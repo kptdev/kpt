@@ -3,34 +3,34 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
-+app: myapp
-+namespace: staging
++    app: myapp
++  namespace: staging
 @@ NORMALIZED @@
 -
-+conditions:
-+- type: Rendered
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+errorResults:
-+- message: fail: intentional failure for testing
-+exitCode: 1
-+results:
-+- message: fail: intentional failure for testing
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      errorResults:
++      - message: fail: intentional failure for testing
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: intentional failure for testing
++        severity: error
++      stderr: failed to evaluate function: error: function failure
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -38,16 +38,16 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+annotations:
-+app: myapp
-+namespace: staging
+   name: nginx-deployment
++  annotations:
++    app: myapp
++  namespace: staging
  spec:
- replicas: 3
-+template:
-+metadata:
-+annotations:
-+app: myapp
+   replicas: 3
++  template:
++    metadata:
++      annotations:
++        app: myapp
 diff --git a/starlark-fn-failure.yaml b/starlark-fn-failure.yaml
 index NORMALIZED 100644
 --- a/starlark-fn-failure.yaml
@@ -55,10 +55,10 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: always-fail
-+annotations:
-+app: myapp
-+namespace: staging
+   name: always-fail
++  annotations:
++    app: myapp
++  namespace: staging
  source: |
- def fail_fn(items):
- fail("intentional failure for testing")
+   def fail_fn(items):
+     fail("intentional failure for testing")

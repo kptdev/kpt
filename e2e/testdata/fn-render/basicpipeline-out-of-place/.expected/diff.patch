@@ -1,16 +1,16 @@
 diff --git a/out/Kptfile b/out/Kptfile
 new file mode 100644
-index 0000000..3a2c718
+index NORMALIZED
 --- /dev/null
 +++ b/out/Kptfile
-@@ -0,0 +1,15 @@
+@@ NORMALIZED @@
 +apiVersion: kpt.dev/v1
 +kind: Kptfile
 +metadata:
-+  name: app
-+  namespace: staging
 +  labels:
 +    tier: backend
++  name: app
++  namespace: staging
 +pipeline:
 +  mutators:
 +    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
@@ -21,10 +21,10 @@ index 0000000..3a2c718
 +        tier: backend
 diff --git a/out/resources.yaml b/out/resources.yaml
 new file mode 100644
-index 0000000..84cfb26
+index NORMALIZED
 --- /dev/null
 +++ b/out/resources.yaml
-@@ -0,0 +1,39 @@
+@@ NORMALIZED @@
 +# Copyright 2021 The kpt Authors
 +#
 +# Licensed under the Apache License, Version 2.0 (the "License");

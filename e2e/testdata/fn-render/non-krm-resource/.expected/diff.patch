@@ -3,27 +3,27 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--namespace: staging
--- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--configMap:
--tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`
-+executionError: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`
-+exitCode: 1
-+message: |-
-+mutationSteps:
-+pipeline.run: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-      configMap:
+-        namespace: staging
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        tier: backend
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: backend
 +status:
-+status: False
-+tier: backend
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`
++    mutationSteps:
++      executionError: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`
++      exitCode: 1

@@ -3,29 +3,28 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--namespace: staging
--- image: ghcr.io/kptdev/krm-functions-catalog/dne # non-existing image
--configMap:
--tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/dne # non-existing image
-+conditions:
-+- type: Rendered
-+configMap:
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/dne:latest: exit code 125
-+exitCode: 0
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-      configMap:
+-        namespace: staging
+-    - image: ghcr.io/kptdev/krm-functions-catalog/dne # non-existing image
+-      configMap:
+-        tier: backend
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/dne # non-existing image
++    configMap:
++      tier: backend
 +status:
-+status: False
-+tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/dne:latest
-+exitCode: 125
-+stderr: |-
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/dne:latest: exit code 125
++    mutationSteps:
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/dne:latest
++      exitCode: 125

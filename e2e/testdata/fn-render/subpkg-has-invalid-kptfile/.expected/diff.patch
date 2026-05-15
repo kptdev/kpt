@@ -3,23 +3,23 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
--configMap:
--namespace: staging
--- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--configMap:
--tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+message: |-
-+pkg.Subpackages: pkg ./db: error reading Kptfile at "./db": yaml: line 10: mapping values are not allowed in this context
-+pkg.render: pkg .:
-+reason: RenderFailed
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+-      configMap:
+-        namespace: staging
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        tier: backend
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: backend
 +status:
-+status: False
-+tier: backend
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pkg.Subpackages: pkg ./db: error reading Kptfile at "./db": yaml: line 10: mapping values are not allowed in this context
++    reason: RenderFailed
++    status: False

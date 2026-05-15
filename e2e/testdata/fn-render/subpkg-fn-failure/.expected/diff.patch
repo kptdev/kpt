@@ -3,37 +3,37 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configPath: starlark-httpbin.yaml
--- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
--configMap:
--namespace: staging
--- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--configMap:
--tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+configPath: starlark-httpbin.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+errorResults:
-+- message: statefulset-filter:4:42: got newline, want primary expression
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+exitCode: 1
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg ./db:
-+reason: RenderFailed
-+renderStatus:
-+results:
-+- message: statefulset-filter:4:42: got newline, want primary expression
-+severity: error
-+severity: error
+-      configPath: starlark-httpbin.yaml
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+-      configMap:
+-        namespace: staging
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        tier: backend
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-httpbin.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: backend
 +status:
-+status: False
-+stderr: failed to evaluate function: error: function failure
-+tier: backend
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg ./db:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++      errorResults:
++      - message: statefulset-filter:4:42: got newline, want primary expression
++        severity: error
++      exitCode: 1
++      results:
++      - message: statefulset-filter:4:42: got newline, want primary expression
++        severity: error
++      stderr: failed to evaluate function: error: function failure

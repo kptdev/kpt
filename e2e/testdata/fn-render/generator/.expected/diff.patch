@@ -3,43 +3,43 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--configMap:
--namespace: staging
--tier: db
-+labels:
-+namespace: staging
-+tier: db
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-      configMap:
+-        namespace: staging
+-      configMap:
+-        tier: db
++  labels:
++    tier: db
++  namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: db
 +status:
-+status: True
-+tier: db
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+exitCode: 0
-+exitCode: 0
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+exitCode: 0
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      exitCode: 0
++      exitCode: 0
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
 diff --git a/db/Kptfile b/db/Kptfile
 index NORMALIZED 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
 @@ NORMALIZED @@
-+app: backend
-+labels:
-+namespace: staging
-+tier: db
++  labels:
++    app: backend
++    tier: db
++  namespace: staging
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
 index NORMALIZED
@@ -49,28 +49,28 @@ index NORMALIZED
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+name: httpbin
-+namespace: staging
-+labels:
-+app: backend
-+tier: db
++  name: httpbin
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
 +spec:
-+replicas: 4
-+template:
-+spec:
-+containers:
-+- image: kennethreitz/httpbin
-+name: httpbin
-+ports:
-+- containerPort: 9876
-+metadata:
-+labels:
-+app: backend
-+tier: db
-+selector:
-+matchLabels:
-+app: backend
-+tier: db
++  replicas: 4
++  template:
++    spec:
++      containers:
++      - image: kennethreitz/httpbin
++        name: httpbin
++        ports:
++        - containerPort: 9876
++    metadata:
++      labels:
++        app: backend
++        tier: db
++  selector:
++    matchLabels:
++      app: backend
++      tier: db
 diff --git a/db/resources.yaml b/db/resources.yaml
 index NORMALIZED 100644
 --- a/db/resources.yaml
@@ -78,22 +78,22 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StatefulSet
  metadata:
- name: db
-+namespace: staging
-+labels:
-+app: backend
-+tier: db
+   name: db
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+app: backend
-+tier: db
-+template:
-+metadata:
-+labels:
-+app: backend
-+tier: db
+   replicas: 3
++  selector:
++    matchLabels:
++      app: backend
++      tier: db
++  template:
++    metadata:
++      labels:
++        app: backend
++        tier: db
 diff --git a/db/starlark-httpbin.yaml b/db/starlark-httpbin.yaml
 index NORMALIZED 100644
 --- a/db/starlark-httpbin.yaml
@@ -101,14 +101,14 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: httpbin-gen
-+namespace: staging
-+labels:
-+app: backend
-+tier: db
+   name: httpbin-gen
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
  source: |-
- httpbin_deployment = {
- "apiVersion": "apps/v1",
+   httpbin_deployment = {
+      "apiVersion": "apps/v1",
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -116,26 +116,26 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+namespace: staging
-+labels:
-+tier: db
+   name: nginx-deployment
++  namespace: staging
++  labels:
++    tier: db
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+tier: db
-+template:
-+metadata:
-+labels:
-+tier: db
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
  ---
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
- name: custom
-+namespace: staging
-+labels:
-+tier: db
+   name: custom
++  namespace: staging
++  labels:
++    tier: db
  spec:
- image: nginx:1.2.3
+   image: nginx:1.2.3

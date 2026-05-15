@@ -3,17 +3,17 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
-+conditions:
-+- type: Rendered
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: function must not modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml
-+message: |-
-+mutationSteps:
-+pipeline.run: function must not modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml
-+pkg.render: pkg ./db:
-+reason: RenderFailed
-+renderStatus:
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+executionError: function must not modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml
-+exitCode: 1
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg ./db:
++      	pipeline.run: function must not modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: function must not modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      executionError: function must not modify resources outside of package: resource has path ../notpkg/deployment_httpbin.yaml
++      exitCode: 1

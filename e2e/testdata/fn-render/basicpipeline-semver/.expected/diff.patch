@@ -3,43 +3,43 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
--configMap:
--namespace: staging
--tag: 0.4.1 - 0.4.3
--- image: ghcr.io/kptdev/krm-functions-catalog/set-labels
--configMap:
--tag: ~0.2
--tier: backend
-+labels:
-+tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
-+configMap:
-+namespace: staging
-+tag: 0.4.1 - 0.4.3
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels
-+conditions:
-+- type: Rendered
-+configMap:
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
+-      configMap:
+-        namespace: staging
+-      tag: 0.4.1 - 0.4.3
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels
+-      configMap:
+-        tier: backend
+-      tag: ~0.2
++  labels:
++    tier: backend
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
++    configMap:
++      namespace: staging
++    tag: 0.4.1 - 0.4.3
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels
++    configMap:
++      tier: backend
++    tag: ~0.2
 +status:
-+status: True
-+tag: ~0.2
-+tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.3
-+exitCode: 0
-+results:
-+- message: namespace [default] updated to "staging", 1 value(s) changed
-+severity: info
-+- message: all `depends-on` annotations are up-to-date. no `namespace` changed
-+severity: info
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.4
-+exitCode: 0
-+results:
-+- message: set 4 labels in total
-+severity: info
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.3
++      exitCode: 0
++      results:
++      - message: namespace [default] updated to "staging", 1 value(s) changed
++        severity: info
++      - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++        severity: info
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.4
++      exitCode: 0
++      results:
++      - message: set 4 labels in total
++        severity: info
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -47,21 +47,21 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+namespace: staging
-+labels:
-+tier: backend
+   name: nginx-deployment
++  namespace: staging
++  labels:
++    tier: backend
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+tier: backend
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
  ---
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
- name: custom
-+labels:
-+tier: backend
+   name: custom
++  labels:
++    tier: backend
  spec:
- image: nginx:1.2.3
+   image: nginx:1.2.3

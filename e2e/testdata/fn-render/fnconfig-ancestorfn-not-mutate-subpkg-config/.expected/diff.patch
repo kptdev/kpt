@@ -3,30 +3,30 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--namespace: staging
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+conditions:
-+- type: Rendered
-+configMap:
-+mutationSteps:
-+namespace: staging
-+reason: RenderSuccess
-+renderStatus:
+-      configMap:
+-        namespace: staging
++  namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
 +status:
-+status: True
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+exitCode: 0
-+exitCode: 0
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
++      exitCode: 0
 diff --git a/db/Kptfile b/db/Kptfile
 index NORMALIZED 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
 @@ NORMALIZED @@
-+labels:
-+namespace: staging
-+tier: db
++  labels:
++    tier: db
++  namespace: staging
 diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
 index NORMALIZED 100644
 --- a/db/labelconfig.yaml
@@ -34,12 +34,12 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: ConfigMap
  metadata:
- name: label-config
-+labels:
-+tier: db
-+namespace: staging
+   name: label-config
++  labels:
++    tier: db
++  namespace: staging
  data:
- tier: db
+   tier: db
 diff --git a/db/resources.yaml b/db/resources.yaml
 index NORMALIZED 100644
 --- a/db/resources.yaml
@@ -47,19 +47,19 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StatefulSet
  metadata:
- name: db
-+labels:
-+tier: db
-+namespace: staging
+   name: db
++  labels:
++    tier: db
++  namespace: staging
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+tier: db
-+template:
-+metadata:
-+labels:
-+tier: db
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -67,15 +67,15 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+namespace: staging
+   name: nginx-deployment
++  namespace: staging
  spec:
- replicas: 3
+   replicas: 3
  ---
 @@ NORMALIZED @@
  kind: Custom
  metadata:
- name: custom
-+namespace: staging
+   name: custom
++  namespace: staging
  spec:
- image: nginx:1.2.3
+   image: nginx:1.2.3

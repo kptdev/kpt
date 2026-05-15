@@ -3,14 +3,14 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: ghcr.io/kptdev/krm-functions-catalog/no-op
-+- image: ghcr.io/kptdev/krm-functions-catalog/no-op
-+conditions:
-+- type: Rendered
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
++  - image: ghcr.io/kptdev/krm-functions-catalog/no-op
 +status:
-+status: True
-+- image: ghcr.io/kptdev/krm-functions-catalog/no-op:latest
-+exitCode: 0
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/no-op:latest
++      exitCode: 0

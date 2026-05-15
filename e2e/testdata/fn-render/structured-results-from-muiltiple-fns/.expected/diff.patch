@@ -3,92 +3,92 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--ignore_missing_schemas: true
--strict: true
-+- image: ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest
-+- image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
-+apiVersion: apps/v1
-+apiVersion: apps/v1
-+apiVersion: apps/v1
-+apiVersion: apps/v1
-+apiVersion: v1
-+apiVersion: v1
-+conditions:
-+- type: Rendered
-+configMap:
-+errorResults:
-+- field:
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest: exit code 1
-+exitCode: 0
-+exitCode: 1
-+file:
-+file:
-+file:
-+file:
-+ignore_missing_schemas: true
-+index: 4
-+index: 4
-+kind: ConfigMap
-+kind: ConfigMap
-+kind: Deployment
-+kind: Deployment
-+kind: Deployment
-+kind: Deployment
-+message: got string, want null or integer
-+message: got string, want null or integer
-+message: missing properties 'selector', 'template'
-+message: missing properties 'selector', 'template'
-+message: |-
-+The following banned keys are being used in the ConfigMap: {"less_sensitive_key"}
-+message: |-
-+message: |-
-+The following banned keys are being used in the ConfigMap: {"private_key"}
-+name: nginx-deployment
-+name: nginx-deployment
-+name: nginx-deployment
-+name: nginx-deployment
-+name: some-secret
-+name: some-secret
-+namespace: default
-+namespace: default
-+path: resources.yaml
-+path: resources.yaml
-+path: resources.yaml
-+path: resources.yaml
-+path: resources.yaml
-+path: resources.yaml
-+path: spec
-+path: spec
-+path: spec.replicas
-+path: spec.replicas
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
-+resourceRef:
-+resourceRef:
-+resourceRef:
-+resourceRef:
-+resourceRef:
-+resourceRef:
-+results:
-+- file:
-+results:
-+- field:
-+severity: error
-+severity: error
-+- field:
-+severity: error
-+severity: error
-+- field:
-+severity: info
-+severity: warning
-+- file:
+-      configMap:
+-        ignore_missing_schemas: true
+-        strict: true
++  - image: ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest
++  - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
++    configMap:
++      ignore_missing_schemas: true
++      strict: true
 +status:
-+status: False
-+stderr: failed to evaluate function: error: function failure
-+strict: true
-+validationSteps:
-+violatedConstraint: no-secrets-in-configmap
-+violatedConstraint: no-sensitive-data-in-configmap
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest: exit code 1
++    validationSteps:
++      exitCode: 0
++      results:
++      - file:
++          index: 4
++          path: resources.yaml
++        message: |-
++          The following banned keys are being used in the ConfigMap: {"private_key"}
++          violatedConstraint: no-secrets-in-configmap
++        resourceRef:
++          apiVersion: v1
++          kind: ConfigMap
++          name: some-secret
++          namespace: default
++        severity: warning
++      - file:
++          index: 4
++          path: resources.yaml
++        message: |-
++          The following banned keys are being used in the ConfigMap: {"less_sensitive_key"}
++          violatedConstraint: no-sensitive-data-in-configmap
++        resourceRef:
++          apiVersion: v1
++          kind: ConfigMap
++          name: some-secret
++          namespace: default
++        severity: info
++      errorResults:
++      - field:
++          path: spec
++        file:
++          path: resources.yaml
++        message: missing properties 'selector', 'template'
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      - field:
++          path: spec.replicas
++        file:
++          path: resources.yaml
++        message: got string, want null or integer
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      exitCode: 1
++      results:
++      - field:
++          path: spec
++        file:
++          path: resources.yaml
++        message: missing properties 'selector', 'template'
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      - field:
++          path: spec.replicas
++        file:
++          path: resources.yaml
++        message: got string, want null or integer
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      stderr: failed to evaluate function: error: function failure

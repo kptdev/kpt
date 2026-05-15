@@ -3,17 +3,17 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configPath: starlark-mutate-path-index.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+conditions:
-+- type: Rendered
-+configPath: starlark-mutate-path-index.yaml
-+exitCode: 0
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-      configPath: starlark-mutate-path-index.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-mutate-path-index.yaml
 +status:
-+status: True
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0
 diff --git a/x.yaml b/y.yaml
 similarity index 100%
 rename from x.yaml
@@ -25,21 +25,21 @@ index NORMALIZED 100644
 +apiVersion: custom.io/v1
 +kind: Custom
 +metadata:
-+name: custom
++  name: custom
 +spec:
-+image: nginx:1.2.3
++  image: nginx:1.2.3
 +---
  # Copyright 2021 The kpt Authors
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
 @@ NORMALIZED @@
- name: nginx-deployment
+   name: nginx-deployment
  spec:
- replicas: 3
+   replicas: 3
 ----
 -apiVersion: custom.io/v1
 -kind: Custom
 -metadata:
--name: custom
+-  name: custom
 -spec:
--image: nginx:1.2.3
+-  image: nginx:1.2.3

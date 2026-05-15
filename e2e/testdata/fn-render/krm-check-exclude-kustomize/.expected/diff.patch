@@ -3,23 +3,23 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: set-labels:v0.1.5
--configMap:
--tier: backend
-+labels:
-+tier: backend
-+- image: set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-    - image: set-labels:v0.1.5
+-      configMap:
+-        tier: backend
++  labels:
++    tier: backend
++  - image: set-labels:v0.1.5
++    configMap:
++      tier: backend
 +status:
-+status: True
-+tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+exitCode: 0
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
 diff --git a/kustomization.yaml b/kustomization.yaml
 index NORMALIZED 100644
 --- a/kustomization.yaml
@@ -33,8 +33,8 @@ index NORMALIZED 100644
  resources:
  - resources.yaml
 +metadata:
-+labels:
-+tier: backend
++  labels:
++    tier: backend
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -42,24 +42,24 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+labels:
-+tier: backend
+   name: nginx-deployment
++  labels:
++    tier: backend
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+tier: backend
-+template:
-+metadata:
-+labels:
-+tier: backend
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
++  template:
++    metadata:
++      labels:
++        tier: backend
  ---
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
- name: custom
-+labels:
-+tier: backend
+   name: custom
++  labels:
++    tier: backend
  spec:
- image: nginx:1.2.3 # kpt-set: {something}
+   image: nginx:1.2.3 # kpt-set: {something}

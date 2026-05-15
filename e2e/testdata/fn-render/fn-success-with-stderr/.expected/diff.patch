@@ -3,15 +3,15 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configPath: starlark.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+conditions:
-+- type: Rendered
-+configPath: starlark.yaml
-+exitCode: 0
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-      configPath: starlark.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark.yaml
 +status:
-+status: True
-+stderr: function succeeded, reporting it on stderr
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0
++      stderr: function succeeded, reporting it on stderr

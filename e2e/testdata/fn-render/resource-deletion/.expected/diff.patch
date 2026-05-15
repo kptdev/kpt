@@ -3,32 +3,32 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--configMap:
--configPath: starlark-httpbin.yaml
--namespace: staging
--tier: backend
-+labels:
-+namespace: staging
-+tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+configPath: starlark-httpbin.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+exitCode: 0
-+exitCode: 0
-+exitCode: 0
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-      configMap:
+-        namespace: staging
+-      configMap:
+-        tier: backend
+-      configPath: starlark-httpbin.yaml
++  labels:
++    tier: backend
++  namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-httpbin.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: backend
 +status:
-+status: True
-+tier: backend
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0
++      exitCode: 0
++      exitCode: 0
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
 index NORMALIZED
@@ -51,26 +51,26 @@ index NORMALIZED
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
--name: httpbin
--namespace: staging
--labels:
--app: backend
--tier: db
+-  name: httpbin
+-  namespace: staging
+-  labels:
+-    app: backend
+-    tier: db
 -spec:
--replicas: 4
--selector:
--matchLabels:
--app: backend
--tier: db
--template:
--metadata:
--labels:
--app: backend
--tier: db
--spec:
--containers:
--- name: httpbin
--image: kennethreitz/httpbin
+-  replicas: 4
+-  selector:
+-    matchLabels:
+-      app: backend
+-      tier: db
+-  template:
+-    metadata:
+-      labels:
+-        app: backend
+-        tier: db
+-    spec:
+-      containers:
+-        - name: httpbin
+-          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -78,29 +78,29 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+namespace: staging
-+labels:
-+tier: backend
+   name: nginx-deployment
++  namespace: staging
++  labels:
++    tier: backend
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+tier: backend
-+template:
-+metadata:
-+labels:
-+tier: backend
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
++  template:
++    metadata:
++      labels:
++        tier: backend
  ---
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
- name: custom
-+namespace: staging
-+labels:
-+tier: backend
+   name: custom
++  namespace: staging
++  labels:
++    tier: backend
  spec:
- image: nginx:1.2.3
+   image: nginx:1.2.3
 diff --git a/starlark-httpbin.yaml b/starlark-httpbin.yaml
 index NORMALIZED 100644
 --- a/starlark-httpbin.yaml
@@ -108,10 +108,10 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: httpbin-gen
-+namespace: staging
-+labels:
-+tier: backend
+   name: httpbin-gen
++  namespace: staging
++  labels:
++    tier: backend
  source: |
- # filter to return if resource is HTTPBin resource
- def isHTTPBin(r):
+   # filter to return if resource is HTTPBin resource
+   def isHTTPBin(r):

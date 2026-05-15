@@ -3,33 +3,33 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--configMap:
--pkg: root
--- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
--configPath: starlark-fn-failure.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+configMap:
-+pkg: root
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+conditions:
-+- type: Rendered
-+configPath: starlark-fn-failure.yaml
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5: exit code 1
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        pkg: root
+-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+-      configPath: starlark-fn-failure.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      pkg: root
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-fn-failure.yaml
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+errorResults:
-+- message: failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail
-+exitCode: 1
-+results:
-+- message: failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail
-+severity: error
-+severity: error
-+stderr: [error] : failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5: exit code 1
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      errorResults:
++      - message: failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail
++        severity: error
++      exitCode: 1
++      results:
++      - message: failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail
++        severity: error
++      stderr: [error] : failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail

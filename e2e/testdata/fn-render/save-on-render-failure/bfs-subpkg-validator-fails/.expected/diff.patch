@@ -3,71 +3,71 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--level: root
--test: subpkg-fail
-+labels:
-+level: root
-+test: subpkg-fail
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+exitCode: 0
-+level: root
-+message: |-
-+mutationSteps:
-+pipeline.run: pkg ./subpkg: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-      configMap:
+-        level: root
+-        test: subpkg-fail
++  labels:
++    level: root
++    test: subpkg-fail
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      level: root
++      test: subpkg-fail
 +status:
-+status: False
-+test: subpkg-fail
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+exitCode: 0
-+validationSteps:
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+errorResults:
-+- message: fail: intentional failure for testing
-+exitCode: 1
-+results:
-+- message: fail: intentional failure for testing
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: pkg ./subpkg: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      exitCode: 0
++    validationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      errorResults:
++      - message: fail: intentional failure for testing
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: intentional failure for testing
++        severity: error
++      stderr: failed to evaluate function: error: function failure
 diff --git a/deployment.yaml b/deployment.yaml
 index NORMALIZED 100644
 --- a/deployment.yaml
 +++ b/deployment.yaml
 @@ NORMALIZED @@
  metadata:
- name: root-deployment
- namespace: default
-+labels:
-+level: root
-+test: subpkg-fail
+   name: root-deployment
+   namespace: default
++  labels:
++    level: root
++    test: subpkg-fail
  spec:
- replicas: 1
-+selector:
-+matchLabels:
-+level: root
-+test: subpkg-fail
-+template:
-+metadata:
-+labels:
-+level: root
-+test: subpkg-fail
+   replicas: 1
++  selector:
++    matchLabels:
++      level: root
++      test: subpkg-fail
++  template:
++    metadata:
++      labels:
++        level: root
++        test: subpkg-fail
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
 index NORMALIZED 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ NORMALIZED @@
-+labels:
-+level: root
-+namespace: subpkg-ns
-+test: subpkg-fail
++  labels:
++    level: root
++    test: subpkg-fail
++  namespace: subpkg-ns
 diff --git a/subpkg/deployment.yaml b/subpkg/deployment.yaml
 index NORMALIZED 100644
 --- a/subpkg/deployment.yaml
@@ -75,22 +75,22 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: sub-deployment
-+labels:
-+level: root
-+test: subpkg-fail
-+namespace: subpkg-ns
+   name: sub-deployment
++  labels:
++    level: root
++    test: subpkg-fail
++  namespace: subpkg-ns
  spec:
- replicas: 2
-+selector:
-+matchLabels:
-+level: root
-+test: subpkg-fail
-+template:
-+metadata:
-+labels:
-+level: root
-+test: subpkg-fail
+   replicas: 2
++  selector:
++    matchLabels:
++      level: root
++      test: subpkg-fail
++  template:
++    metadata:
++      labels:
++        level: root
++        test: subpkg-fail
 diff --git a/subpkg/starlark-fn-failure.yaml b/subpkg/starlark-fn-failure.yaml
 index NORMALIZED 100644
 --- a/subpkg/starlark-fn-failure.yaml
@@ -98,11 +98,11 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: always-fail
-+labels:
-+level: root
-+test: subpkg-fail
-+namespace: subpkg-ns
+   name: always-fail
++  labels:
++    level: root
++    test: subpkg-fail
++  namespace: subpkg-ns
  source: |
- def fail_fn(items):
- fail("intentional failure for testing")
+   def fail_fn(items):
+     fail("intentional failure for testing")

@@ -3,29 +3,29 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+errorResults:
-+- message: failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5: exit code 1
-+exitCode: 0
-+exitCode: 1
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
-+results:
-+- message: failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`
-+severity: error
-+severity: error
+-      configMap:
+-        namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
 +status:
-+status: False
-+stderr: [error] : failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5: exit code 1
++    mutationSteps:
++      errorResults:
++      exitCode: 0
++      - message: failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`
++        severity: error
++      exitCode: 1
++      results:
++      - message: failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`
++        severity: error
++      stderr: [error] : failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`

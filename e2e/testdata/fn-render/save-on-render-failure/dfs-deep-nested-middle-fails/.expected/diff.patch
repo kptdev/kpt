@@ -3,42 +3,42 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--level: root
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+exitCode: 0
-+level: root
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg ./level1:
-+reason: RenderFailed
-+renderStatus:
+-      configMap:
+-        level: root
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      level: root
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+exitCode: 0
-+validationSteps:
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+errorResults:
-+- message: fail: intentional failure for testing
-+exitCode: 1
-+results:
-+- message: fail: intentional failure for testing
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg ./level1:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
++    validationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      errorResults:
++      - message: fail: intentional failure for testing
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: intentional failure for testing
++        severity: error
++      stderr: failed to evaluate function: error: function failure
 diff --git a/level1/Kptfile b/level1/Kptfile
 index NORMALIZED 100644
 --- a/level1/Kptfile
 +++ b/level1/Kptfile
 @@ NORMALIZED @@
-+labels:
-+level: level1
++  labels:
++    level: level1
 diff --git a/level1/configmap.yaml b/level1/configmap.yaml
 index NORMALIZED 100644
 --- a/level1/configmap.yaml
@@ -46,20 +46,20 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: ConfigMap
  metadata:
- name: level1-config
-+labels:
-+level: level1
+   name: level1-config
++  labels:
++    level: level1
  data:
- level: level1
+   level: level1
 diff --git a/level1/level2/Kptfile b/level1/level2/Kptfile
 index NORMALIZED 100644
 --- a/level1/level2/Kptfile
 +++ b/level1/level2/Kptfile
 @@ NORMALIZED @@
--level: level2
-+labels:
-+level: level1
-+level: level2
+-        level: level2
++  labels:
++    level: level1
++        level: level2
 diff --git a/level1/level2/configmap.yaml b/level1/level2/configmap.yaml
 index NORMALIZED 100644
 --- a/level1/level2/configmap.yaml
@@ -67,11 +67,11 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: ConfigMap
  metadata:
- name: level2-config
-+labels:
-+level: level1
+   name: level2-config
++  labels:
++    level: level1
  data:
- level: level2
+   level: level2
 diff --git a/level1/starlark-fn-failure.yaml b/level1/starlark-fn-failure.yaml
 index NORMALIZED 100644
 --- a/level1/starlark-fn-failure.yaml
@@ -79,9 +79,9 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: always-fail
-+labels:
-+level: level1
+   name: always-fail
++  labels:
++    level: level1
  source: |
- def fail_fn(items):
- fail("intentional failure for testing")
+   def fail_fn(items):
+     fail("intentional failure for testing")

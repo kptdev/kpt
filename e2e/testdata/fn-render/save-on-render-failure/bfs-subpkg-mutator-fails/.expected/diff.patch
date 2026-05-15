@@ -3,36 +3,36 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--test: mutator-fail
-+labels:
-+test: mutator-fail
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+exitCode: 0
-+message: |-
-+mutationSteps:
-+pipeline.run: pkg ./subpkg: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-      configMap:
+-        test: mutator-fail
++  labels:
++    test: mutator-fail
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      test: mutator-fail
 +status:
-+status: False
-+test: mutator-fail
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+errorResults:
-+- message: fail: intentional failure for testing
-+exitCode: 1
-+results:
-+- message: fail: intentional failure for testing
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: pkg ./subpkg: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      errorResults:
++      - message: fail: intentional failure for testing
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: intentional failure for testing
++        severity: error
++      stderr: failed to evaluate function: error: function failure
 diff --git a/deployment.yaml b/deployment.yaml
 index NORMALIZED 100644
 --- a/deployment.yaml
@@ -40,26 +40,26 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: root-deployment
-+labels:
-+test: mutator-fail
+   name: root-deployment
++  labels:
++    test: mutator-fail
  spec:
- replicas: 1
-+selector:
-+matchLabels:
-+test: mutator-fail
-+template:
-+metadata:
-+labels:
-+test: mutator-fail
+   replicas: 1
++  selector:
++    matchLabels:
++      test: mutator-fail
++  template:
++    metadata:
++      labels:
++        test: mutator-fail
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
 index NORMALIZED 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ NORMALIZED @@
-+labels:
-+namespace: subpkg-ns
-+test: mutator-fail
++  labels:
++    test: mutator-fail
++  namespace: subpkg-ns
 diff --git a/subpkg/deployment.yaml b/subpkg/deployment.yaml
 index NORMALIZED 100644
 --- a/subpkg/deployment.yaml
@@ -67,19 +67,19 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: sub-deployment
-+labels:
-+test: mutator-fail
-+namespace: subpkg-ns
+   name: sub-deployment
++  labels:
++    test: mutator-fail
++  namespace: subpkg-ns
  spec:
- replicas: 2
-+selector:
-+matchLabels:
-+test: mutator-fail
-+template:
-+metadata:
-+labels:
-+test: mutator-fail
+   replicas: 2
++  selector:
++    matchLabels:
++      test: mutator-fail
++  template:
++    metadata:
++      labels:
++        test: mutator-fail
 diff --git a/subpkg/starlark-fn-failure.yaml b/subpkg/starlark-fn-failure.yaml
 index NORMALIZED 100644
 --- a/subpkg/starlark-fn-failure.yaml
@@ -87,10 +87,10 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: always-fail
-+labels:
-+test: mutator-fail
-+namespace: subpkg-ns
+   name: always-fail
++  labels:
++    test: mutator-fail
++  namespace: subpkg-ns
  source: |
- def fail_fn(items):
- fail("intentional failure for testing")
+   def fail_fn(items):
+     fail("intentional failure for testing")

@@ -4,25 +4,25 @@ index NORMALIZED 100644
 +++ b/Kptfile
 @@ NORMALIZED @@
 -# invalid starlark input results in failure of first fn
-+# invalid starlark input results in failure of first fn
++  # invalid starlark input results in failure of first fn
 @@ NORMALIZED @@
-+conditions:
-+- type: Rendered
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+errorResults:
-+- message: httpbin-gen:3:73: got newline, want primary expression
-+exitCode: 1
-+results:
-+- message: httpbin-gen:3:73: got newline, want primary expression
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      errorResults:
++      - message: httpbin-gen:3:73: got newline, want primary expression
++        severity: error
++      exitCode: 1
++      results:
++      - message: httpbin-gen:3:73: got newline, want primary expression
++        severity: error
++      stderr: failed to evaluate function: error: function failure

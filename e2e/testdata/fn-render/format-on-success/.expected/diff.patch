@@ -3,28 +3,28 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--namespace: staging
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+conditions:
-+- type: Rendered
-+configMap:
-+exitCode: 0
-+mutationSteps:
-+namespace: staging
-+reason: RenderSuccess
-+renderStatus:
+-      configMap:
+-        namespace: staging
++  namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
 +status:
-+status: True
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+exitCode: 0
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      exitCode: 0
 diff --git a/db/Kptfile b/db/Kptfile
 index NORMALIZED 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
 @@ NORMALIZED @@
-+namespace: staging
++  namespace: staging
 diff --git a/db/resources.yaml b/db/resources.yaml
 index NORMALIZED 100644
 --- a/db/resources.yaml
@@ -32,10 +32,10 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StatefulSet
  metadata:
- name: db
-+namespace: staging
+   name: db
++  namespace: staging
  spec:
- replicas: 3
+   replicas: 3
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -43,8 +43,8 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+namespace: staging
+   name: nginx-deployment
++  namespace: staging
  spec:
- replicas: 3
- selector:
+   replicas: 3
+   selector:

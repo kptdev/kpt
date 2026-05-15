@@ -3,15 +3,15 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
-+conditions:
-+- type: Rendered
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
 +status:
-+status: True
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+exitCode: 0
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      exitCode: 0
 diff --git a/deployment.yaml b/newfilename.yaml
 similarity index 100%
 rename from deployment.yaml

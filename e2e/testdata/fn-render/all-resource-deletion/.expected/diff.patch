@@ -3,46 +3,46 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--configMap:
--configPath: delete-all.yaml
--namespace: staging
--tier: backend
-+labels:
-+namespace: staging
-+tier: backend
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+configPath: delete-all.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+exitCode: 0
-+exitCode: 0
-+exitCode: 0
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-      configMap:
+-        namespace: staging
+-      configMap:
+-        tier: backend
+-      configPath: delete-all.yaml
++  labels:
++    tier: backend
++  namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: delete-all.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: backend
 +status:
-+status: True
-+tier: backend
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0
++      exitCode: 0
++      exitCode: 0
 diff --git a/delete-all.yaml b/delete-all.yaml
 index NORMALIZED 100644
 --- a/delete-all.yaml
 +++ b/delete-all.yaml
 @@ NORMALIZED @@
- name: delete-all
- annotations:
- config.kubernetes.io/local-config: "true"
-+namespace: staging
-+labels:
-+tier: backend
+   name: delete-all
+   annotations:
+     config.kubernetes.io/local-config: "true"
++  namespace: staging
++  labels:
++    tier: backend
  source: |-
- # delete all resources
- ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
+   # delete all resources
+   ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
 diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
 index NORMALIZED
@@ -65,14 +65,14 @@ index NORMALIZED
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
--name: httpbin
+-  name: httpbin
 -spec:
--replicas: 4
--template:
--spec:
--containers:
--- name: httpbin
--image: kennethreitz/httpbin
+-  replicas: 4
+-  template:
+-    spec:
+-      containers:
+-        - name: httpbin
+-          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
 deleted file mode 100644
 index NORMALIZED
@@ -95,6 +95,6 @@ index NORMALIZED
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
--name: nginx-deployment
+-  name: nginx-deployment
 -spec:
--replicas: 3
+-  replicas: 3

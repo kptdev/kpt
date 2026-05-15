@@ -3,19 +3,19 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configPath: starlark-gen-duplicate-path.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+conditions:
-+- type: Rendered
-+configPath: starlark-gen-duplicate-path.yaml
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: resource at path "resources.yaml" and index "0" already exists
-+executionError: resource at path "resources.yaml" and index "0" already exists
-+exitCode: 1
-+message: |-
-+mutationSteps:
-+pipeline.run: resource at path "resources.yaml" and index "0" already exists
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-      configPath: starlark-gen-duplicate-path.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-gen-duplicate-path.yaml
 +status:
-+status: False
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: resource at path "resources.yaml" and index "0" already exists
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: resource at path "resources.yaml" and index "0" already exists
++    mutationSteps:
++      executionError: resource at path "resources.yaml" and index "0" already exists
++      exitCode: 1

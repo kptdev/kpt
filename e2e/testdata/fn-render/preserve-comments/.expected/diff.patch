@@ -3,12 +3,12 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
-+- image: ghcr.io/kptdev/krm-functions-catalog/drop-comments:v0.1
-+conditions:
-+- type: Rendered
-+exitCode: 0
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
++  - image: ghcr.io/kptdev/krm-functions-catalog/drop-comments:v0.1
 +status:
-+status: True
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0

@@ -3,41 +3,41 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--configMap:
--configPath: starlark-fn-failure.yaml
--test: parent-fail
-+labels:
-+test: parent-fail
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+configMap:
-+test: parent-fail
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+conditions:
-+- type: Rendered
-+configPath: starlark-fn-failure.yaml
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        test: parent-fail
+-      configPath: starlark-fn-failure.yaml
++  labels:
++    test: parent-fail
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      test: parent-fail
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-fn-failure.yaml
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+errorResults:
-+- message: fail: intentional failure for testing
-+exitCode: 0
-+exitCode: 1
-+results:
-+- message: fail: intentional failure for testing
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
-+validationSteps:
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
++    validationSteps:
++      errorResults:
++      - message: fail: intentional failure for testing
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: intentional failure for testing
++        severity: error
++      stderr: failed to evaluate function: error: function failure
 diff --git a/configmap.yaml b/configmap.yaml
 index NORMALIZED 100644
 --- a/configmap.yaml
@@ -45,11 +45,11 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: ConfigMap
  metadata:
- name: root-config
-+labels:
-+test: parent-fail
+   name: root-config
++  labels:
++    test: parent-fail
  data:
- key: value
+   key: value
 diff --git a/starlark-fn-failure.yaml b/starlark-fn-failure.yaml
 index NORMALIZED 100644
 --- a/starlark-fn-failure.yaml
@@ -57,20 +57,20 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: always-fail
-+labels:
-+test: parent-fail
+   name: always-fail
++  labels:
++    test: parent-fail
  source: |
- def fail_fn(items):
- fail("intentional failure for testing")
+   def fail_fn(items):
+     fail("intentional failure for testing")
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
 index NORMALIZED 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ NORMALIZED @@
-+labels:
-+namespace: subpkg-ns
-+test: parent-fail
++  labels:
++    test: parent-fail
++  namespace: subpkg-ns
 diff --git a/subpkg/service.yaml b/subpkg/service.yaml
 index NORMALIZED 100644
 --- a/subpkg/service.yaml
@@ -78,12 +78,12 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Service
  metadata:
- name: sub-service
-+namespace: subpkg-ns
-+labels:
-+test: parent-fail
+   name: sub-service
++  namespace: subpkg-ns
++  labels:
++    test: parent-fail
  spec:
- ports:
- - port: 80
-+selector:
-+test: parent-fail
+   ports:
+   - port: 80
++  selector:
++    test: parent-fail

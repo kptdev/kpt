@@ -3,19 +3,19 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configPath: confs/labelconfig.yaml
-+labels:
-+tier: db
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configPath: confs/labelconfig.yaml
-+exitCode: 0
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-      configPath: confs/labelconfig.yaml
++  labels:
++    tier: db
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configPath: confs/labelconfig.yaml
 +status:
-+status: True
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0
 diff --git a/confs/labelconfig.yaml b/confs/labelconfig.yaml
 index NORMALIZED 100644
 --- a/confs/labelconfig.yaml
@@ -23,11 +23,11 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: ConfigMap
  metadata:
- name: label-config
-+labels:
-+tier: db
+   name: label-config
++  labels:
++    tier: db
  data:
- tier: db
+   tier: db
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
@@ -35,24 +35,24 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: nginx-deployment
-+labels:
-+tier: db
+   name: nginx-deployment
++  labels:
++    tier: db
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+tier: db
-+template:
-+metadata:
-+labels:
-+tier: db
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
  ---
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
- name: custom
-+labels:
-+tier: db
+   name: custom
++  labels:
++    tier: db
  spec:
- image: nginx:1.2.3
+   image: nginx:1.2.3

@@ -3,39 +3,39 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--configMap:
--namespace: staging
--selectors:
--- name: httpbin
--selectors:
--- name: httpbin
--tier: db
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+configMap:
-+namespace: staging
-+selectors:
-+- name: httpbin
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
-+selectors:
-+- name: httpbin
+-      configMap:
+-        namespace: staging
+-      configMap:
+-        tier: db
+-      selectors:
+-        - name: httpbin
+-      selectors:
+-        - name: httpbin
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++    selectors:
++    - name: httpbin
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: db
++    selectors:
++    - name: httpbin
 +status:
-+status: True
-+tier: db
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+exitCode: 0
-+exitCode: 0
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+exitCode: 0
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      exitCode: 0
++      exitCode: 0
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
 index NORMALIZED
@@ -45,25 +45,25 @@ index NORMALIZED
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+name: httpbin
-+namespace: staging
-+labels:
-+app: backend
-+tier: db
++  name: httpbin
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
 +spec:
-+replicas: 4
-+template:
-+spec:
-+containers:
-+- image: kennethreitz/httpbin
-+name: httpbin
-+ports:
-+- containerPort: 9876
-+metadata:
-+labels:
-+app: backend
-+tier: db
-+selector:
-+matchLabels:
-+app: backend
-+tier: db
++  replicas: 4
++  template:
++    spec:
++      containers:
++      - image: kennethreitz/httpbin
++        name: httpbin
++        ports:
++        - containerPort: 9876
++    metadata:
++      labels:
++        app: backend
++        tier: db
++  selector:
++    matchLabels:
++      app: backend
++      tier: db

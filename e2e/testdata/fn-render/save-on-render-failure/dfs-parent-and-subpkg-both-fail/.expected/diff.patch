@@ -3,44 +3,44 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--configMap:
--configPath: starlark-fn-failure.yaml
--pkg: root
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+configMap:
-+pkg: root
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+conditions:
-+- type: Rendered
-+configPath: starlark-fn-failure.yaml
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg ./subpkg:
-+reason: RenderFailed
-+renderStatus:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        pkg: root
+-      configPath: starlark-fn-failure.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      pkg: root
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-fn-failure.yaml
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+errorResults:
-+- message: fail: intentional failure for testing
-+exitCode: 0
-+exitCode: 1
-+results:
-+- message: fail: intentional failure for testing
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
-+validationSteps:
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg ./subpkg:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
++    validationSteps:
++      errorResults:
++      - message: fail: intentional failure for testing
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: intentional failure for testing
++        severity: error
++      stderr: failed to evaluate function: error: function failure
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
 index NORMALIZED 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ NORMALIZED @@
-+labels:
-+pkg: subpkg
++  labels:
++    pkg: subpkg
 diff --git a/subpkg/service.yaml b/subpkg/service.yaml
 index NORMALIZED 100644
 --- a/subpkg/service.yaml
@@ -48,14 +48,14 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Service
  metadata:
- name: sub-service
-+labels:
-+pkg: subpkg
+   name: sub-service
++  labels:
++    pkg: subpkg
  spec:
- ports:
- - port: 80
-+selector:
-+pkg: subpkg
+   ports:
+   - port: 80
++  selector:
++    pkg: subpkg
 diff --git a/subpkg/starlark-fn-failure.yaml b/subpkg/starlark-fn-failure.yaml
 index NORMALIZED 100644
 --- a/subpkg/starlark-fn-failure.yaml
@@ -63,9 +63,9 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: always-fail
-+labels:
-+pkg: subpkg
+   name: always-fail
++  labels:
++    pkg: subpkg
  source: |
- def fail_fn(items):
- fail("intentional failure for testing")
+   def fail_fn(items):
+     fail("intentional failure for testing")

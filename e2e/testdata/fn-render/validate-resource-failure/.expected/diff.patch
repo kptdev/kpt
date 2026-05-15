@@ -3,27 +3,27 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest # validates httpbin deployment exists
--configPath: starlark-httpbin-val.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest # validates httpbin deployment exists
-+conditions:
-+- type: Rendered
-+configPath: starlark-httpbin-val.yaml
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+message: |-
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest # validates httpbin deployment exists
+-      configPath: starlark-httpbin-val.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest # validates httpbin deployment exists
++    configPath: starlark-httpbin-val.yaml
 +status:
-+status: False
-+validationSteps:
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+errorResults:
-+- message: fail: could not find httpbin deployment
-+exitCode: 1
-+results:
-+- message: fail: could not find httpbin deployment
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    validationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      errorResults:
++      - message: fail: could not find httpbin deployment
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: could not find httpbin deployment
++        severity: error
++      stderr: failed to evaluate function: error: function failure

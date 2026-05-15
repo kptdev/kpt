@@ -3,17 +3,16 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
-+- image: ghcr.io/kptdev/krm-functions-catalog/not-exist:latest
-+conditions:
-+- type: Rendered
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/not-exist:latest: exit code 125
-+exitCode: 125
-+message: |-
-+mutationSteps:
-+pipeline.run: already handled error
-+pkg.render: pkg .:
-+reason: RenderFailed
-+renderStatus:
++  - image: ghcr.io/kptdev/krm-functions-catalog/not-exist:latest
 +status:
-+status: False
-+stderr: |-
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/not-exist:latest: exit code 125
++    mutationSteps:
++      exitCode: 125

@@ -3,39 +3,39 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configMap:
--pkg: root
-+labels:
-+pkg: root
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+conditions:
-+- type: Rendered
-+configMap:
-+errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
-+exitCode: 0
-+message: |-
-+mutationSteps:
-+pipeline.run: pkg ./sub2: already handled error
-+pkg.render: pkg .:
-+pkg: root
-+reason: RenderFailed
-+renderStatus:
+-      configMap:
+-        pkg: root
++  labels:
++    pkg: root
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      pkg: root
 +status:
-+status: False
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+exitCode: 0
-+- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+exitCode: 0
-+validationSteps:
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+errorResults:
-+- message: fail: intentional failure for testing
-+exitCode: 1
-+results:
-+- message: fail: intentional failure for testing
-+severity: error
-+severity: error
-+stderr: failed to evaluate function: error: function failure
++  conditions:
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: pkg ./sub2: already handled error
++    reason: RenderFailed
++    status: False
++  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++    mutationSteps:
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      exitCode: 0
++    validationSteps:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      errorResults:
++      - message: fail: intentional failure for testing
++        severity: error
++      exitCode: 1
++      results:
++      - message: fail: intentional failure for testing
++        severity: error
++      stderr: failed to evaluate function: error: function failure
 diff --git a/service.yaml b/service.yaml
 index NORMALIZED 100644
 --- a/service.yaml
@@ -43,21 +43,21 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Service
  metadata:
- name: root-service
-+labels:
-+pkg: root
+   name: root-service
++  labels:
++    pkg: root
  spec:
- ports:
- - port: 80
-+selector:
-+pkg: root
+   ports:
+   - port: 80
++  selector:
++    pkg: root
 diff --git a/sub1/Kptfile b/sub1/Kptfile
 index NORMALIZED 100644
 --- a/sub1/Kptfile
 +++ b/sub1/Kptfile
 @@ NORMALIZED @@
-+labels:
-+pkg: sub1
++  labels:
++    pkg: sub1
 diff --git a/sub1/deployment.yaml b/sub1/deployment.yaml
 index NORMALIZED 100644
 --- a/sub1/deployment.yaml
@@ -65,25 +65,25 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: sub1-deployment
-+labels:
-+pkg: sub1
+   name: sub1-deployment
++  labels:
++    pkg: sub1
  spec:
- replicas: 1
-+selector:
-+matchLabels:
-+pkg: sub1
-+template:
-+metadata:
-+labels:
-+pkg: sub1
+   replicas: 1
++  selector:
++    matchLabels:
++      pkg: sub1
++  template:
++    metadata:
++      labels:
++        pkg: sub1
 diff --git a/sub2/Kptfile b/sub2/Kptfile
 index NORMALIZED 100644
 --- a/sub2/Kptfile
 +++ b/sub2/Kptfile
 @@ NORMALIZED @@
-+labels:
-+pkg: sub2
++  labels:
++    pkg: sub2
 diff --git a/sub2/deployment.yaml b/sub2/deployment.yaml
 index NORMALIZED 100644
 --- a/sub2/deployment.yaml
@@ -91,18 +91,18 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: sub2-deployment
-+labels:
-+pkg: sub2
+   name: sub2-deployment
++  labels:
++    pkg: sub2
  spec:
- replicas: 2
-+selector:
-+matchLabels:
-+pkg: sub2
-+template:
-+metadata:
-+labels:
-+pkg: sub2
+   replicas: 2
++  selector:
++    matchLabels:
++      pkg: sub2
++  template:
++    metadata:
++      labels:
++        pkg: sub2
 diff --git a/sub2/starlark-fn-failure.yaml b/sub2/starlark-fn-failure.yaml
 index NORMALIZED 100644
 --- a/sub2/starlark-fn-failure.yaml
@@ -110,19 +110,19 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: StarlarkRun
  metadata:
- name: always-fail
-+labels:
-+pkg: sub2
+   name: always-fail
++  labels:
++    pkg: sub2
  source: |
- def fail_fn(items):
- fail("intentional failure for testing")
+   def fail_fn(items):
+     fail("intentional failure for testing")
 diff --git a/sub3/Kptfile b/sub3/Kptfile
 index NORMALIZED 100644
 --- a/sub3/Kptfile
 +++ b/sub3/Kptfile
 @@ NORMALIZED @@
-+labels:
-+pkg: root
++  labels:
++    pkg: root
 diff --git a/sub3/deployment.yaml b/sub3/deployment.yaml
 index NORMALIZED 100644
 --- a/sub3/deployment.yaml
@@ -130,15 +130,15 @@ index NORMALIZED 100644
 @@ NORMALIZED @@
  kind: Deployment
  metadata:
- name: sub3-deployment
-+labels:
-+pkg: root
+   name: sub3-deployment
++  labels:
++    pkg: root
  spec:
- replicas: 3
-+selector:
-+matchLabels:
-+pkg: root
-+template:
-+metadata:
-+labels:
-+pkg: root
+   replicas: 3
++  selector:
++    matchLabels:
++      pkg: root
++  template:
++    metadata:
++      labels:
++        pkg: root

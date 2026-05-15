@@ -27,10 +27,10 @@ index 1234567..89abcde 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,4 +1,5 @@
--  message: |
--  reason: RenderFailed
+-message: |
+-reason: RenderFailed
 +reason: RenderFailed
-+  message: |
++message: |
  status: "False"`
 
 	expected := `diff --git a/Kptfile b/Kptfile
@@ -73,8 +73,8 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--kind: Kptfile
-+kind: Kptfile`
+- kind: Kptfile
++ kind: Kptfile`
 
 	got, err := normalizeDiff(input, "")
 	if err != nil {
@@ -164,30 +164,22 @@ index ccccccc..ddddddd 100644
 	}
 }
 
-func TestNormalizeDiff_KptfileMultilineAndTabOrderInsensitive(t *testing.T) {
+func TestNormalizeDiff_KptfileIndentationChangeDetected(t *testing.T) {
 	actual := `diff --git a/Kptfile b/Kptfile
 index 1234567..89abcde 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,5 +1,8 @@
--message: |-
--  pkg.render: pkg .:
-+reason: RenderFailed
-+	pipeline.run: pkg ./subpkg: already handled error
-+message: |-
- status: "False"`
+@@ -1,2 +1,2 @@
+-  labels: foo
++  labels: bar`
 
 	expected := `diff --git a/Kptfile b/Kptfile
 index fedcba9..7654321 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,5 +1,8 @@
--  pkg.render: pkg .:
--message: |-
-+message: |-
-+pipeline.run: pkg ./subpkg: already handled error
-+reason: RenderFailed
- status: "False"`
+@@ -1,2 +1,2 @@
+-labels: foo
++labels: bar`
 
 	gotActual, err := normalizeDiff(actual, "")
 	if err != nil {
@@ -198,8 +190,8 @@ index fedcba9..7654321 100644
 		t.Fatalf("normalizeDiff(expected) failed: %v", err)
 	}
 
-	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
-		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	if diff := cmp.Diff(gotExpected, gotActual); diff == "" {
+		t.Fatalf("expected indentation-only changes to remain detectable after normalization")
 	}
 }
 
@@ -496,10 +488,8 @@ index fedcba9..7654321 100644
 	}
 }
 
-func TestNormalizeDiff_NonKptfileIndentDriftInsensitive(t *testing.T) {
-	// Goldens committed in this branch stripped YAML indentation from
-	// non-Kptfile hunks, while the actual fn output preserves 2-space
-	// indent. Both sides should normalize to the same form.
+
+func TestNormalizeDiff_NonKptfileIndentationChangeDetected(t *testing.T) {
 	actual := `diff --git a/resources.yaml b/resources.yaml
 index 1234567..89abcde 100644
 --- a/resources.yaml
@@ -533,15 +523,14 @@ index fedcba9..7654321 100644
 		t.Fatalf("normalizeDiff(expected) failed: %v", err)
 	}
 
-	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
-		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	if diff := cmp.Diff(gotExpected, gotActual); diff == "" {
+		t.Fatalf("expected indentation-only changes to remain detectable after normalization")
 	}
 }
 
 func TestNormalizeDiff_NonKptfilePreservesContextLines(t *testing.T) {
 	// Unlike Kptfile diffs (where context lines are unstable anchors
-	// and dropped), non-Kptfile diffs keep context lines — they just
-	// get their leading whitespace stripped.
+	// and dropped), non-Kptfile diffs keep context lines as-is.
 	input := `diff --git a/resources.yaml b/resources.yaml
 index 1234567..89abcde 100644
 --- a/resources.yaml
@@ -558,7 +547,7 @@ index 1234567..89abcde 100644
 		t.Fatalf("normalizeDiff failed: %v", err)
 	}
 
-	for _, want := range []string{" kind: Deployment", " metadata:", " name: nginx-deployment", "+namespace: staging", " spec:"} {
+	for _, want := range []string{" kind: Deployment", " metadata:", "   name: nginx-deployment", "+  namespace: staging", " spec:"} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("expected normalized output to contain %q, got:\n%s", want, got)
 		}
@@ -586,21 +575,14 @@ index 1234567..89abcde 100644
 		t.Fatalf("normalizeDiff failed: %v", err)
 	}
 
-	if !strings.Contains(got, "+- image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.1\n+configMap:\n+namespace: staging") {
+	if !strings.Contains(got, "+      - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.1\n+        configMap:\n+          namespace: staging") {
 		t.Fatalf("expected configMap lines to stay grouped with set-namespace image line, got:\n%s", got)
 	}
 }
 
-// TestNormalizeDiff_StripREAppliesAfterKptfileIndentStrip pins the contract
-// that per-test diffStripRegEx patterns are evaluated against the
-// post-indent-strip form of Kptfile +/- lines. Test configs (e.g.
-// image-pull-policy-never, missing-fn-image) therefore use `\s*` rather
-// than `\s+` when matching keys like `stderr:` so they survive the
-// Kptfile indent-stripping step. This test locks that behavior in so
-// future normalizer changes can't silently re-break the interaction.
-func TestNormalizeDiff_StripREAppliesAfterKptfileIndentStrip(t *testing.T) {
-	// Raw pre-normalization diff, as produced by git diff against a Kptfile
-	// where the rendered pipeline wrote a multi-line stderr block.
+// TestNormalizeDiff_StripREMatchesIndentedKptfileLines ensures strip regexes
+// are evaluated against Kptfile diff lines with their original indentation.
+func TestNormalizeDiff_StripREMatchesIndentedKptfileLines(t *testing.T) {
 	input := `diff --git a/Kptfile b/Kptfile
 index 1234567..89abcde 100644
 --- a/Kptfile
@@ -614,10 +596,7 @@ index 1234567..89abcde 100644
 +        stderr: |-
 +          Error: ghcr.io/kptdev/krm-functions-catalog/dne:latest: image not known`
 
-	// \s* (not \s+) is the key: after the normalizer strips the leading
-	// whitespace off Kptfile +/- lines, the regex still has to match
-	// `+stderr:` with zero spaces after the `+`.
-	stripRE := `\+\s*stderr:|Error:.*image not known`
+	stripRE := `\+\s+stderr:|Error:.*image not known`
 
 	got, err := normalizeDiff(input, stripRE)
 	if err != nil {
@@ -631,15 +610,13 @@ index 1234567..89abcde 100644
 		t.Fatalf("expected stderr body (matching Error:.*image not known) to be stripped, got:\n%s", got)
 	}
 
-	// Sanity: the relaxed \s* also matches the pre-indent-strip form, so a
-	// stripRE authored for the raw diff still wins after normalization.
-	stripREStrictPlus := `\+\s+stderr:` // old form with \s+
-	gotStrict, err := normalizeDiff(input, stripREStrictPlus)
+	stripRENoSpace := `\+stderr:`
+	gotStrict, err := normalizeDiff(input, stripRENoSpace)
 	if err != nil {
 		t.Fatalf("normalizeDiff failed: %v", err)
 	}
 	if !strings.Contains(gotStrict, "stderr:") {
-		t.Fatalf("regression-guard: the tight \\s+ pattern *should* fail to strip the post-indent-strip line (that's the bug we fixed); got:\n%s", gotStrict)
+		t.Fatalf("expected indented stderr line to remain when strip regex does not allow spaces; got:\n%s", gotStrict)
 	}
 }
 

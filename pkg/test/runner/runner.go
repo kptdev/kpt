@@ -630,6 +630,14 @@ func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath strin
 		}
 	}
 	actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
+
+	if err != nil {
+		return err
+	}
+	actualDiff, err = normalizeDiff(
+		actualDiff,
+		r.testCase.Config.DiffStripRegEx,
+	)
 	if err != nil {
 		return err
 	}
@@ -747,7 +755,7 @@ func (n *diffNormalizer) isKptfileDiffHeader(line string) bool {
 }
 
 func (n *diffNormalizer) normalizePayload(payload string) string {
-	payload = strings.TrimLeft(payload, " \t")
+
 	if m := n.doubleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
 		payload = m[1] + m[2]
 	} else if m := n.singleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
@@ -766,6 +774,10 @@ type block struct {
 	sortable bool
 }
 
+func indentOf(line string) int {
+	return len(line) - len(strings.TrimLeft(line, " \t"))
+}
+
 func (n *diffNormalizer) sortChunk(chunk []string) {
 	if len(chunk) <= 1 {
 		return
@@ -779,12 +791,19 @@ func (n *diffNormalizer) sortChunk(chunk []string) {
 			continue
 		}
 
+		baseIndent := indentOf(chunk[i])
 		j := i + 1
-		for j < len(chunk) && !n.isSortableMapKey(chunk[j]) {
+		for j < len(chunk) && indentOf(chunk[j]) > baseIndent {
 			j++
 		}
 		blocks = append(blocks, block{lines: append([]string(nil), chunk[i:j]...), sortable: true})
 		i = j
+	}
+	// Recursively sort children within each multi-line sortable block.
+	for i := range blocks {
+		if blocks[i].sortable && len(blocks[i].lines) > 1 {
+			n.sortChunk(blocks[i].lines[1:])
+		}
 	}
 
 	for i := 0; i < len(blocks); {
@@ -885,7 +904,7 @@ func (n *diffNormalizer) normalize(diff string) string {
 			!strings.HasPrefix(line, "+++") &&
 			!strings.HasPrefix(line, "---") {
 			// Ignore indentation-only drift in Kptfile changed lines.
-			line = line[:1] + strings.TrimLeft(line[1:], " \t")
+
 			if n.re != nil && n.re.MatchString(line) {
 				continue
 			}
@@ -919,7 +938,7 @@ func (n *diffNormalizer) normalize(diff string) string {
 		if len(line) > 0 && (line[0] == ' ' || line[0] == '+' || line[0] == '-') &&
 			!strings.HasPrefix(line, "+++") && !strings.HasPrefix(line, "---") &&
 			!strings.HasPrefix(line, "diff --git") {
-			line = line[:1] + strings.TrimLeft(line[1:], " \t")
+
 		}
 		n.out = append(n.out, line)
 	}

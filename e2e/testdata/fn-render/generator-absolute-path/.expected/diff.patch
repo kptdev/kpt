@@ -3,17 +3,17 @@ index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ NORMALIZED @@
--configPath: starlark-httpbin.yaml
-+- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+conditions:
-+- type: Rendered
-+configPath: starlark-httpbin.yaml
-+exitCode: 0
-+mutationSteps:
-+reason: RenderSuccess
-+renderStatus:
+-      configPath: starlark-httpbin.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-httpbin.yaml
 +status:
-+status: True
++  conditions:
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
++  renderStatus:
++    mutationSteps:
++      exitCode: 0
 diff --git a/another/file/out.yaml b/another/file/out.yaml
 new file mode 100644
 index NORMALIZED
@@ -23,13 +23,13 @@ index NORMALIZED
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+name: httpbin
++  name: httpbin
 +spec:
-+replicas: 4
-+template:
-+spec:
-+containers:
-+- image: kennethreitz/httpbin
-+name: httpbin
-+ports:
-+- containerPort: 9876
++  replicas: 4
++  template:
++    spec:
++      containers:
++      - image: kennethreitz/httpbin
++        name: httpbin
++        ports:
++        - containerPort: 9876
