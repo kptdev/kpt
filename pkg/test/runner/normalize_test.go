@@ -488,7 +488,6 @@ index fedcba9..7654321 100644
 	}
 }
 
-
 func TestNormalizeDiff_NonKptfileIndentationChangeDetected(t *testing.T) {
 	actual := `diff --git a/resources.yaml b/resources.yaml
 index 1234567..89abcde 100644
