@@ -37,11 +37,11 @@ func (in *Result) DeepCopyInto(out *Result) {
 }
 
 func DeepCopyIntoResult(in *framework.Result, out *framework.Result) {
-	(*out).Severity = (*in).Severity
-	(*out).Message = (*in).Message
-	maps.Copy((*out).Tags, (*in).Tags)
-	*(*out).File = *(*in).File
-	*(*out).Field = *(*in).Field
+	out.Severity = in.Severity
+	out.Message = in.Message
+	maps.Copy(out.Tags, in.Tags)
+	*out.File = *in.File
+	*out.Field = *in.Field
 
 	// TODO: what to do with CurrentValue and ProposedValue of Field?
 }
