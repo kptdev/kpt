@@ -12,7 +12,7 @@ index NORMALIZED 100644
 +  - type: Rendered
 +    message: |
 +      Field: `pipeline.mutators[0].configPath`
-+      Reason: functionConfig must exist in the current package
++      Reason: functionConfig resource for mutator "set-labels" is missing from path "db/labelconfig.yaml", this also occurs if "db/labelconfig.yaml" is part of a subpackage
 +      Value: db/labelconfig.yaml
 +      pkg.render: pkg .: Kptfile is invalid:
 +    reason: RenderFailed
