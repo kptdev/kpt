@@ -24,7 +24,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -79,7 +79,7 @@ func TestNewPkg(t *testing.T) {
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, test.workingDir))
 			defer revert()
-			absInputPath, _, err := path.ResolveAbsAndRelPaths(test.inputPath)
+			absInputPath, _, err := pathutil.ResolveAbsAndRelPaths(test.inputPath)
 			assert.NoError(t, err)
 			p, err := New(filesys.FileSystemOrOnDisk{}, absInputPath)
 			assert.NoError(t, err)
@@ -163,18 +163,18 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, "rootPkgParentDir", test.workingDir))
 			defer revert()
-			absPkgPath, _, err := path.ResolveAbsAndRelPaths(test.pkgPath)
+			absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(test.pkgPath)
 			assert.NoError(t, err)
 			parent, err := New(filesys.FileSystemOrOnDisk{}, absPkgPath)
 			assert.NoError(t, err)
 			if test.rootPkgParentDirPath != "" {
-				absRootPkgPath, _, err := path.ResolveAbsAndRelPaths(test.rootPkgParentDirPath)
+				absRootPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(test.rootPkgParentDirPath)
 				assert.NoError(t, err)
 				rootPkg, err := New(filesys.FileSystemOrOnDisk{}, absRootPkgPath)
 				assert.NoError(t, err)
 				parent.rootPkgParentDirPath = string(rootPkg.UniquePath)
 			}
-			absSubPkgPath, _, err := path.ResolveAbsAndRelPaths(test.subPkgPath)
+			absSubPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(test.subPkgPath)
 			assert.NoError(t, err)
 			subPkg, err := New(filesys.FileSystemOrOnDisk{}, absSubPkgPath)
 			assert.NoError(t, err)
@@ -278,7 +278,7 @@ func TestDirectSubpackages(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, nil)
 			defer os.RemoveAll(pkgPath)
-			absPkgPath, _, err := path.ResolveAbsAndRelPaths(pkgPath)
+			absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(pkgPath)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

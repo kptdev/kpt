@@ -29,7 +29,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/lib/util/get"
 	"github.com/kptdev/kpt/pkg/lib/util/parse"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -97,7 +97,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 
 	r.Get.Git = &t.Git
-	absDestPath, _, err := path.ResolveAbsAndRelPaths(t.Destination)
+	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(t.Destination)
 	if err != nil {
 		return err
 	}

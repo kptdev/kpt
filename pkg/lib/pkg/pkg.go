@@ -31,7 +31,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	regclientref "github.com/regclient/regclient/types/ref"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -538,7 +538,7 @@ func ReadRGFile(pkgPath, rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if filepath.Base(rgfile) == rgfile {
 		absPath = filepath.Join(pkgPath, rgfile)
 	} else {
-		rgFilePath, _, err := path.ResolveAbsAndRelPaths(rgfile)
+		rgFilePath, _, err := pathutil.ResolveAbsAndRelPaths(rgfile)
 		if err != nil {
 			return nil, &RGError{
 				Path: types.UniquePath(rgfile),

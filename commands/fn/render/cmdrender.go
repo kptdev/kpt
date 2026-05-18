@@ -27,7 +27,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -126,7 +126,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 		// capture the content to be written
 		output = &outContent
 	}
-	absPkgPath, _, err := path.ResolveAbsAndRelPaths(r.pkgPath)
+	absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(r.pkgPath)
 	if err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ import (
 	"github.com/kptdev/kpt/pkg/kptpkg"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -67,7 +67,7 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 		args = append(args, pkg.CurDir)
 	}
 
-	absPath, _, err := path.ResolveAbsAndRelPaths(args[0])
+	absPath, _, err := pathutil.ResolveAbsAndRelPaths(args[0])
 	if err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -41,7 +41,7 @@ type ResourceGroupPathManifestReader struct {
 // Kptfile data. If unable to generate the ResourceGroup inventory
 // object from the Kptfile, it is NOT an error.
 func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, error) {
-	absPkgPath, _, err := path.ResolveAbsAndRelPaths(r.PkgPath)
+	absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(r.PkgPath)
 	if err != nil {
 		return nil, err
 	}

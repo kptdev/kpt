@@ -33,7 +33,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	"github.com/kptdev/kpt/pkg/lib/util/fetch"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/lib/util/stack"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -122,7 +122,7 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	absDestPath, _, err := path.ResolveAbsAndRelPaths(c.Destination)
+	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(c.Destination)
 	if err != nil {
 		return err
 	}

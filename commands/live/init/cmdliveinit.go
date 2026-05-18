@@ -33,7 +33,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -140,7 +140,7 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
-	absPath, _, err := path.ResolveAbsAndRelPaths(dir)
+	absPath, _, err := pathutil.ResolveAbsAndRelPaths(dir)
 	if err != nil {
 		return err
 	}
