@@ -133,25 +133,36 @@ func TestDeepCopyIntoResult(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("nil", func(t *testing.T) {
+		out := &framework.Result{}
+		assert.NotPanics(t, func() {
+			DeepCopyIntoResult(nil, out)
+		})
+		assert.NotNil(t, out)
+	})
 }
 
-func TestDeepCopyIntoResultCurrentValue(t *testing.T) {
+func TestDeepCopyIntoResultFieldValues(t *testing.T) {
 	testCases := map[string]struct {
 		value any
 	}{
-		"int CurrentValue": {
+		"nil": {
+			value: nil,
+		},
+		"int": {
 			value: 3,
 		},
-		"float CurrentValue": {
+		"float": {
 			value: 3.14,
 		},
-		"string CurrentValue": {
+		"string": {
 			value: "a",
 		},
-		"slice CurrentValue": {
+		"slice": {
 			value: []any{"a", "b", "c"},
 		},
-		"map CurrentValue": {
+		"map": {
 			value: map[string]any{
 				"a": "b",
 				"c": "d",
@@ -163,7 +174,8 @@ func TestDeepCopyIntoResultCurrentValue(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			in := &framework.Result{
 				Field: &framework.Field{
-					CurrentValue: tc.value,
+					CurrentValue:  tc.value,
+					ProposedValue: tc.value, // for coverage
 				},
 			}
 
@@ -173,6 +185,74 @@ func TestDeepCopyIntoResultCurrentValue(t *testing.T) {
 			})
 
 			assert.Equal(t, in.Field.CurrentValue, out.Field.CurrentValue)
+			assert.Equal(t, in.Field.ProposedValue, out.Field.ProposedValue)
 		})
 	}
+}
+
+func TestDeepCopyIntoResults(t *testing.T) {
+	testCases := map[string]struct {
+		in *framework.Results
+	}{
+		"nil": {
+			in: nil,
+		},
+		"empty": {
+			in: &framework.Results{},
+		},
+		"few": {
+			in: &framework.Results{
+				{
+					Severity: framework.Error,
+					Message:  "message",
+				},
+				{
+					Severity: framework.Info,
+					Message:  "message2",
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			out := &framework.Results{}
+			require.NotPanics(t, func() {
+				DeepCopyIntoResults(tc.in, out)
+			})
+
+			expectedLen := 0
+			if tc.in != nil {
+				expectedLen = len(*tc.in)
+			}
+			assert.Len(t, *out, expectedLen)
+		})
+	}
+}
+
+func TestDeepCopyInterfacePanics(t *testing.T) {
+	t.Run("unhandled type", func(t *testing.T) {
+		assert.PanicsWithValue(t, "cannot deepcopy type map[string]string", func() {
+			var in any = map[string]string{
+				"a": "b",
+			}
+
+			_ = DeepCopyInterface(in)
+		})
+	})
+
+	t.Run("max depth", func(t *testing.T) {
+		assert.PanicsWithValue(t, "reached max deepcopy depth of 1024", func() {
+			var in = map[string]any{}
+			current := &in
+
+			for range 1025 {
+				next := make(map[string]any)
+				(*current)["a"] = next
+				current = &next
+			}
+
+			_ = DeepCopyInterface(in)
+		})
+	})
 }

@@ -15,6 +15,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"maps"
 
@@ -23,6 +24,10 @@ import (
 )
 
 func DeepCopyIntoResult(in *framework.Result, out *framework.Result) {
+	*out = framework.Result{}
+	if in == nil {
+		return
+	}
 	*out = *in
 	if in.Tags != nil {
 		out.Tags = make(map[string]string, len(in.Tags))
@@ -51,6 +56,12 @@ func DeepCopyIntoResult(in *framework.Result, out *framework.Result) {
 }
 
 func DeepCopyIntoResults(in *framework.Results, out *framework.Results) {
+	if in == nil {
+		if out != nil {
+			*out = make(framework.Results, 0)
+		}
+		return
+	}
 	*out = make(framework.Results, len(*in))
 	for i := range *in {
 		if (*in)[i] != nil {
@@ -66,15 +77,11 @@ func DeepCopyInterface(in any) any {
 	return deepCopyInterface(in, 0)
 }
 
-const maxDepth = 2 << 8
+const maxDepth = 1024
 
 func deepCopyInterface(in any, depth uint) any {
 	if depth > maxDepth {
 		panic(fmt.Sprintf("reached max deepcopy depth of %d", maxDepth))
-	}
-
-	if in == nil {
-		return in
 	}
 
 	// return all primitive / non-pointer types
@@ -84,18 +91,20 @@ func deepCopyInterface(in any, depth uint) any {
 		float32, float64,
 		complex64, complex128,
 		bool,
-		string:
+		string,
+		json.Number:
 		return t
+	// inspired by k8s.io/apimachinery/pkg/runtime.DeepCopyJSONValue
 	case map[string]any:
 		clone := make(map[string]interface{}, len(t))
 		for k, v := range t {
-			clone[k] = DeepCopyInterface(v)
+			clone[k] = deepCopyInterface(v, depth+1)
 		}
 		return clone
 	case []any:
 		clone := make([]interface{}, len(t))
 		for i, v := range t {
-			clone[i] = DeepCopyInterface(v)
+			clone[i] = deepCopyInterface(v, depth+1)
 		}
 		return clone
 	default:
