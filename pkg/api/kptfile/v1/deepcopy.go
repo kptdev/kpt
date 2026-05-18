@@ -18,9 +18,12 @@ import (
 	"github.com/kptdev/kpt/pkg/api/common"
 )
 
-func (in *Result) DeepCopyInto(out *Result) {
+func (in *PipelineStepResult) DeepCopyInto(out *PipelineStepResult) {
 	*out = *in
 	if in.Results != nil {
 		common.DeepCopyIntoResults(&in.Results, &out.Results)
+	}
+	if in.ErrorResults != nil {
+		common.DeepCopyIntoResults(&in.ErrorResults, &out.ErrorResults)
 	}
 }

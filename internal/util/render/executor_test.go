@@ -818,7 +818,7 @@ func TestCaptureStepResult_FromFnResults(t *testing.T) {
 
 	// First result — error with full resource ref and file
 	assert.Equal(t, "banned key found", step.Results[0].Message)
-	assert.Equal(t, "error", step.Results[0].Severity)
+	assert.Equal(t, framework.Error, step.Results[0].Severity)
 	assert.Equal(t, "v1", step.Results[0].ResourceRef.APIVersion)
 	assert.Equal(t, "ConfigMap", step.Results[0].ResourceRef.Kind)
 	assert.Equal(t, "my-cm", step.Results[0].ResourceRef.Name)
@@ -828,7 +828,7 @@ func TestCaptureStepResult_FromFnResults(t *testing.T) {
 
 	// Second result — warning, no resource ref
 	assert.Equal(t, "missing label", step.Results[1].Message)
-	assert.Equal(t, "warning", step.Results[1].Severity)
+	assert.Equal(t, framework.Warning, step.Results[1].Severity)
 	assert.Nil(t, step.Results[1].ResourceRef)
 
 	// ErrorResults should only contain the error-severity item
@@ -865,47 +865,6 @@ func TestPreExecFailureStep_EmptyFn(t *testing.T) {
 	assert.Empty(t, step.Image)
 	assert.Empty(t, step.ExecPath)
 	assert.Equal(t, "no functions", step.ExecutionError)
-}
-
-func TestFrameworkResultsToItems_Nil(t *testing.T) {
-	items := frameworkResultsToItems(nil)
-	assert.Nil(t, items)
-}
-
-func TestFrameworkResultsToItems_WithFieldRef(t *testing.T) {
-	results := framework.Results{
-		{
-			Message:  "wrong value",
-			Severity: framework.Error,
-			Field: &framework.Field{
-				Path:          ".spec.replicas",
-				CurrentValue:  "invalid",
-				ProposedValue: 3,
-			},
-		},
-	}
-	items := frameworkResultsToItems(results)
-	assert.Len(t, items, 1)
-	assert.Equal(t, ".spec.replicas", items[0].Field.Path)
-	assert.Equal(t, "invalid", items[0].Field.CurrentValue)
-	assert.Equal(t, "3", items[0].Field.ProposedValue)
-}
-
-func TestFrameworkResultsToItems_NilFieldValues(t *testing.T) {
-	results := framework.Results{
-		{
-			Message:  "field info",
-			Severity: framework.Info,
-			Field: &framework.Field{
-				Path: ".spec.replicas",
-			},
-		},
-	}
-	items := frameworkResultsToItems(results)
-	assert.Len(t, items, 1)
-	assert.Equal(t, ".spec.replicas", items[0].Field.Path)
-	assert.Empty(t, items[0].Field.CurrentValue)
-	assert.Empty(t, items[0].Field.ProposedValue)
 }
 
 func TestUpdateRenderStatus_WritesRenderStatus(t *testing.T) {
