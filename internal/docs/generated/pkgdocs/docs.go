@@ -7,22 +7,27 @@ The ` + "`" + `pkg` + "`" + ` command group contains subcommands for fetching, u
 from git repositories.
 `
 
-var CatShort = `Print the resources in a file/directory`
+var CatShort = `Print the contents of a package`
 var CatLong = `
   kpt pkg cat [FILE | DIR]
 
 Args:
 
   FILE | DIR:
-    Path to a directory either a directory containing files with KRM resources, or
-    a file with KRM resource(s). Defaults to the current directory.
+    Path to a file or a directory containing a kpt package. Displays all
+    package files: KRM resources (YAML/JSON) are formatted by default,
+    and non-KRM text files (e.g., README.md) are shown as raw content.
+    Binary files are skipped. Defaults to the current directory.
 `
 var CatExamples = `
-  # Print resource from a file.
+  # Print all package contents from current directory.
+  $ kpt pkg cat
+
+  # Print a single resource file.
   $ kpt pkg cat path/to/deployment.yaml
 
-  # Print resources from current directory.
-  $ kpt pkg cat
+  # Print a non-KRM file.
+  $ kpt pkg cat path/to/README.md
 `
 
 var DiffShort = `Show differences between a local package and upstream.`
