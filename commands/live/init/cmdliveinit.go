@@ -141,11 +141,9 @@ func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
 
 func (r *Runner) runE(_ *cobra.Command, args []string) error {
 	const op errors.Op = "cmdliveinit.runE"
-	name, err := validateName(r.Name)
-	if err != nil {
+	if err := trimAndValidateName(&r.Name); err != nil {
 		return errors.E(op, err)
 	}
-	r.Name = name
 	if len(args) == 0 {
 		// default to the current working directory
 		cwd, err := os.Getwd()
@@ -356,18 +354,19 @@ func generateHash(namespace, name string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// validateName rejects empty, whitespace-only, and invalid RFC 1123 subdomain names.
-// Returns the trimmed name on success.
-func validateName(name string) (string, error) {
-	trimmed := strings.TrimSpace(name)
+// trimAndValidateName rejects empty, whitespace-only, and invalid RFC 1123 subdomain names.
+// It updates name with the trimmed value on success.
+func trimAndValidateName(name *string) error {
+	trimmed := strings.TrimSpace(*name)
 	if trimmed == "" {
-		return "", errNameRequired
+		return errNameRequired
 	}
 	if errs := validation.IsDNS1123Subdomain(trimmed); len(errs) > 0 {
-		return "", fmt.Errorf("--name %q is not a valid Kubernetes resource name: %s",
+		return fmt.Errorf("--name %q is not a valid Kubernetes resource name: %s",
 			trimmed, strings.Join(errs, "; "))
 	}
-	return trimmed, nil
+	*name = trimmed
+	return nil
 }
 
 // kptfileInventoryEmpty returns true if the Inventory structure

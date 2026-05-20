@@ -89,7 +89,7 @@ metadata:
     cli-utils.sigs.k8s.io/inventory-id: SSSSSSSSSS-RRRRR
 `
 
-func TestValidateName(t *testing.T) {
+func TestTrimAndValidateName(t *testing.T) {
 	testCases := map[string]struct {
 		name        string
 		expectError bool
@@ -140,14 +140,14 @@ func TestValidateName(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			result, err := validateName(tc.name)
+			name := tc.name
+			err := trimAndValidateName(&name)
 			if tc.expectError {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.errContains)
-				assert.Empty(t, result)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, strings.TrimSpace(tc.name), result)
+				assert.Equal(t, strings.TrimSpace(tc.name), name)
 			}
 		})
 	}
