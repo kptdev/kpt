@@ -35,7 +35,7 @@ func init() {
 
 const (
 	noInventoryObjErrorMsg = `
-Error: Package uninitialized. Please run "kpt live init --name=DEPLOYMENT_NAME" command.
+Error: Package uninitialized. Please run "kpt live init --name=deployment-name" command.
 
 The --name flag is required and must be a stable identifier (like a Helm release
 name). If you lose your local package and re-initialize, using the same --name
