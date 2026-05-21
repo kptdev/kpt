@@ -26,8 +26,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -92,7 +92,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		return runner.HandleError(r.Ctx, err)
 	}
 
-	resolvedPath, err := argutil.ResolveSymlink(r.Ctx, args[0])
+	resolvedPath, err := argsutil.ResolveSymlink(r.Ctx, args[0])
 	if err != nil {
 		return runner.HandleError(r.Ctx, err)
 	}
