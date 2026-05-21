@@ -723,8 +723,8 @@ items:
     message: test
     field:
       path: ".spec.replicas"
-      suggestedValue: 3
       currentValue: 0
+      suggestedValue: 3
 `,
 			expected: []fnresultv1.ResultItem{
 				{
@@ -734,6 +734,39 @@ items:
 						Path:          ".spec.replicas",
 						CurrentValue:  "0",
 						ProposedValue: "3",
+					},
+				},
+			},
+		},
+		"complex suggestedValue": {
+			input: `
+name: "apply-setters"
+items:
+  - severity: info
+    message: test
+    field:
+      path: ".spec.containers[0].resources"
+      currentValue:
+        requests:
+          memory: 512Mi
+          cpu: 1000m
+      suggestedValue:
+        requests:
+          memory: 1Gi
+          cpu: 1
+`,
+			expected: []fnresultv1.ResultItem{
+				{
+					Severity: framework.Info,
+					Message:  "test",
+					Field: &fnresultv1.Field{
+						Path: ".spec.containers[0].resources",
+						CurrentValue: `requests:
+  memory: 512Mi
+  cpu: 1000m`,
+						ProposedValue: `requests:
+  memory: 1Gi
+  cpu: 1`,
 					},
 				},
 			},

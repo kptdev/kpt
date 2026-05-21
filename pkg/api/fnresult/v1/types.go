@@ -16,6 +16,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -157,4 +158,46 @@ type Field struct {
 	CurrentValue string `yaml:"currentValue,omitempty" json:"currentValue,omitempty"`
 
 	ProposedValue string `yaml:"proposedValue,omitempty" json:"proposedValue,omitempty"`
+}
+
+var _ json.Unmarshaler = &Field{}
+var _ yaml.Unmarshaler = &Field{}
+
+func (in *Field) UnmarshalJSON(data []byte) error {
+	rnode, err := yaml.Parse(string(data))
+	if err != nil {
+		return fmt.Errorf("error parsing `field`: %v", err)
+	}
+
+	return in.unmarshalRNode(rnode)
+}
+
+func (in *Field) UnmarshalYAML(value *yaml.Node) error {
+	rnode := yaml.NewRNode(value)
+
+	return in.unmarshalRNode(rnode)
+}
+
+func (in *Field) unmarshalRNode(rnode *yaml.RNode) error {
+	if path, err := rnode.GetString("path"); err == nil {
+		in.Path = strings.TrimSpace(path)
+	}
+
+	if currentValue, err := rnode.Pipe(yaml.Lookup("currentValue")); err == nil {
+		in.CurrentValue, err = currentValue.String()
+		if err != nil {
+			return fmt.Errorf("error parsing `field.currentValue`: %v", err)
+		}
+		in.CurrentValue = strings.TrimSpace(in.CurrentValue)
+	}
+
+	if proposedValue, err := rnode.Pipe(yaml.Lookup("proposedValue")); err == nil {
+		in.ProposedValue, err = proposedValue.String()
+		if err != nil {
+			return fmt.Errorf("error parsing `field.proposedValue`: %v", err)
+		}
+		in.ProposedValue = strings.TrimSpace(in.ProposedValue)
+	}
+
+	return nil
 }
