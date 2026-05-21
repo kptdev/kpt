@@ -30,7 +30,9 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -690,6 +692,126 @@ func TestHasTagOrDigest(t *testing.T) {
 			if got := hasTagOrDigest(tt.image); got != tt.want {
 				t.Errorf("hasTagOrDigest(%q) = %v, want %v", tt.image, got, tt.want)
 			}
+		})
+	}
+}
+
+func TestMigrateLegacyResults(t *testing.T) {
+	testCases := map[string]struct {
+		input    string
+		expected []fnresultv1.ResultItem
+	}{
+		"no field or resourceRef": {
+			input: `
+name: "apply-setters"
+items:
+  - severity: info
+    message: test
+`,
+			expected: []fnresultv1.ResultItem{
+				{
+					Severity: framework.Info,
+					Message:  "test",
+				},
+			},
+		},
+		"int suggestedValue": {
+			input: `
+name: "apply-setters"
+items:
+  - severity: info
+    message: test
+    field:
+      path: ".spec.replicas"
+      suggestedValue: 3
+      currentValue: 0
+`,
+			expected: []fnresultv1.ResultItem{
+				{
+					Severity: framework.Info,
+					Message:  "test",
+					Field: &fnresultv1.Field{
+						Path:          ".spec.replicas",
+						CurrentValue:  "0",
+						ProposedValue: "3",
+					},
+				},
+			},
+		},
+		"resourceRef": {
+			input: `
+name: "apply-setters"
+items:
+  - severity: info
+    message: test
+    resourceRef:
+      metadata:
+        name: test-deployment
+        namespace: test-namespace
+`,
+			expected: []fnresultv1.ResultItem{
+				{
+					Severity: framework.Info,
+					Message:  "test",
+					ResourceRef: &yaml.ResourceIdentifier{
+						NameMeta: yaml.NameMeta{
+							Name:      "test-deployment",
+							Namespace: "test-namespace",
+						},
+					},
+				},
+			},
+		},
+		"non-legacy": {
+			input: `
+- severity: info
+  message: test
+  field:
+    path: ".spec.replicas"
+    proposedValue: 3
+    currentValue: 0
+  resourceRef:
+    name: test-deployment
+    namespace: test-namespace
+    apiVersion: apps/v1
+    kind: Deployment
+`,
+			expected: []fnresultv1.ResultItem{
+				{
+					Severity: framework.Info,
+					Message:  "test",
+					ResourceRef: &yaml.ResourceIdentifier{
+						NameMeta: yaml.NameMeta{
+							Name:      "test-deployment",
+							Namespace: "test-namespace",
+						},
+						TypeMeta: yaml.TypeMeta{
+							APIVersion: "apps/v1",
+							Kind:       "Deployment",
+						},
+					},
+					Field: &fnresultv1.Field{
+						Path:          ".spec.replicas",
+						CurrentValue:  "0",
+						ProposedValue: "3",
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			expected := &fnresultv1.Result{
+				Results: tc.expected,
+			}
+			actual := &fnresultv1.Result{}
+			rnode, err := yaml.Parse(tc.input)
+			require.NoError(t, err)
+
+			err = parseStructuredResult(rnode, actual)
+			require.NoError(t, err)
+			assert.Equal(t, expected, actual)
 		})
 	}
 }

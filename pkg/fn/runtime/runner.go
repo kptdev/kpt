@@ -392,8 +392,15 @@ func populateProposedValue(item *yaml.RNode, resultItem *fnresultv1.ResultItem) 
 	if resultItem.Field == nil {
 		resultItem.Field = &fnresultv1.Field{}
 	}
-	resultItem.Field.ProposedValue, err = sv.String()
-	return err
+
+	str, err := sv.String()
+	if err != nil {
+		return err
+	}
+
+	resultItem.Field.ProposedValue = strings.TrimSpace(str)
+
+	return nil
 }
 
 func populateResourceRef(item *yaml.RNode, resultItem *fnresultv1.ResultItem) error {

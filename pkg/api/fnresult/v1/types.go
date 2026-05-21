@@ -150,7 +150,7 @@ func (i *ResultItem) String() string {
 }
 
 // Field is a modified version of sigs.k8s.io/kustomize/kyaml/fn/framework.Field
-// where CurrentValue and ProposedValue is a string instead of an interface{}.
+// where CurrentValue and ProposedValue are strings instead of interface{} values.
 type Field struct {
 	Path string `yaml:"path,omitempty" json:"path,omitempty"`
 
