@@ -1,5 +1,17 @@
 // Copyright 2019 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 The kpt Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmdtree
 
@@ -33,10 +45,11 @@ var GraphStructures = []string{string(TreeStructurePackage)}
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
 // used for printing rather than updating or editing.
 type TreeWriter struct {
-	Writer    io.Writer
-	Root      string
-	Fields    []TreeWriterField
-	Structure TreeStructure
+	Writer      io.Writer
+	Root        string
+	Fields      []TreeWriterField
+	Structure   TreeStructure
+	NonKRMFiles map[string][]string // root-relative dir → file basenames in that dir, or relative paths after roll-up from subdirs
 }
 
 // TreeWriterField configures a Resource field to be included in the tree
@@ -52,10 +65,45 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	// create the new tree
 	tree := treeprint.New()
 
+	// p.sort sorts nodes within each package (side-effect) and returns sorted keys.
+	allKeys := p.sort(indexByPackage)
+
+	// Merge NonKRMFiles keys that already exist in the KRM index (these dirs
+	// already have branches). For dirs not in the index, roll files up to the
+	// nearest ancestor dir that IS in the index, prefixing with the relative path.
+	nonKRM := map[string][]string{}
+	if len(p.NonKRMFiles) > 0 {
+		krmKeys := map[string]bool{}
+		for _, k := range allKeys {
+			krmKeys[k] = true
+		}
+		for dir, files := range p.NonKRMFiles {
+			if krmKeys[dir] {
+				nonKRM[dir] = append(nonKRM[dir], files...)
+				continue
+			}
+			// Find nearest ancestor that is a known key.
+			ancestor := dir
+			for !krmKeys[ancestor] && ancestor != "." {
+				ancestor = filepath.Dir(ancestor)
+			}
+			if !krmKeys[ancestor] {
+				ancestor = "."
+			}
+			// Prefix filenames with the relative path from ancestor to dir.
+			rel, err := filepath.Rel(ancestor, dir)
+			if err != nil {
+				continue
+			}
+			for _, f := range files {
+				nonKRM[ancestor] = append(nonKRM[ancestor], filepath.Join(rel, f))
+			}
+		}
+	}
+
 	// add each package to the tree
 	treeIndex := map[string]treeprint.Tree{}
-	keys := p.sort(indexByPackage)
-	for _, pkg := range keys {
+	for _, pkg := range allKeys {
 		// create a branch for this package -- search for the parent package and create
 		// the branch under it -- requires that the keys are sorted
 		branch := tree
@@ -82,6 +130,35 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 			var err error
 			if _, err = p.doResource(indexByPackage[pkg][i], "", branch); err != nil {
 				return err
+			}
+		}
+
+		// print non-KRM files (skip files already rendered as KRM resources)
+		if len(nonKRM[pkg]) > 0 {
+			rendered := map[string]bool{}
+			for _, node := range indexByPackage[pkg] {
+				_ = kioutil.CopyLegacyAnnotations(node)
+				meta, _ := node.GetMeta()
+				if pathAnno := meta.Annotations[kioutil.PathAnnotation]; pathAnno != "" {
+					// pathAnno is relative to root; strip pkg prefix to get path relative to package
+					rel := pathAnno
+					if pkg != "." {
+						if r, err := filepath.Rel(pkg, pathAnno); err == nil {
+							rel = r
+						}
+					}
+					rendered[rel] = true
+				}
+			}
+			names := make([]string, 0, len(nonKRM[pkg]))
+			for _, name := range nonKRM[pkg] {
+				if !rendered[name] {
+					names = append(names, name)
+				}
+			}
+			sort.Strings(names)
+			for _, name := range names {
+				branch.AddNode(name)
 			}
 		}
 	}

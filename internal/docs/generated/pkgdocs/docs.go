@@ -211,6 +211,13 @@ var InitExamples = `
 var TreeShort = `Display resources, files and packages in a tree structure.`
 var TreeLong = `
   kpt pkg tree [DIR]
+
+Args:
+
+  DIR:
+    Path to a local package directory. Defaults to the current directory.
+    Displays KRM resources with their Kind and Name, and non-KRM text files
+    as plain filenames. Dotfiles and symlinks are excluded.
 `
 var TreeExamples = `
   # Show resources in the current directory.
