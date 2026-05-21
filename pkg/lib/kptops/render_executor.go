@@ -1063,9 +1063,9 @@ func captureStepResult(fn kptfilev1.Function, fnResults *fnresult.ResultList, re
 		last := fnResults.Items[len(fnResults.Items)-1]
 		step.Stderr = last.Stderr
 		step.ExitCode = last.ExitCode
-		step.Results = frameworkResultsToItems(last.Results)
+		step.Results = last.Results
 		for _, ri := range step.Results {
-			if ri.Severity == string(framework.Error) {
+			if ri.Severity == framework.Error {
 				step.ErrorResults = append(step.ErrorResults, ri)
 			}
 		}
@@ -1088,44 +1088,4 @@ func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStep
 		ExitCode:       1,
 		ExecutionError: err.Error(),
 	}
-}
-
-// frameworkResultsToItems converts framework.Results to []ResultItem.
-func frameworkResultsToItems(results framework.Results) []kptfilev1.ResultItem {
-	if len(results) == 0 {
-		return nil
-	}
-	items := make([]kptfilev1.ResultItem, len(results))
-	for i, r := range results {
-		items[i] = kptfilev1.ResultItem{
-			Message:  r.Message,
-			Severity: string(r.Severity),
-		}
-		if r.ResourceRef != nil {
-			items[i].ResourceRef = &kptfilev1.ResourceRef{
-				APIVersion: r.ResourceRef.APIVersion,
-				Kind:       r.ResourceRef.Kind,
-				Name:       r.ResourceRef.Name,
-				Namespace:  r.ResourceRef.Namespace,
-			}
-		}
-		if r.Field != nil {
-			items[i].Field = &kptfilev1.FieldRef{
-				Path: r.Field.Path,
-			}
-			if r.Field.CurrentValue != nil {
-				items[i].Field.CurrentValue = fmt.Sprintf("%v", r.Field.CurrentValue)
-			}
-			if r.Field.ProposedValue != nil {
-				items[i].Field.ProposedValue = fmt.Sprintf("%v", r.Field.ProposedValue)
-			}
-		}
-		if r.File != nil {
-			items[i].File = &kptfilev1.FileRef{
-				Path:  r.File.Path,
-				Index: r.File.Index,
-			}
-		}
-	}
-	return items
 }

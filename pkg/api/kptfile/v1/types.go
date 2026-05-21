@@ -15,17 +15,19 @@
 // Package defines Kptfile schema.
 // Version: v1
 // swagger:meta
+// +kubebuilder:object:generate=true
 package v1
 
 import (
 	"fmt"
 	"strings"
 
+	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 const (
 	KptFileName = "Kptfile"
@@ -267,7 +269,6 @@ type Subpackage struct {
 }
 
 // Pipeline declares a pipeline of functions used to mutate or validate resources.
-// +kubebuilder:object:generate=true
 type Pipeline struct {
 	//  Sources defines the source packages to resolve as input to the pipeline. Possible values:
 	//  a) A slash-separated, OS-agnostic relative package path which may include '.' and '..' e.g. './base', '../foo'
@@ -315,7 +316,6 @@ func (p *Pipeline) IsEmpty() bool {
 }
 
 // Function specifies a KRM function.
-// +kubebuilder:object:generate=true
 type Function struct {
 	// `Image` specifies the function container image.
 	// It can either be fully qualified, e.g.:
@@ -365,7 +365,6 @@ type Function struct {
 
 // Selector specifies the selection criteria
 // please update IsEmpty method if more properties are added
-// +kubebuilder:object:generate=true
 type Selector struct {
 	// APIVersion of the target resources
 	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
@@ -430,44 +429,15 @@ type RenderStatus struct {
 // PipelineStepResult contains the structured result from an individual function
 // call in the pipeline.
 type PipelineStepResult struct {
-	Name           string       `yaml:"name,omitempty" json:"name,omitempty"`
-	Image          string       `yaml:"image,omitempty" json:"image,omitempty"`
-	ExecPath       string       `yaml:"exec,omitempty" json:"exec,omitempty"`
-	ExecutionError string       `yaml:"executionError,omitempty" json:"executionError,omitempty"`
-	Stderr         string       `yaml:"stderr,omitempty" json:"stderr,omitempty"`
-	ExitCode       int          `yaml:"exitCode" json:"exitCode"`
-	Results        []ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
-	ErrorResults   []ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
-}
+	Name           string `yaml:"name,omitempty" json:"name,omitempty"`
+	Image          string `yaml:"image,omitempty" json:"image,omitempty"`
+	ExecPath       string `yaml:"exec,omitempty" json:"exec,omitempty"`
+	ExecutionError string `yaml:"executionError,omitempty" json:"executionError,omitempty"`
+	Stderr         string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
+	ExitCode       int    `yaml:"exitCode" json:"exitCode"`
 
-// ResultItem mirrors framework.Result with only the fields needed for Kptfile status.
-type ResultItem struct {
-	Message     string       `yaml:"message,omitempty" json:"message,omitempty"`
-	Severity    string       `yaml:"severity,omitempty" json:"severity,omitempty"`
-	ResourceRef *ResourceRef `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`
-	Field       *FieldRef    `yaml:"field,omitempty" json:"field,omitempty"`
-	File        *FileRef     `yaml:"file,omitempty" json:"file,omitempty"`
-}
-
-// ResourceRef identifies a resource.
-type ResourceRef struct {
-	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
-	Kind       string `yaml:"kind,omitempty" json:"kind,omitempty"`
-	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
-	Namespace  string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
-}
-
-// FieldRef references a field in a resource.
-type FieldRef struct {
-	Path          string `yaml:"path,omitempty" json:"path,omitempty"`
-	CurrentValue  string `yaml:"currentValue,omitempty" json:"currentValue,omitempty"`
-	ProposedValue string `yaml:"proposedValue,omitempty" json:"proposedValue,omitempty"`
-}
-
-// FileRef references a file containing a resource.
-type FileRef struct {
-	Path  string `yaml:"path,omitempty" json:"path,omitempty"`
-	Index int    `yaml:"index,omitempty" json:"index,omitempty"`
+	Results      []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	ErrorResults []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
 }
 
 type Condition struct {
