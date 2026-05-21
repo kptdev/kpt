@@ -26,7 +26,7 @@ import (
 
 	"github.com/kptdev/kpt/commands/pkg/get"
 	"github.com/kptdev/kpt/commands/pkg/update"
-	"github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
@@ -62,7 +62,7 @@ func TestCmd_execute(t *testing.T) {
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
-	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	gitRunner, err := internalgitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

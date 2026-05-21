@@ -19,7 +19,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/util/merge"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -37,6 +36,8 @@ const (
 	upstreamIdentifier    = "internal.kpt.dev/upstream-identifier"
 	unknownNamespace      = "~C"
 	defaultNamespace      = "default"
+
+	MergeCommentPrefix = "kpt-merge:"
 )
 
 // AddMergeComment adds merge comments with format "kpt-merge: namespace/name"
@@ -73,8 +74,8 @@ func Process(paths ...string) error {
 func addUpstreamAnnotation(object *kyaml.RNode, mergeComment string) error {
 	group, _ := resid.ParseGroupVersion(object.GetApiVersion())
 	var name, namespace string
-	if strings.Contains(mergeComment, merge.MergeCommentPrefix) {
-		nsAndName := merge.NsAndNameForMerge(mergeComment)
+	if strings.Contains(mergeComment, MergeCommentPrefix) {
+		nsAndName := NsAndNameForMerge(mergeComment)
 		namespace = nsAndName[0]
 		name = nsAndName[1]
 	} else {
@@ -91,6 +92,23 @@ func addUpstreamAnnotation(object *kyaml.RNode, mergeComment string) error {
 	}
 	upstreamIdentifierValue := fmt.Sprintf(upstreamIdentifierFmt, group, object.GetKind(), namespace, name)
 	return object.PipeE(kyaml.SetAnnotation(upstreamIdentifier, upstreamIdentifierValue))
+}
+
+// NsAndNameForMerge returns the namespace and name for merge
+// from the line comment on the metadata field
+// e.g. metadata: # kpt-merge: default/foo returns [default, foo]
+func NsAndNameForMerge(metadataComment string) []string {
+	comment := strings.TrimPrefix(metadataComment, "#")
+	comment = strings.TrimSpace(comment)
+	if !strings.HasPrefix(comment, MergeCommentPrefix) {
+		return nil
+	}
+	comment = strings.TrimPrefix(comment, MergeCommentPrefix)
+	nsAndName := strings.SplitN(strings.TrimSpace(comment), "/", 2)
+	if len(nsAndName) != 2 {
+		return nil
+	}
+	return nsAndName
 }
 
 // Filter implements kyaml.Filter
@@ -123,8 +141,8 @@ func (amc *AddMergeComment) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 	}
 
 	// Only add merge comment if merge comment does not present
-	if !strings.Contains(mf.Key.YNode().LineComment, merge.MergeCommentPrefix) {
-		mf.Key.YNode().LineComment = fmt.Sprintf("%s %s/%s", merge.MergeCommentPrefix, rm.Namespace, rm.Name)
+	if !strings.Contains(mf.Key.YNode().LineComment, MergeCommentPrefix) {
+		mf.Key.YNode().LineComment = fmt.Sprintf("%s %s/%s", MergeCommentPrefix, rm.Namespace, rm.Name)
 	}
 	// We will migrate kpt-merge comment to upstream-identifier annotation. As an intermediate stage, this filter
 	// preserves the mergeComment behavior to guarantee the backward compatibility.

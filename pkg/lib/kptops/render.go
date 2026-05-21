@@ -20,10 +20,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/render"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/fn"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
@@ -41,7 +40,7 @@ type renderer struct {
 var _ fn.Renderer = &renderer{}
 
 func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresult.ResultList, error) {
-	rr := render.Renderer{
+	rr := Renderer{
 		PkgPath:       opts.PkgPath,
 		Runtime:       opts.Runtime,
 		DisplayName:   opts.DisplayName,

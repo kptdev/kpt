@@ -18,7 +18,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/kptdev/kpt/internal/util/argutil"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -56,7 +56,7 @@ func (r *FakeLoader) GetInvInfo(cmd *cobra.Command, args []string) (inventory.In
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(r.ctx, path)
+		path, err = argsutil.ResolveSymlink(r.ctx, path)
 		if err != nil {
 			return nil, err
 		}

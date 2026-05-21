@@ -20,10 +20,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	"github.com/kptdev/kpt/internal/util/get"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/util/get"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -92,7 +92,7 @@ func (g *TestSetupManager) Init() bool {
 		return false
 	}
 	g.cacheDir = cacheDir
-	os.Setenv(gitutil.RepoCacheDirEnv, g.cacheDir)
+	os.Setenv(internalgitutil.RepoCacheDirEnv, g.cacheDir)
 
 	g.Repos, g.LocalWorkspace, g.cleanTestRepos = SetupReposAndWorkspace(g.T, g.ReposChanges)
 	if g.GetSubDirectory == "/" {
@@ -112,7 +112,7 @@ func (g *TestSetupManager) Init() bool {
 		}}.Run(fake.CtxWithDefaultPrinter())) {
 		return false
 	}
-	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
+	localGit, err := internalgitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
 	if !assert.NoError(g.T, err) {
 		return false
 	}
@@ -207,7 +207,7 @@ func (g *TestSetupManager) GetSubPkg(dest, repo, upstreamDir string) {
 			Directory: path.Join(g.GetSubDirectory, upstreamDir),
 		}}.Run(fake.CtxWithDefaultPrinter()))
 
-	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
+	localGit, err := internalgitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
 	assert.NoError(g.T, err)
 	_, err = localGit.Run(fake.CtxWithDefaultPrinter(), "add", ".")
 	assert.NoError(g.T, err)

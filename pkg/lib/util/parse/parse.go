@@ -23,7 +23,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -64,7 +64,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target
 		return g, err
 	}
 	if version == "" {
-		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+		gur, err := internalgitutil.NewGitUpstreamRepo(ctx, repo)
 		if err != nil {
 			return g, err
 		}
@@ -97,7 +97,7 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitD
 		dir = "/"
 	}
 	if ref == "" {
-		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+		gur, err := internalgitutil.NewGitUpstreamRepo(ctx, repo)
 		if err != nil {
 			return g, err
 		}
@@ -196,7 +196,7 @@ func pkgURLFromGHURL(ctx context.Context, v string, findRepoBranches func(contex
 
 // getRepoBranches returns a slice of branches in upstream repo
 func getRepoBranches(ctx context.Context, repo string) ([]string, error) {
-	gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+	gur, err := internalgitutil.NewGitUpstreamRepo(ctx, repo)
 	if err != nil {
 		return nil, err
 	}

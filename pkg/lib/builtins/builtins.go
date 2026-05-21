@@ -19,14 +19,13 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/kptdev/kpt/internal/builtins"
-	builtintypes "github.com/kptdev/kpt/pkg/lib/builtins/builtintypes"
+	"github.com/kptdev/kpt/pkg/lib/builtins/builtintypes"
 )
 
 func GetBuiltinFn(config any) builtintypes.BuiltinFunction {
 	if reflect.TypeOf(config) == reflect.TypeFor[*builtintypes.PackageConfig]() {
 		packageConfig := config.(*builtintypes.PackageConfig)
-		return &builtins.PackageContextGenerator{
+		return &PackageContextGenerator{
 			PackageConfig: packageConfig,
 		}
 	}
