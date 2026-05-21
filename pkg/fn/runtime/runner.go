@@ -29,7 +29,7 @@ import (
 	"github.com/kptdev/kpt/internal/builtins"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/lib/errors"
@@ -37,7 +37,6 @@ import (
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/regclient/regclient"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -50,7 +49,7 @@ func NewRunner(
 	fsys filesys.FileSystem,
 	f *kptfilev1.Function,
 	pkgPath types.UniquePath,
-	fnResults *fnresult.ResultList,
+	fnResults *fnresultv1.ResultList,
 	opts runneroptions.RunnerOptions,
 	runtime fn.FunctionRuntime,
 ) (*FunctionRunner, error) {
@@ -95,7 +94,7 @@ func NewRunner(
 		}
 	}
 
-	fnResult := &fnresult.Result{
+	fnResult := &fnresultv1.Result{
 		Image:    f.Image,
 		ExecPath: f.Exec,
 		// TODO(droot): This is required for making structured results subpackage aware.
@@ -190,8 +189,8 @@ func NewRunner(
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
 	pkgPath types.UniquePath,
-	fnResult *fnresult.Result,
-	fnResults *fnresult.ResultList,
+	fnResult *fnresultv1.Result,
+	fnResults *fnresultv1.ResultList,
 	opts runneroptions.RunnerOptions) (*FunctionRunner, error) {
 	name := fnResult.Image
 	if name == "" {
@@ -220,8 +219,8 @@ type FunctionRunner struct {
 	pkgPath          types.UniquePath
 	disableCLIOutput bool
 	filter           *runtimeutil.FunctionFilter
-	fnResult         *fnresult.Result
-	fnResults        *fnresult.ResultList
+	fnResult         *fnresultv1.Result
+	fnResults        *fnresultv1.ResultList
 	opts             runneroptions.RunnerOptions
 }
 
@@ -332,7 +331,7 @@ func setPkgPathAnnotationIfNotExist(resources []*yaml.RNode, pkgPath types.Uniqu
 	return nil
 }
 
-func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
+func parseStructuredResult(yml *yaml.RNode, fnResult *fnresultv1.Result) error {
 	if yml.IsNilOrEmpty() {
 		return nil
 	}
@@ -364,17 +363,17 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 // function (e.g. using kyaml Go SDKs) gives results in a schema
 // that puts a resourceRef's name and namespace under a metadata field
 // TODO: fix upstream (https://github.com/kptdev/kpt/issues/2091)
-func migrateLegacyResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
+func migrateLegacyResult(yml *yaml.RNode, fnResult *fnresultv1.Result) error {
 	items, err := yml.Elements()
 	if err != nil {
 		return err
 	}
 
 	for i := range items {
-		if err = populateResourceRef(items[i], fnResult.Results[i]); err != nil {
+		if err = populateResourceRef(items[i], &fnResult.Results[i]); err != nil {
 			return err
 		}
-		if err = populateProposedValue(items[i], fnResult.Results[i]); err != nil {
+		if err = populateProposedValue(items[i], &fnResult.Results[i]); err != nil {
 			return err
 		}
 	}
@@ -382,7 +381,7 @@ func migrateLegacyResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return nil
 }
 
-func populateProposedValue(item *yaml.RNode, resultItem *framework.Result) error {
+func populateProposedValue(item *yaml.RNode, resultItem *fnresultv1.ResultItem) error {
 	sv, err := item.Pipe(yaml.Lookup("field", "suggestedValue"))
 	if err != nil {
 		return err
@@ -391,13 +390,13 @@ func populateProposedValue(item *yaml.RNode, resultItem *framework.Result) error
 		return nil
 	}
 	if resultItem.Field == nil {
-		resultItem.Field = &framework.Field{}
+		resultItem.Field = &fnresultv1.Field{}
 	}
-	resultItem.Field.ProposedValue = sv
-	return nil
+	resultItem.Field.ProposedValue, err = sv.String()
+	return err
 }
 
-func populateResourceRef(item *yaml.RNode, resultItem *framework.Result) error {
+func populateResourceRef(item *yaml.RNode, resultItem *fnresultv1.ResultItem) error {
 	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
 	if err != nil {
 		return err
@@ -425,9 +424,8 @@ func populateResourceRef(item *yaml.RNode, resultItem *framework.Result) error {
 	return nil
 }
 
-// printFnResult prints given function result in a user friendly
-// format on kpt CLI.
-func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.Options) {
+// printFnResult prints given function result in a user-friendly format on kpt CLI.
+func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, opt *printer.Options) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(fnResult.Results) > 0 {
 		// function returned structured results

@@ -22,12 +22,12 @@ import (
 	"fmt"
 	"strings"
 
+	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 const (
 	KptFileName = "Kptfile"
@@ -436,8 +436,8 @@ type PipelineStepResult struct {
 	Stderr         string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
 	ExitCode       int    `yaml:"exitCode" json:"exitCode"`
 
-	Results      framework.Results `yaml:"results,omitempty" json:"results,omitempty"`
-	ErrorResults framework.Results `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+	Results      []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	ErrorResults []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
 }
 
 type Condition struct {

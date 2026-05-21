@@ -24,7 +24,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
@@ -790,12 +790,12 @@ func TestBuildRenderStatus_UsesExecPathForErrorSummary(t *testing.T) {
 }
 
 func TestCaptureStepResult_FromFnResults(t *testing.T) {
-	fnResults := fnresult.NewResultList()
-	fnResults.Items = append(fnResults.Items, fnresult.Result{
+	fnResults := fnresultv1.NewResultList()
+	fnResults.Items = append(fnResults.Items, fnresultv1.Result{
 		Image:    "gatekeeper:latest",
 		ExitCode: 1,
 		Stderr:   "validation failed",
-		Results: framework.Results{
+		Results: []fnresultv1.ResultItem{
 			{Message: "banned key found", Severity: framework.Error,
 				ResourceRef: &yaml.ResourceIdentifier{
 					TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "ConfigMap"},
@@ -837,7 +837,7 @@ func TestCaptureStepResult_FromFnResults(t *testing.T) {
 }
 
 func TestCaptureStepResult_NoNewItems(t *testing.T) {
-	fnResults := fnresult.NewResultList()
+	fnResults := fnresultv1.NewResultList()
 	fn := kptfilev1.Function{Image: "set-namespace:v1"}
 	step := captureStepResult(fn, fnResults, 0, fmt.Errorf("output resource list must contain only KRM resources"))
 
