@@ -777,7 +777,7 @@ kind: Kptfile
 metadata:
   name: root
 `)
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		writeFile(t, filepath.Join(d, fmt.Sprintf("f%03d.yaml", i)),
 			fmt.Sprintf("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cm-%d\n", i))
 	}
