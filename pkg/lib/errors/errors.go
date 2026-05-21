@@ -22,7 +22,7 @@ import (
 	goerrors "errors"
 
 	kyaml_errors "github.com/go-errors/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 )
 
 // Error is the type that implements error interface used in the kpt codebase.
@@ -35,7 +35,7 @@ import (
 // from how it is surfaced to the end users.
 type Error struct {
 	// Path is the path of the object (pkg, file) involved in kpt operation.
-	Path types.UniquePath
+	Path kptfilev1.UniquePath
 
 	// Op is the operation being performed, for ex. pkg.get, fn.render
 	Op Op
@@ -176,7 +176,7 @@ func E(args ...any) error {
 	e := &Error{}
 	for _, arg := range args {
 		switch a := arg.(type) {
-		case types.UniquePath:
+		case kptfilev1.UniquePath:
 			e.Path = a
 		case Op:
 			e.Op = a

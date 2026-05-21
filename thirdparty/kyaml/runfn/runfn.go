@@ -12,9 +12,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -22,8 +23,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 )
 
@@ -38,7 +37,7 @@ type RunFns struct {
 	Path string
 
 	// uniquePath is the absolute version of Path
-	uniquePath types.UniquePath
+	uniquePath kptfilev1.UniquePath
 
 	// FnConfigPath specifies a config file which contains the configs used in
 	// function input. It can be absolute or relative to kpt working directory.
@@ -63,7 +62,7 @@ type RunFns struct {
 	// ResultsDir is where to write each functions results
 	ResultsDir string
 
-	fnResults *fnresult.ResultList
+	fnResults *fnresultv1.ResultList
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -93,9 +92,9 @@ type RunFns struct {
 	// OriginalExec is the original exec commands
 	OriginalExec string
 
-	Selector kptfile.Selector
+	Selector kptfilev1.Selector
 
-	Exclusion kptfile.Selector
+	Exclusion kptfilev1.Selector
 }
 
 // Execute runs the command
@@ -126,7 +125,7 @@ func (r RunFns) getNodesAndFilters() (
 			PackagePath:        string(r.uniquePath),
 			MatchFilesGlob:     pkg.MatchAllKRM,
 			PreserveSeqIndent:  true,
-			PackageFileName:    kptfile.KptFileName,
+			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
 		}
@@ -201,8 +200,8 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		// select the resources on which function should be applied
 		selectedInput, err = fnruntime.SelectInput(
 			inputResources,
-			[]kptfile.Selector{r.Selector},
-			[]kptfile.Selector{r.Exclusion},
+			[]kptfilev1.Selector{r.Selector},
+			[]kptfilev1.Selector{r.Exclusion},
 			&fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
 		if err != nil {
 			return err
@@ -284,10 +283,10 @@ func (r *RunFns) init() error {
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		r.uniquePath = types.UniquePath(absPath)
+		r.uniquePath = kptfilev1.UniquePath(absPath)
 	}
 
-	r.fnResults = fnresult.NewResultList()
+	r.fnResults = fnresultv1.NewResultList()
 
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
@@ -326,7 +325,7 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 // getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	return kptfile.GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, "", r.FnConfigPath)
+	return kptfilev1.GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, "", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters
@@ -346,7 +345,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		FunctionConfig: fnConfig,
 		DeferFailure:   spec.DeferFailure,
 	}
-	fnResult := &fnresult.Result{
+	fnResult := &fnresultv1.Result{
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(r.uniquePath),

@@ -21,11 +21,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
@@ -131,7 +130,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func resolveRelPath(path types.UniquePath) (string, error) {
+func resolveRelPath(path kptfilev1.UniquePath) (string, error) {
 	const op errors.Op = "cmdupdate.resolveRelPath"
 	cwd, err := os.Getwd()
 	if err != nil {

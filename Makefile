@@ -92,6 +92,7 @@ generate: install-mdtogo
 	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./...
 	go fmt ./internal/docs/generated/...
+	pushd api && GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./... && popd
 
 tidy:
 	go mod tidy

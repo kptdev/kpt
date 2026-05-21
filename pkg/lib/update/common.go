@@ -17,9 +17,9 @@ package update
 import (
 	"reflect"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -29,12 +29,12 @@ func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
 	const op errors.Op = "update.PkgHasUpdatedUpstream"
 	originKf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, origin)
 	if err != nil {
-		return false, errors.E(op, types.UniquePath(local), err)
+		return false, errors.E(op, kptfilev1.UniquePath(local), err)
 	}
 
 	localKf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, local)
 	if err != nil {
-		return false, errors.E(op, types.UniquePath(local), err)
+		return false, errors.E(op, kptfilev1.UniquePath(local), err)
 	}
 
 	// If the upstream information in local has changed from origin, it

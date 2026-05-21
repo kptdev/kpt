@@ -23,13 +23,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	"github.com/kptdev/kpt/pkg/lib/util/fetch"
@@ -79,26 +78,26 @@ func (c Command) Run(ctx context.Context) error {
 	case err == nil:
 		// Destination exists - check if it's an empty directory
 		if !destInfo.IsDir() {
-			return errors.E(op, errors.Exist, types.UniquePath(c.Destination), fmt.Errorf("destination exists and is not a directory"))
+			return errors.E(op, errors.Exist, kptfilev1.UniquePath(c.Destination), fmt.Errorf("destination exists and is not a directory"))
 		}
 
 		// Check if directory is empty
 		entries, err := os.ReadDir(c.Destination)
 		if err != nil {
-			return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
+			return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
 		}
 		if len(entries) > 0 {
-			return errors.E(op, errors.Exist, types.UniquePath(c.Destination), fmt.Errorf("destination directory already exists"))
+			return errors.E(op, errors.Exist, kptfilev1.UniquePath(c.Destination), fmt.Errorf("destination directory already exists"))
 		}
 		// Directory exists but is empty, we can use it
 	case goerrors.Is(err, os.ErrNotExist):
 		// Directory doesn't exist, create it
 		err = os.MkdirAll(c.Destination, 0700)
 		if err != nil {
-			return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
+			return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
 		}
 	default:
-		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
+		return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
 	}
 
 	// normalize path to a filepath
@@ -254,7 +253,7 @@ func cleanUpDirAndError(destination string, err error) error {
 	const op errors.Op = "get.Run"
 	rmErr := os.RemoveAll(destination)
 	if rmErr != nil {
-		return errors.E(op, types.UniquePath(destination), err, rmErr)
+		return errors.E(op, kptfilev1.UniquePath(destination), err, rmErr)
 	}
-	return errors.E(op, types.UniquePath(destination), err)
+	return errors.E(op, kptfilev1.UniquePath(destination), err)
 }

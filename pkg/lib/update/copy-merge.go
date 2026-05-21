@@ -15,10 +15,10 @@
 package update
 
 import (
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 )
 
@@ -41,13 +41,13 @@ func (u CopyMergeUpdater) Update(options updatetypes.Options) error {
 	org := options.OriginPath
 
 	if err := kptfileutil.UpdateKptfile(dst, src, options.OriginPath, true); err != nil {
-		return errors.E(op, types.UniquePath(dst), err)
+		return errors.E(op, kptfilev1.UniquePath(dst), err)
 	}
 	if err := pkg.CopyPackage(src, dst, options.IsRoot, pkg.All); err != nil {
-		return errors.E(op, types.UniquePath(dst), err)
+		return errors.E(op, kptfilev1.UniquePath(dst), err)
 	}
 	if err := pkg.RemoveStaleItems(org, src, dst, options.IsRoot, pkg.All); err != nil {
-		return errors.E(op, types.UniquePath(dst), err)
+		return errors.E(op, kptfilev1.UniquePath(dst), err)
 	}
 	return nil
 }

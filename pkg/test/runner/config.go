@@ -19,7 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kptdev/kpt/pkg/lib/types"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -31,7 +31,7 @@ type EvalTestCaseConfig struct {
 	// The path should be separated by slash '/'
 	ExecPath string `json:"execPath,omitempty" yaml:"execPath,omitempty"`
 	// execUniquePath is an absolute, OS-specific path to exec file.
-	execUniquePath types.UniquePath
+	execUniquePath kptfilev1.UniquePath
 	// Image is the image name for the function
 	Image string `json:"image,omitempty" yaml:"image,omitempty"`
 	Tag   string `json:"tag,omitempty" yaml:"tag,omitempty"`
@@ -47,7 +47,7 @@ type EvalTestCaseConfig struct {
 	// The path should be separated by slash '/'
 	FnConfig string `json:"fnConfig,omitempty" yaml:"fnConfig,omitempty"`
 	// fnConfigUniquePath is an absolute, OS-specific path to function config file.
-	fnConfigUniquePath types.UniquePath
+	fnConfigUniquePath kptfilev1.UniquePath
 }
 
 // TestCaseConfig contains the config information for the test case
@@ -222,17 +222,17 @@ func ScanTestCases(path string) (*TestCases, error) {
 // fromSlashPath returns a UniquePath according to the input slash 'path'.
 // 'base' should be an OS-specific base path which will be joined with 'path'
 // if 'path' is not absolute.
-func fromSlashPath(base, path string) (types.UniquePath, error) {
+func fromSlashPath(base, path string) (kptfilev1.UniquePath, error) {
 	if path == "" {
-		return types.UniquePath(""), nil
+		return kptfilev1.UniquePath(""), nil
 	}
 	path = filepath.FromSlash(path)
 	if filepath.IsAbs(path) {
-		return types.UniquePath(path), nil
+		return kptfilev1.UniquePath(path), nil
 	}
 	p, err := filepath.Abs(filepath.Join(base, path))
 	if err != nil {
 		return "", err
 	}
-	return types.UniquePath(p), nil
+	return kptfilev1.UniquePath(p), nil
 }

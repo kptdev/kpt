@@ -23,9 +23,9 @@ import (
 	"runtime"
 	"testing"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/commands/pkg/get"
 	"github.com/kptdev/kpt/internal/testutil"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"

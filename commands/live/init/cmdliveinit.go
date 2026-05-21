@@ -25,13 +25,12 @@ import (
 	"strings"
 	"time"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -291,13 +290,13 @@ func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) 
 		return err
 	}
 	if _, err := os.Stat(filepath.Join(dir, filename)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
-		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 	}
 
 	// fyi: perm is ignored if the file already exists
 	err = os.WriteFile(filepath.Join(dir, filename), b, 0600)
 	if err != nil {
-		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 	}
 	return nil
 }

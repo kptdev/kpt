@@ -20,11 +20,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/lib/util/get"
@@ -104,7 +103,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absDestPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(t.Destination), err)
+		return errors.E(op, kptfilev1.UniquePath(t.Destination), err)
 	}
 	r.Get.Destination = string(p.UniquePath)
 
@@ -120,7 +119,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = "cmdget.runE"
 	if err := r.Get.Run(r.ctx); err != nil {
-		return errors.E(op, types.UniquePath(r.Get.Destination), err)
+		return errors.E(op, kptfilev1.UniquePath(r.Get.Destination), err)
 	}
 
 	return nil

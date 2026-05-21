@@ -19,13 +19,12 @@ import (
 	"fmt"
 	"io"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
@@ -49,12 +48,12 @@ type Executor struct {
 
 	// fnResults stores function results gathered
 	// during pipeline execution.
-	fnResults *fnresult.ResultList
+	fnResults *fnresultv1.ResultList
 }
 
 // Execute executes given hook.
 func (e *Executor) Execute(ctx context.Context, hook []kptfilev1.Function) error {
-	e.fnResults = fnresult.NewResultList()
+	e.fnResults = fnresultv1.NewResultList()
 
 	pkgReaderWriter := &kio.LocalPackageReadWriter{
 		PackagePath:        e.PkgPath,
@@ -91,7 +90,7 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 		runner, err = fnruntime.NewRunner(ctx,
 			e.FileSystem,
 			&fn,
-			types.UniquePath(e.PkgPath),
+			kptfilev1.UniquePath(e.PkgPath),
 			e.fnResults,
 			opts,
 			e.Runtime)

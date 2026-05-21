@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"testing"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 
@@ -141,7 +141,7 @@ func TestCmd_Execute(t *testing.T) {
 		functionFilterProvider: getFilterProvider(t),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
@@ -170,7 +170,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, os.WriteFile(
-		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, kptfilev1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
@@ -180,13 +180,13 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
 	b, err := os.ReadFile(
-		filepath.Join(dir, v1.KptFileName))
+		filepath.Join(dir, kptfilev1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -205,7 +205,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, os.WriteFile(
-		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, kptfilev1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
@@ -213,13 +213,13 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
 	b, err := os.ReadFile(
-		filepath.Join(dir, v1.KptFileName))
+		filepath.Join(dir, kptfilev1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -299,7 +299,7 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 		Path:         dir,
 		Function:     fn,
 		FnConfig:     fnConfig,
-		fnResults:    fnresult.NewResultList(),
+		fnResults:    fnresultv1.NewResultList(),
 	}
 	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
 	// initialize the defaults
@@ -340,7 +340,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 		functionFilterProvider: getFilterProvider(t),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	// initialize the defaults
 	assert.NoError(t, instance.init())
@@ -397,7 +397,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		functionFilterProvider: getFilterProvider(t),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	// initialize the defaults
 	assert.NoError(t, instance.init())

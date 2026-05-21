@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	"github.com/google/shlex"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
@@ -149,8 +149,8 @@ type EvalFnRunner struct {
 	AsCurrentUser        bool
 	IncludeMetaResources bool
 	Ctx                  context.Context
-	Selector             kptfile.Selector
-	Exclusion            kptfile.Selector
+	Selector             kptfilev1.Selector
+	Exclusion            kptfilev1.Selector
 	dataItems            []string
 
 	RunnerOptions runneroptions.RunnerOptions
@@ -185,8 +185,8 @@ func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
 
 // NewFunction creates a Kptfile.Function object which has the evaluated fn configurations.
 // This object can be written to Kptfile `pipeline.mutators`.
-func (r *EvalFnRunner) NewFunction() *kptfile.Function {
-	newFn := &kptfile.Function{}
+func (r *EvalFnRunner) NewFunction() *kptfilev1.Function {
+	newFn := &kptfilev1.Function{}
 	if r.Image != "" {
 		newFn.Image = r.Image
 		newFn.Tag = r.Tag
@@ -194,10 +194,10 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 		newFn.Exec = r.Exec
 	}
 	if !r.Selector.IsEmpty() {
-		newFn.Selectors = []kptfile.Selector{r.Selector}
+		newFn.Selectors = []kptfilev1.Selector{r.Selector}
 	}
 	if !r.Exclusion.IsEmpty() {
-		newFn.Exclusions = []kptfile.Selector{r.Exclusion}
+		newFn.Exclusions = []kptfilev1.Selector{r.Exclusion}
 	}
 	if r.FnConfigPath != "" {
 		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
@@ -221,8 +221,8 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 
 // Add the evaluated function to the kptfile.Function list, this Function can either be
 // `pipeline.mutators` or `pipeline.validators`
-func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) ([]kptfile.Function, string) {
-	var newFns []kptfile.Function
+func (r *EvalFnRunner) updateFnList(oldFNs []kptfilev1.Function) ([]kptfilev1.Function, string) {
+	var newFns []kptfilev1.Function
 	found := false
 	newFn := r.NewFunction()
 	var message string
@@ -261,7 +261,7 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	}
 
 	if kf.Pipeline == nil {
-		kf.Pipeline = &kptfile.Pipeline{}
+		kf.Pipeline = &kptfilev1.Pipeline{}
 	}
 	var usrMsg string
 	switch r.FnType {
@@ -288,8 +288,8 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 
 // preserveCommentsAndFieldOrder syncs the mutated Kptfile with the original to preserve
 // comments and field order, and returns the result as a yaml Node
-func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfile.KptFile) (*yaml.Node, error) {
-	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.runFns.Path, kptfile.KptFileName))
+func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfilev1.KptFile) (*yaml.Node, error) {
+	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.runFns.Path, kptfilev1.KptFileName))
 	if err != nil {
 		return nil, fmt.Errorf("could not read Kptfile: %v", err)
 	}
@@ -381,7 +381,7 @@ func (r *EvalFnRunner) getFunctionSpec() (*runtimeutil.FunctionSpec, []string, e
 	fn := &runtimeutil.FunctionSpec{}
 	var execArgs []string
 	if r.Image != "" {
-		if err := kptfile.ValidateFunctionImageURL(r.Image); err != nil {
+		if err := kptfilev1.ValidateFunctionImageURL(r.Image); err != nil {
 			return nil, nil, err
 		}
 		fn.Container.Image = r.Image

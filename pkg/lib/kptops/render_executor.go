@@ -23,15 +23,14 @@ import (
 	"slices"
 	"strings"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
@@ -57,7 +56,7 @@ type Renderer struct {
 	ResultsDirPath string
 
 	// fnResultsList is the list of results from the pipeline execution
-	fnResultsList *fnresult.ResultList
+	fnResultsList *fnresultv1.ResultList
 
 	// Output is the writer to which the output resources are written
 	Output io.Writer
@@ -73,22 +72,22 @@ type Renderer struct {
 }
 
 // Execute runs a pipeline.
-func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
+func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) {
 	const op errors.Op = "fn.render"
 
 	pr := printer.FromContextOrDie(ctx)
 
 	root, err := newPkgNode(e.FileSystem, e.PkgPath, nil)
 	if err != nil {
-		return nil, errors.E(op, types.UniquePath(e.PkgPath), err)
+		return nil, errors.E(op, kptfilev1.UniquePath(e.PkgPath), err)
 	}
 
 	// initialize hydration context
 	hctx := &hydrationContext{
 		root:          root,
 		rootName:      e.DisplayName,
-		pkgs:          map[types.UniquePath]*pkgNode{},
-		fnResults:     fnresult.NewResultList(),
+		pkgs:          map[kptfilev1.UniquePath]*pkgNode{},
+		fnResults:     fnresultv1.NewResultList(),
 		runnerOptions: e.RunnerOptions,
 		fileSystem:    e.FileSystem,
 		runtime:       e.Runtime,
@@ -300,7 +299,7 @@ func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.
 	}
 }
 
-func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
+func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresultv1.ResultList) error {
 	e.fnResultsList = fnResults
 	resultsFile, err := fnruntime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
 	if err != nil {
@@ -320,7 +319,7 @@ type hydrationContext struct {
 
 	// pkgs refers to the packages undergoing hydration. pkgs are key'd by their
 	// unique paths.
-	pkgs map[types.UniquePath]*pkgNode
+	pkgs map[kptfilev1.UniquePath]*pkgNode
 
 	// inputFiles is a set of filepaths containing input resources to the
 	// functions across all the packages during hydration.
@@ -336,7 +335,7 @@ type hydrationContext struct {
 
 	// fnResults stores function results gathered
 	// during pipeline execution.
-	fnResults *fnresult.ResultList
+	fnResults *fnresultv1.ResultList
 
 	// saveOnRenderFailure indicates whether partially rendered resources
 	// should be saved when rendering fails. Read from the root Kptfile annotation.
@@ -529,10 +528,10 @@ func hydrateBfsOrder(ctx context.Context, root *pkgNode, hctx *hydrationContext)
 
 // discoverAndLoadPackages performs a Breadth-First search trasversal to
 // discover all packages, build tree structure and load their local resources.
-func discoverAndLoadPackages(root *pkgNode, hctx *hydrationContext) ([]*pkgNode, map[types.UniquePath][]*pkgNode, error) {
+func discoverAndLoadPackages(root *pkgNode, hctx *hydrationContext) ([]*pkgNode, map[kptfilev1.UniquePath][]*pkgNode, error) {
 	queue := []*pkgNode{root}
 	var allNodes []*pkgNode
-	childrenMap := map[types.UniquePath][]*pkgNode{}
+	childrenMap := map[kptfilev1.UniquePath][]*pkgNode{}
 
 	for len(queue) > 0 {
 		current := queue[0]
@@ -618,7 +617,7 @@ func processSubpackages(current *pkgNode, hctx *hydrationContext) ([]*pkgNode, e
 
 // executePipelinesWithScopedVisibility executes pipelines for all packages in top-down order
 // Each package can see itself plus its descendants (children, granchildren) only
-func executePipelinesWithScopedVisibility(ctx context.Context, allNodes []*pkgNode, childrenMap map[types.UniquePath][]*pkgNode, hctx *hydrationContext) error {
+func executePipelinesWithScopedVisibility(ctx context.Context, allNodes []*pkgNode, childrenMap map[kptfilev1.UniquePath][]*pkgNode, hctx *hydrationContext) error {
 	for _, node := range allNodes {
 		node.state = Hydrating
 		hctx.pkgs[node.pkg.UniquePath] = node
@@ -690,7 +689,7 @@ func aggregateRootResources(allNodes []*pkgNode, hctx *hydrationContext) {
 
 // buildPipelineInputWithScopedVisibility creates the input resource
 // list for a package's pipeline using childrenMap to find descendants
-func buildPipelineInputWithScopedVisibility(node *pkgNode, childrenMap map[types.UniquePath][]*pkgNode) []*yaml.RNode {
+func buildPipelineInputWithScopedVisibility(node *pkgNode, childrenMap map[kptfilev1.UniquePath][]*pkgNode) []*yaml.RNode {
 	var input []*yaml.RNode
 
 	input = append(input, node.resources...)
@@ -983,7 +982,7 @@ func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath s
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]*fnruntime.FunctionRunner, int, error) {
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath kptfilev1.UniquePath, fns []kptfilev1.Function) ([]*fnruntime.FunctionRunner, int, error) {
 	var runners []*fnruntime.FunctionRunner
 	for i := range fns {
 		var err error
@@ -1053,7 +1052,7 @@ func pruneResources(fsys filesys.FileSystem, hctx *hydrationContext) error {
 
 // captureStepResult builds a PipelineStepResult from the fnresult.Result items
 // appended since resultCountBeforeExec.
-func captureStepResult(fn kptfilev1.Function, fnResults *fnresult.ResultList, resultCountBeforeExec int, execErr error) kptfilev1.PipelineStepResult {
+func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, resultCountBeforeExec int, execErr error) kptfilev1.PipelineStepResult {
 	step := kptfilev1.PipelineStepResult{
 		Name:     fn.Name,
 		Image:    fn.Image,

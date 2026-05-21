@@ -22,10 +22,10 @@ import (
 	"sort"
 	"testing"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -38,7 +38,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 		pkg            *pkgbuilder.RootPkg
 		namespace      string
 		expectedObjs   object.ObjMetadataSet
-		expectedInv    kptfile.Inventory
+		expectedInv    kptfilev1.Inventory
 		expectedErrMsg string
 		rgFile         string
 	}{
@@ -99,7 +99,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 						WithFile("deployment.yaml", deploymentA),
 				),
 			namespace: "foo",
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -156,7 +156,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 					Namespace: "foo",
 				},
 			},
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -185,7 +185,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 				),
 			namespace:    "foo",
 			expectedObjs: []object.ObjMetadata{},
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -202,7 +202,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			)),
 			namespace:    "foo",
 			expectedObjs: []object.ObjMetadata{},
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -226,7 +226,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}),
 			namespace:    "foo",
 			expectedObjs: []object.ObjMetadata{},
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -287,7 +287,7 @@ func TestLoad_StdIn(t *testing.T) {
 		pkg            *pkgbuilder.RootPkg
 		namespace      string
 		expectedObjs   object.ObjMetadataSet
-		expectedInv    kptfile.Inventory
+		expectedInv    kptfilev1.Inventory
 		expectedErrMsg string
 		rgFile         string
 	}{
@@ -320,7 +320,7 @@ func TestLoad_StdIn(t *testing.T) {
 					Namespace: "foo",
 				},
 			},
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -360,7 +360,7 @@ func TestLoad_StdIn(t *testing.T) {
 					Namespace: "foo",
 				},
 			},
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -403,7 +403,7 @@ func TestLoad_StdIn(t *testing.T) {
 				},
 				)),
 			namespace: "foo",
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -433,7 +433,7 @@ func TestLoad_StdIn(t *testing.T) {
 					},
 				}),
 			namespace: "foo",
-			expectedInv: kptfile.Inventory{
+			expectedInv: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "bar",
 				InventoryID: "foo-bar",
@@ -515,7 +515,7 @@ func TestLoad_StdIn(t *testing.T) {
 					kio.LocalPackageReader{
 						PackagePath:           dir,
 						OmitReaderAnnotations: true,
-						MatchFilesGlob:        append([]string{kptfile.KptFileName}, kio.DefaultMatch...),
+						MatchFilesGlob:        append([]string{kptfilev1.KptFileName}, kio.DefaultMatch...),
 						IncludeSubpackages:    true,
 						WrapBareSeqNode:       true,
 					},
@@ -530,7 +530,7 @@ func TestLoad_StdIn(t *testing.T) {
 				t.FailNow()
 			}
 
-			os.Remove(filepath.Join(dir, kptfile.KptFileName))
+			os.Remove(filepath.Join(dir, kptfilev1.KptFileName))
 			os.Remove(filepath.Join(dir, tc.rgFile))
 
 			objs, inv, err := Load(tf, "-", &buf)
@@ -564,12 +564,12 @@ func TestLoad_StdIn(t *testing.T) {
 
 func TestValidateInventory(t *testing.T) {
 	testCases := map[string]struct {
-		inventory           kptfile.Inventory
+		inventory           kptfilev1.Inventory
 		expectErr           bool
 		expectedErrorFields []string
 	}{
 		"complete inventory info validate": {
-			inventory: kptfile.Inventory{
+			inventory: kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "foo-default",
@@ -577,7 +577,7 @@ func TestValidateInventory(t *testing.T) {
 			expectErr: false,
 		},
 		"inventory info without name doesn't validate": {
-			inventory: kptfile.Inventory{
+			inventory: kptfilev1.Inventory{
 				Namespace:   "default",
 				InventoryID: "foo-default",
 			},
@@ -585,7 +585,7 @@ func TestValidateInventory(t *testing.T) {
 			expectedErrorFields: []string{"name"},
 		},
 		"inventory namespace doesn't validate": {
-			inventory: kptfile.Inventory{
+			inventory: kptfilev1.Inventory{
 				Name: "foo",
 			},
 			expectErr:           true,

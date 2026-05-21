@@ -20,9 +20,9 @@ import (
 	"sort"
 	"testing"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	. "github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/stretchr/testify/assert"
 )

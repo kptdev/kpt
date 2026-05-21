@@ -26,14 +26,13 @@ import (
 	"time"
 
 	"github.com/google/shlex"
-	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/lib/builtins"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/regclient/regclient"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -48,7 +47,7 @@ func NewRunner(
 	ctx context.Context,
 	fsys filesys.FileSystem,
 	f *kptfilev1.Function,
-	pkgPath types.UniquePath,
+	pkgPath kptfilev1.UniquePath,
 	fnResults *fnresultv1.ResultList,
 	opts runneroptions.RunnerOptions,
 	runtime fn.FunctionRuntime,
@@ -188,7 +187,7 @@ func NewRunner(
 // and it's config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
-	pkgPath types.UniquePath,
+	pkgPath kptfilev1.UniquePath,
 	fnResult *fnresultv1.Result,
 	fnResults *fnresultv1.ResultList,
 	opts runneroptions.RunnerOptions) (*FunctionRunner, error) {
@@ -216,7 +215,7 @@ func NewFunctionRunner(ctx context.Context,
 type FunctionRunner struct {
 	ctx              context.Context
 	name             string
-	pkgPath          types.UniquePath
+	pkgPath          kptfilev1.UniquePath
 	disableCLIOutput bool
 	filter           *runtimeutil.FunctionFilter
 	fnResult         *fnresultv1.Result
@@ -316,7 +315,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	return output, nil
 }
 
-func setPkgPathAnnotationIfNotExist(resources []*yaml.RNode, pkgPath types.UniquePath) error {
+func setPkgPathAnnotationIfNotExist(resources []*yaml.RNode, pkgPath kptfilev1.UniquePath) error {
 	for _, r := range resources {
 		currPkgPath, err := pkg.GetPkgPathAnnotation(r)
 		if err != nil {
@@ -506,7 +505,7 @@ func enforcePathInvariants(nodes []*yaml.RNode) error {
 	return nil
 }
 
-func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
+func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfilev1.UniquePath) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
 	fn := errors.Fn(f.Image)
 

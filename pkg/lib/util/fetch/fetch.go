@@ -24,11 +24,10 @@ import (
 
 	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/otiai10/copy"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
@@ -133,7 +132,7 @@ func (c *Cloner) cloneAndCopy(ctx context.Context, dest string) error {
 
 	err := c.ClonerUsingGitExec(ctx)
 	if err != nil {
-		return errors.E(op, errors.Git, types.UniquePath(dest), err)
+		return errors.E(op, errors.Git, kptfilev1.UniquePath(dest), err)
 	}
 	defer os.RemoveAll(c.repoSpec.Dir)
 	// update cache before removing clone dir
@@ -142,15 +141,15 @@ func (c *Cloner) cloneAndCopy(ctx context.Context, dest string) error {
 	sourcePath := filepath.Join(c.repoSpec.Dir, c.repoSpec.Path)
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(c.repoSpec.Path, "/"))
 	if err := pkg.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
-		return errors.E(op, types.UniquePath(dest), err)
+		return errors.E(op, kptfilev1.UniquePath(dest), err)
 	}
 
 	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, sourcePath, false); err != nil {
-		return errors.E(op, types.UniquePath(dest), err)
+		return errors.E(op, kptfilev1.UniquePath(dest), err)
 	}
 
 	if err := kptfileutil.UpdateUpstreamLockFromGit(dest, c.repoSpec); err != nil {
-		return errors.E(op, errors.Git, types.UniquePath(dest), err)
+		return errors.E(op, errors.Git, kptfilev1.UniquePath(dest), err)
 	}
 	return nil
 }

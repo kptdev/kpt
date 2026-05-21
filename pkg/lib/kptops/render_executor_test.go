@@ -22,12 +22,11 @@ import (
 	"strings"
 	"testing"
 
-	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -373,7 +372,7 @@ metadata:
 
 	hctx := &hydrationContext{
 		root:       root,
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFileSystem,
 	}
 
@@ -444,7 +443,7 @@ metadata:
 
 	hctx := &hydrationContext{
 		root:       root,
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFileSystem,
 	}
 
@@ -507,7 +506,7 @@ metadata:
 	}
 	hctx := &hydrationContext{
 		root:       root,
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFileSystem,
 	}
 
@@ -563,12 +562,12 @@ func TestRenderer_PrintPipelineExecutionSummary(t *testing.T) {
 
 			hctx := hydrationContext{
 				executedFunctionCnt: tc.executedFunctionCnt,
-				pkgs:                make(map[types.UniquePath]*pkgNode, tc.pkgCount),
+				pkgs:                make(map[kptfilev1.UniquePath]*pkgNode, tc.pkgCount),
 			}
 
 			// Populate pkgs map with dummy entries
 			for i := 0; i < tc.pkgCount; i++ {
-				hctx.pkgs[types.UniquePath(fmt.Sprintf("/pkg%d", i))] = &pkgNode{}
+				hctx.pkgs[kptfilev1.UniquePath(fmt.Sprintf("/pkg%d", i))] = &pkgNode{}
 			}
 
 			renderer.printPipelineExecutionSummary(pr, hctx, tc.hydErr)
@@ -595,7 +594,7 @@ metadata:
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
@@ -628,7 +627,7 @@ metadata:
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
@@ -668,7 +667,7 @@ status:
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
@@ -712,7 +711,7 @@ metadata:
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
@@ -883,7 +882,7 @@ metadata:
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 		mutationSteps: []kptfilev1.PipelineStepResult{
 			{Image: "set-namespace:v1", ExitCode: 0},
@@ -929,7 +928,7 @@ metadata:
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 	}
 
@@ -958,7 +957,7 @@ metadata:
 	// First render: failure with steps
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 		mutationSteps: []kptfilev1.PipelineStepResult{
 			{Image: "bad:v1", ExitCode: 1},
@@ -973,7 +972,7 @@ metadata:
 	// Second render: success with no steps (empty pipeline)
 	hctx2 := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
 		fileSystem: mockFS,
 	}
 	updateRenderStatus(hctx2, nil)

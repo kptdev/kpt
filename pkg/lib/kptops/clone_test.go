@@ -17,7 +17,7 @@ package kptops
 import (
 	"testing"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 )
 
 const exampleRepoURL = "https://github.com/example/repo.git"

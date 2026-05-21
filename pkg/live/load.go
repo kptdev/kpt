@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"io"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"

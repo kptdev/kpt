@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
@@ -110,7 +110,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 			PackagePath:        resolvedPath,
 			MatchFilesGlob:     pkg.MatchAllKRM,
 			PreserveSeqIndent:  true,
-			PackageFileName:    kptfile.KptFileName,
+			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
 		})

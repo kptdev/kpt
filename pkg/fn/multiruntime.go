@@ -18,7 +18,7 @@ import (
 	"context"
 	"errors"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 )
 
 // MultiRuntime is a compound FunctionRuntime that will use the first available runner.

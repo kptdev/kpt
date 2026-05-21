@@ -23,8 +23,8 @@ import (
 	"regexp"
 	"strings"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 

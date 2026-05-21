@@ -20,7 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 )
 
 const (
@@ -59,7 +59,7 @@ func NewNodejsFn(loader WasmLoader) (*WasmNodejsFn, error) {
 			Env: map[string]string{
 				WasmPathEnv: wasmFile,
 			},
-			FnResult: &fnresult.Result{},
+			FnResult: &fnresultv1.Result{},
 		},
 		loader: loader,
 	}
