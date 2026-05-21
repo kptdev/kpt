@@ -20,12 +20,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kptdev/kpt/internal/util/fetch"
-	"github.com/kptdev/kpt/internal/util/git"
-	"github.com/kptdev/kpt/internal/util/update"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/update"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	"github.com/kptdev/kpt/pkg/lib/util/fetch"
+	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
 )
@@ -72,7 +72,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, _ PkgUpdateOp
 	}
 
 	// var updatedDigest string
-	var updatedRepoSpec git.RepoSpec
+	var updatedRepoSpec gitutil.RepoSpec
 	var updatedDir string
 	var originDir string
 
@@ -80,7 +80,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, _ PkgUpdateOp
 	switch kf.Upstream.Type {
 	case kptfilev1.GitOrigin:
 		g := kf.Upstream.Git
-		upstream := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
+		upstream := &gitutil.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 		klog.Infof("Fetching upstream from %s@%s\n", upstream.OrgRepo, upstream.Ref)
 		// pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 		// if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
@@ -97,7 +97,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, _ PkgUpdateOp
 		// var origin repoClone
 		if kf.UpstreamLock != nil {
 			gLock := kf.UpstreamLock.Git
-			originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
+			originRepoSpec := &gitutil.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 			klog.Infof("Fetching origin from %s@%s\n", originRepoSpec.OrgRepo, originRepoSpec.Ref)
 			// pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 			// if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {

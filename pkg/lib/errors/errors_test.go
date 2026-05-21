@@ -19,7 +19,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/pkg/lib/types"
 )
 
 func TestErrorFormatting(t *testing.T) {

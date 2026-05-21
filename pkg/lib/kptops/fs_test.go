@@ -17,7 +17,6 @@ package kptops
 import (
 	"testing"
 
-	"github.com/kptdev/kpt/internal/util/render"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -101,7 +100,7 @@ spec:
 	if err := fs.WriteFile("/a/b/c/Kptfile", []byte(kptfile)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
 	}
-	r := render.Renderer{
+	r := Renderer{
 		PkgPath:    "/a/b/c",
 		FileSystem: fs,
 		Runtime:    &runtime{},
@@ -215,7 +214,7 @@ spec:
 		t.Errorf("Failed to write file: %v", err)
 	}
 
-	r := render.Renderer{
+	r := Renderer{
 		PkgPath:    "/app",
 		FileSystem: fs,
 		Runtime:    &runtime{},

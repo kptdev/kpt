@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 )
 
 //nolint:gochecknoinits
@@ -32,7 +32,7 @@ func init() {
 type gitExecErrorResolver struct{}
 
 func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	gitExecErr, ok := goerrors.AsType[*gitutil.GitExecError](err)
+	gitExecErr, ok := goerrors.AsType[*internalgitutil.GitExecError](err)
 	if !ok {
 		return ResolvedResult{}, false
 	}
@@ -41,25 +41,25 @@ func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 	var msg string
 	switch gitExecErr.Type {
-	case gitutil.UnknownReference:
+	case internalgitutil.UnknownReference:
 		msg = fmt.Sprintf("Error: Unknown ref %q. Please verify that the reference exists in upstream repo %q.", gitExecErr.Ref, gitExecErr.Repo)
 		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
 
-	case gitutil.GitExecutableNotFound:
+	case internalgitutil.GitExecutableNotFound:
 		msg = "Error: No git executable found. kpt requires git to be installed and available in the path."
 		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
 
-	case gitutil.HTTPSAuthRequired:
+	case internalgitutil.HTTPSAuthRequired:
 		msg = fmt.Sprintf("Error: Repository %q requires authentication.", gitExecErr.Repo)
 		msg += " kpt does not support this for the 'https' protocol."
 		msg += " Please use the 'git' protocol instead."
 		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
 
-	case gitutil.RepositoryUnavailable:
+	case internalgitutil.RepositoryUnavailable:
 		msg = fmt.Sprintf("Error: Unable to access repository %q.", gitExecErr.Repo)
 		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
 
-	case gitutil.RepositoryNotFound:
+	case internalgitutil.RepositoryNotFound:
 		msg = fmt.Sprintf("Error: Repository %q not found.", gitExecErr.Repo)
 		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
 	default:

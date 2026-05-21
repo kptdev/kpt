@@ -1,1 +1,1 @@
-{{- .Site.Params.kpt_version  | default "v1.0.0-beta.59" -}}
+{{- getenv "HUGO_KPT_VERSION" | default .Site.Params.kpt_version -}}

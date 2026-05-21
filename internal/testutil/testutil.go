@@ -25,11 +25,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/gitutil"
-	"github.com/kptdev/kpt/internal/util/git"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
+	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
@@ -434,7 +436,7 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 	err := w.SetupTestWorkspace()
 	assert.NoError(t, err)
 
-	gr, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	gr, err := internalgitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -461,7 +463,7 @@ func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf *kptfilev1.KptFile
 		t.FailNow()
 	}
 
-	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	gitRunner, err := internalgitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -746,7 +748,7 @@ func commit(repo, message string) (string, error) {
 		return "", err
 	}
 
-	sha, err := git.LookupCommit(repo)
+	sha, err := gitutil.LookupCommit(repo)
 	if err != nil {
 		return "", err
 	}
@@ -871,7 +873,7 @@ func ConfigureTestKptCache(m *testing.M) int {
 	defer func() {
 		_ = os.RemoveAll(cacheDir)
 	}()
-	if err := os.Setenv(gitutil.RepoCacheDirEnv, cacheDir); err != nil {
+	if err := os.Setenv(internalgitutil.RepoCacheDirEnv, cacheDir); err != nil {
 		panic(fmt.Errorf("error setting repo cache env variable: %w", err))
 	}
 	return m.Run()
@@ -907,4 +909,18 @@ func (ri *ReposInfo) ResolveCommitIndex(repoRef string, index int) (string, bool
 		return "", false
 	}
 	return commits[index], true
+}
+
+// CreatePkgOrFail creates a new package from the provided path. Unlike the
+// pkg.New function, it fails the test instead of returning an error.
+func CreatePkgOrFail(t *testing.T, path string) *pkg.Pkg {
+	absPath, _, err := pathutil.ResolveAbsAndRelPaths(path)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPath)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	return p
 }

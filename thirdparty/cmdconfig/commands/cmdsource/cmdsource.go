@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/argutil"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
@@ -102,7 +102,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("cannot convert input path %q to absolute path: %w", a, err)
 		}
-		resolvedPath, err := argutil.ResolveSymlink(r.Ctx, pkgPath)
+		resolvedPath, err := argsutil.ResolveSymlink(r.Ctx, pkgPath)
 		if err != nil {
 			return err
 		}
