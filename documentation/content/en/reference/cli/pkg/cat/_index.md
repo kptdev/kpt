@@ -3,14 +3,16 @@ title: "`cat`"
 linkTitle: "cat"
 
 description: |
-  Print the resources in a file/directory
+  Print the contents of a package
 ---
 
 <!--mdtogo:Short
-    Print the resources in a file/directory
+    Print the contents of a package
 -->
 
-`cat` prints the resources in a file or directory as yaml to stdout.
+`cat` prints the contents of a package to stdout. KRM resources (YAML/JSON)
+are formatted as YAML, while non-KRM text files are printed raw. Outputs are
+separated by document separators.
 
 ### Synopsis
 
@@ -24,8 +26,10 @@ kpt pkg cat [FILE | DIR]
 
 ```shell
 FILE | DIR:
-  Path to a directory either a directory containing files with KRM resources, or
-  a file with KRM resource(s). Defaults to the current directory.
+  Path to a file or a directory containing a kpt package. Displays all
+  package files: KRM resources (YAML/JSON) are formatted by default,
+  and non-KRM text files (e.g., README.md) are shown as raw content.
+  Binary files are skipped. Defaults to the current directory.
 ```
 
 <!--mdtogo-->
@@ -54,13 +58,18 @@ FILE | DIR:
 <!--mdtogo:Examples-->
 
 ```shell
-# Print resource from a file.
+# Print all package contents from current directory.
+$ kpt pkg cat
+```
+
+```shell
+# Print a single resource file.
 $ kpt pkg cat path/to/deployment.yaml
 ```
 
 ```shell
-# Print resources from current directory.
-$ kpt pkg cat
+# Print a non-KRM file.
+$ kpt pkg cat path/to/README.md
 ```
 
 <!--mdtogo-->
