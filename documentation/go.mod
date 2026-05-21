@@ -1,5 +1,3 @@
 module github.com/kptdev/docs
 
-go 1.26.3
-
-require github.com/google/docsy v0.14.3 // indirect
+go 1.25.9
