@@ -68,7 +68,7 @@ Validation goes hand-in-hand with customization. KRM functions can be used to au
 
 A kpt package is a bundle of configuration _data_. It is represented as a directory tree containing the KRM resources using YAML as the file format.
 
-A package is explicitly declared using a file named `Kptfile`. This file contains a KRM resource of type `Kptfile`. The Kptfile contains metadata about the package and is simply a regular resource in the YAML format.
+A package is explicitly declared using a file named `Kptfile`. This file contains a KRM resource of kind `Kptfile`. The Kptfile contains metadata about the package and is simply a regular resource in the YAML format.
 
 Just as directories can be nested, a package can contain another package. This is called a _subpackage_.
 
@@ -104,7 +104,7 @@ status:
       reason: RenderFailed
       message: |-
         pkg.render: pkg .:
-        	pipeline.run: must run with `--allow-exec` option to allow running function binaries
+          pipeline.run: must run with `--allow-exec` option to allow running function binaries
 ```
 
 The status condition is recorded only in the root Kptfile, not in subpackages. The error message, in failure cases, provides details about what went wrong during the render operation.
