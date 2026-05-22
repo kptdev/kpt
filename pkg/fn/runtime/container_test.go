@@ -38,6 +38,7 @@ func TestContainerFn(t *testing.T) {
 		{
 			name:   "no-op function",
 			image:  "ghcr.io/kptdev/krm-functions-catalog/no-op:latest",
+                        input:  "apiVersion: v1\nkind: ResourceList\nmetadata:\n  name: input\nitems: []\n",
 			output: "apiVersion: v1\nkind: ResourceList\nmetadata:\n  name: output\nitems: []\n",
 		},
 		{
