@@ -15,9 +15,9 @@
 package kptops
 
 import (
+	"strings"
 	"testing"
 
-	utilstrings "github.com/kptdev/kpt/internal/util/strings"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 )
 
@@ -141,8 +141,8 @@ upstreamLock:
     commit: abcdef
 `
 
-	if utilstrings.NormalizeAndTrim(got) != utilstrings.NormalizeAndTrim(want) {
-		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", utilstrings.NormalizeLineEndings(want), utilstrings.NormalizeLineEndings(got))
+	if strings.TrimSpace(strings.ReplaceAll(got, "\r\n", "\n")) != strings.TrimSpace(strings.ReplaceAll(want, "\r\n", "\n")) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", strings.ReplaceAll(want, "\r\n", "\n"), strings.ReplaceAll(got, "\r\n", "\n"))
 	}
 }
 
@@ -166,7 +166,7 @@ metadata:
   name: new-name # name inline comment
 `
 
-	if utilstrings.NormalizeAndTrim(got) != utilstrings.NormalizeAndTrim(want) {
-		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", utilstrings.NormalizeLineEndings(want), utilstrings.NormalizeLineEndings(got))
+	if strings.TrimSpace(strings.ReplaceAll(got, "\r\n", "\n")) != strings.TrimSpace(strings.ReplaceAll(want, "\r\n", "\n")) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", strings.ReplaceAll(want, "\r\n", "\n"), strings.ReplaceAll(got, "\r\n", "\n"))
 	}
 }
