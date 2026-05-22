@@ -59,6 +59,7 @@ index fedcba9..7654321 100644
 	}
 }
 
+
 func TestNormalizeDiff_NonMapRunPreservesOrder(t *testing.T) {
 	input := `diff --git a/Kptfile b/Kptfile
 index 1234567..89abcde 100644
