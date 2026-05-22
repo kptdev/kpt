@@ -21,8 +21,6 @@ import (
 	"slices"
 	"strings"
 
-	"sigs.k8s.io/kustomize/api/konfig"
-	kustomizetypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -32,6 +30,7 @@ import (
 const (
 	// constants related to kustomize
 	kustomizationAPIGroup = "kustomize.config.k8s.io"
+	kustomizationKind     = "Kustomization"
 )
 
 func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
@@ -237,7 +236,7 @@ func isKustomization(n *yaml.RNode) bool {
 		// read the file path of the resource
 		resourceFile := filepath.Base(resourcePath)
 
-		if slices.Contains(konfig.RecognizedKustomizationFileNames(), resourceFile) {
+		if slices.Contains(RecognizedKustomizationFileNames(), resourceFile) {
 			return true
 		}
 	}
@@ -250,7 +249,7 @@ func isKustomization(n *yaml.RNode) bool {
 		return true
 	}
 
-	if meta.APIVersion == "" && meta.Kind == kustomizetypes.KustomizationKind {
+	if meta.APIVersion == "" && meta.Kind == kustomizationKind {
 		return true
 	}
 
@@ -275,4 +274,14 @@ func (e *ValidateError) Error() string {
 	}
 	fmt.Fprintf(&sb, "Reason: %s\n", e.Reason)
 	return sb.String()
+}
+
+// RecognizedKustomizationFileNames taken from sigs.k8s.io/kustomize/api@v0.21.1/konfig/general.go
+// to avoid dependency.
+func RecognizedKustomizationFileNames() []string {
+	return []string{
+		"kustomization.yaml",
+		"kustomization.yml",
+		"Kustomization",
+	}
 }

@@ -136,7 +136,7 @@ func (i *ResultItem) String() string {
 	if i.Severity == "" {
 		severity = framework.Info
 	}
-	list := []interface{}{severity}
+	list := []any{severity}
 	if len(idStringList) > 0 {
 		formatString += " %s"
 		list = append(list, strings.Join(idStringList, "/"))
