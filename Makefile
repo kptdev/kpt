@@ -72,7 +72,7 @@ lint: lint-api
 		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
 	fi
 
-test:
+test: test-api
 	go test -cover ${LDFLAGS} ./...
 
 # This target is used to run Go tests that require docker runtime.
@@ -154,7 +154,7 @@ vulncheck: build
 	# Scan the source
 	GOFLAGS= go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
-.PHONY: fix-api fmt-api generate-api tidy-api lint-api vet-api api
+.PHONY: fix-api fmt-api generate-api tidy-api lint-api test-api vet-api api
 
 fix-api:
 	make -C api fix
@@ -170,6 +170,9 @@ tidy-api:
 
 lint-api:
 	make -C api lint
+
+test-api:
+	make -C api test
 
 vet-api:
 	make -C api vet

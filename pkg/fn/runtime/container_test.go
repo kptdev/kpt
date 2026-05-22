@@ -19,12 +19,14 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"testing"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 func TestContainerFn(t *testing.T) {
@@ -38,7 +40,8 @@ func TestContainerFn(t *testing.T) {
 		{
 			name:   "no-op function",
 			image:  "ghcr.io/kptdev/krm-functions-catalog/no-op:latest",
-			output: "apiVersion: v1\nkind: ResourceList\nmetadata:\n  name: output\nitems: []\n",
+			input:  fmt.Sprintf("apiVersion: %s\nkind: %s\n", kio.ResourceListAPIVersion, kio.ResourceListKind), // TODO: remove when SDK is fixed
+			output: fmt.Sprintf("apiVersion: %s\nkind: %s\n", kio.ResourceListAPIVersion, kio.ResourceListKind),
 		},
 		{
 			name:  "non-existing image",

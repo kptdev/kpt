@@ -18,7 +18,7 @@ SHELL := bash
 include ../make/info.mk
 
 .PHONY: all
-all: fix vet fmt lint tidy
+all: fix vet fmt lint test tidy
 
 .PHONY: fix
 fix:
@@ -44,6 +44,10 @@ lint:
 	else \
 		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
 	fi
+
+.PHONY: test
+test:
+	go test -cover ${LDFLAGS} ./...
 
 .PHONY: vet
 vet:
