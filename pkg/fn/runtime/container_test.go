@@ -36,6 +36,7 @@ func TestContainerFn(t *testing.T) {
 		err    bool
 	}{
 		{
+
 			name:  "no-op function",
 			image: "ghcr.io/kptdev/krm-functions-catalog/no-op:latest",
 			input: `apiVersion: config.kubernetes.io/v1
@@ -74,6 +75,7 @@ items:
       internal.config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/path: 'svc.yaml'
 `,
+
 		},
 		{
 			name:  "non-existing image",
