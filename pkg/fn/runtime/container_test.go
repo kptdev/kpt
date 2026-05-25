@@ -36,9 +36,44 @@ func TestContainerFn(t *testing.T) {
 		err    bool
 	}{
 		{
-			name:   "no-op function",
-			image:  "ghcr.io/kptdev/krm-functions-catalog/no-op:latest",
-			output: "apiVersion: v1\nkind: ResourceList\nmetadata:\n  name: output\nitems: []\n",
+			name:  "no-op function",
+			image: "ghcr.io/kptdev/krm-functions-catalog/no-op:latest",
+			input: `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deployment
+      annotations:
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx-svc
+      annotations:
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
+`,
+			output: `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    annotations:
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'deployment.yaml'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: nginx-svc
+    annotations:
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'svc.yaml'
+`,
 		},
 		{
 			name:  "non-existing image",
