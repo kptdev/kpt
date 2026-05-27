@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,14 @@
 package live
 
 import (
+	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apis/actuation"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -155,31 +159,17 @@ func TestLoadStore(t *testing.T) {
 			_ = wrapped.Store(tc.objs, tc.objStatus)
 			invStored, err := wrapped.GetObject()
 			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
+				require.Error(t, err)
 				return
 			}
-			if !tc.isError && err != nil {
-				t.Fatalf("unexpected error %v received", err)
-				return
-			}
+			require.NoError(t, err)
 			wrapped = WrapInventoryObj(invStored)
 			objs, err := wrapped.Load()
-			if !tc.isError && err != nil {
-				t.Fatalf("unexpected error %v received", err)
-				return
-			}
-			if !objs.Equal(tc.objs) {
-				t.Fatalf("expected inventory objs (%v), got (%v)", tc.objs, objs)
-			}
+			require.NoError(t, err)
+			require.True(t, objs.Equal(tc.objs), "expected inventory objs (%v), got (%v)", tc.objs, objs)
 			resourceStatus, _, err := unstructured.NestedSlice(invStored.Object, "status", "resourceStatuses")
-			if err != nil {
-				t.Fatalf("unexpected error %v received", err)
-			}
-			if len(resourceStatus) != len(tc.objStatus) {
-				t.Fatalf("expected %d resource status but got %d", len(tc.objStatus), len(resourceStatus))
-			}
+			require.NoError(t, err)
+			require.Len(t, resourceStatus, len(tc.objStatus), "expected %d resource status but got %d", len(tc.objStatus), len(resourceStatus))
 		})
 	}
 }
@@ -225,18 +215,78 @@ func TestIsResourceGroupInventory(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := IsResourceGroupInventory(tc.invObj)
 			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
+				require.Error(t, err)
 				return
 			}
-			if !tc.isError && err != nil {
-				t.Fatalf("unexpected error %v received", err)
-				return
-			}
-			if tc.expected != actual {
-				t.Errorf("expected inventory as (%t), got (%t)", tc.expected, actual)
-			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual, "expected inventory as (%t), got (%t)", tc.expected, actual)
 		})
 	}
+}
+
+// TestWrapInventoryObjWithContext_StoresContext stores ctx on the wrapper.
+func TestWrapInventoryObjWithContext_StoresContext(t *testing.T) {
+	type ctxKey struct{}
+	ctx := context.WithValue(context.Background(), ctxKey{}, "propagated")
+
+	storage := WrapInventoryObjWithContext(ctx)(inventoryObj)
+	icm, ok := storage.(*InventoryResourceGroup)
+	require.True(t, ok, "WrapInventoryObjWithContext produced unexpected type %T", storage)
+	require.NotNil(t, icm.ctx, "expected ctx on InventoryResourceGroup; got nil")
+	require.Equal(t, "propagated", icm.ctx.Value(ctxKey{}), "expected stored ctx to carry propagated value")
+}
+
+// TestWrapInventoryObj_LeavesContextNil keeps legacy nil ctx.
+func TestWrapInventoryObj_LeavesContextNil(t *testing.T) {
+	storage := WrapInventoryObj(inventoryObj)
+	icm, ok := storage.(*InventoryResourceGroup)
+	require.True(t, ok, "WrapInventoryObj produced unexpected type %T", storage)
+	require.Nil(t, icm.ctx, "expected legacy wrapper to leave ctx nil; got %v", icm.ctx)
+}
+
+// TestWrapInventoryObjWithContext_NilCtxDefaultsToBackground normalizes nil ctx.
+func TestWrapInventoryObjWithContext_NilCtxDefaultsToBackground(t *testing.T) {
+	//nolint:staticcheck // SA1012: deliberately passing a nil context to exercise the nil-safety guard.
+	storage := WrapInventoryObjWithContext(nil)(inventoryObj)
+	icm, ok := storage.(*InventoryResourceGroup)
+	require.True(t, ok, "WrapInventoryObjWithContext(nil) produced unexpected type %T", storage)
+	require.NotNil(t, icm.ctx, "expected nil ctx to be normalized to Background(); got nil")
+	// Background() never cancels; Done() returns a nil channel.
+	require.Nil(t, icm.ctx.Done(), "expected Background()-equivalent ctx; Done() returned non-nil")
+}
+
+// TestResourceGroupCRDMatched_BackCompatSignaturePreserved pins exported signatures.
+func TestResourceGroupCRDMatched_BackCompatSignaturePreserved(t *testing.T) {
+	pinSignatures := func(
+		_ func(cmdutil.Factory) bool,
+		_ func(context.Context, cmdutil.Factory) bool,
+	) {
+	}
+	pinSignatures(ResourceGroupCRDMatched, ResourceGroupCRDMatchedWithContext)
+}
+
+// TestContextOrBackground covers stored ctx and fallback behavior.
+func TestContextOrBackground(t *testing.T) {
+	t.Run("returns stored ctx when set", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		icm := &InventoryResourceGroup{ctx: ctx}
+
+		got := icm.contextOrBackground()
+		require.Same(t, ctx, got, "expected contextOrBackground to return the stored ctx")
+		// Cancellation on the original ctx must be visible through the returned ctx.
+		cancel()
+		select {
+		case <-got.Done():
+		default:
+			require.FailNow(t, "returned ctx did not observe cancellation of the stored ctx")
+		}
+	})
+
+	t.Run("falls back to Background when nil", func(t *testing.T) {
+		icm := &InventoryResourceGroup{}
+		got := icm.contextOrBackground()
+		require.NotNil(t, got, "contextOrBackground returned nil; expected context.Background()")
+		// Background() never cancels; Done() returns a nil channel.
+		require.Nil(t, got.Done(), "expected Background-equivalent ctx; Done channel was not nil")
+	})
 }

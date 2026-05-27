@@ -15,6 +15,7 @@
 package migrate
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -169,7 +170,7 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
 			migrateRunner.rgFile = tc.rgFilename
-			migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+			migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
 				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			err = migrateRunner.migrateKptfileToRG([]string{dir})
@@ -247,7 +248,7 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
-			migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+			migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
 				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})

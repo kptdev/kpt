@@ -133,7 +133,7 @@ func (r *Runner) RunE(c *cobra.Command, args []string) error {
 	}
 
 	// Create and execute the planner.
-	planner, err := kptplanner.NewClusterPlanner(r.factory)
+	planner, err := kptplanner.NewClusterPlannerWithContext(r.ctx, r.factory)
 	if err != nil {
 		return err
 	}
