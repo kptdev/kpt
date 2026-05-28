@@ -70,14 +70,15 @@ status:
 
 The `Kptfile` contains several sections to keep track of the package and its state: the `upstream` section, the `upstreamLock` section, and the `status` section. These sections are defined as follows:
 
-1. The `upstream` section contains the user-specified Git reference to the upstream package. This contains three pieces
-of information:
+1. The `upstream` section contains the user-specified Git        
+   reference to the upstream package. This contains three pieces
+   of information:
    - `repo`: This is the Git repository where the package can be found.
    - `directory`: This is the directory within the Git repository where this package can be found.
    - `ref`: This is the Git reference for the package. This can be a branch, tag, or a commit SHA.
 2. The `upstreamLock` section records the upstream Git reference (the exact Git SHA) that was fetched by kpt. This section is managed by kpt and should not be changed manually.
 3. The `status` section records the operational state of the package. This is managed by kpt and tracks the execution
-status of operations such as `render`. The `status.conditions` field contains a list of condition objects, similarly to the way in which Kubernetes tracks the conditions on the resources. For example, after running `kpt fn render`, a `Rendered` condition is automatically recorded to indicate whether the last render succeeded or failed.
+   status of operations such as `render`. The `status.conditions` field contains a list of condition objects, similarly to the way in which Kubernetes tracks the conditions on the resources. For example, after running `kpt fn render`, a `Rendered` condition is automatically recorded to indicate whether the last render succeeded or failed.
 
 Let us now look at the `Kptfile` for the `mysql` subpackage:
 
