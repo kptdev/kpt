@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,4 +21,12 @@ stdErrStripLines:
 
 exitCode: 1
 
-stdErr: "[error]: failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`"
+stdErr: |
+  Package: "no-fnconfig"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+  [FAIL] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [Results]: [info]: `FunctionConfig` is not given
+   Stderr: failed to evaluate function: error: function failure  Exit code: 1

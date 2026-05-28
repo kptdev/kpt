@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,10 +62,10 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: staging
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: backend`
 
@@ -140,10 +140,10 @@ metadata:
   name: app-with-db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: staging
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: db`
 
@@ -159,10 +159,10 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: db
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: backend`
 

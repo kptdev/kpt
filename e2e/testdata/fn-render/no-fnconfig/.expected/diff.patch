@@ -1,11 +1,11 @@
 diff --git a/Kptfile b/Kptfile
-index f2d1249..6772376 100644
+index f2fdc9a..c6b117b 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -8,3 +8,25 @@ pipeline:
+@@ -8,3 +8,27 @@ pipeline:
        configMap:
          namespace: staging
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
 +status:
 +  conditions:
 +    - type: Rendered
@@ -16,15 +16,17 @@ index f2d1249..6772376 100644
 +        	pipeline.run: already handled error
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+        stderr: '[error] : failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`'
++        results:
++          - message: namespace [default] updated to "staging", 1 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
++        stderr: 'failed to evaluate function: error: function failure'
 +        exitCode: 1
 +        results:
-+          - message: 'failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`'
-+            severity: error
-+        errorResults:
-+          - message: 'failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`'
-+            severity: error
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5: exit code 1'
++          - message: '`FunctionConfig` is not given'
++            severity: info
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/set-labels:latest: exit code 1'

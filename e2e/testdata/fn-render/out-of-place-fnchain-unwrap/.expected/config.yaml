@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,8 +53,21 @@ stdOut: |
     name: custom
     annotations:
       foo: bar
-    namespace: staging
     labels:
       tier: backend
   spec:
     image: nginx:1.2.3
+  ---
+  apiVersion: kpt.dev/v1
+  kind: Kptfile
+  metadata:
+    name: app
+    annotations:
+      foo: bar
+    labels:
+      tier: backend
+  pipeline:
+    mutators:
+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+        configMap:
+          namespace: staging

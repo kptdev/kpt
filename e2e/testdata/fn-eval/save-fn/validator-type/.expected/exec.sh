@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval -s -t validator -i set-namespace:v0.2.0 -- namespace=staging
+kpt fn eval -s -t validator -i set-namespace:latest -- namespace=staging

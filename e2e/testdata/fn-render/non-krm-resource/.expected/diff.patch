@@ -1,9 +1,9 @@
 diff --git a/Kptfile b/Kptfile
-index 1307fb5..a5c31bf 100644
+index ae603c9..38d3a2a 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -10,3 +10,17 @@ pipeline:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
        configMap:
          tier: backend
 +status:
@@ -16,7 +16,7 @@ index 1307fb5..a5c31bf 100644
 +        	pipeline.run: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        executionError: 'input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`'
 +        exitCode: 1
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`'
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest: input resource list must contain only KRM resources: non-krm.yaml: resource must have `apiVersion`'

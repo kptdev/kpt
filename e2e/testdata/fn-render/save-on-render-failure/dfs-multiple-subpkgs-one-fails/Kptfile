@@ -8,6 +8,6 @@ info:
   description: DFS - Multiple subpackages, sub2 fails
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         pkg: root

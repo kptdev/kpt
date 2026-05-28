@@ -6,13 +6,15 @@ stdErrStripLines:
   - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
 
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" in 0s
   [Results]: [info] metadata.annotations: set annotations: {"foo":"bar"}, [info] spec.template.metadata.annotations: set annotations: {"foo":"bar"}, [info] metadata.annotations: set annotations: {"foo":"bar"}
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [Results]: [info]: set 4 labels in total
 
 stdOut: |
   apiVersion: config.kubernetes.io/v1
@@ -36,11 +38,11 @@ stdOut: |
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: "0"
-        config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/index: "0"
-        internal.config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/seqindent: compact
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/seqindent: 'compact'
         foo: bar
       namespace: staging
       labels:
@@ -61,13 +63,12 @@ stdOut: |
     metadata:
       name: custom
       annotations:
-        config.kubernetes.io/index: "1"
-        config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/index: "1"
-        internal.config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/seqindent: compact
+        config.kubernetes.io/index: '1'
+        config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '1'
+        internal.config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/seqindent: 'compact'
         foo: bar
-      namespace: staging
       labels:
         tier: backend
     spec:

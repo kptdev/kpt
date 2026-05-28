@@ -1,20 +1,19 @@
 diff --git a/Kptfile b/Kptfile
-index 043dcac..58ddc42 100644
+index cd1b1e5..a14e2ce 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: app-with-db
-+  namespace: staging
 +  labels:
 +    tier: db
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-@@ -9,3 +12,18 @@ pipeline:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+@@ -9,3 +11,34 @@ pipeline:
          namespace: staging
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
        configPath: labelconfig.yaml
 +status:
 +  conditions:
@@ -23,34 +22,49 @@ index 043dcac..58ddc42 100644
 +      reason: RenderSuccess
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        results:
++          - message: namespace [default] updated to "db", 1 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
 +        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        results:
++          - message: set 3 labels in total
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        results:
++          - message: namespace [db default] updated to "staging", 3 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
 +        exitCode: 0
++        results:
++          - message: set 8 labels in total
++            severity: info
 diff --git a/db/Kptfile b/db/Kptfile
-index 264dd2e..8dd7c37 100644
+index a0e6f2d..5e0e30a 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
-@@ -2,6 +2,10 @@ apiVersion: kpt.dev/v1
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: db
-+  namespace: staging
 +  labels:
 +    app: backend
 +    tier: db
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/db/resources.yaml b/db/resources.yaml
-index dabe43c..e9be40c 100644
+index dabe43c..25f77c1 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -15,5 +15,18 @@ apiVersion: apps/v1
+@@ -15,5 +15,13 @@ apiVersion: apps/v1
  kind: StatefulSet
  metadata:
    name: db
@@ -64,11 +78,6 @@ index dabe43c..e9be40c 100644
 +    matchLabels:
 +      app: backend
 +      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        app: backend
-+        tier: db
 diff --git a/labelconfig.yaml b/labelconfig.yaml
 index 22d2de2..8712cbf 100644
 --- a/labelconfig.yaml
@@ -83,10 +92,10 @@ index 22d2de2..8712cbf 100644
  data:
    tier: db
 diff --git a/resources.yaml b/resources.yaml
-index f2eec52..8b2113d 100644
+index f2eec52..dcf72b1 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,12 +15,25 @@ apiVersion: apps/v1
+@@ -15,12 +15,20 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -98,16 +107,11 @@ index f2eec52..8b2113d 100644
 +  selector:
 +    matchLabels:
 +      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        tier: db
  ---
  apiVersion: custom.io/v1
  kind: Custom
  metadata:
    name: custom
-+  namespace: staging
 +  labels:
 +    tier: db
  spec:

@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,15 @@ actualStripLines:
   - "    stderr: 'WARNING: The requested image''s platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested'"
 
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" in 0s
+  Package: "short-image-path"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [Results]: [info]: set 4 labels in total
+  Successfully executed 2 function(s) in 1 package(s).
+  For complete results, see results/results.yaml
 
 stdErrStripLines:
   - "  Stderr:"

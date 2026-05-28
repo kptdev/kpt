@@ -1,12 +1,12 @@
 diff --git a/Kptfile b/Kptfile
-index 8a2f9e1..49b7fb6 100644
+index 377ab52..4155d35 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,11 +4,35 @@ metadata:
+@@ -4,11 +4,40 @@ metadata:
    name: no-save-on-render-failure
  pipeline:
    mutators:
--  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 -    configMap:
 -      namespace: staging
 -  - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
@@ -14,7 +14,7 @@ index 8a2f9e1..49b7fb6 100644
 -      app: myapp
 -  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 -    configPath: starlark-fn-failure.yaml
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +      configMap:
 +        namespace: staging
 +    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
@@ -32,8 +32,13 @@ index 8a2f9e1..49b7fb6 100644
 +        	pipeline.run: already handled error
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        exitCode: 0
++        results:
++          - message: namespace [default] updated to "staging", 1 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
 +        exitCode: 0
 +      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest

@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,6 @@
 
 set -eo pipefail
 
-kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 -o stdout -- namespace=staging \
+kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -o stdout -- namespace=staging \
 | kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest -- foo=bar \
-| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5 -o unwrap -- tier=backend
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:latest -o unwrap -- tier=backend

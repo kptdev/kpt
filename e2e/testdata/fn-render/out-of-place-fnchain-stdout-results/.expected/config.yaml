@@ -6,25 +6,6 @@ stdOut: |
   apiVersion: config.kubernetes.io/v1
   kind: ResourceList
   items:
-  - apiVersion: kpt.dev/v1
-    kind: Kptfile
-    metadata:
-      name: app
-      annotations:
-        config.kubernetes.io/index: "0"
-        config.kubernetes.io/path: Kptfile
-        internal.config.kubernetes.io/index: "0"
-        internal.config.kubernetes.io/path: Kptfile
-        internal.config.kubernetes.io/seqindent: wide
-        foo: bar
-      namespace: staging
-      labels:
-        tier: backend
-    pipeline:
-      mutators:
-      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-        configMap:
-          namespace: staging
   # Copyright 2021 The kpt Authors
   #
   # Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,11 +24,11 @@ stdOut: |
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: "0"
-        config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/index: "0"
-        internal.config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/seqindent: compact
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/seqindent: 'compact'
         foo: bar
       namespace: staging
       labels:
@@ -68,17 +49,34 @@ stdOut: |
     metadata:
       name: custom
       annotations:
-        config.kubernetes.io/index: "1"
-        config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/index: "1"
-        internal.config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/seqindent: compact
+        config.kubernetes.io/index: '1'
+        config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '1'
+        internal.config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/seqindent: 'compact'
         foo: bar
-      namespace: staging
       labels:
         tier: backend
     spec:
       image: nginx:1.2.3
+  - apiVersion: kpt.dev/v1
+    kind: Kptfile
+    metadata:
+      name: app
+      annotations:
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'Kptfile'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'Kptfile'
+        internal.config.kubernetes.io/seqindent: 'wide'
+        foo: bar
+      labels:
+        tier: backend
+    pipeline:
+      mutators:
+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+        configMap:
+          namespace: staging
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s

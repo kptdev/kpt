@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,4 +22,4 @@ fi
 
 echo "KRM_FN_RUNTIME is ${KRM_FN_RUNTIME}"
 # run eval with KRM_FN_RUNTIME unset.
-kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 -- namespace=staging
+kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -- namespace=staging

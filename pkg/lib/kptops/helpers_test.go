@@ -35,8 +35,8 @@ import (
 // testFunctions maps image references to in-process function implementations.
 // Test Kptfiles must use these exact image strings for the runtime to resolve them.
 var testFunctions = map[string]framework.ResourceListProcessorFunc{
-	"ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5":    setLabels,
-	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1": setNamespace,
+	"ghcr.io/kptdev/krm-functions-catalog/set-labels:latest":    setLabels,
+	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest": setNamespace,
 }
 
 // runtime is a test-only FunctionRuntime that resolves functions from testFunctions.

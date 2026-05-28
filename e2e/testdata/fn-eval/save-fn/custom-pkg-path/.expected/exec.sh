@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval ./sub-pkg -s -t mutator -i set-namespace:v0.2.0 --fn-config=./sub-pkg/fn-config.yaml
+kpt fn eval ./sub-pkg -s -t mutator -i set-namespace:latest --fn-config=./sub-pkg/fn-config.yaml

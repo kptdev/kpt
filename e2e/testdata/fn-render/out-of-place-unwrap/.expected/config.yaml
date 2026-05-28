@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021-2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,23 @@
 # limitations under the License.
 
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
 
 stdOut: |
+  # Copyright 2021 The kpt Authors
+  #
+  # Licensed under the Apache License, Version 2.0 (the "License");
+  # you may not use this file except in compliance with the License.
+  # You may obtain a copy of the License at
+  #
+  #      http://www.apache.org/licenses/LICENSE-2.0
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS IS" BASIS,
+  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  # See the License for the specific language governing permissions and
+  # limitations under the License.
   apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -29,6 +42,15 @@ stdOut: |
   kind: Custom
   metadata:
     name: custom
-    namespace: staging
   spec:
     image: nginx:1.2.3
+  ---
+  apiVersion: kpt.dev/v1
+  kind: Kptfile
+  metadata:
+    name: app
+  pipeline:
+    mutators:
+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+        configMap:
+          namespace: staging
