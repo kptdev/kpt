@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -159,7 +160,21 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
 	Run: func(_ *cobra.Command, _ []string) {
-		fmt.Printf("%s\n", version)
+		var hash, dirty string
+		if info, ok := debug.ReadBuildInfo(); ok {
+			for _, setting := range info.Settings {
+				switch setting.Key {
+				case "vcs.revision":
+					hash = setting.Value
+				case "vcs.modified":
+					if strings.ToLower(setting.Value) == "true" {
+						dirty = " (dirty)"
+					}
+				}
+			}
+		}
+		fmt.Printf("Version: %s\n", version)
+		fmt.Printf("Git commit: %s%s\n", hash, dirty)
 	},
 }
 
