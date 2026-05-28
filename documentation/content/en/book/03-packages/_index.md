@@ -14,7 +14,8 @@ menu:
 
 ## Getting a package
 
-Packaging in kpt is based on Git forking. The producer publishes a package by committing it to a Git repository. The consumer forks the package, in order to use it.
+Packaging in kpt is based on Git forking. The producer publishes a package 
+by committing it to a Git repository. The consumer forks the package, in order to use it.
 
 Let us revisit the Wordpress example:
 
@@ -164,7 +165,7 @@ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 kpt does not maintain any state on your local machine outside the directory from where you fetched the package. Making changes to the package is achieved by manipulating the local filesystem. At the lowest level, _editing_ a package is simply a process that does either of the following:
 
 - It changes the resources within the package. Examples are as follows:
-  - Authoring new a Deployment resource.
+  - Authoring a new Deployment resource.
   - Customizing an existing Deployment resource.
   - Modifying the Kptfile.
 - It changes the package hierarchy, also called _package composition_. Examples are as follows:
@@ -173,7 +174,7 @@ kpt does not maintain any state on your local machine outside the directory from
 
 Editing a package ultimately results in a Git commit that fully specifies the package. Depending on your use case, this process can be manual or automated.
 
-We will cover package composition later in this section. For now, let us focus on editing the resources _within_ a package.
+We will cover package composition later in this chapter. For now, let us focus on editing the resources _within_ a package.
 
 ### Initializing the local repository
 
@@ -249,7 +250,7 @@ If you are happy with the changes, then commit them, using the following command
 git add .; git commit -m "My changes"
 ```
 
-## Updating the package
+### Updating the package
 
 You can, for example, update to the `main` version of the `wordpress` package, using the following command:
 
@@ -356,14 +357,14 @@ First, delete the `mysql` subpackage. Deleting a subpackage is done by deleting 
 rm -r wordpress/mysql
 ```
 
-You now need to add back the `mysql` subpackage, using the following two approaches:
+You now need to add back the `mysql` subpackage, using either of the following two approaches:
 
 - creating a package
 - getting an existing package
 
 These two approaches are described in the following sections.
 
-### Creating a package
+### Creating a mysql subpackage
 
 Initialize the package, using the following command:
 
@@ -396,7 +397,7 @@ A kpt package is published as a Git subdirectory containing the KRM resources. P
 
 As an example, republish the local `wordpress` package to your own repository.
 
-Start by initializing the the `wordpress` directory as a Git repository, if you have not already done so:
+Start by initializing the `wordpress` directory as a Git repository, if you have not already done so:
 
 ```shell
 cd wordpress; git init; git add .; git commit -m "My wordpress package"
