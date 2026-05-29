@@ -30,6 +30,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -607,7 +608,7 @@ metadata:
 	assert.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
 	assert.Equal(t, kptfilev1.ConditionTypeRendered, rootKf.Status.Conditions[0].Type)
-	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
+	assert.Equal(t, metav1.ConditionTrue, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderSuccess, rootKf.Status.Conditions[0].Reason)
 }
 
@@ -639,7 +640,7 @@ metadata:
 	assert.NoError(t, err)
 	assert.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
-	assert.Equal(t, kptfilev1.ConditionFalse, rootKf.Status.Conditions[0].Status)
+	assert.Equal(t, metav1.ConditionFalse, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderFailed, rootKf.Status.Conditions[0].Reason)
 	assert.Contains(t, rootKf.Status.Conditions[0].Message, "set-annotations failed")
 }
@@ -679,7 +680,7 @@ status:
 	assert.NoError(t, err)
 	assert.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
-	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
+	assert.Equal(t, metav1.ConditionTrue, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderSuccess, rootKf.Status.Conditions[0].Reason)
 	assert.Empty(t, rootKf.Status.Conditions[0].Message)
 }
@@ -725,7 +726,7 @@ metadata:
 	assert.NoError(t, err)
 	assert.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
-	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
+	assert.Equal(t, metav1.ConditionTrue, rootKf.Status.Conditions[0].Status)
 
 	// Subpackage should NOT have any condition
 	subKf, err := kptfileutil.ReadKptfile(mockFS, subPkgPath)
@@ -901,7 +902,7 @@ metadata:
 
 	// Condition should be set
 	assert.Len(t, rootKf.Status.Conditions, 1)
-	assert.Equal(t, kptfilev1.ConditionFalse, rootKf.Status.Conditions[0].Status)
+	assert.Equal(t, metav1.ConditionFalse, rootKf.Status.Conditions[0].Status)
 
 	// RenderStatus should be populated
 	rs := rootKf.Status.RenderStatus

@@ -25,6 +25,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -391,10 +392,10 @@ func (k *Kptfile) WithUpstreamLockRef(repoRef, dir, ref string, index int) *Kptf
 }
 
 // WithStatusCondition adds a status condition to the Kptfile.
-func (k *Kptfile) WithStatusCondition(condition kptfilev1.Condition) *Kptfile {
+func (k *Kptfile) WithStatusCondition(condition metav1.Condition) *Kptfile {
 	if k.Status == nil {
 		k.Status = &kptfilev1.Status{
-			Conditions: []kptfilev1.Condition{},
+			Conditions: []metav1.Condition{},
 		}
 	}
 	k.Status.Conditions = append(k.Status.Conditions, condition)

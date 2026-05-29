@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 17a7822..98fa855 100644
+index 17a7822..b60071f 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -12,3 +12,22 @@ pipeline:
+@@ -12,3 +12,25 @@ pipeline:
      - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.4
        configMap:
          tier: backend
@@ -10,7 +10,10 @@ index 17a7822..98fa855 100644
 +  conditions:
 +    - type: Rendered
 +      status: "True"
++      observedgeneration: 0
++      lasttransitiontime: "0001-01-01T00:00:00Z"
 +      reason: RenderSuccess
++      message: ""
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.1

@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 0f5d7db..3ac3611 100644
+index 0f5d7db..381e420 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -6,3 +6,12 @@ pipeline:
+@@ -6,3 +6,15 @@ pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
        configPath: starlark-httpbin-gen.yaml
@@ -10,7 +10,10 @@ index 0f5d7db..3ac3611 100644
 +  conditions:
 +    - type: Rendered
 +      status: "True"
++      observedgeneration: 0
++      lasttransitiontime: "0001-01-01T00:00:00Z"
 +      reason: RenderSuccess
++      message: ""
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest

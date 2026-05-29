@@ -25,6 +25,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/update"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const setLabelsImageV01 = "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1"
@@ -174,7 +175,7 @@ func TestUpdate_FastForward(t *testing.T) {
 						WithUpstream(kptRepo, "/", "master", "fast-forward").
 						WithUpstreamLock(kptRepo, "/", "master", "abc123").
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
-							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+							metav1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 						WithStatusRenderStatus(
 							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 							nil, ""),
@@ -197,9 +198,9 @@ func TestUpdate_FastForward(t *testing.T) {
 			origin: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithStatusCondition(kptfilev1.Condition{
+						WithStatusCondition(metav1.Condition{
 							Type:   "Ready",
-							Status: kptfilev1.ConditionTrue,
+							Status: metav1.ConditionTrue,
 							Reason: "AllReady",
 						}),
 				).
@@ -209,13 +210,13 @@ func TestUpdate_FastForward(t *testing.T) {
 					pkgbuilder.NewKptfile().
 						WithUpstream(kptRepo, "/", "master", "fast-forward").
 						WithUpstreamLock(kptRepo, "/", "master", "abc123").
-						WithStatusCondition(kptfilev1.Condition{
+						WithStatusCondition(metav1.Condition{
 							Type:   "Ready",
-							Status: kptfilev1.ConditionTrue,
+							Status: metav1.ConditionTrue,
 							Reason: "AllReady",
 						}).
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
-							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+							metav1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 						WithStatusRenderStatus(
 							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 							nil, ""),
@@ -224,9 +225,9 @@ func TestUpdate_FastForward(t *testing.T) {
 			updated: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithStatusCondition(kptfilev1.Condition{
+						WithStatusCondition(metav1.Condition{
 							Type:   "Ready",
-							Status: kptfilev1.ConditionTrue,
+							Status: metav1.ConditionTrue,
 							Reason: "AllReady",
 						}),
 				).
@@ -238,9 +239,9 @@ func TestUpdate_FastForward(t *testing.T) {
 					pkgbuilder.NewKptfile().
 						WithUpstream(kptRepo, "/", "master", "fast-forward").
 						WithUpstreamLock(kptRepo, "/", "master", "abc123").
-						WithStatusCondition(kptfilev1.Condition{
+						WithStatusCondition(metav1.Condition{
 							Type:   "Ready",
-							Status: kptfilev1.ConditionTrue,
+							Status: metav1.ConditionTrue,
 							Reason: "AllReady",
 						}),
 				).
@@ -261,7 +262,7 @@ func TestUpdate_FastForward(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
-							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+							metav1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 						WithStatusRenderStatus(
 							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 							nil, ""),
@@ -287,7 +288,7 @@ func TestUpdate_FastForward(t *testing.T) {
 						WithUpstream(kptRepo, "/", "master", "fast-forward").
 						WithUpstreamLock(kptRepo, "/", "master", "abc123").
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
-							kptfilev1.ConditionFalse, kptfilev1.ReasonRenderFailed, "function failed")).
+							metav1.ConditionFalse, kptfilev1.ReasonRenderFailed, "function failed")).
 						WithStatusRenderStatus(
 							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 1, ExecutionError: "validation error"}},
 							nil, "render failed"),
@@ -351,7 +352,7 @@ func TestFastForward_RenderStatusDoesNotMaskLocalEdits(t *testing.T) {
 				WithUpstreamLock(kptRepo, "/", "master", "abc123").
 				WithPipeline(pkgbuilder.NewFunction(setLabelsImageV01)).
 				WithStatusCondition(kptfilev1.NewRenderedCondition(
-					kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+					metav1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 				WithStatusRenderStatus(
 					[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 					nil, ""),

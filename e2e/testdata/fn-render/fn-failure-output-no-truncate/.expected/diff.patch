@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 0586af9..ff80297 100644
+index 0586af9..fc78162 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -7,3 +7,59 @@ pipeline:
+@@ -7,3 +7,61 @@ pipeline:
      - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
        configMap:
          strict: "true"
@@ -10,6 +10,8 @@ index 0586af9..ff80297 100644
 +  conditions:
 +    - type: Rendered
 +      status: "False"
++      observedgeneration: 0
++      lasttransitiontime: "0001-01-01T00:00:00Z"
 +      reason: RenderFailed
 +      message: |-
 +        pkg.render: pkg .:

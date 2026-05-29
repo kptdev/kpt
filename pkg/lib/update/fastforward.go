@@ -27,6 +27,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
@@ -178,7 +179,7 @@ func clearRenderStatus(kf *kptfilev1.KptFile) {
 	}
 	kf.Status.RenderStatus = nil
 
-	kf.Status.Conditions = slices.DeleteFunc(kf.Status.Conditions, func(condition kptfilev1.Condition) bool {
+	kf.Status.Conditions = slices.DeleteFunc(kf.Status.Conditions, func(condition metav1.Condition) bool {
 		return condition.Type == kptfilev1.ConditionTypeRendered
 	})
 	if len(kf.Status.Conditions) == 0 {

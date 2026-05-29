@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 3c63ab9..775911c 100644
+index 3c63ab9..6d2e709 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -6,3 +6,18 @@ pipeline:
+@@ -6,3 +6,21 @@ pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
        configPath: search-replace-conf.yaml
@@ -10,7 +10,10 @@ index 3c63ab9..775911c 100644
 +  conditions:
 +    - type: Rendered
 +      status: "True"
++      observedgeneration: 0
++      lasttransitiontime: "0001-01-01T00:00:00Z"
 +      reason: RenderSuccess
++      message: ""
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest

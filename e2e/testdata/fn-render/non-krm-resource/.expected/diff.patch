@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 1307fb5..a5c31bf 100644
+index 1307fb5..52cf581 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -10,3 +10,17 @@ pipeline:
+@@ -10,3 +10,19 @@ pipeline:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
        configMap:
          tier: backend
@@ -10,6 +10,8 @@ index 1307fb5..a5c31bf 100644
 +  conditions:
 +    - type: Rendered
 +      status: "False"
++      observedgeneration: 0
++      lasttransitiontime: "0001-01-01T00:00:00Z"
 +      reason: RenderFailed
 +      message: |-
 +        pkg.render: pkg .:

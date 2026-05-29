@@ -20,9 +20,9 @@ package v1
 
 import (
 	"fmt"
-	"strings"
 
 	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -409,7 +409,7 @@ func (i Inventory) IsValid() bool {
 }
 
 type Status struct {
-	Conditions   []Condition   `yaml:"conditions,omitempty" json:"conditions,omitempty"`
+	Conditions   []metav1.Condition   `yaml:"conditions,omitempty" json:"conditions,omitempty"`
 	RenderStatus *RenderStatus `yaml:"renderStatus,omitempty" json:"renderStatus,omitempty"`
 }
 
@@ -443,20 +443,12 @@ type PipelineStepResult struct {
 type Condition struct {
 	Type string `yaml:"type" json:"type"`
 
-	Status ConditionStatus `yaml:"status" json:"status"`
+	Status metav1.ConditionStatus `yaml:"status" json:"status"`
 
 	Reason string `yaml:"reason,omitempty" json:"reason,omitempty"`
 
 	Message string `yaml:"message,omitempty" json:"message,omitempty"`
 }
-
-type ConditionStatus string
-
-const (
-	ConditionTrue    ConditionStatus = "True"
-	ConditionFalse   ConditionStatus = "False"
-	ConditionUnknown ConditionStatus = "Unknown"
-)
 
 // Rendered condition type and reasons
 const (
@@ -466,8 +458,8 @@ const (
 )
 
 // NewRenderedCondition creates a Rendered status condition.
-func NewRenderedCondition(status ConditionStatus, reason, message string) Condition {
-	return Condition{
+func NewRenderedCondition(status metav1.ConditionStatus, reason, message string) metav1.Condition {
+	return metav1.Condition{
 		Type:    ConditionTypeRendered,
 		Status:  status,
 		Reason:  reason,
@@ -484,15 +476,3 @@ const (
 	SaveOnRenderFailureAnnotation = "kpt.dev/save-on-render-failure"
 )
 
-func ToCondition(value string) ConditionStatus {
-	switch strings.ToLower(value) {
-	case strings.ToLower(string(ConditionTrue)):
-		return ConditionTrue
-
-	case strings.ToLower(string(ConditionFalse)):
-		return ConditionFalse
-
-	default:
-		return ConditionUnknown
-	}
-}

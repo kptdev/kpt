@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 266b33a..4be3f73 100644
+index 266b33a..a2d8b79 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -8,10 +8,21 @@ pipeline:
+@@ -8,10 +8,24 @@ pipeline:
        configMap:
          namespace: staging
        selectors:
@@ -19,7 +19,10 @@ index 266b33a..4be3f73 100644
 +  conditions:
 +    - type: Rendered
 +      status: "True"
++      observedgeneration: 0
++      lasttransitiontime: "0001-01-01T00:00:00Z"
 +      reason: RenderSuccess
++      message: ""
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0

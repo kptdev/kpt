@@ -363,6 +363,8 @@ status:
   conditions:
     - type: foo
       status: "True"
+      observedgeneration: 0
+      lasttransitiontime: "0001-01-01T00:00:00Z"
       reason: reason
       message: message
 `,
@@ -432,10 +434,14 @@ status:
   conditions:
     - type: foo
       status: "True"
+      observedgeneration: 0
+      lasttransitiontime: "0001-01-01T00:00:00Z"
       reason: reason
       message: message
     - type: bar
       status: "False"
+      observedgeneration: 0
+      lasttransitiontime: "0001-01-01T00:00:00Z"
       reason: reason
       message: message
 		`,
@@ -562,10 +568,14 @@ status:
   conditions:
     - type: foo
       status: "True"
+      observedgeneration: 0
+      lasttransitiontime: "0001-01-01T00:00:00Z"
       reason: reason
       message: message
     - type: zork
       status: Unknown
+      observedgeneration: 0
+      lasttransitiontime: "0001-01-01T00:00:00Z"
       reason: reason
       message: message
 `,
