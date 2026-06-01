@@ -74,7 +74,7 @@ func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*ya
 		return nodes.Updated(), nil
 	}
 	if yaml.IsMissingOrNull(nodes.Updated()) && yaml.IsMissingOrNull(nodes.Origin()) {
-		// value added or removed in update
+		// value absent in both origin and update
 		return nodes.Dest(), nil
 	}
 
