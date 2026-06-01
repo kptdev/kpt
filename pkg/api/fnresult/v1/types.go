@@ -164,38 +164,50 @@ var _ json.Unmarshaler = &Field{}
 var _ yaml.Unmarshaler = &Field{}
 
 func (in *Field) UnmarshalJSON(data []byte) error {
-	rnode, err := yaml.Parse(string(data))
+	rNode, err := yaml.Parse(string(data))
 	if err != nil {
 		return fmt.Errorf("error parsing `field`: %v", err)
 	}
 
-	return in.unmarshalRNode(rnode)
+	return in.unmarshalRNode(rNode)
 }
 
 func (in *Field) UnmarshalYAML(value *yaml.Node) error {
-	rnode := yaml.NewRNode(value)
+	rNode := yaml.NewRNode(value)
 
-	return in.unmarshalRNode(rnode)
+	return in.unmarshalRNode(rNode)
 }
 
-func (in *Field) unmarshalRNode(rnode *yaml.RNode) error {
-	if path, err := rnode.GetString("path"); err == nil {
+func (in *Field) unmarshalRNode(rNode *yaml.RNode) error {
+	if path, err := rNode.GetString("path"); err == nil {
 		in.Path = strings.TrimSpace(path)
 	}
 
-	if currentValue, err := rnode.Pipe(yaml.Lookup("currentValue")); err == nil {
-		in.CurrentValue, err = currentValue.String()
-		if err != nil {
-			return fmt.Errorf("error parsing `field.currentValue`: %v", err)
+	if currentValue, err := rNode.Pipe(yaml.Lookup("currentValue")); err == nil && currentValue.YNode() != nil {
+		switch currentValue.YNode().Kind {
+		case yaml.ScalarNode:
+			in.CurrentValue = currentValue.YNode().Value
+		default:
+			in.CurrentValue, err = currentValue.String()
+			if err != nil {
+				return fmt.Errorf("error parsing `field.currentValue`: %v", err)
+			}
 		}
+
 		in.CurrentValue = strings.TrimSpace(in.CurrentValue)
 	}
 
-	if proposedValue, err := rnode.Pipe(yaml.Lookup("proposedValue")); err == nil {
-		in.ProposedValue, err = proposedValue.String()
-		if err != nil {
-			return fmt.Errorf("error parsing `field.proposedValue`: %v", err)
+	if proposedValue, err := rNode.Pipe(yaml.Lookup("proposedValue")); err == nil && proposedValue.YNode() != nil {
+		switch proposedValue.YNode().Kind {
+		case yaml.ScalarNode:
+			in.ProposedValue = proposedValue.YNode().Value
+		default:
+			in.ProposedValue, err = proposedValue.String()
+			if err != nil {
+				return fmt.Errorf("error parsing `field.proposedValue`: %v", err)
+			}
 		}
+
 		in.ProposedValue = strings.TrimSpace(in.ProposedValue)
 	}
 
