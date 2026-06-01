@@ -168,7 +168,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrategy) error {
 	// Run the destroyer. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObjWithContext(r.ctx), live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrat
 		DryRunStrategy:   dryRunStrategy,
 		EmitStatusEvents: true,
 	}
-	ch := destroyer.Run(context.Background(), inv, options)
+	ch := destroyer.Run(r.ctx, inv, options)
 
 	// Print the preview strategy unless the output format is json.
 	if dryRunStrategy.ClientOrServerDryRun() && r.output != printers.JSONPrinter {

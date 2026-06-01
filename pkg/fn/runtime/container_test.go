@@ -19,14 +19,12 @@ package runtime
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 func TestContainerFn(t *testing.T) {
@@ -38,10 +36,44 @@ func TestContainerFn(t *testing.T) {
 		err    bool
 	}{
 		{
-			name:   "no-op function",
-			image:  "ghcr.io/kptdev/krm-functions-catalog/no-op:latest",
-			input:  fmt.Sprintf("apiVersion: %s\nkind: %s\n", kio.ResourceListAPIVersion, kio.ResourceListKind), // TODO: remove when SDK is fixed
-			output: fmt.Sprintf("apiVersion: %s\nkind: %s\n", kio.ResourceListAPIVersion, kio.ResourceListKind),
+			name:  "no-op function",
+			image: "ghcr.io/kptdev/krm-functions-catalog/no-op:latest",
+			input: `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deployment
+      annotations:
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: nginx-svc
+      annotations:
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
+`,
+			output: `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    annotations:
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'deployment.yaml'
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: nginx-svc
+    annotations:
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'svc.yaml'
+`,
 		},
 		{
 			name:  "non-existing image",

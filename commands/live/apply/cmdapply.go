@@ -228,7 +228,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return err
 			}
-		} else if !live.ResourceGroupCRDMatched(f) {
+		} else if !live.ResourceGroupCRDMatchedWithContext(r.ctx, f) {
 			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return &cmdutil.ResourceGroupCRDNotLatestError{
 					Err: err,
@@ -239,7 +239,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObjWithContext(r.ctx), live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
 	if err != nil {
 		return err
 	}

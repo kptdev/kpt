@@ -19,8 +19,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -112,9 +114,8 @@ func TestClusterPlanner(t *testing.T) {
 			}).BuildPlan(ctx, &FakeInventoryInfo{}, []*unstructured.Unstructured{}, Options{})
 			require.NoError(t, err)
 
-			if diff := cmp.Diff(tc.expectedPlan, plan); diff != "" {
-				t.Errorf("plan mismatch (-want +got):\n%s", diff)
-			}
+			diff := cmp.Diff(tc.expectedPlan, plan)
+			assert.Empty(t, diff, "plan mismatch (-want +got):\n%s", diff)
 		})
 	}
 }
@@ -165,4 +166,14 @@ func (fii *FakeInventoryInfo) ID() string {
 
 func (fii *FakeInventoryInfo) Strategy() inventory.Strategy {
 	return inventory.NameStrategy
+}
+
+// TestNewClusterPlanner_BackCompatSignaturePreserved pins exported signatures.
+func TestNewClusterPlanner_BackCompatSignaturePreserved(t *testing.T) {
+	pinSignatures := func(
+		_ func(util.Factory) (*ClusterPlanner, error),
+		_ func(context.Context, util.Factory) (*ClusterPlanner, error),
+	) {
+	}
+	pinSignatures(NewClusterPlanner, NewClusterPlannerWithContext)
 }
