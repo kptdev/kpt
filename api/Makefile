@@ -47,7 +47,7 @@ lint:
 
 .PHONY: test
 test:
-	go test -cover ${LDFLAGS} ./...
+	go test -cover ./...
 
 .PHONY: vet
 vet:
