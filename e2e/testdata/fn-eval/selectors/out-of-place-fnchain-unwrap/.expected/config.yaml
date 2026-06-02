@@ -17,8 +17,8 @@ stdErrStripLines:
   - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
 
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 1 resource(s)
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" in 0s
   [Results]: [info] metadata.annotations: set annotations: {"foo":"bar"}

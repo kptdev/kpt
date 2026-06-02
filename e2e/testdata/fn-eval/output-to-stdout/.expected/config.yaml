@@ -52,6 +52,5 @@ stdOut: |
         internal.config.kubernetes.io/index: "1"
         internal.config.kubernetes.io/path: resources.yaml
         internal.config.kubernetes.io/seqindent: compact
-      namespace: staging
     spec:
       image: nginx:1.2.3

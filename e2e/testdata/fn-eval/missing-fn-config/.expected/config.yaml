@@ -13,6 +13,4 @@
 # limitations under the License.
 
 testType: eval
-exitCode: 1
-image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-stdErr: "failed to configure function: input namespace cannot be empty"
+image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest

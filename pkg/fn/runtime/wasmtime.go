@@ -77,6 +77,12 @@ func NewWasmtimeFn(loader WasmLoader) (*WasmtimeFn, error) {
 		return nil, err
 	}
 
+	// Also register all imports under "gojs" module name for compatibility
+	// with Go-compiled WASM binaries that use the "gojs" import module.
+	if err = addGojsAliases(f.store, linker, f); err != nil {
+		return nil, fmt.Errorf("failed to add gojs aliases: %w", err)
+	}
+
 	// Create an instance of the module.
 	if f.Instance, err = linker.Instantiate(f.store, module); err != nil {
 		return nil, err
@@ -220,4 +226,61 @@ func (f *WasmtimeFn) Write(fd int, b []byte) (n int, err error) {
 // Error implements the wasmexec.errorLogger interface
 func (f *WasmtimeFn) Error(format string, params ...any) {
 	log.Printf("ERROR: "+format+"\n", params...)
+}
+
+// addGojsAliases registers all Go wasm imports under the "gojs" module name
+// in addition to the "go" module name. This provides compatibility with
+// Go-compiled WASM binaries that import from "gojs" (used by some Go versions).
+func addGojsAliases(store *wasmtime.Store, linker *wasmtime.Linker, instance wasmexec.Instance) error {
+	i32 := wasmtime.NewValType(wasmtime.KindI32)
+	mod := wasmexec.New(instance)
+
+	type fnDef struct {
+		name string
+		fn   func(uint32)
+	}
+
+	defs := []fnDef{
+		{"runtime.wasmExit", mod.WasmExit},
+		{"runtime.wasmWrite", mod.WasmWrite},
+		{"runtime.resetMemoryDataView", mod.ResetMemoryDataView},
+		{"runtime.nanotime1", mod.Nanotime1},
+		{"runtime.walltime", mod.Walltime},
+		{"runtime.scheduleTimeoutEvent", mod.ScheduleTimeoutEvent},
+		{"runtime.clearTimeoutEvent", mod.ClearTimeoutEvent},
+		{"runtime.getRandomData", mod.GetRandomData},
+		{"syscall/js.finalizeRef", mod.FinalizeRef},
+		{"syscall/js.stringVal", mod.StringVal},
+		{"syscall/js.valueGet", mod.ValueGet},
+		{"syscall/js.valueSet", mod.ValueSet},
+		{"syscall/js.valueDelete", mod.ValueDelete},
+		{"syscall/js.valueIndex", mod.ValueIndex},
+		{"syscall/js.valueSetIndex", mod.ValueSetIndex},
+		{"syscall/js.valueCall", mod.ValueCall},
+		{"syscall/js.valueInvoke", mod.ValueCall},
+		{"syscall/js.valueNew", mod.ValueNew},
+		{"syscall/js.valueLength", mod.ValueLength},
+		{"syscall/js.valuePrepareString", mod.ValuePrepareString},
+		{"syscall/js.valueLoadString", mod.ValueLoadString},
+		{"syscall/js.valueInstanceOf", mod.ValueInstanceOf},
+		{"syscall/js.copyBytesToGo", mod.CopyBytesToGo},
+		{"syscall/js.copyBytesToJS", mod.CopyBytesToJS},
+		{"debug", mod.Debug},
+	}
+
+	for _, d := range defs {
+		d := d // capture
+		fn := wasmtime.NewFunc(
+			store,
+			wasmtime.NewFuncType([]*wasmtime.ValType{i32}, []*wasmtime.ValType{}),
+			func(caller *wasmtime.Caller, args []wasmtime.Val) ([]wasmtime.Val, *wasmtime.Trap) {
+				d.fn(uint32(args[0].I32()))
+				return []wasmtime.Val{}, nil
+			},
+		)
+		if err := linker.Define("gojs", d.name, fn); err != nil {
+			return fmt.Errorf("failed to define gojs::%s: %w", d.name, err)
+		}
+	}
+	return nil
 }
