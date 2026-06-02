@@ -1,9 +1,9 @@
 diff --git a/out/resources.yaml b/out/resources.yaml
 new file mode 100644
-index 0000000..94ced72
+index NORMALIZED
 --- /dev/null
 +++ b/out/resources.yaml
-@@ -0,0 +1,39 @@
+@@ NORMALIZED @@
 +# Copyright 2021 The kpt Authors
 +#
 +# Licensed under the Apache License, Version 2.0 (the "License");

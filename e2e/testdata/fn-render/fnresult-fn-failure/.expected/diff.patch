@@ -1,64 +1,65 @@
 diff --git a/Kptfile b/Kptfile
-index 0586af9..ff80297 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -7,3 +7,59 @@ pipeline:
-     - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
-       configMap:
-         strict: "true"
+@@ NORMALIZED @@
+-      configMap:
+-        strict: true
++  - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
++    configMap:
++      strict: true
 +status:
 +  conditions:
-+    - type: Rendered
-+      status: "False"
-+      reason: RenderFailed
-+      message: |-
-+        pkg.render: pkg .:
-+        	pipeline.run: already handled error
++  - type: Rendered
++    message: |-
++      pkg.render: pkg .:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
 +  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest: exit code 1
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
-+        stderr: 'failed to evaluate function: error: function failure'
-+        exitCode: 1
-+        results:
-+          - message: missing properties 'selector', 'template'
-+            severity: error
-+            resourceRef:
-+              apiVersion: apps/v1
-+              kind: Deployment
-+              name: nginx-deployment
-+            field:
-+              path: spec
-+            file:
-+              path: resources.yaml
-+          - message: got string, want null or integer
-+            severity: error
-+            resourceRef:
-+              apiVersion: apps/v1
-+              kind: Deployment
-+              name: nginx-deployment
-+            field:
-+              path: spec.replicas
-+            file:
-+              path: resources.yaml
-+        errorResults:
-+          - message: missing properties 'selector', 'template'
-+            severity: error
-+            resourceRef:
-+              apiVersion: apps/v1
-+              kind: Deployment
-+              name: nginx-deployment
-+            field:
-+              path: spec
-+            file:
-+              path: resources.yaml
-+          - message: got string, want null or integer
-+            severity: error
-+            resourceRef:
-+              apiVersion: apps/v1
-+              kind: Deployment
-+              name: nginx-deployment
-+            field:
-+              path: spec.replicas
-+            file:
-+              path: resources.yaml
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest: exit code 1'
++      errorResults:
++      - field:
++          path: spec
++        file:
++          path: resources.yaml
++        message: missing properties 'selector', 'template'
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      - field:
++          path: spec.replicas
++        file:
++          path: resources.yaml
++        message: got string, want null or integer
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      exitCode: 1
++      results:
++      - field:
++          path: spec
++        file:
++          path: resources.yaml
++        message: missing properties 'selector', 'template'
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      - field:
++          path: spec.replicas
++        file:
++          path: resources.yaml
++        message: got string, want null or integer
++        resourceRef:
++          apiVersion: apps/v1
++          kind: Deployment
++          name: nginx-deployment
++        severity: error
++      stderr: failed to evaluate function: error: function failure

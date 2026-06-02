@@ -1,8 +1,8 @@
 diff --git a/db/resources.yaml b/db/resources.yaml
-index dabe43c..b44084a 100644
+index NORMALIZED 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -15,5 +15,6 @@ apiVersion: apps/v1
+@@ NORMALIZED @@
  kind: StatefulSet
  metadata:
    name: db
@@ -10,10 +10,10 @@ index dabe43c..b44084a 100644
  spec:
    replicas: 3
 diff --git a/resources.yaml b/resources.yaml
-index f2eec52..b66c419 100644
+index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,6 +15,7 @@ apiVersion: apps/v1
+@@ NORMALIZED @@
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -21,7 +21,7 @@ index f2eec52..b66c419 100644
  spec:
    replicas: 3
  ---
-@@ -22,5 +23,6 @@ apiVersion: custom.io/v1
+@@ NORMALIZED @@
  kind: Custom
  metadata:
    name: custom

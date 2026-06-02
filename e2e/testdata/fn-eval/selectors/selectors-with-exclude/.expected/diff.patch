@@ -1,8 +1,8 @@
 diff --git a/resources.yaml b/resources.yaml
-index 90bc5cf..6d24ecb 100644
+index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -27,6 +27,7 @@ metadata:
+@@ NORMALIZED @@
    labels:
      foo: bar
      foo-1: bar

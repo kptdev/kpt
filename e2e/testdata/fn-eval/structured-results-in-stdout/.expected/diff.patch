@@ -1,8 +1,8 @@
 diff --git a/resources.yaml b/resources.yaml
-index f2eec52..114819d 100644
+index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -16,7 +16,7 @@ kind: Deployment
+@@ NORMALIZED @@
  metadata:
    name: nginx-deployment
  spec:

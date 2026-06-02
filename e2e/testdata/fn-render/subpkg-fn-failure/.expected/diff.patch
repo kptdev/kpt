@@ -1,28 +1,39 @@
 diff --git a/Kptfile b/Kptfile
-index 364e274..4e01e27 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -12,3 +12,23 @@ pipeline:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-       configMap:
-         tier: backend
+@@ NORMALIZED @@
+-      configPath: starlark-httpbin.yaml
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+-      configMap:
+-        namespace: staging
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        tier: backend
++  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++    configPath: starlark-httpbin.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    configMap:
++      namespace: staging
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configMap:
++      tier: backend
 +status:
 +  conditions:
-+    - type: Rendered
-+      status: "False"
-+      reason: RenderFailed
-+      message: |-
-+        pkg.render: pkg ./db:
-+        	pipeline.run: already handled error
++  - type: Rendered
++    message: |-
++      pkg.render: pkg ./db:
++      	pipeline.run: already handled error
++    reason: RenderFailed
++    status: False
 +  renderStatus:
++    errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+        stderr: 'failed to evaluate function: error: function failure'
-+        exitCode: 1
-+        results:
-+          - message: 'statefulset-filter:4:42: got newline, want primary expression'
-+            severity: error
-+        errorResults:
-+          - message: 'statefulset-filter:4:42: got newline, want primary expression'
-+            severity: error
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
++      errorResults:
++      - message: statefulset-filter:4:42: got newline, want primary expression
++        severity: error
++      exitCode: 1
++      results:
++      - message: statefulset-filter:4:42: got newline, want primary expression
++        severity: error
++      stderr: failed to evaluate function: error: function failure

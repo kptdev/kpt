@@ -1,21 +1,18 @@
 diff --git a/sub-pkg/Kptfile b/sub-pkg/Kptfile
-index d9e2f05..82455d5 100644
+index NORMALIZED 100644
 --- a/sub-pkg/Kptfile
 +++ b/sub-pkg/Kptfile
-@@ -2,3 +2,8 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: app
+@@ NORMALIZED @@
 +  namespace: staging
 +pipeline:
 +  mutators:
 +    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +      configPath: fn-config.yaml
 diff --git a/sub-pkg/fn-config.yaml b/sub-pkg/fn-config.yaml
-index 21135f9..1000dd9 100644
+index NORMALIZED 100644
 --- a/sub-pkg/fn-config.yaml
 +++ b/sub-pkg/fn-config.yaml
-@@ -15,5 +15,6 @@ apiVersion: v1
+@@ NORMALIZED @@
  kind: ConfigMap
  metadata:
    name: fn-config
@@ -23,10 +20,10 @@ index 21135f9..1000dd9 100644
  data:
    namespace: staging
 diff --git a/sub-pkg/resources.yaml b/sub-pkg/resources.yaml
-index eed43d6..81473ca 100644
+index NORMALIZED 100644
 --- a/sub-pkg/resources.yaml
 +++ b/sub-pkg/resources.yaml
-@@ -15,6 +15,7 @@ apiVersion: apps/v1
+@@ NORMALIZED @@
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -34,7 +31,7 @@ index eed43d6..81473ca 100644
  spec:
    replicas: 3
  ---
-@@ -22,5 +23,6 @@ apiVersion: custom.io/v1
+@@ NORMALIZED @@
  kind: Custom
  metadata:
    name: custom

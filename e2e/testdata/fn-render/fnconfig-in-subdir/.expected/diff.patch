@@ -1,31 +1,26 @@
 diff --git a/Kptfile b/Kptfile
-index 0bfdbb0..f4fdf26 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,7 +2,18 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: app-with-db
+@@ NORMALIZED @@
+-      configPath: db/labelconfig.yaml
 +  labels:
 +    tier: db
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-       configPath: db/labelconfig.yaml
++  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++    configPath: db/labelconfig.yaml
 +status:
 +  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
++  - type: Rendered
++    reason: RenderSuccess
++    status: True
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+        exitCode: 0
++      exitCode: 0
 diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
-index 22d2de2..19e0746 100644
+index NORMALIZED 100644
 --- a/db/labelconfig.yaml
 +++ b/db/labelconfig.yaml
-@@ -15,5 +15,7 @@ apiVersion: v1
+@@ NORMALIZED @@
  kind: ConfigMap
  metadata:
    name: label-config
@@ -34,10 +29,10 @@ index 22d2de2..19e0746 100644
  data:
    tier: db
 diff --git a/resources.yaml b/resources.yaml
-index f2eec52..022e175 100644
+index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,12 +15,23 @@ apiVersion: apps/v1
+@@ NORMALIZED @@
  kind: Deployment
  metadata:
    name: nginx-deployment

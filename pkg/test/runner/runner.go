@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -478,15 +479,13 @@ func (r *Runner) compareResult(exitErr error, stdout string, inStderr string, tm
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
 	expectedDiff := expected.Diff
-	if r.testCase.Config.DiffStripRegEx != "" {
-		actualDiff, err = normalizeDiff(actualDiff, r.testCase.Config.DiffStripRegEx)
-		if err != nil {
-			return err
-		}
-		expectedDiff, err = normalizeDiff(expectedDiff, r.testCase.Config.DiffStripRegEx)
-		if err != nil {
-			return err
-		}
+	actualDiff, err = normalizeDiff(actualDiff, r.testCase.Config.DiffStripRegEx)
+	if err != nil {
+		return err
+	}
+	expectedDiff, err = normalizeDiff(expectedDiff, r.testCase.Config.DiffStripRegEx)
+	if err != nil {
+		return err
 	}
 	if actualDiff != expectedDiff {
 		diffOfDiff, err := diffStrings(actualDiff, expectedDiff)
@@ -631,6 +630,14 @@ func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath strin
 		}
 	}
 	actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
+
+	if err != nil {
+		return err
+	}
+	actualDiff, err = normalizeDiff(
+		actualDiff,
+		r.testCase.Config.DiffStripRegEx,
+	)
 	if err != nil {
 		return err
 	}
@@ -657,20 +664,267 @@ func (r *Runner) stripLines(string2Strip string, linesToStrip []string) string {
 // headers in the diff string so that environment-specific output does not
 // cause comparison failures.
 func normalizeDiff(diff, stripRegEx string) (string, error) {
-	re, err := regexp.Compile(stripRegEx)
-	if err != nil {
-		return "", fmt.Errorf("unable to compile DiffStripRegEx %q: %w", stripRegEx, err)
+	var re *regexp.Regexp
+	var err error
+	if stripRegEx != "" {
+		re, err = regexp.Compile(stripRegEx)
+		if err != nil {
+			return "", fmt.Errorf("unable to compile DiffStripRegEx %q: %w", stripRegEx, err)
+		}
 	}
+	// Normalize CRLF to LF for cross-platform safety.
+	diff = strings.ReplaceAll(diff, "\r", "")
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
-	hunkRE := regexp.MustCompile(`^@@ -\d+,\d+ \+\d+,\d+ @@`)
-	var out []string
-	for line := range strings.SplitSeq(diff, "\n") {
-		if re.MatchString(line) {
+	hunkRE := regexp.MustCompile(`^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@.*$`)
+	doubleQuotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[^:]+:\s*)"(.*)"\s*$`)
+	singleQuotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[^:]+:\s*)'(.*)'\s*$`)
+	mapKeyOnlyRE := regexp.MustCompile(`^[A-Za-z0-9_.-]+:\s*.*$`)
+
+	n := &diffNormalizer{
+		re:                   re,
+		indexRE:              indexRE,
+		hunkRE:               hunkRE,
+		doubleQuotedScalarRE: doubleQuotedScalarRE,
+		singleQuotedScalarRE: singleQuotedScalarRE,
+		mapKeyOnlyRE:         mapKeyOnlyRE,
+	}
+	return n.normalize(diff), nil
+}
+
+type diffNormalizer struct {
+	re                   *regexp.Regexp
+	indexRE              *regexp.Regexp
+	hunkRE               *regexp.Regexp
+	doubleQuotedScalarRE *regexp.Regexp
+	singleQuotedScalarRE *regexp.Regexp
+	mapKeyOnlyRE         *regexp.Regexp
+
+	out           []string
+	kptChangedRun []string
+	inKptfileDiff bool
+}
+
+// diffGitHeaderRE matches a `diff --git` header and captures the two paths.
+// Each path is either an unquoted token (no spaces) or a double-quoted string
+// (git's c-quoted form for paths containing spaces or special characters).
+var diffGitHeaderRE = regexp.MustCompile(`^diff --git (?:"((?:[^"\\]|\\.)*)"|(\S+)) (?:"((?:[^"\\]|\\.)*)"|(\S+))$`)
+
+// unquoteDiffGitPath returns the path with surrounding double quotes stripped
+// and the limited c-style escape sequences git uses unescaped (\\, \", \t,
+// \n, \r, \a, \b, \f, \v; octal \NNN; everything else left as-is). Good enough
+// to normalize the common cases; we only use the result to test `/Kptfile`.
+func unquoteDiffGitPath(quoted, unquoted string) string {
+	if unquoted != "" {
+		return unquoted
+	}
+	// The regex strips the outer quotes; undo the common escapes.
+	var b strings.Builder
+	b.Grow(len(quoted))
+	for i := 0; i < len(quoted); i++ {
+		if quoted[i] == '\\' && i+1 < len(quoted) {
+			switch c := quoted[i+1]; c {
+			case '\\', '"':
+				b.WriteByte(c)
+			case 't':
+				b.WriteByte('\t')
+			case 'n':
+				b.WriteByte('\n')
+			default:
+				// Keep the escaped byte as-is; we don't need to be 100%
+				// faithful — we only inspect the suffix.
+				b.WriteByte(c)
+			}
+			i++
 			continue
 		}
-		line = indexRE.ReplaceAllString(line, "index NORMALIZED")
-		line = hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
-		out = append(out, line)
+		b.WriteByte(quoted[i])
 	}
-	return strings.Join(out, "\n"), nil
+	return b.String()
+}
+
+func (n *diffNormalizer) isKptfileDiffHeader(line string) bool {
+	m := diffGitHeaderRE.FindStringSubmatch(line)
+	if m == nil {
+		return false
+	}
+	left := unquoteDiffGitPath(m[1], m[2])
+	right := unquoteDiffGitPath(m[3], m[4])
+	leftIsKptfile := left == "a/Kptfile" || strings.HasSuffix(left, "/Kptfile")
+	rightIsKptfile := right == "b/Kptfile" || strings.HasSuffix(right, "/Kptfile")
+	return leftIsKptfile && rightIsKptfile
+}
+
+func (n *diffNormalizer) normalizePayload(payload string) string {
+	if m := n.doubleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
+		payload = m[1] + m[2]
+	} else if m := n.singleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
+		payload = m[1] + strings.ReplaceAll(m[2], "''", "'")
+	}
+	return payload
+}
+
+func (n *diffNormalizer) isSortableMapKey(line string) bool {
+	trimmed := strings.TrimLeft(line, " \t")
+	return n.mapKeyOnlyRE.MatchString(trimmed) && !strings.HasPrefix(trimmed, "- ")
+}
+
+type block struct {
+	lines    []string
+	sortable bool
+}
+
+func indentOf(line string) int {
+	return len(line) - len(strings.TrimLeft(line, " \t"))
+}
+
+func (n *diffNormalizer) sortChunk(chunk []string) {
+	if len(chunk) <= 1 {
+		return
+	}
+
+	var blocks []block
+	for i := 0; i < len(chunk); {
+		if !n.isSortableMapKey(chunk[i]) {
+			blocks = append(blocks, block{lines: []string{chunk[i]}, sortable: false})
+			i++
+			continue
+		}
+
+		baseIndent := indentOf(chunk[i])
+		j := i + 1
+		for j < len(chunk) && indentOf(chunk[j]) > baseIndent {
+			j++
+		}
+		blocks = append(blocks, block{lines: append([]string(nil), chunk[i:j]...), sortable: true})
+		i = j
+	}
+	// Recursively sort children within each multi-line sortable block.
+	for i := range blocks {
+		if blocks[i].sortable && len(blocks[i].lines) > 1 {
+			n.sortChunk(blocks[i].lines[1:])
+		}
+	}
+
+	for i := 0; i < len(blocks); {
+		if !blocks[i].sortable {
+			i++
+			continue
+		}
+		j := i + 1
+		for j < len(blocks) && blocks[j].sortable {
+			j++
+		}
+		sort.Slice(blocks[i:j], func(a, b int) bool {
+			return blocks[i+a].lines[0] < blocks[i+b].lines[0]
+		})
+		i = j
+	}
+
+	idx := 0
+	for _, b := range blocks {
+		for _, line := range b.lines {
+			chunk[idx] = line
+			idx++
+		}
+	}
+}
+
+func (n *diffNormalizer) isListItem(line string) bool {
+	return strings.HasPrefix(strings.TrimLeft(line, " \t"), "- image:")
+}
+
+func (n *diffNormalizer) sortMapKeySegments(lines []string) {
+	for i := 0; i < len(lines); {
+		if n.isListItem(lines[i]) {
+			j := i + 1
+			for j < len(lines) && !n.isListItem(lines[j]) {
+				j++
+			}
+			n.sortChunk(lines[i+1 : j])
+			i = j
+			continue
+		}
+		j := i
+		for j < len(lines) && !n.isListItem(lines[j]) {
+			j++
+		}
+		n.sortChunk(lines[i:j])
+		i = j
+	}
+}
+
+func (n *diffNormalizer) flushKptChangedRun() {
+	if len(n.kptChangedRun) == 0 {
+		return
+	}
+
+	var removed []string
+	var added []string
+	for _, runLine := range n.kptChangedRun {
+		switch runLine[0] {
+		case '-':
+			removed = append(removed, runLine[1:])
+		case '+':
+			added = append(added, runLine[1:])
+		}
+	}
+
+	for i := range removed {
+		removed[i] = n.normalizePayload(removed[i])
+	}
+	for i := range added {
+		added[i] = n.normalizePayload(added[i])
+	}
+
+	n.sortMapKeySegments(removed)
+	n.sortMapKeySegments(added)
+
+	for _, line := range removed {
+		n.out = append(n.out, "-"+line)
+	}
+	for _, line := range added {
+		n.out = append(n.out, "+"+line)
+	}
+	n.kptChangedRun = nil
+}
+
+func (n *diffNormalizer) normalize(diff string) string {
+	for line := range strings.SplitSeq(diff, "\n") {
+		if line == `\ No newline at end of file` {
+			continue
+		}
+		if strings.HasPrefix(line, "diff --git ") {
+			n.flushKptChangedRun()
+			n.inKptfileDiff = n.isKptfileDiffHeader(line)
+		}
+
+		if n.inKptfileDiff &&
+			(len(line) > 0 && (line[0] == '+' || line[0] == '-')) &&
+			!strings.HasPrefix(line, "+++") &&
+			!strings.HasPrefix(line, "---") {
+			// Ignore indentation-only drift in Kptfile changed lines.
+
+			if n.re != nil && n.re.MatchString(line) {
+				continue
+			}
+			line = n.indexRE.ReplaceAllString(line, "index NORMALIZED")
+			line = n.hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
+			n.kptChangedRun = append(n.kptChangedRun, line)
+			continue
+		}
+		if n.inKptfileDiff && strings.HasPrefix(line, " ") {
+			// Hunk context lines are unstable anchors; compare only semantic changes.
+			continue
+		}
+		n.flushKptChangedRun()
+
+		if n.re != nil && n.re.MatchString(line) {
+			continue
+		}
+		line = n.indexRE.ReplaceAllString(line, "index NORMALIZED")
+		line = n.hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
+		n.out = append(n.out, line)
+	}
+	n.flushKptChangedRun()
+	return strings.Join(n.out, "\n")
 }

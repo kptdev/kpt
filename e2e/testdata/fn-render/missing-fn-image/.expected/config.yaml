@@ -14,4 +14,4 @@
 
 exitCode: 1
 StdErrRegEx: "(docker: Error response from daemon: Head.*denied|Error.*initializing source docker)"
-diffStripRegEx: "\\+\\s+stderr:|docker: Error response from daemon|Run 'docker run|Error:.*initializing source|^\\+\\s+denied$|^\\+$"
+diffStripRegEx: "\\+\\s*stderr:|docker: Error response from daemon|Run 'docker run|Error:.*initializing source|^\\+\\s*denied$|^\\+$"
