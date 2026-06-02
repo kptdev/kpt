@@ -182,3 +182,9 @@ name = "Functions Catalog"
 url = "https://catalog.kpt.dev/"
 weight = 40
 target = "_self"
+
+[[menu.main]]
+name = "Porch"
+url = "https://kpt-porch.netlify.app/"
+weight = 50
+target = "_self"
