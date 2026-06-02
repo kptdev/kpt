@@ -105,6 +105,7 @@ func GetMain(ctx context.Context) *cobra.Command {
 
 	replace(cmd)
 
+	versionCmd.Flags().Bool("short", false, "Print only the concise version identifier")
 	cmd.AddCommand(versionCmd)
 	hideFlags(cmd)
 	return cmd
@@ -159,7 +160,7 @@ var version = "unknown"
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
-	Run: func(_ *cobra.Command, _ []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		var hash, dirty string
 		if info, ok := debug.ReadBuildInfo(); ok {
 			for _, setting := range info.Settings {
@@ -173,7 +174,20 @@ var versionCmd = &cobra.Command{
 				}
 			}
 		}
+
+		short, _ := cmd.Flags().GetBool("short")
+		if short {
+			if version == "unknown" && len(hash) >= 7 {
+				fmt.Printf("%s\n", hash[:7])
+			} else {
+				fmt.Printf("%s\n", version)
+			}
+			return
+		}
 		fmt.Printf("Version: %s\n", version)
+		if hash == "" {
+			hash = "unknown"
+		}
 		fmt.Printf("Git commit: %s%s\n", hash, dirty)
 	},
 }
