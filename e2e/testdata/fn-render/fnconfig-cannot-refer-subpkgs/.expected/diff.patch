@@ -1,10 +1,10 @@
 diff --git a/Kptfile b/Kptfile
-index 0bfdbb0..b4a6160 100644
+index f244e01..dad7306 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -6,3 +6,13 @@ pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
        configPath: db/labelconfig.yaml
 +status:
 +  conditions:

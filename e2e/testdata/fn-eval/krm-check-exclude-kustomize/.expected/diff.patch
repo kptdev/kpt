@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 2985a1a..3dfdcf6 100644
+index 4948ed1..712fea8 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
@@ -10,12 +10,12 @@ index 2985a1a..3dfdcf6 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: set-labels:v0.1.5
+     - image: set-labels:latest
 diff --git a/kustomization.yaml b/kustomization.yaml
-index f3f0207..6c517af 100644
+index f3f0207..0452667 100644
 --- a/kustomization.yaml
 +++ b/kustomization.yaml
-@@ -11,7 +11,9 @@
+@@ -11,7 +11,14 @@
  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  # See the License for the specific language governing permissions and
  # limitations under the License.
@@ -26,11 +26,16 @@ index f3f0207..6c517af 100644
 +metadata:
 +  labels:
 +    tier: backend
++spec:
++  selector:
++    tier: backend
++    matchLabels:
++      tier: backend
 diff --git a/resources.yaml b/resources.yaml
-index 40a033d..eb585ba 100644
+index 40a033d..dc478d6 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,12 +15,23 @@ apiVersion: apps/v1
+@@ -15,12 +15,19 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -41,10 +46,6 @@ index 40a033d..eb585ba 100644
 +  selector:
 +    matchLabels:
 +      tier: backend
-+  template:
-+    metadata:
-+      labels:
-+        tier: backend
  ---
  apiVersion: custom.io/v1
  kind: Custom

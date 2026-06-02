@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 207a7ca..c351a54 100644
+index aa1ee97..1777945 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,15 +1,41 @@
+@@ -1,15 +1,49 @@
  apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
@@ -16,7 +16,7 @@ index 207a7ca..c351a54 100644
    description: DFS - Parent mutator fails
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
        configMap:
 -        test: "parent-mutator-fail"
 +        test: parent-mutator-fail
@@ -32,10 +32,18 @@ index 207a7ca..c351a54 100644
 +        	pipeline.run: already handled error
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        results:
++          - message: namespace [default] updated to "subpkg-ns", 1 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
 +        exitCode: 0
++        results:
++          - message: set 6 labels in total
++            severity: info
 +      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 +        stderr: 'failed to evaluate function: error: function failure'
 +        exitCode: 1
@@ -72,14 +80,13 @@ index 55ceaae..f589633 100644
    def fail_fn(items):
      fail("intentional failure for testing")
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index e940ae8..9b73f07 100644
+index fd277c8..ed7a995 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
-@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: subpkg
-+  namespace: subpkg-ns
 +  labels:
 +    test: parent-mutator-fail
  info:

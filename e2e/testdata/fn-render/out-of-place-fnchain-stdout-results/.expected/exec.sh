@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2021 The kpt Authors
+# Copyright 2021, 2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ results=$(mktemp -d)
 
 kpt fn render -o stdout --results-dir $results \
 | kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest --results-dir $results -- foo=bar \
-| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5 --results-dir $results -- tier=backend
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:latest --results-dir $results -- tier=backend
 
 # remove temporary directory
 rm -r $results

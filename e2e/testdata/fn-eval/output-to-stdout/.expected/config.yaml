@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021, 2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,11 +34,11 @@ stdOut: |
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: "0"
-        config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/index: "0"
-        internal.config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/seqindent: compact
+        config.kubernetes.io/index: '0'
+        config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/seqindent: 'compact'
       namespace: staging
     spec:
       replicas: 3
@@ -47,11 +47,10 @@ stdOut: |
     metadata:
       name: custom
       annotations:
-        config.kubernetes.io/index: "1"
-        config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/index: "1"
-        internal.config.kubernetes.io/path: resources.yaml
-        internal.config.kubernetes.io/seqindent: compact
-      namespace: staging
+        config.kubernetes.io/index: '1'
+        config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '1'
+        internal.config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/seqindent: 'compact'
     spec:
       image: nginx:1.2.3
