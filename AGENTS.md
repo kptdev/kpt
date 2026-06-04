@@ -8,7 +8,7 @@ in this repository.
 ### Coding
 
 * Never commit directly to this repository, always aim for a pull request
-* Always ask for a final review of a human before commiting
+* Always ask for a final review from a human before committing
 * Make sure that AI agent usage is attributed in the correct way
 
 ### Reviewing PRs
@@ -35,7 +35,7 @@ in this repository.
 - Go 1.26.3 (specified in `go.mod`)
 - Git (required and checked at runtime)
 - Docker or Podman (for `test-docker` and function runtime tests)
-- Kind v0.30.0 (for e2e live apply tests with Kubernetes 1.33 and 1.34)
+- KinD (CI uses v0.30.0; `make install-kind` installs v0.29.0) (for e2e live apply tests with Kubernetes 1.33 and 1.34)
 
 ### Build
 
@@ -73,12 +73,12 @@ Requires Docker or Podman. Tests that need container runtime (e.g., pipeline tes
 #### Render tests
 
 ```bash
-make make test-fn-render T=".*"
+make test-fn-render T=".*"
 ```
 #### Eval tests
 
 ```bash
-make make test-fn-eval T=".*"
+make test-fn-eval T=".*"
 ```
 
 Use `T` parameter to filter tests by regex (e.g., `T=fnconfig` for function config tests). Set `KRM_FN_RUNTIME` to select runtime.
@@ -132,7 +132,7 @@ git config --global user.name "Your Name"
 
 ### Key Source Directories
 
-* **cmd/**: CLI command implementations using Cobra framework
+* **commands/**: CLI command implementations using Cobra framework
 * **run/**: Main CLI setup; contains GetMain() that initializes Cobra commands with environment setup
 * **pkg/**: Core library packages (business logic, utilities)
 * **internal/**: Internal packages; includes internal/docs/generated/ (generated from Markdown via mdtogo)
@@ -244,7 +244,7 @@ If changes modify CLI documentation in documentation/content/en/reference/cli/:
 ### Known CI Skips
 
 * Windows build currently disabled (see `.github/workflows/go.yml` line 88-104, issue #3463)
-* Some linters disabled: `funlen`, `gosec` (marked TODO in .`golangci.yml`)
+* Some linters disabled: `funlen`, `gosec` (marked TODO in `.golangci.yml`)
 
 ## Environment Variables
 
