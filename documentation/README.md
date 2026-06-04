@@ -37,12 +37,12 @@ git submodule update --init --recursive
 
 1. Use US English in the documentation
 
-2. Do not add manually a table of contents to the documents. Hugo and Docsy takes care of this.
+2. Do not manually add a table of contents to the documents. Hugo and Docsy take care of this.
 
-3. Do not use H1 (#) headers in the documents. Docsy generates a H1 header to every document
+3. Do not use H1 (#) headers in the documents. Docsy generates an H1 header for every document
    consistent with the title of the document. Start the headings with H2 (##)
 
-4. Use the built in alerts for notes and alerts
+4. Use the built-in alerts for notes and alerts
 
   ```go-html-template
   {{%/* alert title="Warning" color="primary" */%}}
@@ -56,17 +56,17 @@ git submodule update --init --recursive
   {{%/* /alert */%}}
   ```
 
-5. If you add any commands to the content inline surround the comand with backticks (\` \`), like \`ls -la\`
+5. If you add any commands to the content inline, surround the command with backticks (\` \`), like `ls -la`
 
-6. Do not surround IP addresses, domain names or any other identifyers with backticks. Use italics
-(\* \*) to mark any inline IP address, domain name, file name, file location or similar.
+6. Do not surround IP addresses, domain names, or any other identifiers with backticks. Use italics
+(\* \*) to mark any inline IP address, domain name, file name, file location, or similar.
 
-7. Whenever possible define the type of code for your code blocks
+7. Whenever possible, define the type of code for your code blocks
   * \```shell for all shell blocks
   * \```golang for all Go blocks
   * \```yaml for all YAML blocks
-  * \``` yang for all YANG blocks
-  * a full list of language identifyers is available [here](https://gohugo.io/content-management/syntax-highlighting/#list-of-chroma-highlighting-languages)
+  * \```yang for all YANG blocks
+  * a full list of language identifiers is available [here](https://gohugo.io/content-management/syntax-highlighting/#list-of-chroma-highlighting-languages)
 
 
 8. Links to other kpt doc pages should be absolute:
