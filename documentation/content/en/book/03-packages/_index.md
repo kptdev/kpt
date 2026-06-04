@@ -14,8 +14,8 @@ menu:
 
 ## Getting a package
 
-Packaging in kpt is based on Git forking. The producer publishes a package 
-by committing it to a Git repository. The consumer forks the package, in order to use it.
+Packaging in kpt is based on Git forking. The producer publishes a package
+by committing it to a Git repository. The consumer forks the package in order to use it.
 
 Let us revisit the Wordpress example:
 
@@ -71,8 +71,7 @@ status:
 
 The `Kptfile` contains several sections to keep track of the package and its state: the `upstream` section, the `upstreamLock` section, and the `status` section. These sections are defined as follows:
 
-1. The `upstream` section contains the user-specified Git        
-   reference to the upstream package. This contains three pieces
+1. The `upstream` section contains the user-specified Git reference to the upstream package. This contains three pieces
    of information:
    - `repo`: This is the Git repository where the package can be found.
    - `directory`: This is the directory within the Git repository where this package can be found.
@@ -196,8 +195,7 @@ code wordpress
 
 ### Automation
 
-It is often necessary to automate repetitive or complex operations. Having standardized on KRM for all resources in a package allows you easily to develop automation in different
-toolchains and languages, as well as at levels of abstraction.
+It is often necessary to automate repetitive or complex operations. Having standardized on KRM for all resources in a package allows you to easily develop automation in different toolchains and languages, as well as at levels of abstraction.
 
 For example, setting a label on all the resources in the `wordpress` package can be done using the following function:
 
@@ -364,7 +362,7 @@ You now need to add back the `mysql` subpackage, using either of the following t
 
 These two approaches are described in the following sections.
 
-### Creating a mysql subpackage
+### Creating a `mysql` subpackage
 
 Initialize the package, using the following command:
 
@@ -389,7 +387,7 @@ Fetch the package, using the following command:
 kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20 wordpress/mysql
 ```
 
-This creates an [independent package](#getting-a-package). If you wish to make this a dependent package, then delete the `upstream` and `upstreamLock` sections of the `Kptfile`, in the `mysql` directory.
+This creates an [independent package](#getting-a-package). If you wish to make this a dependent package, then delete the `upstream` and `upstreamLock` sections of the `Kptfile` in the `mysql` directory.
 
 ## Publishing a package
 
