@@ -2,7 +2,7 @@
 
 ### What is the roadmap for kpt?
 
-Please visit the [roadmap document] and the [kpt milestones].
+Please visit the [roadmap GitHub Project](https://github.com/orgs/kptdev/projects/2) and the [kpt milestones].
 
 ### How is kpt different from other solutions?
 
@@ -131,8 +131,6 @@ don't have to alias it. It is pronounced "kept".
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
-[roadmap document]:
-  https://github.com/kptdev/kpt/blob/main/docs/ROADMAP.md
 [kpt milestones]: https://github.com/kptdev/kpt/milestones
 [kustomize solution]:
   https://github.com/kptdev/kpt/tree/main/package-examples/kustomize

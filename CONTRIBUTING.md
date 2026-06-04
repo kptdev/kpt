@@ -178,8 +178,8 @@ Docs are under [documentation/](documentation/). Refer to the [README.md](docume
 documentation contributions. 
 
 
-[error message style guide]: docs/style-guides/errors.md
-[documentation style guide]: docs/style-guides/docs.md
+[error message style guide]: architecture/style-guides/errors.md
+[documentation style guide]: documentation/README.md#styl-guide-for-documentation
 [github help]: https://help.github.com/articles/about-pull-requests/
 [google's open source community guidelines]:
   https://opensource.google.com/conduct/
