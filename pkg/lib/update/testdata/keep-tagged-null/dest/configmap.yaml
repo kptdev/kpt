@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+data:
+  replicas: 1
+  nullKey: null
+  unsetKey:
+  tildeKey: ~
+  emptyStringKey1: ""
+  emptyStringKey2: ''

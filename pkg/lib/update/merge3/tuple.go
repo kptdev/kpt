@@ -34,7 +34,7 @@ type tuple struct {
 func (t *tuple) merge() (*yaml.RNode, error) {
 	return walk.Walker{
 		// same as in merge3.Merge()
-		Visitor:            Visitor{},
+		Visitor:            &Visitor{},
 		VisitKeysAsScalars: true,
 		Sources:            []*yaml.RNode{t.dest, t.original, t.updated},
 

@@ -1,3 +1,4 @@
+// Copyright 2019 The Kubernetes Authors.
 // Copyright 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,25 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// copied from sigs.k8s.io/kustomize/kyaml@v0.21.1/yaml/merge3/visitor.go with modifications
+
 package merge3
 
 import (
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
 
-type ConflictStrategy uint
+type Visitor struct {
+	*merge3.Visitor
+}
 
-const (
-	// TODO: Support more strategies
-	TakeUpdate ConflictStrategy = 1 + iota
-)
-
-type Visitor struct{}
-
-func (m Visitor) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
-	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) {
+func (m *Visitor) VisitMap(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
+	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) { // MODIFIED
 		// explicitly cleared from either dest or update
 		return walk.ClearNode, nil
 	}
@@ -49,7 +48,7 @@ func (m Visitor) VisitMap(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.
 	return nodes.Dest(), nil
 }
 
-func (m Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
+func (m *Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if yaml.IsMissingOrNull(nodes.Updated()) && !yaml.IsMissingOrNull(nodes.Origin()) {
 		// implicitly cleared from update -- element was deleted
 		return walk.ClearNode, nil
@@ -64,8 +63,8 @@ func (m Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yam
 	return nodes.Dest(), nil
 }
 
-func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*yaml.RNode, error) {
-	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) {
+func (m *Visitor) VisitScalar(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
+	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) { // MODIFIED
 		// explicitly cleared from either dest or update
 		return nil, nil
 	}
@@ -97,8 +96,8 @@ func (m Visitor) VisitScalar(nodes walk.Sources, s *openapi.ResourceSchema) (*ya
 	return nodes.Dest(), nil
 }
 
-func (m Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
-	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) {
+func (m *Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
+	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) { // MODIFIED
 		// explicitly cleared from either dest or update
 		return walk.ClearNode, nil
 	}
@@ -126,11 +125,13 @@ func (m Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
 	return nodes.Dest(), nil
 }
 
-func (m Visitor) isCleared(origin, current *yaml.RNode) bool {
-	return !origin.IsTaggedNull() && current.IsTaggedNull()
+// NEW
+// isCleared returns if the node has been present in `left` but explicitly removed in `right`
+func (*Visitor) isCleared(left, right *yaml.RNode) bool {
+	return !left.IsTaggedNull() && right.IsTaggedNull()
 }
 
-func (m Visitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind walk.ListKind) (*yaml.RNode, error) {
+func (m *Visitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind walk.ListKind) (*yaml.RNode, error) {
 	if kind == walk.AssociativeList {
 		return m.visitAList(nodes, s)
 	}
@@ -138,38 +139,20 @@ func (m Visitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind w
 	return m.visitNAList(nodes)
 }
 
-func (m Visitor) getStrValues(nodes walk.Sources) (strValues, error) {
+// SIMPLIFIED
+func (m *Visitor) getStrValues(nodes walk.Sources) (strValues, error) {
 	var uStr, oStr, dStr string
 	var err error
-	if nodes.Updated() != nil && nodes.Updated().YNode() != nil {
-		s := nodes.Updated().YNode().Style
-		defer func() {
-			nodes.Updated().YNode().Style = s
-		}()
-		nodes.Updated().YNode().Style = yaml.FlowStyle | yaml.SingleQuotedStyle
-		uStr, err = nodes.Updated().String()
-		if err != nil {
-			return strValues{}, err
+	for _, rnode := range []*yaml.RNode{nodes.Updated(), nodes.Origin(), nodes.Dest()} {
+		if rnode == nil || rnode.YNode() == nil {
+			continue
 		}
-	}
-	if nodes.Origin() != nil && nodes.Origin().YNode() != nil {
-		s := nodes.Origin().YNode().Style
+		s := rnode.YNode().Style
 		defer func() {
-			nodes.Origin().YNode().Style = s
+			rnode.YNode().Style = s
 		}()
-		nodes.Origin().YNode().Style = yaml.FlowStyle | yaml.SingleQuotedStyle
-		oStr, err = nodes.Origin().String()
-		if err != nil {
-			return strValues{}, err
-		}
-	}
-	if nodes.Dest() != nil && nodes.Dest().YNode() != nil {
-		s := nodes.Dest().YNode().Style
-		defer func() {
-			nodes.Dest().YNode().Style = s
-		}()
-		nodes.Dest().YNode().Style = yaml.FlowStyle | yaml.SingleQuotedStyle
-		dStr, err = nodes.Dest().String()
+		rnode.YNode().Style = yaml.FlowStyle | yaml.SingleQuotedStyle
+		uStr, err = rnode.String()
 		if err != nil {
 			return strValues{}, err
 		}
@@ -184,4 +167,4 @@ type strValues struct {
 	Dest   string
 }
 
-var _ walk.Visitor = Visitor{}
+var _ walk.Visitor = &Visitor{}
