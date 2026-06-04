@@ -23,7 +23,7 @@ Let us revisit the Wordpress example:
 kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.61
 ```
 
-A package in a Git repository can be fetched by specifying a branch, tag, or commit SHA. In the above example, `v1.0.0-beta.61` is specified.
+A package in a Git repository can be fetched by specifying a branch, tag, or commit SHA. In the above example, the tag `v1.0.0-beta.61` is specified.
 
 See the [get command reference](../../reference/cli/pkg/get/) for usage.
 
@@ -166,7 +166,7 @@ kpt does not maintain any state on your local machine outside the directory from
 - It changes the resources within the package. Examples are as follows:
   - Authoring a new Deployment resource.
   - Customizing an existing Deployment resource.
-  - Modifying the Kptfile.
+  - Modifying the `Kptfile`.
 - It changes the package hierarchy, also called _package composition_. Examples are as follows:
   - Adding a subpackage.
   - Creating a new dependent subpackage.
@@ -222,9 +222,8 @@ See the [render command reference](../../reference/cli/fn/render/) for command u
 3. It guarantees the package postconditions. For example, it enforces consistent formatting of resources, even though a function (developed by different people using different toolchains) may have modified the formatting in some way.
 4. It records the render execution status in the root `Kptfile` as a `Rendered` condition, under `status.conditions`. If the render execution was a success, then the condition has `status: "True"` and `reason: RenderSuccess`. If the render execution was unsuccessful, then the condition has `status: "False"` and `reason: RenderFailed`, and includes the error details in the `message` field.
 
-Note:
-Status conditions are only written for in-place renders (this is the default behavior). When using out-of-place output modes, such as `kpt fn render -o stdout` or `kpt fn render -o <dir>`,
-no status condition is indicated, since the package is not being updated on a disk.
+Note that status conditions are only written for in-place renders (this is the default behavior). When using out-of-place output modes, such as `kpt fn render -o stdout` or `kpt fn render -o <dir>`,
+no status condition is indicated because the package is not being updated on disk.
 
 [Chapter 4](../04-using-functions/) discusses in detail the different ways of running the functions.
 
