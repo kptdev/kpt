@@ -143,7 +143,16 @@ func (m *Visitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind 
 func (m *Visitor) getStrValues(nodes walk.Sources) (strValues, error) {
 	var uStr, oStr, dStr string
 	var err error
-	for _, rnode := range []*yaml.RNode{nodes.Updated(), nodes.Origin(), nodes.Dest()} {
+
+	for _, p := range []struct {
+		rnode *yaml.RNode
+		str   *string
+	}{
+		{nodes.Updated(), &uStr},
+		{nodes.Origin(), &oStr},
+		{nodes.Dest(), &dStr},
+	} {
+		rnode := p.rnode
 		if rnode == nil || rnode.YNode() == nil {
 			continue
 		}
@@ -152,7 +161,7 @@ func (m *Visitor) getStrValues(nodes walk.Sources) (strValues, error) {
 			rnode.YNode().Style = s
 		}()
 		rnode.YNode().Style = yaml.FlowStyle | yaml.SingleQuotedStyle
-		uStr, err = rnode.String()
+		*p.str, err = rnode.String()
 		if err != nil {
 			return strValues{}, err
 		}
