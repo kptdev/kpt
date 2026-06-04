@@ -44,17 +44,17 @@ git submodule update --init --recursive
 
 4. Use the built-in alerts for notes and alerts
 
-  ```go-html-template
-  {{%/* alert title="Warning" color="primary" */%}}
-  This is a note.
-  {{%/* /alert */%}}
-  ```
+   ```go-html-template
+   {{%/* alert title="Note" color="primary" */%}}
+   This is a note.
+   {{%/* /alert */%}}
+   ```
 
-  ```go-html-template
-  {{%/* alert title="Warning" color="warning" */%}}
-  This is a warning.
-  {{%/* /alert */%}}
-  ```
+   ```go-html-template
+   {{%/* alert title="Warning" color="warning" */%}}
+   This is a warning.
+   {{%/* /alert */%}}
+   ```
 
 5. If you add any commands to the content inline, surround the command with backticks (\` \`), like `ls -la`
 
