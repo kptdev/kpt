@@ -161,7 +161,7 @@ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 
 ## Editing a package
 
-kpt does not maintain any state on your local machine outside the directory from where you fetched the package. Making changes to the package is achieved by manipulating the local filesystem. At the lowest level, _editing_ a package is simply a process that does either of the following:
+kpt does not maintain any state on your local machine outside the directory from where you fetched the package. Making changes to the package is achieved by manipulating the local filesystem. At the lowest level, _editing_ a package is simply a process that does one of the following:
 
 - It changes the resources within the package. Examples are as follows:
   - Authoring a new Deployment resource.
