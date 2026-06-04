@@ -76,7 +76,8 @@ The `Kptfile` contains several sections to keep track of the package and its sta
    - `repo`: This is the Git repository where the package can be found.
    - `directory`: This is the directory within the Git repository where this package can be found.
    - `ref`: This is the Git reference for the package. This can be a branch, tag, or a commit SHA.
-2. The `upstreamLock` section records the upstream Git reference (the exact Git SHA) that was fetched by kpt. This section is managed by kpt and should not be changed manually.
+2. The `upstreamLock` section records the upstream Git reference (the exact Git SHA) that was
+   fetched by kpt. This section is managed by kpt and should not be changed manually.
 3. The `status` section records the operational state of the package. This is managed by kpt and tracks the execution
    status of operations such as `render`. The `status.conditions` field contains a list of condition objects, similarly to the way in which Kubernetes tracks the conditions on the resources. For example, after running `kpt fn render`, a `Rendered` condition is automatically recorded to indicate whether the last render succeeded or failed.
 
