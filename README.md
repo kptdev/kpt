@@ -57,7 +57,7 @@ The kpt toolchain includes the following components:
 
 ## Roadmap
 
-You can read about the big upcoming features in the [roadmap doc](/docs/ROADMAP.md).
+You can floow the kpt roadmap in the related [GitHub Project](https://github.com/orgs/kptdev/projects/2/views/2)
 
 ## Contributing
 
