@@ -33,8 +33,10 @@ type tuple struct {
 // merge performs a 3-way merge on the tuple
 func (t *tuple) merge() (*yaml.RNode, error) {
 	return walk.Walker{
+		// modified Visitor
+		Visitor: &Visitor{},
+
 		// same as in merge3.Merge()
-		Visitor:            &Visitor{},
 		VisitKeysAsScalars: true,
 		Sources:            []*yaml.RNode{t.dest, t.original, t.updated},
 

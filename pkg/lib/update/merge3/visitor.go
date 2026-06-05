@@ -20,13 +20,10 @@ package merge3
 import (
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
 
-type Visitor struct {
-	*merge3.Visitor
-}
+type Visitor struct{}
 
 func (m *Visitor) VisitMap(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) { // MODIFIED
@@ -77,16 +74,6 @@ func (m *Visitor) VisitScalar(nodes walk.Sources, _ *openapi.ResourceSchema) (*y
 		return nodes.Dest(), nil
 	}
 
-	values, err := m.getStrValues(nodes)
-	if err != nil {
-		return nil, err
-	}
-
-	if (values.Dest == "" || values.Dest == values.Origin) && values.Origin != values.Update {
-		// if local is nil or is unchanged but there is new update
-		return nodes.Updated(), nil
-	}
-
 	if nodes.Updated().YNode().Value != nodes.Origin().YNode().Value {
 		// value changed in update
 		return nodes.Updated(), nil
@@ -111,12 +98,7 @@ func (m *Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
 		return nodes.Dest(), nil
 	}
 
-	// compare origin and update values to see if they have changed
-	values, err := m.getStrValues(nodes)
-	if err != nil {
-		return nil, err
-	}
-	if values.Update != values.Origin {
+	if !m.isNodeContentEqual(nodes.Origin().YNode(), nodes.Updated().YNode()) {
 		// value changed in update
 		return nodes.Updated(), nil
 	}
@@ -126,7 +108,7 @@ func (m *Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
 }
 
 // NEW
-// isCleared returns if the node has been present in `left` but explicitly removed in `right`
+// isCleared returns if the node has not tagged null in `left` but explicitly removed in `right`
 func (*Visitor) isCleared(left, right *yaml.RNode) bool {
 	return !left.IsTaggedNull() && right.IsTaggedNull()
 }
@@ -140,40 +122,24 @@ func (m *Visitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind 
 }
 
 // SIMPLIFIED
-func (m *Visitor) getStrValues(nodes walk.Sources) (strValues, error) {
-	var uStr, oStr, dStr string
-	var err error
-
-	for _, p := range []struct {
-		rnode *yaml.RNode
-		str   *string
-	}{
-		{nodes.Updated(), &uStr},
-		{nodes.Origin(), &oStr},
-		{nodes.Dest(), &dStr},
-	} {
-		rnode := p.rnode
-		if rnode == nil || rnode.YNode() == nil {
-			continue
-		}
-		s := rnode.YNode().Style
-		defer func() {
-			rnode.YNode().Style = s
-		}()
-		rnode.YNode().Style = yaml.FlowStyle | yaml.SingleQuotedStyle
-		*p.str, err = rnode.String()
-		if err != nil {
-			return strValues{}, err
+// isNodeContentEqual compares the nodes structurally (kind, tag, value and children),
+// avoiding YAML serialization. Presentation style and comments are ignored.
+func (m *Visitor) isNodeContentEqual(a, b *yaml.Node) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	if a.Kind != b.Kind || a.Tag != b.Tag || a.Value != b.Value {
+		return false
+	}
+	if len(a.Content) != len(b.Content) {
+		return false
+	}
+	for i := range a.Content {
+		if !m.isNodeContentEqual(a.Content[i], b.Content[i]) {
+			return false
 		}
 	}
-
-	return strValues{Origin: oStr, Update: uStr, Dest: dStr}, nil
-}
-
-type strValues struct {
-	Origin string
-	Update string
-	Dest   string
+	return true
 }
 
 var _ walk.Visitor = &Visitor{}

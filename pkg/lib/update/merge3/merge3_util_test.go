@@ -164,6 +164,14 @@ func assocListMergeCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
 	})(t, kos)
 }
 
+func nonAssocListMergeCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
+	makeFruitCheckFunc(10, map[string]int{
+		"apple": 20,
+		"grape": 5,
+		"pear":  30,
+	})(t, kos)
+}
+
 //nolint:unparam
 func makeFruitCheckFunc(expectedTemp int, expectedFruits map[string]int) func(*Merge3TestSuite, fn.KubeObjects) {
 	return func(t *Merge3TestSuite, kos fn.KubeObjects) {
