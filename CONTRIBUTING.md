@@ -179,7 +179,7 @@ documentation contributions.
 
 
 [error message style guide]: architecture/style-guides/errors.md
-[documentation style guide]: documentation/README.md#styl-guide-for-documentation
+[documentation style guide]: documentation/README.md#style-guide-for-documentation
 [github help]: https://help.github.com/articles/about-pull-requests/
 [google's open source community guidelines]:
   https://opensource.google.com/conduct/
