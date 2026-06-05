@@ -1,7 +1,6 @@
 # Cloud Agent Instructions for kpt
 
-For Copilot, Cursor, Codex, Gemini Code Assist or any agents generating code or review Pull Requests
-in this repository. 
+For Copilot, Cursor, Codex, Gemini Code Assist, or any agents generating code or reviewing pull requests in this repository.
 
 ## Generic rules
 
@@ -13,8 +12,7 @@ in this repository.
 
 ### Reviewing PRs
 
-* When comitting suggested changes add a signoff of the approving human and add the `Assisted-by`
-  tag to the commit message
+* When committing suggested changes, add a sign-off from the approving human and add the `Assisted-by` tag to the commit message
 * If a comment was not accepted and the Conversation was resolved do not make the same comment again
 
 
@@ -157,8 +155,8 @@ git config --global user.name "Your Name"
 ### Documentation & Tests
 
 * **documentation/**: Hugo-based website published to kpt.dev
-  * Run `make serve` from root (serves docs locally)
-  * Requires `npm install` first
+  * Run `make serve` from `documentation/` (serves docs locally)
+  * Requires `npm install` first (run in `documentation/`)
 
 * **e2e/**: End-to-end test suites
   * Contains testdata directories for function render/eval tests
@@ -251,7 +249,7 @@ If changes modify CLI documentation in documentation/content/en/reference/cli/:
 * **KRM_FN_RUNTIME**: Select function runtime for tests: `docker`,  `podman` or `nerdctl`
 * **K8S_VERSION**: Kubernetes version for e2e live tests (used in CI with pinned SHAs)
 * **KPT_NO_PAGER_HELP**: Set to 1 to disable pager for help output
-PAGER: Custom pager command (default: less -R)
+* **PAGER**: Custom pager command (default: less -R)
 * **KPT_FN_WASM_RUNTIME**: WASM function runtime selection
 * **GOPATH**: Go workspace path (used in CI workflows)
 * **GOBIN**: Go binary installation directory
@@ -270,13 +268,13 @@ PAGER: Custom pager command (default: less -R)
 
 * **Unit Tests**: Run with `make test` (standard Go tests)
 * **Docker-based Tests**: Run with `make test-docker` (requires container runtime)
-* **Function E2E Tests**: Run with make `test-fn-render` / `make test-fn-eval` (testdata-driven)
+* **Function E2E Tests**: Run with `make test-fn-render` / `make test-fn-eval` (testdata-driven)
 * **Live Apply E2E**: Run with `make test-live-apply` (KinD-based, 20-minute timeout)
 * **Example Verification**: Run with `make site-verify-examples` (verifies CLI examples in docs)
 
 ## Implementation Notes for Code Changes
 
-* **CLI Commands**: Add to `commands/` directory; use Cobra; update `documentation/cli` for documentation
+* **CLI Commands**: Add to `commands/` directory; use Cobra; update `documentation/content/en/reference/cli/` for documentation
 * **Library Code**: Place in `pkg/` for public APIs; use `internal/` for internal utilities
 * **Tests**: Colocate `*_test.go` files with source; use testdata directories for fixtures
 * **Generated Code**: Run `make generate` after modifying templates
