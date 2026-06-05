@@ -158,3 +158,17 @@ func (t *Merge3TestSuite) TestInferAssocList() {
 		t.commonTest(name, tc)
 	}
 }
+
+func (t *Merge3TestSuite) TestNonAssocList() {
+	testCases := map[string]testCase{
+		"non-assoc-crd": {
+			dir:     "non-assoc-crd",
+			crds:    []string{},
+			checkFn: nonAssocListMergeCheck,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.commonTest(name, tc)
+	}
+}

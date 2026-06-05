@@ -37,6 +37,10 @@ func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
 		return false, errors.E(op, types.UniquePath(local), err)
 	}
 
+	if originKf.Upstream == nil {
+		return false, nil
+	}
+
 	// If the upstream information in local has changed from origin, it
 	// means the user had updated the package independently and we don't
 	// want to override it.

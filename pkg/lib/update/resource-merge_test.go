@@ -16,14 +16,17 @@
 package update_test
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/pkg/lib/update"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUpdate_ResourceMerge(t *testing.T) {
@@ -299,5 +302,45 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 
 			testutil.KptfileAwarePkgEqual(t, local, expected, false)
 		})
+	}
+}
+
+func TestKeepTaggedNull(t *testing.T) {
+	updater := update.ResourceMergeUpdater{}
+
+	testdata, err := filepath.Abs(filepath.Join(".", "testdata", "keep-tagged-null"))
+	require.NoError(t, err)
+
+	tmpDir := t.TempDir()
+	newDest := filepath.Join(tmpDir, "dest")
+	err = os.MkdirAll(newDest, 0755)
+	require.NoError(t, err)
+
+	oldDestFiles, err := os.ReadDir(filepath.Join(testdata, "dest"))
+	require.NoError(t, err)
+	for _, file := range oldDestFiles {
+		if file.Type().IsRegular() {
+			content, err := os.ReadFile(filepath.Join(testdata, "dest", file.Name()))
+			require.NoError(t, err)
+			err = os.WriteFile(filepath.Join(newDest, file.Name()), content, 0644)
+			require.NoError(t, err)
+		}
+	}
+
+	options := updatetypes.Options{
+		OriginPath:  filepath.Join(testdata, "origin"),
+		UpdatedPath: filepath.Join(testdata, "updated"),
+		LocalPath:   newDest,
+	}
+	err = updater.Update(options)
+	require.NoError(t, err)
+
+	destBytes, err := os.ReadFile(filepath.Join(newDest, "configmap.yaml"))
+	require.NoError(t, err)
+	expBytes, err := os.ReadFile(filepath.Join(testdata, "expected", "configmap.yaml"))
+	require.NoError(t, err)
+
+	if diff := cmp.Diff(expBytes, destBytes); diff != "" {
+		t.Errorf("unexpected result (-want, +got): %s", diff)
 	}
 }
