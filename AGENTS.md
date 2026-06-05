@@ -141,7 +141,7 @@ git config --global user.name "Your Name"
 * **.github/workflows/go.yml**: Main CI workflow
   * Runs on Linux (docker/podman matrix) and macOS
   * Executes: `make all` + `make test-docker`
-  * Triggered on PRs and pushes (excludes dependabot branches)
+  * Triggered on PRs on pushes (pushes exclude dependabot branches)
 * **.github/workflows/verifyContent.yml**: Verifies CLI examples
   * Runs `make build`, installs mdrip/kind, runs `make site-verify-examples`
   * Triggered on changes to `commands/`, `internal/` paths
@@ -180,16 +180,18 @@ git config --global user.name "Your Name"
 * **Line Length**: max 170 characters
 * **Revive Confidence**: 0.85
 * **Excluded Paths**: thirdparty/, third_party, builtin, examples
-* **Test Files**: Further relaxed rules (gosec, funlen disabled for *_test.go files)
+* **Test Files**: `funlen` and `gosec` are currently disabled project-wide (see `.golangci.yml`); if enabled later,
+  test files have additional exclusions configured.
 
 ### Code Style Requirements (from CONTRIBUTING.md)
 
 * **Copyright Headers**: All files must have Apache 2.0 license header
   * Use format: // Copyright YEAR The kpt Authors (or year range if modified)
-   * Year should match creation year, or creation-to-modification year range
+  * Year should match creation year, or creation-to-modification year range
 * **Developer Certificate of Origin (DCO)**: Commits must be signed with -s flag
 * **Large Features**: Require reviewed and merged design document (use /docs/design-docs/00-template.md as template)
-* **AI Usage**: Must declare AI usage in PR description and commit messages with `Assisted-by: AGENT_NAME:MODEL_VERSION` format
+* **AI Usage**: Must declare AI usage in the PR description; `Assisted-by: AGENT_NAME:MODEL_VERSION` attribution in
+  commit messages is recommended (see CONTRIBUTING.md).
 
 ## Validation Checklist for PRs
 
