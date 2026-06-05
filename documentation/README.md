@@ -62,10 +62,10 @@ git submodule update --init --recursive
    (\* \*) to mark any inline IP address, domain name, file name, file location, or similar.
 
 7. Whenever possible, define the type of code for your code blocks
-   - \```shell for all shell blocks
-   - \```golang for all Go blocks
-   - \```yaml for all YAML blocks
-   - \```yang for all YANG blocks
+   - <code>```shell</code> for all shell blocks
+   - <code>```golang</code> for all Go blocks
+   - <code>```yaml</code> for all YAML blocks
+   - <code>```yang</code> for all YANG blocks
    - a full list of language identifiers is available [here](https://gohugo.io/content-management/syntax-highlighting/#list-of-chroma-highlighting-languages)
 
 
@@ -104,4 +104,4 @@ git submodule update --init --recursive
 
 ## License
 
-Licensed under the [Creative Commons Attribution 4.0 International license](LICENSE-documentation)
+Licensed under the [Creative Commons Attribution 4.0 International license](../LICENSE-documentation)
