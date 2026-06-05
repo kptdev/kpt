@@ -100,7 +100,7 @@ Runs golangci-lint v2.11.4. If already installed locally with matching version, 
 ### Code Generation & Formatting
 
 ```bash
-make fmt        # Run gofmt and goimports
+make fmt        # Run gofmt
 make fix        # Run go fix
 make vet        # Run go vet
 make tidy       # Run go mod tidy
