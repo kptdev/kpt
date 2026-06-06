@@ -216,10 +216,10 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	if c.Name == "" {
 		if c.InventoryID != "" {
 			dirName := filepath.Base(c.Pkg.UniquePath.String())
-			if errs := validation.IsDNS1123Subdomain(dirName); len(errs) > 0 {
+			if err := trimAndValidateName(&dirName); err != nil {
 				return errors.E(op, c.Pkg.UniquePath,
-					fmt.Errorf("directory name %q is not a valid Kubernetes resource name and --name was not provided: %s",
-						dirName, strings.Join(errs, "; ")))
+					fmt.Errorf("directory name %q is not a valid Kubernetes resource name and --name was not provided (%w)",
+						dirName, err))
 			}
 			c.Name = dirName
 		} else {
