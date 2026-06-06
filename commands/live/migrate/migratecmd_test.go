@@ -493,7 +493,7 @@ func TestKptMigrate_legacyRGMissingInvID_forceFalse(t *testing.T) {
 	migrateRunner.dryRun = false
 	migrateRunner.force = false
 	migrateRunner.rgFile = "resourcegroup.yaml"
-	migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+	migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
 		return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 	}
 
@@ -528,7 +528,7 @@ func TestKptMigrate_legacyRGMissingInvID_forceTrue(t *testing.T) {
 	migrateRunner.dryRun = false
 	migrateRunner.force = true
 	migrateRunner.rgFile = "resourcegroup.yaml"
-	migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+	migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
 		return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 	}
 
