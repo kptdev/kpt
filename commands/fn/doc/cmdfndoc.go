@@ -65,11 +65,10 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	resolveFunc := runneroptions.ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
 	image := resolveFunc(r.Image)
 	var out, errout bytes.Buffer
-	dockerRunArgs := []string{
+	runArgs := []string{
 		"run",
-		"--rm",    // delete the container afterward
-		"-i",      // interactive mode to accept stdin
-		"--stdin", // keep stdin open
+		"--rm", // delete the container afterward
+		"-i",   // interactive mode to accept stdin
 		image,
 		"--help",
 	}
@@ -84,7 +83,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd := exec.Command(runtime.GetBin(), dockerRunArgs...)
+	cmd := exec.Command(runtime.GetBin(), runArgs...)
 	cmd.Stdout = &out
 	cmd.Stderr = &errout
 
