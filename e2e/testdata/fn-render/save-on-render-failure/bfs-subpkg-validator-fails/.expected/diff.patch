@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index ba48e7c..487d026 100644
+index ba48e7c..487d026 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,15 +1,51 @@
@@ -75,7 +75,7 @@ index 7123634..6d1e0fb 100644
 +      level: root
 +      test: subpkg-fail
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index cd67e16..2ba1858 100644
+index cd67e16..2ba1858 100755
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1

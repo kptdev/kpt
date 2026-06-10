@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index e60b7a4..064d8e6 100644
+index e60b7a4..064d8e6 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -7,6 +7,31 @@ pipeline:

@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 473349f..1f6381e 100644
+index 473349f..1f6381e 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1

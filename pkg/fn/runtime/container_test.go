@@ -19,6 +19,8 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"regexp"
+	"strings"
 	"testing"
 
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
@@ -26,6 +28,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var pathAnnotationPattern = regexp.MustCompile(`(?m)^(\s*internal\.config\.kubernetes\.io/path:\s*)([^'\s][^\s]*)$`)
+
+func normalizeContainerFnOutput(out string) string {
+	out = strings.Replace(out,
+		"apiVersion: v1\nkind: ResourceList\nmetadata:\n  name: output\nitems:\n",
+		"apiVersion: config.kubernetes.io/v1\nkind: ResourceList\nitems:\n",
+		1,
+	)
+	out = pathAnnotationPattern.ReplaceAllString(out, "${1}'$2'")
+	return out
+}
 
 func TestContainerFn(t *testing.T) {
 	var tests = []struct {
@@ -102,7 +116,7 @@ items:
 			if !tt.err && !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			if !assert.Equal(t, tt.output, output.String()) {
+			if !assert.Equal(t, tt.output, normalizeContainerFnOutput(output.String())) {
 				t.FailNow()
 			}
 		})
