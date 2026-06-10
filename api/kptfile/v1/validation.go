@@ -17,10 +17,10 @@ package v1
 import (
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
 
+	"github.com/distribution/reference"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -116,35 +116,21 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 	return nil
 }
 
-// ValidateFunctionImageURL validates the function name.
-// According to Docker implementation
-// https://github.com/docker/distribution/blob/master/reference/reference.go. A valid
-// name definition is:
+// ValidateFunctionImageURL validates the function image reference.
 //
-//	name                            := [domain '/'] path-component ['/' path-component]*
-//	domain                          := domain-component ['.' domain-component]* [':' port-number]
-//	domain-component                := /([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])/
-//	port-number                     := /[0-9]+/
-//	path-component                  := alpha-numeric [separator alpha-numeric]*
-//	alpha-numeric                   := /[a-z0-9]+/
-//	separator                       := /[_.]|__|[-]*/
+// The reference must conform to the standard OCI/Docker reference grammar
+// implemented by github.com/distribution/reference:
+//
+//	reference := name [ ":" tag ] [ "@" digest ]
+//
+// This means an image may carry a tag
+// (e.g. ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.5),
+// a digest (e.g. ghcr.io/kptdev/krm-functions-catalog/set-namespace@sha256:...),
+// or both at the same time
+// (e.g. ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.5@sha256:...).
 func ValidateFunctionImageURL(name string) error {
-	pathComponentRegexp := `(?:[a-z0-9](?:(?:[_.]|__|[-]*)[a-z0-9]+)*)`
-	domainComponentRegexp := `(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])`
-	domainRegexp := fmt.Sprintf(`%s(?:\.%s)*(?:\:[0-9]+)?`, domainComponentRegexp, domainComponentRegexp)
-	nameRegexp := fmt.Sprintf(`(?:%s\/)?%s(?:\/%s)*`, domainRegexp,
-		pathComponentRegexp, pathComponentRegexp)
-	tagRegexp := `(?:[\w][\w.-]{0,127})`
-	shaRegexp := `(sha256:[a-zA-Z0-9]{64})`
-	versionRegexp := fmt.Sprintf(`(%s|%s)`, tagRegexp, shaRegexp)
-	r := fmt.Sprintf(`^(?:%s(?:(\:|@)%s)?)$`, nameRegexp, versionRegexp)
-
-	matched, err := regexp.MatchString(r, name)
-	if err != nil {
-		return err
-	}
-	if !matched {
-		return fmt.Errorf("function name %q is invalid", name)
+	if _, err := reference.Parse(name); err != nil {
+		return fmt.Errorf("function image reference %q is invalid: %w", name, err)
 	}
 	return nil
 }
