@@ -13,8 +13,8 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.21.6
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/kptdev/krm-functions-sdk/go/fn v1.0.3
 	github.com/kptdev/kpt/api v0.0.0-00010101000000-000000000000
+	github.com/kptdev/krm-functions-sdk/go/fn v1.0.3
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
