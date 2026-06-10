@@ -187,7 +187,8 @@ func E(args ...any) error {
 		case Class:
 			e.Class = a
 		case *Error:
-			e.Err = new(*a)
+			errCopy := *a
+			e.Err = &errCopy
 		case error:
 			e.Err = a
 		case string:

@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 05b0b75..c39c740 100644
+index 05b0b75..c39c740 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,10 +1,12 @@
@@ -72,7 +72,7 @@ index 55ceaae..4d0a95c 100644
    def fail_fn(items):
      fail("intentional failure for testing")
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index 4c71101..09b6550 100644
+index 4c71101..09b6550 100755
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1

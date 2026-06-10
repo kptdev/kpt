@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 8d8916e..67d2002 100644
+index 8d8916e..67d2002 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -7,3 +7,22 @@ pipeline:
@@ -26,7 +26,7 @@ index 8d8916e..67d2002 100644
 +          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
 +            severity: info
 diff --git a/db/Kptfile b/db/Kptfile
-index f4f3c67..456cee5 100644
+index f4f3c67..456cee5 100755
 --- a/db/Kptfile
 +++ b/db/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1

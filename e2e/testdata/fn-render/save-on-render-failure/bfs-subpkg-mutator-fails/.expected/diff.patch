@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 9e3fa88..8523c39 100644
+index 9e3fa88..8523c39 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,14 +1,48 @@
@@ -69,7 +69,7 @@ index cc866f6..694641e 100644
 +    matchLabels:
 +      test: mutator-fail
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index 672ec0a..3385016 100644
+index 672ec0a..3385016 100755
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1

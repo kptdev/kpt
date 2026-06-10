@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 8795678..85b77a9 100644
+index 8795678..85b77a9 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,14 +1,42 @@

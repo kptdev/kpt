@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 31eb203..499fd22 100644
+index 31eb203..499fd22 100755
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,9 +1,9 @@
@@ -44,7 +44,7 @@ index 31eb203..499fd22 100644
 +            severity: error
 +    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index 4c71101..18abcc9 100644
+index 4c71101..18abcc9 100755
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1

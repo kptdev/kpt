@@ -16,3 +16,5 @@ apiVersion: kpt.dev/v1
 kind: Custom
 metadata:
   name: cr
+  annotations:
+    config.kubernetes.io/depends-on: apiextensions.k8s.io/CustomResourceDefinition/customs.kpt.dev
