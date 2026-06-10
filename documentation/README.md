@@ -99,7 +99,7 @@ git submodule update --init --recursive
    - Correct: `ConfigMap`
    - Incorrect: ConfigMap
 
-12. Do not add any TBDs to the documentation. If something is missing create an [issue](https://github.com/kptdev/kpt/issues) for it
+12. Do not add any TBDs to the documentation. If something is missing, create an [issue](https://github.com/kptdev/kpt/issues) for it.
 
 
 ## License
