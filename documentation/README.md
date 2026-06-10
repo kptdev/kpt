@@ -59,7 +59,7 @@ git submodule update --init --recursive
 5. If you add any commands to the content inline, surround the command with backticks (\` \`), like `ls -la`
 
 6. Do not surround IP addresses, domain names, or any other identifiers with backticks. Use italics
-   (\* \*) to mark any inline IP address, domain name, file name, file location, or similar.
+   (for example, `*example.com*`) to mark any inline IP address, domain name, file name, file location, or similar.
 
 7. Whenever possible, define the type of code for your code blocks
    - <code>```shell</code> for all shell blocks
