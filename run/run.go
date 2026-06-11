@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -104,6 +105,7 @@ func GetMain(ctx context.Context) *cobra.Command {
 
 	replace(cmd)
 
+	versionCmd.Flags().Bool("short", false, "Print only the concise version identifier")
 	cmd.AddCommand(versionCmd)
 	hideFlags(cmd)
 	return cmd
@@ -158,8 +160,35 @@ var version = "unknown"
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
-	Run: func(_ *cobra.Command, _ []string) {
-		fmt.Printf("%s\n", version)
+	Run: func(cmd *cobra.Command, _ []string) {
+		var hash, dirty string
+		if info, ok := debug.ReadBuildInfo(); ok {
+			for _, setting := range info.Settings {
+				switch setting.Key {
+				case "vcs.revision":
+					hash = setting.Value
+				case "vcs.modified":
+					if strings.ToLower(setting.Value) == "true" {
+						dirty = " (dirty)"
+					}
+				}
+			}
+		}
+
+		short, _ := cmd.Flags().GetBool("short")
+		if short {
+			if version == "unknown" && len(hash) >= 7 {
+				fmt.Printf("%s\n", hash[:7])
+			} else {
+				fmt.Printf("%s\n", version)
+			}
+			return
+		}
+		fmt.Printf("Version: %s\n", version)
+		if hash == "" {
+			hash = "unknown"
+		}
+		fmt.Printf("Git commit: %s%s\n", hash, dirty)
 	},
 }
 

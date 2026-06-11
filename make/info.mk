@@ -21,11 +21,11 @@ GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 YEAR_GEN          := $(shell date '+%Y')
 
 GOBIN := $(shell go env GOPATH)/bin
-GIT_COMMIT := $(shell git rev-parse --short HEAD)
+KPT_VERSION := $(shell date '+development-%Y-%m-%dT%H:%M:%S')
 
 export KPT_FN_WASM_RUNTIME ?= nodejs
 
-LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
+LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${KPT_VERSION}
 ifeq ($(OS),Windows_NT)
 	# Do nothing
 else
