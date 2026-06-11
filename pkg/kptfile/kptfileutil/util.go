@@ -24,9 +24,8 @@ import (
 	"slices"
 	"strings"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -46,7 +45,7 @@ var SupportedKptfileVersions = []schema.GroupVersionKind{
 
 // KptfileError records errors regarding reading or parsing of a Kptfile.
 type KptfileError struct {
-	Path types.UniquePath
+	Path kptfilev1.UniquePath
 	Err  error
 }
 
@@ -83,13 +82,13 @@ func WriteFile(dir string, k any) error {
 		return err
 	}
 	if _, err := os.Stat(filepath.Join(dir, kptfilev1.KptFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
-		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 	}
 
 	// fyi: perm is ignored if the file already exists
 	err = os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
 	if err != nil {
-		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 	}
 	return nil
 }
@@ -103,7 +102,7 @@ func WriteKptfileToFS(fs filesys.FileSystem, dir string, k any) error {
 	}
 	err = fs.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b)
 	if err != nil {
-		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 	}
 	return nil
 }
@@ -181,7 +180,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 	localKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 		localKf = &kptfilev1.KptFile{}
 	}
@@ -189,7 +188,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 	updatedKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(updatedPath), err)
+			return errors.E(op, kptfilev1.UniquePath(updatedPath), err)
 		}
 		updatedKf = &kptfilev1.KptFile{}
 	}
@@ -205,7 +204,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 
 	err = WriteFile(localPath, localKf)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 	return nil
 }
@@ -220,7 +219,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 	localKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 		localKf = &kptfilev1.KptFile{}
 	}
@@ -228,7 +227,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 	updatedKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 		updatedKf = &kptfilev1.KptFile{}
 	}
@@ -236,7 +235,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 	originKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, originPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 		originKf = &kptfilev1.KptFile{}
 	}
@@ -252,7 +251,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 
 	err = WriteFile(localPath, localKf)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 	return nil
 }
@@ -266,7 +265,7 @@ func UpdateUpstreamLockFromGit(path string, spec *gitutil.RepoSpec) error {
 	// read KptFile cloned with the package if it exists
 	kpgfile, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
 	if err != nil {
-		return errors.E(op, types.UniquePath(path), err)
+		return errors.E(op, kptfilev1.UniquePath(path), err)
 	}
 
 	// populate the cloneFrom values so we know where the package came from
@@ -281,7 +280,7 @@ func UpdateUpstreamLockFromGit(path string, spec *gitutil.RepoSpec) error {
 	}
 	err = WriteFile(path, kpgfile)
 	if err != nil {
-		return errors.E(op, types.UniquePath(path), err)
+		return errors.E(op, kptfilev1.UniquePath(path), err)
 	}
 	return nil
 }
@@ -296,7 +295,7 @@ func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
 	f, err := fs.Open(filepath.Join(p, kptfilev1.KptFileName))
 	if err != nil {
 		return nil, &KptfileError{
-			Path: types.UniquePath(p),
+			Path: kptfilev1.UniquePath(p),
 			Err:  err,
 		}
 	}
@@ -305,7 +304,7 @@ func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
 	kf, err := DecodeKptfile(f)
 	if err != nil {
 		return nil, &KptfileError{
-			Path: types.UniquePath(p),
+			Path: kptfilev1.UniquePath(p),
 			Err:  err,
 		}
 	}

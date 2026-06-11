@@ -15,39 +15,7 @@
 SHELL := bash
 .SHELLFLAGS := -exc
 
-GOLANG_VERSION    := 1.26.3
-GOLANGCI_LINT_VERSION := 2.11.4
-
-GORELEASER_CONFIG = release/tag/goreleaser.yaml
-GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
-
-YEAR_GEN          := $(shell date '+%Y')
-
-.PHONY: docs fix vet fmt lint test build tidy release release-ci
-
-GOBIN := $(shell go env GOPATH)/bin
-GIT_COMMIT := $(shell git rev-parse --short HEAD)
-
-export KPT_FN_WASM_RUNTIME ?= nodejs
-
-LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
-ifeq ($(OS),Windows_NT)
-	# Do nothing
-else
-    UNAME := $(shell uname -s)
-    ifeq ($(UNAME),Linux)
-        LDFLAGS += -extldflags '-z noexecstack'
-    endif
-endif
-LDFLAGS += "
-
-# T refers to an e2e test case matcher. This enables running e2e tests
-# selectively.  For example,
-# To invoke e2e tests related to fnconfig, run:
-# make test-fn-render T=fnconfig
-# make test-fn-eval T=fnconfig
-# By default, make test-fn-render/test-fn-eval will run all tests.
-T ?= ".*"
+include ./make/info.mk
 
 all: fix vet fmt lint test build tidy
 
@@ -78,33 +46,33 @@ install-swagger:
 install-mdtogo:
 	go install ./mdtogo
 
-fix:
+fix: fix-api
 	go fix ./...
 
-fmt:
+fmt: fmt-api
 	go fmt ./...
 
 schema: install-swagger
 	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
-generate: install-mdtogo
+generate: install-mdtogo generate-api
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./...
 	go fmt ./internal/docs/generated/...
 
-tidy:
+tidy: tidy-api
 	go mod tidy
 
 # if the local version of golangci-lint matches the one we want, we can use that without overhead
-lint:
+lint: lint-api
 	@if [[ `command -v golangci-lint` && `golangci-lint version --short` == $(GOLANGCI_LINT_VERSION) ]]; then \
 		golangci-lint run -v ./...; \
 	else \
 		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
 	fi
 
-test:
+test: test-api
 	go test -cover ${LDFLAGS} ./...
 
 # This target is used to run Go tests that require docker runtime.
@@ -131,7 +99,7 @@ test-fn-eval: build
 test-live-apply: build
 	PATH="$(GOBIN):$(PATH)" go test -v -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
 
-vet:
+vet: vet-api
 	go vet ./...
 
 docker:
@@ -185,3 +153,29 @@ release-ci:
 vulncheck: build
 	# Scan the source
 	GOFLAGS= go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+.PHONY: fix-api fmt-api generate-api tidy-api lint-api test-api vet-api api
+
+fix-api:
+	make -C api fix
+
+fmt-api:
+	make -C api fmt
+
+generate-api:
+	make -C api generate
+
+tidy-api:
+	make -C api tidy
+
+lint-api:
+	make -C api lint
+
+test-api:
+	make -C api test
+
+vet-api:
+	make -C api vet
+
+api:
+	make -C api all

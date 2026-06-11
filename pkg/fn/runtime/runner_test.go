@@ -24,10 +24,9 @@ import (
 	"strings"
 	"testing"
 
-	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -92,7 +91,7 @@ data: {foo: bar}
 				c.fn.ConfigPath = path.Base(tmp.Name())
 			}
 			fsys := filesys.MakeFsOnDisk()
-			cn, err := newFnConfig(fsys, &c.fn, types.UniquePath(os.TempDir()))
+			cn, err := newFnConfig(fsys, &c.fn, kptfilev1.UniquePath(os.TempDir()))
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")

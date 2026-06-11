@@ -20,7 +20,7 @@ import (
 	"io"
 	"os"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
@@ -39,7 +39,7 @@ type renderer struct {
 
 var _ fn.Renderer = &renderer{}
 
-func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresult.ResultList, error) {
+func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresultv1.ResultList, error) {
 	rr := Renderer{
 		PkgPath:       opts.PkgPath,
 		Runtime:       opts.Runtime,

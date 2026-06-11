@@ -21,8 +21,8 @@ import (
 	"io"
 	"os"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 )
 
 // TruncateOutput defines should output be truncated
@@ -46,9 +46,9 @@ type Printer interface {
 // Options are optional options for printer
 type Options struct {
 	// PkgPath is the unique path to the package
-	PkgPath types.UniquePath
+	PkgPath kptfilev1.UniquePath
 	// PkgDisplayPath is the display path for the package
-	PkgDisplayPath types.DisplayPath
+	PkgDisplayPath kptfilev1.DisplayPath
 	// PkgDisplayName is the display name of the package.
 	// It takes precedence over PkgPath and PkgDisplayPath in most logging scenarios.
 	PkgDisplayName string
@@ -60,13 +60,13 @@ func NewOpt() *Options {
 }
 
 // Pkg sets the package unique path in options
-func (opt *Options) Pkg(p types.UniquePath) *Options {
+func (opt *Options) Pkg(p kptfilev1.UniquePath) *Options {
 	opt.PkgPath = p
 	return opt
 }
 
 // PkgDisplayPath sets the package display path in options
-func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
+func (opt *Options) PkgDisplay(p kptfilev1.DisplayPath) *Options {
 	opt.PkgDisplayPath = p
 	return opt
 }

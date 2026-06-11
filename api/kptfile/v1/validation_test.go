@@ -18,7 +18,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -502,7 +501,7 @@ metadata:
 			d := t.TempDir()
 			err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)
 			assert.NoError(t, err)
-			got, err := GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, types.UniquePath(d), "f1.yaml")
+			got, err := GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, UniquePath(d), "f1.yaml")
 			if tc.errMsg != "" {
 				assert.Error(t, err)
 				assert.Equal(t, tc.errMsg, err.Error())

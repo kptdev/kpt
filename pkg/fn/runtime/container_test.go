@@ -21,7 +21,7 @@ import (
 	"context"
 	"testing"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -89,7 +89,7 @@ items:
 			instance := ContainerFn{
 				Ctx:   printer.WithContext(ctx, printer.New(nil, errBuff)),
 				Image: tt.image,
-				FnResult: &fnresult.Result{
+				FnResult: &fnresultv1.Result{
 					Image: tt.image,
 				},
 			}

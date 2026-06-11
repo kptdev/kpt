@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 )
 
 // FunctionRunner knows how to run a function.

@@ -23,7 +23,7 @@ import (
 	"os/exec"
 	"time"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/printer"
 )
 
@@ -40,7 +40,7 @@ type ExecFn struct {
 	Timeout time.Duration
 	// FnResult is used to store the information about the result from
 	// the function.
-	FnResult *fnresult.Result
+	FnResult *fnresultv1.Result
 }
 
 // Run runs the executable file which reads the input from r and

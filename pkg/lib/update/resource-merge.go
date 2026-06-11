@@ -22,11 +22,10 @@ import (
 	"strings"
 
 	pkgdiff "github.com/kptdev/kpt/pkg/lib/pkg/diff"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update/merge3"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -50,7 +49,7 @@ func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 	if !options.IsRoot {
 		hasChanges, err := PkgHasUpdatedUpstream(options.LocalPath, options.OriginPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(options.LocalPath), err)
+			return errors.E(op, kptfilev1.UniquePath(options.LocalPath), err)
 		}
 
 		// If the upstream information in local has changed from origin, it
@@ -67,7 +66,7 @@ func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 	subPkgPaths, err := pkg.FindSubpackagesForPaths(pkg.Local, true,
 		options.LocalPath, options.UpdatedPath, options.OriginPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(options.LocalPath), err)
+		return errors.E(op, kptfilev1.UniquePath(options.LocalPath), err)
 	}
 
 	// Update each package and subpackage. Parent package is updated before
@@ -83,7 +82,7 @@ func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 
 		err := u.updatePackage(subPkgPath, localSubPkgPath, updatedSubPkgPath, originalSubPkgPath, isRootPkg)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localSubPkgPath), err)
 		}
 	}
 	return nil
@@ -96,28 +95,28 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 	const op errors.Op = "update.updatePackage"
 	localExists, err := pkg.Exists(localPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
 	updatedExists, err := pkg.Exists(updatedPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
 	originalExists, err := pkg.Exists(originalPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
 	switch {
 	// Check if subpackage has been added both in upstream and in local
 	case !originalExists && localExists && updatedExists:
-		return errors.E(op, types.UniquePath(localPath),
+		return errors.E(op, kptfilev1.UniquePath(localPath),
 			fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath))
 	// Package added in upstream
 	case !originalExists && !localExists && updatedExists:
 		if err := pkg.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 	// Package added locally
 	case !originalExists && localExists && !updatedExists:
@@ -134,16 +133,16 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 		// Check the diff. If there are local changes, we keep the subpackage.
 		diff, err := pkgdiff.PkgDiff(originalPath, localPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 		if diff.Len() == 0 {
 			if err := os.RemoveAll(localPath); err != nil {
-				return errors.E(op, types.UniquePath(localPath), err)
+				return errors.E(op, kptfilev1.UniquePath(localPath), err)
 			}
 		}
 	default:
 		if err := u.mergePackage(localPath, updatedPath, originalPath, subPkgPath, isRootPkg); err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 	}
 	return nil
@@ -154,7 +153,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath, _ string, isRootPkg bool) error {
 	const op errors.Op = "update.mergePackage"
 	if err := kptfileutil.UpdateKptfile(localPath, updatedPath, originalPath, !isRootPkg); err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 	originalKos, updatedKos, destinationKos, err := collectKubeObjectsFromPackages(localPath, updatedPath, originalPath)
 	if err != nil {
@@ -179,7 +178,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 	}
 
 	if err := ReplaceNonKRMFiles(updatedPath, originalPath, localPath); err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 	return nil
 }
@@ -210,17 +209,17 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 	const op errors.Op = "update.ReplaceNonKRMFiles"
 	updatedSubDirs, updatedFiles, err := getSubDirsAndNonKrmFiles(updatedDir)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localDir), err)
+		return errors.E(op, kptfilev1.UniquePath(localDir), err)
 	}
 
 	originalSubDirs, originalFiles, err := getSubDirsAndNonKrmFiles(originalDir)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localDir), err)
+		return errors.E(op, kptfilev1.UniquePath(localDir), err)
 	}
 
 	localSubDirs, localFiles, err := getSubDirsAndNonKrmFiles(localDir)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localDir), err)
+		return errors.E(op, kptfilev1.UniquePath(localDir), err)
 	}
 
 	// identify all non KRM files modified locally, to leave them untouched
@@ -233,7 +232,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 		}
 		same, err := compareFiles(filepath.Join(originalDir, file), filepath.Join(localDir, file))
 		if err != nil {
-			return errors.E(op, types.UniquePath(localDir), err)
+			return errors.E(op, kptfilev1.UniquePath(localDir), err)
 		}
 		if !same {
 			// local file has been modified
@@ -244,7 +243,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 		// remove the file from local if it is not modified and is deleted from updated upstream
 		if !updatedFiles.Has(file) {
 			if err = os.Remove(filepath.Join(localDir, file)); err != nil {
-				return errors.E(op, types.UniquePath(localDir), err)
+				return errors.E(op, kptfilev1.UniquePath(localDir), err)
 			}
 		}
 	}
@@ -252,7 +251,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 	// make sure local has all sub-dirs present in updated
 	for _, dir := range updatedSubDirs.List() {
 		if err = os.MkdirAll(filepath.Join(localDir, dir), 0700); err != nil {
-			return errors.E(op, types.UniquePath(localDir), err)
+			return errors.E(op, kptfilev1.UniquePath(localDir), err)
 		}
 	}
 
@@ -264,7 +263,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 		}
 		err = copyutil.SyncFile(filepath.Join(updatedDir, file), filepath.Join(localDir, file))
 		if err != nil {
-			return errors.E(op, types.UniquePath(localDir), err)
+			return errors.E(op, kptfilev1.UniquePath(localDir), err)
 		}
 	}
 
@@ -403,7 +402,7 @@ func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation stri
 	}
 	nodes, err := reader.Read()
 	if err != nil {
-		return nil, errors.E(types.UniquePath(directoryPath), err)
+		return nil, errors.E(kptfilev1.UniquePath(directoryPath), err)
 	}
 	return fn.MoveToKubeObjects(nodes), err
 }
@@ -419,7 +418,7 @@ func writeResourcesToDirectory(destPath string, kubeObjects fn.KubeObjects) erro
 	}
 	_, err := destWriter.Read()
 	if err != nil {
-		return errors.E(types.UniquePath(destPath), err)
+		return errors.E(kptfilev1.UniquePath(destPath), err)
 	}
 	err = destWriter.Write(kubeObjects.CopyToResourceNodes())
 	if err != nil {

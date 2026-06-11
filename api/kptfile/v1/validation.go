@@ -21,9 +21,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kptdev/kpt/pkg/lib/types"
-	"sigs.k8s.io/kustomize/api/konfig"
-	kustomizetypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -33,9 +30,10 @@ import (
 const (
 	// constants related to kustomize
 	kustomizationAPIGroup = "kustomize.config.k8s.io"
+	kustomizationKind     = "Kustomization"
 )
 
-func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath types.UniquePath) error {
+func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
 	if err := kf.Pipeline.validate(fsys, pkgPath); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)
 	}
@@ -46,7 +44,7 @@ func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath types.UniquePath) e
 // validate will validate all fields in the Pipeline
 // 'mutators' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
-func (p *Pipeline) validate(fsys filesys.FileSystem, pkgPath types.UniquePath) error {
+func (p *Pipeline) validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
 	if p == nil {
 		return nil
 	}
@@ -67,7 +65,7 @@ func (p *Pipeline) validate(fsys filesys.FileSystem, pkgPath types.UniquePath) e
 	return nil
 }
 
-func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkgPath types.UniquePath) error {
+func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkgPath UniquePath) error {
 	if f.Image == "" && f.Exec == "" {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
@@ -173,7 +171,7 @@ func validateFnConfigPathSyntax(p string) error {
 // GetValidatedFnConfigFromPath validates the functionConfig at the path specified by
 // the package path (pkgPath) and configPath, returning the functionConfig as an
 // RNode if the validation is successful.
-func GetValidatedFnConfigFromPath(fsys filesys.FileSystem, pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
+func GetValidatedFnConfigFromPath(fsys filesys.FileSystem, pkgPath UniquePath, configPath string) (*yaml.RNode, error) {
 	path := filepath.Join(string(pkgPath), configPath)
 	file, err := fsys.Open(path)
 	if err != nil {
@@ -238,7 +236,7 @@ func isKustomization(n *yaml.RNode) bool {
 		// read the file path of the resource
 		resourceFile := filepath.Base(resourcePath)
 
-		if slices.Contains(konfig.RecognizedKustomizationFileNames(), resourceFile) {
+		if slices.Contains(RecognizedKustomizationFileNames(), resourceFile) {
 			return true
 		}
 	}
@@ -251,7 +249,7 @@ func isKustomization(n *yaml.RNode) bool {
 		return true
 	}
 
-	if meta.APIVersion == "" && meta.Kind == kustomizetypes.KustomizationKind {
+	if meta.APIVersion == "" && meta.Kind == kustomizationKind {
 		return true
 	}
 
@@ -276,4 +274,14 @@ func (e *ValidateError) Error() string {
 	}
 	fmt.Fprintf(&sb, "Reason: %s\n", e.Reason)
 	return sb.String()
+}
+
+// RecognizedKustomizationFileNames taken from sigs.k8s.io/kustomize/api@v0.21.1/konfig/general.go
+// to avoid dependency.
+func RecognizedKustomizationFileNames() []string {
+	return []string{
+		"kustomization.yaml",
+		"kustomization.yml",
+		"Kustomization",
+	}
 }

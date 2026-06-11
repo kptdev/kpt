@@ -19,14 +19,13 @@ package v1alpha1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
 	RGFileName = "resourcegroup.yaml"
 	// RGInventoryIDLabel is the label name used for storing an inventory ID.
-	RGInventoryIDLabel = common.InventoryLabel
+	RGInventoryIDLabel = "cli-utils.sigs.k8s.io/inventory-id"
 
 	// Deprecated: prefer ResourceGroupGVK
 	RGFileKind = "ResourceGroup"

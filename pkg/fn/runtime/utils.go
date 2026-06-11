@@ -19,9 +19,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -32,7 +31,7 @@ import (
 const ResourceIDAnnotation = "internal.config.k8s.io/kpt-resource-id"
 
 // SaveResults saves results gathered from running the pipeline at specified dir in the input FileSystem.
-func SaveResults(fsys filesys.FileSystem, resultsDir string, fnResults *fnresult.ResultList) (string, error) {
+func SaveResults(fsys filesys.FileSystem, resultsDir string, fnResults *fnresultv1.ResultList) (string, error) {
 	if resultsDir == "" {
 		return "", nil
 	}
@@ -136,7 +135,7 @@ func DeleteResourceIDs(input []*yaml.RNode) error {
 }
 
 type SelectionContext struct {
-	RootPackagePath types.UniquePath
+	RootPackagePath kptfilev1.UniquePath
 }
 
 // SelectInput returns the selected resources based on criteria in selectors

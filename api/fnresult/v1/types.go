@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 // Result contains the structured result from an individual function
 type Result struct {
@@ -136,7 +136,7 @@ func (i *ResultItem) String() string {
 	if i.Severity == "" {
 		severity = framework.Info
 	}
-	list := []interface{}{severity}
+	list := []any{severity}
 	if len(idStringList) > 0 {
 		formatString += " %s"
 		list = append(list, strings.Join(idStringList, "/"))

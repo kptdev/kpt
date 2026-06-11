@@ -2,6 +2,8 @@ module github.com/kptdev/kpt
 
 go 1.26.3
 
+replace github.com/kptdev/kpt/api => ./api
+
 require (
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/bytecodealliance/wasmtime-go v1.0.0
@@ -12,6 +14,7 @@ require (
 	github.com/google/go-containerregistry v0.21.6
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/kptdev/krm-functions-sdk/go/fn v1.0.3
+	github.com/kptdev/kpt/api v0.0.0-00010101000000-000000000000
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
@@ -36,7 +39,6 @@ require (
 	k8s.io/kubectl v0.36.1
 	sigs.k8s.io/cli-utils v0.37.2
 	sigs.k8s.io/controller-runtime v0.24.1
-	sigs.k8s.io/kustomize/api v0.21.1
 	sigs.k8s.io/kustomize/kyaml v0.21.1
 	sigs.k8s.io/yaml v1.6.0
 )
@@ -122,6 +124,7 @@ require (
 	k8s.io/component-helpers v0.36.1 // indirect
 	k8s.io/utils v0.0.0-20260507154919-ff6756f316d2 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
+	sigs.k8s.io/kustomize/api v0.21.1 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0 // indirect
 )

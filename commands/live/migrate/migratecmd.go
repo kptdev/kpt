@@ -23,13 +23,13 @@ import (
 	"os"
 	"path/filepath"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	initialization "github.com/kptdev/kpt/commands/live/init"
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/live"
@@ -385,9 +385,9 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 		_, rgFileErr := os.Stat(filepath.Join(dir, mr.rgFile))
 		switch {
 		case rgFileErr == nil:
-			return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
+			return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
 		case err != nil && !goerrors.Is(err, os.ErrNotExist):
-			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+			return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 		}
 
 		err = (&initialization.ConfigureInventoryInfo{

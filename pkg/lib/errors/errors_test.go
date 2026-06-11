@@ -19,7 +19,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/pkg/lib/types"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 )
 
 func TestErrorFormatting(t *testing.T) {
@@ -27,7 +27,7 @@ func TestErrorFormatting(t *testing.T) {
 
 	e := &Error{
 		Op:    "pkg.get",
-		Path:  types.UniquePath("/workspace/my-pkg"),
+		Path:  kptfilev1.UniquePath("/workspace/my-pkg"),
 		Fn:    "my-fn",
 		Repo:  "github.com/example/repo",
 		Class: InvalidParam,

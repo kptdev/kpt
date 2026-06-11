@@ -25,11 +25,10 @@ import (
 	"sort"
 	"strings"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	regclientref "github.com/regclient/regclient/types/ref"
@@ -69,7 +68,7 @@ func (e *RemoteKptfileError) Unwrap() error {
 // RGError is an implementation of the error interface that is returned whenever
 // kpt encounters errors reading a resourcegroup object file.
 type RGError struct {
-	Path types.UniquePath
+	Path kptfilev1.UniquePath
 	Err  error
 }
 
@@ -131,14 +130,14 @@ type Pkg struct {
 	fsys filesys.FileSystem
 
 	// UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
-	UniquePath types.UniquePath
+	UniquePath kptfilev1.UniquePath
 
 	// DisplayPath represents Slash-separated path to the package directory on the filesystem relative
 	// to parent directory of root package on which the command is invoked.
 	// root package is defined as the package on which the command is invoked by user
 	// This is not guaranteed to be unique (e.g. in presence of symlinks) and should only
 	// be used for display purposes and is subject to change.
-	DisplayPath types.DisplayPath
+	DisplayPath kptfilev1.DisplayPath
 
 	// rootPkgParentDirPath is the absolute path to the parent directory of root package,
 	// root package is defined as the package on which the command is invoked by user
@@ -162,11 +161,11 @@ func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 	absPath := filepath.Clean(path)
 	pkg := &Pkg{
 		fsys:       fs,
-		UniquePath: types.UniquePath(absPath),
+		UniquePath: kptfilev1.UniquePath(absPath),
 		// by default, rootPkgParentDirPath should be the absolute path to the parent directory of package being instantiated
 		rootPkgParentDirPath: filepath.Dir(absPath),
 		// by default, DisplayPath should be the package name which is same as directory name
-		DisplayPath: types.DisplayPath(filepath.Base(absPath)),
+		DisplayPath: kptfilev1.DisplayPath(filepath.Base(absPath)),
 	}
 	return pkg, nil
 }
@@ -257,7 +256,7 @@ func (p *Pkg) adjustDisplayPathForSubpkg(subPkg *Pkg) error {
 		return err
 	}
 	// make sure that the DisplayPath is always Slash-separated os-agnostic
-	subPkg.DisplayPath = types.DisplayPath(filepath.ToSlash(dp))
+	subPkg.DisplayPath = kptfilev1.DisplayPath(filepath.ToSlash(dp))
 	return nil
 }
 
@@ -322,7 +321,7 @@ func Subpackages(fsys filesys.FileSystem, rootPath string, matcher SubpackageMat
 			if isPkg {
 				kf, err := kptfileutil.ReadKptfile(fsys, path)
 				if err != nil {
-					return errors.E(op, types.UniquePath(path), err)
+					return errors.E(op, kptfilev1.UniquePath(path), err)
 				}
 				switch matcher {
 				case Local:
@@ -506,7 +505,7 @@ func GetPkgPathAnnotation(rn *yaml.RNode) (string, error) {
 }
 
 // SetPkgPathAnnotation sets package path on a given resource.
-func SetPkgPathAnnotation(rn *yaml.RNode, pkgPath types.UniquePath) error {
+func SetPkgPathAnnotation(rn *yaml.RNode, pkgPath kptfilev1.UniquePath) error {
 	return rn.PipeE(yaml.SetAnnotation(pkgPathAnnotation, string(pkgPath)))
 }
 
@@ -541,7 +540,7 @@ func ReadRGFile(pkgPath, rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
 		rgFilePath, _, err := pathutil.ResolveAbsAndRelPaths(rgfile)
 		if err != nil {
 			return nil, &RGError{
-				Path: types.UniquePath(rgfile),
+				Path: kptfilev1.UniquePath(rgfile),
 				Err:  err,
 			}
 		}
@@ -552,7 +551,7 @@ func ReadRGFile(pkgPath, rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
 	f, err := os.Open(absPath)
 	if err != nil {
 		return nil, &RGError{
-			Path: types.UniquePath(absPath),
+			Path: kptfilev1.UniquePath(absPath),
 			Err:  err,
 		}
 	}
@@ -561,7 +560,7 @@ func ReadRGFile(pkgPath, rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
 	rg, err := DecodeRGFile(f)
 	if err != nil {
 		return nil, &RGError{
-			Path: types.UniquePath(absPath),
+			Path: kptfilev1.UniquePath(absPath),
 			Err:  err,
 		}
 	}

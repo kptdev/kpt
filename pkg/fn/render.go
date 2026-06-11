@@ -17,7 +17,7 @@ package fn
 import (
 	"context"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -31,5 +31,5 @@ type RenderOptions struct {
 }
 
 type Renderer interface {
-	Render(ctx context.Context, pkg filesys.FileSystem, opts RenderOptions) (*fnresult.ResultList, error)
+	Render(ctx context.Context, pkg filesys.FileSystem, opts RenderOptions) (*fnresultv1.ResultList, error)
 }

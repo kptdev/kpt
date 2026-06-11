@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"testing"
 
-	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -224,7 +224,7 @@ func Test_GitParseArgs(t *testing.T) {
 	}{
 		"git@ url with .git suffix": {
 			ghURL: "git@github.com:github.com/kptdev/kpt.git",
-			expected: Target{Git: v1.Git{
+			expected: Target{Git: kptfilev1.Git{
 				Repo:      "git@github.com:github.com/kptdev/kpt",
 				Directory: "/",
 				Ref:       "main",
@@ -235,7 +235,7 @@ func Test_GitParseArgs(t *testing.T) {
 		},
 		"http url with .git suffix": {
 			ghURL: "https://github.com/kptdev/kpt.git",
-			expected: Target{Git: v1.Git{
+			expected: Target{Git: kptfilev1.Git{
 				Repo:      "https://github.com/kptdev/kpt",
 				Directory: "/",
 				Ref:       "main",
@@ -244,7 +244,7 @@ func Test_GitParseArgs(t *testing.T) {
 		},
 		"starts with github.com": {
 			ghURL: "https://github.com/kptdev/kpt",
-			expected: Target{Git: v1.Git{
+			expected: Target{Git: kptfilev1.Git{
 				Repo:      "https://github.com/kptdev/kpt",
 				Directory: "/",
 				Ref:       "main",

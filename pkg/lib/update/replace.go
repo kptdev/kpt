@@ -18,10 +18,10 @@ import (
 	"os"
 	"path/filepath"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 )
 
@@ -38,12 +38,12 @@ func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 
 	// Update Kptfile for root package
 	if err := kptfileutil.UpdateKptfile(options.LocalPath, options.UpdatedPath, options.OriginPath, true); err != nil {
-		return errors.E(op, types.UniquePath(options.LocalPath), err)
+		return errors.E(op, kptfilev1.UniquePath(options.LocalPath), err)
 	}
 
 	paths, err := pkg.FindSubpackagesForPaths(pkg.Local, true, options.LocalPath, options.UpdatedPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(options.LocalPath), err)
+		return errors.E(op, kptfilev1.UniquePath(options.LocalPath), err)
 	}
 
 	for _, p := range append([]string{"."}, paths...) {
@@ -55,7 +55,7 @@ func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 		updatedSubPkgPath := filepath.Join(options.UpdatedPath, p)
 		err = pkg.RemovePackageContent(localSubPkgPath, !isRootPkg)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localSubPkgPath), err)
 		}
 
 		// If the package doesn't exist in updated, we make sure it is
@@ -63,15 +63,15 @@ func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 		// the content of the package into local.
 		_, err = os.Stat(updatedSubPkgPath)
 		if err != nil && !os.IsNotExist(err) {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, kptfilev1.UniquePath(localSubPkgPath), err)
 		}
 		if os.IsNotExist(err) {
 			if err = os.RemoveAll(localSubPkgPath); err != nil {
-				return errors.E(op, types.UniquePath(localSubPkgPath), err)
+				return errors.E(op, kptfilev1.UniquePath(localSubPkgPath), err)
 			}
 		} else {
 			if err = pkg.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
-				return errors.E(op, types.UniquePath(localSubPkgPath), err)
+				return errors.E(op, kptfilev1.UniquePath(localSubPkgPath), err)
 			}
 		}
 	}

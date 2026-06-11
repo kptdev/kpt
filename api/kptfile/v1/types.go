@@ -22,12 +22,12 @@ import (
 	"fmt"
 	"strings"
 
-	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 const (
 	KptFileName = "Kptfile"
