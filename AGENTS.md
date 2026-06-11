@@ -33,7 +33,7 @@ For Copilot, Cursor, Codex, Gemini Code Assist, or any agents generating code or
 - Go 1.26.3 (specified in `go.mod`)
 - Git (required and checked at runtime)
 - Docker or Podman (for `test-docker` and function runtime tests)
-- KinD (CI uses v0.30.0 for live e2e/apply workflows; `make install-kind` installs v0.29.0 and is used by `verifyContent.yml`) (for e2e live apply tests with Kubernetes 1.33 and 1.34)
+- KinD (CI uses v0.30.0 for live e2e/apply workflows) (for e2e live apply tests with Kubernetes 1.33 and 1.34)
 
 ### Build
 
@@ -142,9 +142,6 @@ git config --global user.name "Your Name"
   * Runs on Linux (docker/podman matrix) and macOS
   * Executes: `make all` + `make test-docker`
   * Triggered on PRs (except changes limited to ignored paths like `**.md`) and pushes (pushes exclude dependabot branches)
-* **.github/workflows/verifyContent.yml**: Verifies CLI examples
-  * Runs `make build`, installs mdrip/kind, runs `make site-verify-examples`
-  * Triggered on changes to `commands/`, `internal/` paths
 * **.github/workflows/e2eEnvironment.yml**: KinD-based e2e tests
   * Tests Kubernetes 1.33 and 1.34 with KinD v0.30.0
   * Runs `./e2e/live/end-to-end-test.sh -k <K8S_VERSION>`
