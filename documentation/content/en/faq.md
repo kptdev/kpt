@@ -2,7 +2,7 @@
 
 ### What is the roadmap for kpt?
 
-Please visit the [roadmap document] and the [kpt milestones].
+Please visit the [roadmap GitHub Project](https://github.com/orgs/kptdev/projects/2) and the [kpt milestones].
 
 ### How is kpt different from other solutions?
 
@@ -10,7 +10,7 @@ Think of configuration as an API or data in a database. kpt can operate on confi
 in storage, git or OCI.
 
 Rather than expressing configuration AS code or templates that generate configuration,
-kpt represents [Configuration as Data]. In particular, it represents configuration
+kpt represents Configuration as Data. In particular, it represents configuration
 as YAML or JSON objects adhering to [The Kubernetes Resource Model], the same as the
 live state in Kubernetes, which enables novel remedies to configuration drift.
 
@@ -120,8 +120,6 @@ don't have to alias it. It is pronounced "kept".
 
 [Please reach out!]( _index.md#communication )
 
-[Configuration as Data]:
-  https://github.com/kptdev/kpt/blob/main/docs/design-docs/06-config-as-data.md
 [the kubernetes resource model]:
   https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md
 [declarative application management in kubernetes]:
@@ -131,8 +129,6 @@ don't have to alias it. It is pronounced "kept".
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
-[roadmap document]:
-  https://github.com/kptdev/kpt/blob/main/docs/ROADMAP.md
 [kpt milestones]: https://github.com/kptdev/kpt/milestones
 [kustomize solution]:
   https://github.com/kptdev/kpt/tree/main/package-examples/kustomize

@@ -9,7 +9,7 @@
 kpt is a package-centric toolchain that enables a WYSIWYG configuration authoring, automation, and delivery experience,
 which simplifies managing Kubernetes platforms and KRM-driven infrastructure (e.g.,
 [Config Connector](https://github.com/GoogleCloudPlatform/k8s-config-connector), [Crossplane](https://crossplane.io)) at
-scale by manipulating declarative [Configuration as Data](docs/design-docs/06-config-as-data.md).
+scale by manipulating declarative Configuration as Data.
 
 *Configuration as Data* is an approach to management of configuration which:
 
@@ -57,7 +57,7 @@ The kpt toolchain includes the following components:
 
 ## Roadmap
 
-You can read about the big upcoming features in the [roadmap doc](/docs/ROADMAP.md).
+You can follow the kpt roadmap in the related [GitHub Project](https://github.com/orgs/kptdev/projects/2/views/2).
 
 ## Contributing
 
