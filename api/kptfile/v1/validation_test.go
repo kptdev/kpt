@@ -233,6 +233,18 @@ func TestValidateFunctionName(t *testing.T) {
 			"example.com/foo/generate-folders@sha256:3434a5299f8fcb2c2ade9975e56ca5a622427b9d5a9a971640765e830fb90a0e",
 			true,
 		},
+		{
+			"example.com/foo/generate-folders:v0.1.0@sha256:3434a5299f8fcb2c2ade9975e56ca5a622427b9d5a9a971640765e830fb90a0e",
+			true,
+		},
+		{
+			"example:v0.1.0@sha256:a2672547b418a57a2b2b41940f96ab4fe78f19851f15c74017ff074bba70c9d9",
+			true,
+		},
+		{
+			"generate-folders@v0.1.0",
+			false,
+		},
 	}
 
 	for _, n := range inputs {
