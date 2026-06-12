@@ -44,7 +44,7 @@ install-swagger:
 
 .PHONY: install-mdtogo
 install-mdtogo:
-	go install ./mdtogo
+	cd mdtogo && go install .
 
 fix: fix-api
 	go fix ./...
