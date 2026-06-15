@@ -50,7 +50,7 @@ jobs:
           which podman
           podman version
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
       - name: Set up Go
@@ -73,7 +73,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           path: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
       - name: Set up Go
