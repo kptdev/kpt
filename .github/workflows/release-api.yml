@@ -24,7 +24,7 @@ jobs:
     name: kpt-api-release
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           path: go/src/github.com/kptdev/kpt
