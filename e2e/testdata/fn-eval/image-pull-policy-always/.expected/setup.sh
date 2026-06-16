@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2021 The kpt Authors
+# Copyright 2021, 2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@ set -eo pipefail
 
 KRM_FN_RUNTIME="${KRM_FN_RUNTIME:=docker}"
 
-# Function ghcr.io/kptdev/krm-functions-catalog/foo:v0.1 prints "foo" to stderr and
-# function ghcr.io/kptdev/krm-functions-catalog/bar:v0.1 prints "bar" to stderr.
-# We intentionally tag a wrong image as ghcr.io/kptdev/krm-functions-catalog/foo:v0.1, since we
+# Function ghcr.io/kptdev/krm-functions-catalog/foo:latest prints "foo" to stderr and
+# function ghcr.io/kptdev/krm-functions-catalog/bar:latest prints "bar" to stderr.
+# We intentionally tag a wrong image as ghcr.io/kptdev/krm-functions-catalog/foo:latest, since we
 # expect the correct image to be pulled and override the wrong image.
-${KRM_FN_RUNTIME} pull ghcr.io/kptdev/krm-functions-catalog/bar:v0.1
-${KRM_FN_RUNTIME} tag ghcr.io/kptdev/krm-functions-catalog/bar:v0.1 ghcr.io/kptdev/krm-functions-catalog/foo:v0.1
+${KRM_FN_RUNTIME} pull ghcr.io/kptdev/krm-functions-catalog/bar:latest
+${KRM_FN_RUNTIME} tag ghcr.io/kptdev/krm-functions-catalog/bar:latest ghcr.io/kptdev/krm-functions-catalog/foo:latest
