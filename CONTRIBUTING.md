@@ -40,18 +40,32 @@ If the file has been modified: use a year range from creation to last modificati
 
 ## Code reviews
 
-All submissions, including submissions by project members, require review. We
-use GitHub pull requests for this purpose. Consult [GitHub Help] for more
-information on using pull requests.
+All submissions, including submissions by project members, require review. We use GitHub pull
+requests for this purpose. Consult [GitHub Help] for more information on using pull requests.
 
 Process for code reviews. Before requesting human review, a PR must:
 
 * All tests passing
 * All linting passing
-* Meeting project code quality requirements, including passing all configured static analysis / SonarCloud quality gates and not reducing automated test coverage for the affected components
-* The comments from the first run of automatically generated comments (AI generated comments, SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further re-runs of AI are optional)
-* If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the automated comment cannot be resolved or ask for help in resolving the comment
-* The PR description states whether AI was used to help create the PR; if so, it lists the AI tools used and the areas where they were used
+* Meeting project code quality requirements, including passing all configured
+  static analysis / SonarCloud quality gates and not reducing automated test coverage for the
+  affected components
+* The comments from the first run of automatically generated comments (AI generated comments,
+  SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further
+  re-runs of AI are optional)
+* If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the
+  automated comment cannot be resolved or ask for help in resolving the comment
+* The PR description states whether AI was used to help create the PR; if so, it lists the AI tools
+  used and the areas where they were used
+
+All pr-s should be approved by at least two memebrs of the [CODEOWNERS](./CODEOWNERS) file, have all
+checks passed and all discussions resolved before merge.
+
+### Stale pr-s
+
+In the case if the comments of a pr are not addressed for more than 2 weeks the pr will be closed.
+The pr can be re-opened any time and the work can be continued if there is a willingness to continue
+the work after a break.
 
 ## Declare any use of AI
 
