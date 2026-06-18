@@ -110,6 +110,8 @@ github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnr
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/klauspost/compress v1.18.6 h1:2jupLlAwFm95+YDR+NwD2MEfFO9d4z4Prjl1XXDjuao=
 github.com/klauspost/compress v1.18.6/go.mod h1:cwPg85FWrGar70rWktvGQj8/hthj3wpl0PGDogxkrSQ=
+github.com/kptdev/kpt/api v0.0.1 h1:1PZ/lA0IuMYkgrSXCJqk3fcVok8tyuP6gOmHhrTETdM=
+github.com/kptdev/kpt/api v0.0.1/go.mod h1:JviL89EPiMTdxSSJL9sXnOuckflKVXZKKDCu9YJ5kM4=
 github.com/kptdev/krm-functions-sdk/go/fn v1.0.3 h1:Gmkqbc2cbwJxamVoRSs409TZinuNGZaMYmNmlQcF6Bs=
 github.com/kptdev/krm-functions-sdk/go/fn v1.0.3/go.mod h1:+MgNIVQMGs6WcNhQZYIbgFINnmskX8VMYcUvJBtE01M=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
