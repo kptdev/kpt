@@ -361,16 +361,16 @@ func (gur *GitUpstreamRepo) cacheRepo(ctx context.Context, uri string, requiredR
 	// Validate that refs and URI do not start with '-' to prevent them from
 	// being interpreted as git command-line options.
 	if strings.HasPrefix(uri, "-") {
-		return "", errors.E(op, errors.Git, fmt.Errorf("invalid git repo %q: must not start with '-'", uri))
+		return "", errors.E(op, errors.InvalidParam, fmt.Errorf("invalid git repo %q: must not start with '-'", uri))
 	}
 	for _, ref := range requiredRefs {
 		if strings.HasPrefix(ref, "-") {
-			return "", errors.E(op, errors.Git, fmt.Errorf("invalid git ref %q: must not start with '-'", ref))
+			return "", errors.E(op, errors.InvalidParam, fmt.Errorf("invalid git ref %q: must not start with '-'", ref))
 		}
 	}
 	for _, ref := range optionalRefs {
 		if strings.HasPrefix(ref, "-") {
-			return "", errors.E(op, errors.Git, fmt.Errorf("invalid git ref %q: must not start with '-'", ref))
+			return "", errors.E(op, errors.InvalidParam, fmt.Errorf("invalid git ref %q: must not start with '-'", ref))
 		}
 	}
 

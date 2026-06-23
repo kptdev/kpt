@@ -135,7 +135,7 @@ func (u *Command) Run(ctx context.Context) error {
 			fmt.Errorf("package must have an upstream reference"))
 	}
 	if strings.HasPrefix(rootKf.Upstream.Git.Repo, "-") {
-		return errors.E(op, u.Pkg.UniquePath,
+		return errors.E(op, u.Pkg.UniquePath, errors.InvalidParam,
 			fmt.Errorf("invalid git repo %q: must not start with '-'", rootKf.Upstream.Git.Repo))
 	}
 	originalRootKfRef := rootKf.Upstream.Git.Ref
@@ -143,7 +143,7 @@ func (u *Command) Run(ctx context.Context) error {
 		rootKf.Upstream.Git.Ref = u.Ref
 	}
 	if strings.HasPrefix(rootKf.Upstream.Git.Ref, "-") {
-		return errors.E(op, u.Pkg.UniquePath,
+		return errors.E(op, u.Pkg.UniquePath, errors.InvalidParam,
 			fmt.Errorf("invalid git ref %q: must not start with '-'", rootKf.Upstream.Git.Ref))
 	}
 	if u.Strategy != "" {
