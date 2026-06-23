@@ -12,13 +12,17 @@ For Copilot, Cursor, Codex, Gemini Code Assist, or any agents generating code or
 
 ### Reviewing PRs
 
-* When committing suggested changes, add a sign-off from the approving human and add the `Assisted-by` tag to the commit message
+* When committing suggested changes, add a sign-off from the human author and add the `Assisted-by`
+  tag with the suggesting agent and its used model to the commit message
 * If a comment was not accepted and the Conversation was resolved do not make the same comment again
 
 
 ## Repository Overview
 
-**kpt** is a package-centric toolchain that automates Kubernetes configuration editing and management. It enables declarative configuration authoring, automation, and delivery at scale through a "Configuration as Data" approach, supporting Kubernetes platforms and KRM-driven infrastructure (e.g., Config Connector, Crossplane).
+**kpt** is a package-centric toolchain that automates Kubernetes configuration editing and
+management. It enables declarative configuration authoring, automation, and delivery at scale
+through a "Configuration as Data" approach, supporting Kubernetes platforms and KRM-driven
+infrastructure (e.g., Config Connector, Crossplane).
 
 - **Language**: Go (version is defined in the [go.mod](./go.mod) file)
 - **License**: Apache 2.0
