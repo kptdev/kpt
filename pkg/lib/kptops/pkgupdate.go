@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
@@ -59,10 +60,16 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, _ PkgUpdateOp
 	if kf.Upstream == nil || kf.Upstream.Git == nil {
 		return fmt.Errorf("package must have an upstream reference")
 	}
+	if strings.HasPrefix(kf.Upstream.Git.Repo, "-") {
+		return fmt.Errorf("invalid git repo %q: must not start with '-'", kf.Upstream.Git.Repo)
+	}
 
 	// originalRootKfRef := rootKf.Upstream.Git.Ref
 	if ref != "" {
 		kf.Upstream.Git.Ref = ref
+	}
+	if strings.HasPrefix(kf.Upstream.Git.Ref, "-") {
+		return fmt.Errorf("invalid git ref %q: must not start with '-'", kf.Upstream.Git.Ref)
 	}
 	// if u.Strategy != "" {
 	// 	rootKf.Upstream.UpdateStrategy = u.Strategy

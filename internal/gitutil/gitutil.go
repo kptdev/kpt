@@ -357,6 +357,23 @@ func (gur *GitUpstreamRepo) getRepoCacheDir() (string, error) {
 // cacheRepo fetches a remote repo to a cache location, and fetches the provided refs.
 func (gur *GitUpstreamRepo) cacheRepo(ctx context.Context, uri string, requiredRefs []string, optionalRefs []string) (string, error) {
 	const op errors.Op = "gitutil.cacheRepo"
+
+	// Validate that refs and URI do not start with '-' to prevent them from
+	// being interpreted as git command-line options.
+	if strings.HasPrefix(uri, "-") {
+		return "", errors.E(op, errors.Git, fmt.Errorf("invalid git repo %q: must not start with '-'", uri))
+	}
+	for _, ref := range requiredRefs {
+		if strings.HasPrefix(ref, "-") {
+			return "", errors.E(op, errors.Git, fmt.Errorf("invalid git ref %q: must not start with '-'", ref))
+		}
+	}
+	for _, ref := range optionalRefs {
+		if strings.HasPrefix(ref, "-") {
+			return "", errors.E(op, errors.Git, fmt.Errorf("invalid git ref %q: must not start with '-'", ref))
+		}
+	}
+
 	kptCacheDir, err := gur.getRepoCacheDir()
 	if err != nil {
 		return "", errors.E(op, err)

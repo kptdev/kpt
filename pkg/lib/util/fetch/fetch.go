@@ -82,8 +82,14 @@ func (c Command) validate(kf *kptfilev1.KptFile) error {
 	if len(g.Repo) == 0 {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
 	}
+	if strings.HasPrefix(g.Repo, "-") {
+		return errors.E(op, errors.InvalidParam, fmt.Errorf("invalid git repo %q: must not start with '-'", g.Repo))
+	}
 	if len(g.Ref) == 0 {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
+	}
+	if strings.HasPrefix(g.Ref, "-") {
+		return errors.E(op, errors.InvalidParam, fmt.Errorf("invalid git ref %q: must not start with '-'", g.Ref))
 	}
 	if len(g.Directory) == 0 {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))

@@ -441,3 +441,30 @@ func toKeys(m map[string]string) []string {
 	sort.Strings(keys)
 	return keys
 }
+
+// TestGitUpstreamRepo_GetRepo_flagLikeRefRejected verifies that a ref
+// starting with '--' is rejected as invalid input.
+func TestGitUpstreamRepo_GetRepo_flagLikeRefRejected(t *testing.T) {
+	repoContent := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: "main",
+			},
+		},
+	}
+
+	g, _, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+	defer clean()
+
+	gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	// A ref starting with '--' should be rejected by input validation.
+	_, err = gur.GetRepo(fake.CtxWithDefaultPrinter(), []string{"--some-invalid-ref"})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "must not start with '-'")
+}
