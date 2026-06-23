@@ -90,6 +90,8 @@ func NewRunner(
 	c.Flags().StringVar(&r.statusPolicyString, "status-policy", "all",
 		"It determines which status information should be saved in the inventory (if compatible). Available options "+
 			fmt.Sprintf("%q and %q.", "all", "none"))
+	c.Flags().BoolVar(&r.wait, "wait", true,
+		"Whether or not to wait for the resources to be ready")
 	return r
 }
 
@@ -117,6 +119,7 @@ type Runner struct {
 	dryRun                       bool
 	printStatusEvents            bool
 	statusPolicyString           string
+	wait                         bool
 
 	inventoryPolicy inventory.Policy
 	prunePropPolicy metav1.DeletionPropagation
@@ -261,7 +264,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 	ch := applier.Run(r.ctx, invInfo, objs, apply.ApplierOptions{
 		ServerSideOptions:      r.serverSideOptions,
 		ReconcileTimeout:       r.reconcileTimeout,
-		EmitStatusEvents:       true, // We are always waiting for reconcile.
+		EmitStatusEvents:       r.wait,
 		DryRunStrategy:         dryRunStrategy,
 		PrunePropagationPolicy: r.prunePropPolicy,
 		PruneTimeout:           r.pruneTimeout,
@@ -275,6 +278,11 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 		} else {
 			fmt.Println("Dry-run strategy: client")
 		}
+	}
+
+	if !r.wait {
+		_, _ = fmt.Fprintf(r.ioStreams.Out, "Apply started in the background")
+		return nil
 	}
 
 	// The printer will print updates from the channel. It will block
