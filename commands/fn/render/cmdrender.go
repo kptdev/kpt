@@ -41,10 +41,6 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 
 	// find the image prefix
 	// priority order: CLI arg - env var - default
-	defaultPrefix := os.Getenv(PrefixEnvVar)
-	if defaultPrefix == "" {
-		defaultPrefix = runneroptions.GHCRImagePrefix
-	}
 
 	c := &cobra.Command{
 		Use:     "render [PKG_PATH] [flags]",
@@ -54,10 +50,14 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	r.InitDefaults()
+	defaultPrefix := os.Getenv(PrefixEnvVar)
+	if defaultPrefix == "" {
+		defaultPrefix = runneroptions.GHCRImagePrefix
+	}
+	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", defaultPrefix,
+		"The prefix to be used when converting from short path to the full url")
 
-	prefix := *c.Flags().String("image-prefix", defaultPrefix, "The prefix to be used when converting from short path to the full url")
-	fmt.Println(prefix)
-	r.InitDefaults(prefix)
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
@@ -95,11 +95,12 @@ type Runner struct {
 	RunnerOptions runneroptions.RunnerOptions
 }
 
-func (r *Runner) InitDefaults(prefix string) {
-	r.RunnerOptions.InitDefaults(prefix)
+func (r *Runner) InitDefaults() {
+	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
+	r.RunnerOptions.UpdateImageResolveFunc()
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()

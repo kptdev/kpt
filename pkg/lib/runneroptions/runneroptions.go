@@ -57,11 +57,17 @@ type RunnerOptions struct {
 
 	// ResolveToImage will resolve a partial image to a fully-qualified one
 	ResolveToImage ImageResolveFunc
+
+	ImagePrefix string
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
 	opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
+}
+
+func (opts *RunnerOptions) UpdateImageResolveFunc() {
+	opts.ResolveToImage = ResolveToImageForCLIFunc(opts.ImagePrefix)
 }
 
 // ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.
