@@ -33,8 +33,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const PrefixEnvVar = "KPT_IMAGE_PREFIX" // TODO: check if this is in the right place and if there is any convention I should be following
-
 // NewRunner returns a command runner
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
@@ -51,7 +49,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		PreRunE: r.preRunE,
 	}
 	r.InitDefaults()
-	defaultPrefix := os.Getenv(PrefixEnvVar)
+	defaultPrefix := os.Getenv(runneroptions.PrefixEnvVar)
 	if defaultPrefix == "" {
 		defaultPrefix = runneroptions.GHCRImagePrefix
 	}

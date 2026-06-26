@@ -23,6 +23,7 @@ import (
 const (
 	FuncGenPkgContext = "builtins/gen-pkg-context"
 	GHCRImagePrefix   = "ghcr.io/kptdev/krm-functions-catalog/"
+	PrefixEnvVar      = "KPT_IMAGE_PREFIX" // TODO: check if this is in the right place and if there is any convention I should be following
 )
 
 // ImageResolveFunc is the type for a function that can resolve a partial image to a (more) fully-qualified name
@@ -56,18 +57,33 @@ type RunnerOptions struct {
 	AllowWasm bool
 
 	// ResolveToImage will resolve a partial image to a fully-qualified one
-	ResolveToImage ImageResolveFunc
+	// ResolveToImage ImageResolveFunc
 
 	ImagePrefix string
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
-	opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
+	opts.ImagePrefix = defaultImagePrefix
+	// opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
 }
 
 func (opts *RunnerOptions) UpdateImageResolveFunc() {
-	opts.ResolveToImage = ResolveToImageForCLIFunc(opts.ImagePrefix)
+	// opts.ResolveToImage = ResolveToImageForCLIFunc(opts.ImagePrefix)
+}
+
+// a func that converts the KRM function short path to the full image url.
+// If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
+// A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
+func (opts RunnerOptions) ResolveToImage(image string) string {
+	prefix := strings.TrimRight(opts.ImagePrefix, "/")
+	if prefix == "" {
+		return image
+	}
+	if !strings.Contains(image, "/") {
+		return fmt.Sprintf("%s/%s", prefix, image)
+	}
+	return image
 }
 
 // ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.
