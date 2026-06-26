@@ -35,7 +35,6 @@ import (
 
 const PrefixEnvVar = "KPT_IMAGE_PREFIX" // TODO: check if this is in the right place and if there is any convention I should be following
 
-
 // NewRunner returns a command runner
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
@@ -57,6 +56,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 
 	prefix := *c.Flags().String("image-prefix", defaultPrefix, "The prefix to be used when converting from short path to the full url")
+	fmt.Println(prefix)
 	r.InitDefaults(prefix)
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
