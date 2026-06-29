@@ -62,8 +62,10 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	resolveFunc := runneroptions.ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
-	image := resolveFunc(r.Image)
+
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.DefaultImagePrefix())
+	image := opts.ResolveToImage(r.Image)
 	var out, errout bytes.Buffer
 	runArgs := []string{
 		"run",

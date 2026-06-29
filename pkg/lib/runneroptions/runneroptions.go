@@ -17,17 +17,23 @@ package runneroptions
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
 const (
 	FuncGenPkgContext = "builtins/gen-pkg-context"
 	GHCRImagePrefix   = "ghcr.io/kptdev/krm-functions-catalog/"
-	PrefixEnvVar      = "KPT_IMAGE_PREFIX" // TODO: check if this is in the right place and if there is any convention I should be following
+	PrefixEnvVar      = "KPT_IMAGE_PREFIX"
 )
 
-// ImageResolveFunc is the type for a function that can resolve a partial image to a (more) fully-qualified name
-type ImageResolveFunc func(image string) string
+// DefaultImagePrefix returns the image prefix from the KPT_IMAGE_PREFIX env var, or GHCRImagePrefix if unset.
+func DefaultImagePrefix() string {
+	if p := os.Getenv(PrefixEnvVar); p != "" {
+		return p
+	}
+	return GHCRImagePrefix
+}
 
 type RunnerOptions struct {
 	// ImagePullPolicy controls the image pulling behavior before running the container.
@@ -56,6 +62,8 @@ type RunnerOptions struct {
 	// enabled explicitly.
 	AllowWasm bool
 
+	// ImagePrefix determines the prefix ResolveToImage will use when resolving a
+	// partial image reference to a fully qualified url
 	ImagePrefix string
 }
 
@@ -64,7 +72,7 @@ func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePrefix = defaultImagePrefix
 }
 
-// a func that converts the KRM function short path to the full image url.
+// ResolveToImage converts the KRM function short path to the full image url.
 // If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
 // A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
 func (opts RunnerOptions) ResolveToImage(image string) string {
@@ -76,24 +84,6 @@ func (opts RunnerOptions) ResolveToImage(image string) string {
 		return fmt.Sprintf("%s/%s", prefix, image)
 	}
 	return image
-}
-
-// ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.
-// If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
-// A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
-func ResolveToImageForCLIFunc(prefix string) ImageResolveFunc {
-	prefix = strings.TrimRight(prefix, "/")
-	if prefix == "" {
-		return func(image string) string {
-			return image
-		}
-	}
-	return func(image string) string {
-		if !strings.Contains(image, "/") {
-			return fmt.Sprintf("%s/%s", prefix, image)
-		}
-		return image
-	}
 }
 
 type SingleLineFormatter struct {

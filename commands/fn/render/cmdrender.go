@@ -49,11 +49,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		PreRunE: r.preRunE,
 	}
 	r.InitDefaults()
-	defaultPrefix := os.Getenv(runneroptions.PrefixEnvVar)
-	if defaultPrefix == "" {
-		defaultPrefix = runneroptions.GHCRImagePrefix
-	}
-	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", defaultPrefix,
+	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
 		"The prefix to be used when converting from short path to the full url")
 
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
