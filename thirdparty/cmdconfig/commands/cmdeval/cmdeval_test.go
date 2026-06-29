@@ -434,7 +434,6 @@ apiVersion: v1
 			if tt.expectedStruct != nil {
 				r.runFns.Function = nil
 				r.runFns.FnConfig = nil
-				// r.runFns.RunnerOptions.ResolveToImage = nil
 				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
 				if !assert.Equal(t, *tt.expectedStruct, r.runFns) {
 					t.FailNow()

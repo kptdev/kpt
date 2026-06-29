@@ -98,7 +98,6 @@ func (r *Runner) InitDefaults() {
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
-	r.RunnerOptions.UpdateImageResolveFunc()
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()
