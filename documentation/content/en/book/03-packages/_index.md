@@ -69,7 +69,7 @@ status:
       reason: RenderSuccess
 ```
 
-The `Kptfile` contains several sections to keep track of the package and its state: the `upstream` section, the `upstreamLock` section, and the `status` section. These sections are defined as follows:
+The `Kptfile` contains several sections to keep track of the package and its state, these are the `upstream` ,  `upstreamLock` and the `status` sections and are defined below as follows:
 
 1. The `upstream` section contains the user-specified Git reference to the upstream package. This contains three pieces
    of information:
