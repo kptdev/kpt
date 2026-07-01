@@ -19,7 +19,7 @@ require (
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
 	github.com/prep/wasmexec v0.0.0-20220807105708-6554945c1dec
-	github.com/regclient/regclient v0.11.4
+	github.com/regclient/regclient v0.11.5
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
@@ -112,7 +112,7 @@ require (
 	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/term v0.43.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
