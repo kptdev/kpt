@@ -50,7 +50,7 @@ _kpt_
 - Enables workflows that combine programmatic changes ([functions]) with manual
   edits.
 - Aims to support mutating and validating admission control on derived packages.
-- Also supports packages, package orchestration (see [Nephio documentation](https://docs.porch.nephio.org/)), resource actuation, and GitOps.
+- Also supports packages, package orchestration (see [Nephio documentation](https://porch.kpt.dev/)), resource actuation, and GitOps.
 
 ### Do kpt and kustomize work together?
 
