@@ -3,8 +3,8 @@ title: "Chapter 3: Packages"
 linkTitle: "Chapter 3: Packages"
 description: |
     [Chapter 2](../02-concepts#packages) provided a high-level conceptual explanation of a package and the package
-    lifecycle. This chapter will cover working with packages in detail: how to get, explore, edit, update, and publish
-    them.
+    lifecycle. This chapter covers working with packages in detail: how to get, explore, edit, update, and publish
+    packages.
 toc: true
 menu:
   main:
@@ -14,21 +14,20 @@ menu:
 
 ## Getting a package
 
-Packaging in kpt is based on Git forking. Producers publish packages by committing them to a Git repository. Consumers
-fork the package to use it.
+Packaging in kpt is based on Git forking. The producer publishes a package
+by committing it to a Git repository. The consumer forks the package in order to use it.
 
-Let's revisit the Wordpress example:
+Let us revisit the WordPress example:
 
 ```shell
 kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.61
 ```
 
-A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case, we are specifying tag
-`v1.0.0-beta.61`.
+A package in a Git repository can be fetched by specifying a branch, tag, or commit SHA. In the above example, the tag `v1.0.0-beta.61` is specified.
 
-Refer to the [get command reference](../../reference/cli/pkg/get/) for usage.
+See the [get command reference](../../reference/cli/pkg/get/) for usage.
 
-The `Kptfile` contains metadata about the origin of the forked package. Take a look at the content of the `Kptfile` on
+The `Kptfile` contains the metadata about the origin of the forked package. Have a look at the content of the `Kptfile` on
 your local filesystem:
 
 ```yaml
@@ -70,23 +69,19 @@ status:
       reason: RenderSuccess
 ```
 
-The `Kptfile` contains several sections to keep track of the package and its state:
+The `Kptfile` contains several sections to keep track of the package and its state, these are the `upstream` ,  `upstreamLock` and the `status` sections and are defined below as follows:
 
 1. The `upstream` section contains the user-specified Git reference to the upstream package. This contains three pieces
    of information:
-   - `repo`: The Git repository where the package can be found
-   - `directory`: The directory within the Git repository where this package can
-     be found
-   - `ref`: The Git reference for the package. This can be either a branch, tag,
-     or commit SHA.
-2. The `upstreamLock` section records the upstream Git reference (exact Git SHA) that was fetched by kpt. This section
-   is managed by kpt and should not be changed manually.
+   - `repo`: This is the Git repository where the package can be found.
+   - `directory`: This is the directory within the Git repository where this package can be found.
+   - `ref`: This is the Git reference for the package. This can be a branch, tag, or a commit SHA.
+2. The `upstreamLock` section records the upstream Git reference (the exact Git SHA) that was
+   fetched by kpt. This section is managed by kpt and should not be changed manually.
 3. The `status` section records the operational state of the package. This is managed by kpt and tracks the execution
-   status of operations like `render`. The `status.conditions` field contains a list of condition objects, similar to
-   how Kubernetes tracks conditions on resources. For example, after running `kpt fn render`, a `Rendered` condition
-   is automatically recorded to indicate whether the last render succeeded or failed.
+   status of operations such as `render`. The `status.conditions` field contains a list of condition objects, similarly to the way in which Kubernetes tracks the conditions on the resources. For example, after running `kpt fn render`, a `Rendered` condition is automatically recorded to indicate whether the last render succeeded or failed.
 
-Now, let's look at the `Kptfile` for the `mysql` subpackage:
+Let us now look at the `Kptfile` for the `mysql` subpackage:
 
 ```yaml
 # wordpress/mysql/Kptfile
@@ -105,47 +100,41 @@ pipeline:
         tier: mysql
 ```
 
-As you can see, this `Kptfile` doesn't have the `upstream` and `upstreamLock` sections. This is because there are two
-different package types in kpt:
+This `Kptfile` does not have the `upstream` and `upstreamLock` sections. This is because there are two different package types in kpt: the **independent package** and the **dependent package**:
 
-- **Independent package:** A package where the `Kptfile` has `upstream` defined.
-- **Dependent package:** A package where the `Kptfile` doesn’t have `upstream` defined.
+- **Independent package:** This is a package in which the `Kptfile` has `upstream` defined.
+- **Dependent package:** This is a package in which the `Kptfile` does not have `upstream` defined.
 
 In this case, the `mysql` subpackage is a _dependent package_. The upstream package for `mysql` is automatically
-inferred from the parent package. You can think of the `Kptfile` in the `mysql` package as implicitly inheriting the
-`upstream` section of its parent, with the only difference being that `upstream.directory` in the subpackage would
-instead point to `/package-examples/wordpress/mysql`.
+inferred from the parent package. Think of the `Kptfile` in the `mysql` package as implicitly inheriting the `upstream` section
+of its parent, with the only difference being that the `upstream.directory` in the subpackage instead points to `/package-examples/wordpress/mysql`.
 
-### Package Name and Identifier
+### Package name and identifier
 
-It is possible to specify a different local directory name to the `get` command.
-For example, the following fetches the packages to a directory named `mywordpress`:
+It is possible to specify a different local directory name to the `get` command. For example, the following command fetches the packages to a directory named `mywordpress`:
 
 ```shell
 kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.61 mywordpress
 ```
 
-The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and follows the familiar
-structure of KRM resources, the name of the package is also available from the `metadata.name` field. This must always
-be the name of the directory, and kpt will update it automatically when forking a package. In this case, `metadata.name`
-is set to `mywordpress`.
+The _name of a package_ is given by its directory name. Since the `Kptfile` is a KRM resource and follows the familiar
+structure of the KRM resources, the name of the package is also available from the `metadata.name` field. This must always
+be the name of the directory. kpt updates it automatically when forking a package. In this case, `metadata.name` is set to
+`mywordpress`.
 
 In general, the package name is not unique. The _unique identifier_ for a package is defined as the relative path from
-the top package to the subpackage. For example, we could have two subpackages with the name `mysql` having the
-following identifiers:
+the top package to the subpackage. For example, we could have two subpackages with the name `mysql` having the following
+identifiers:
 
 - `wordpress/backend/mysql`
 - `wordpress/frontend/mysql`
 
 ## Exploring a package
 
-After you fetch a package to your local filesystem, you typically want to explore the package to understand how it is
-composed and how it can be customized for your needs. Given a kpt package is just an ordinary directory of
-human-readable YAML files, you can naturally use your favorite file explorer, shell commands, or editor to explore the
+After having fetched a package to your local filesystem, it is generally a good idea to analyze the package, in order to understand how it is structured and how it can be customized to suit your needs. Given that a kpt package is simply an ordinary directory of human-readable YAML files, you can use your favorite file explorer, shell commands, or editor to explore the
 package.
 
-kpt also provides the `tree` command which is handy for quickly viewing package
-hierarchy and the constituent packages, files, and resources:
+kpt also provides the `tree` command which is handy for quickly viewing the package hierarchy and the constituent packages, files, and resources:
 
 ```shell
 kpt pkg tree wordpress/
@@ -162,11 +151,10 @@ Package "wordpress"
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
-Refer to the [tree command reference](../../reference/cli/pkg/tree/) for usage.
+See the [tree command reference](../../reference/cli/pkg/tree/) for usage.
 
-In addition, you can use a kpt function such as `search-replace` to run a query
-on the package. For example, to search for resources that have a field with path
-`spec.selector.tier`:
+In addition, you can use a kpt function, such as `search-replace`, to run a query on the package. For example, to search for resources that have a field with the
+`spec.selector.tier` path, use the following kpt function:
 
 ```shell
 kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
@@ -174,27 +162,23 @@ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 
 ## Editing a package
 
-kpt does not maintain any state on your local machine outside of the directory where you fetched the
-package. Making changes to the package is accomplished by manipulating the local filesystem. At the
-lowest-level, _editing_ a package is simply a process that either:
+kpt does not maintain any state on your local machine outside the directory from where you fetched the package. Making changes to the package is achieved by manipulating the local filesystem. At the lowest level, _editing_ a package is simply a process that does one of the following:
 
-- Changes the resources within that package. Examples:
-  - Authoring new a Deployment resource
-  - Customizing an existing Deployment resource
-  - Modifying the Kptfile
-- Changes the package hierarchy, also called _package composition_. Examples:
+- It changes the resources within the package. Examples are as follows:
+  - Authoring a new Deployment resource.
+  - Customizing an existing Deployment resource.
+  - Modifying the `Kptfile`.
+- It changes the package hierarchy, also called _package composition_. Examples are as follows:
   - Adding a subpackage.
-  - Create a new dependent subpackage.
+  - Creating a new dependent subpackage.
 
-At the end of the day, editing a package will result in a Git commit that fully specifies
-the package. This process can be manual or automated depending on your use case.
+Editing a package ultimately results in a Git commit that fully specifies the package. Depending on your use case, this process can be manual or automated.
 
-We will cover package composition later in this chapter. For now, let's focus on editing resources
-_within_ a package.
+We will cover package composition later in this chapter. For now, let us focus on editing the resources _within_ a package.
 
-### Initialize the local repo
+### Initializing the local repository
 
-Before you make any changes to package, you should first initialize and commit the pristine package:
+Before you make any changes to the package, first initialize and commit the pristine package, using the following command:
 
 ```shell
 git init; git add .; git commit -m "Pristine wordpress package"
@@ -202,12 +186,9 @@ git init; git add .; git commit -m "Pristine wordpress package"
 
 ### Manual edits
 
-As mentioned earlier, you can manually edit or author KRM resources using your favorite editor.
-Since every KRM resource has a known schema, you can take advantage of tooling that assists in
-authoring and validating resource configuration. For example, [Cloud Code](https://cloud.google.com/code) extensions for
-VS Code and IntelliJ provide IDE features such as auto-completion, inline documentation, linting, and snippets.
+As mentioned earlier, you can manually edit or author the KRM resources, using your favorite editor. Since every KRM resource has a known schema, you can take advantage of the tooling that assists in authoring and validating the resource configuration. For example, [Cloud Code](https://cloud.google.com/code) extensions for VS Code and IntelliJ provide IDE features such as auto-completion, inline documentation, linting, and snippets.
 
-For example, if you have VS Code installed, try modifying the resources in the `wordpress` package:
+If, for example, you have VS Code installed, try modifying the resources in the `wordpress` package, as follows:
 
 ```shell
 code wordpress
@@ -215,82 +196,67 @@ code wordpress
 
 ### Automation
 
-Oftentimes, you want to automate repetitive or complex operations. Having standardized on KRM for
-all resources in a package allows us to easily develop automation in different
-toolchains and languages, as well as at levels of abstraction.
+It is often necessary to automate repetitive or complex operations. Having standardized on KRM for all resources in a package allows you to easily develop automation in different toolchains and languages, as well as at levels of abstraction.
 
-For example, setting a label on all the resources in the `wordpress` package can be done
-using the following function:
+For example, setting a label on all the resources in the `wordpress` package can be done using the following function:
 
 ```shell
 kpt fn eval wordpress -i set-labels:latest -- env=dev
 ```
 
-[Chapter 4](../04-using-functions/) discusses different ways of running functions in detail.
+[Chapter 4](../04-using-functions/) discusses in detail the different ways of running the functions.
 
 ## Rendering a package
 
-Regardless of how you have edited the package, you want to _render_ the package:
+Regardless of how you have edited the package, you need to _render_ it. Use the following command to render the package:
 
 ```shell
 kpt fn render wordpress
 ```
 
-Refer to the [render command reference](../../reference/cli/fn/render/) for usage.
+See the [render command reference](../../reference/cli/fn/render/) for command usage.
 
-`render` is a critical step in the package lifecycle. At a high level, it
-perform the following steps:
+`render` is a critical step in the package lifecycle. At a high level, it performs the following steps:
 
-1. Enforces package preconditions. For example, it validates the `Kptfile`.
-2. Executes functions declared in the package hierarchy in a depth-first order.
-   By default, the packages are modified in-place.
-3. Guarantees package postconditions. For example, it enforces a consistent
-   formatting of resources, even though a function (developed by different
-   people using different toolchains) may have modified the formatting in some
-   way.
-4. Records the render execution status in the root `Kptfile` as a `Rendered` condition
-   under `status.conditions`. On success, the condition has `status: "True"` and
-   `reason: RenderSuccess`. On failure, it has `status: "False"`, `reason: RenderFailed`,
-   and includes error details in the `message` field.
+1. It enforces the package preconditions. For example, it validates the `Kptfile`.
+2. It executes the functions declared in the package hierarchy in a depth-first order. By default, the packages are modified in-place.
+3. It guarantees the package postconditions. For example, it enforces consistent formatting of resources, even though a function (developed by different people using different toolchains) may have modified the formatting in some way.
+4. It records the render execution status in the root `Kptfile` as a `Rendered` condition, under `status.conditions`. If the render execution was a success, then the condition has `status: "True"` and `reason: RenderSuccess`. If the render execution was unsuccessful, then the condition has `status: "False"` and `reason: RenderFailed`, and includes the error details in the `message` field.
 
-Note that status conditions are only written for in-place renders (the default behavior).
-When using out-of-place output modes like `kpt fn render -o stdout` or `kpt fn render -o <dir>`,
-no status condition is written since the package is not being updated on disk.
+Note that status conditions are only written for in-place renders (this is the default behavior). When using out-of-place output modes, such as `kpt fn render -o stdout` or `kpt fn render -o <dir>`,
+no status condition is indicated because the package is not being updated on disk.
 
-[Chapter 4](../04-using-functions/) discusses different ways of running functions in detail.
+[Chapter 4](../04-using-functions/) discusses in detail the different ways of running the functions.
 
 ## Updating a package
 
-An independent package records the exact commit where the local fork and the
-upstream package diverged. This enables kpt to fetch any update to the upstream
-package and merge it with local changes.
+An independent package records the exact commit where the local fork and the upstream package diverged. This enables kpt to fetch any update to the upstream package and merge it with the local changes.
 
-### Commit your local changes
+### Committing your local changes
 
-Before you update the package, you want to commit your local changes.
+Before you update the package, you must commit your local changes.
 
-First, to see the changes you've made to the fork of the upstream package:
+First, use the following command to see the changes you have made to the fork of the upstream package:
 
 ```shell
 git diff
 ```
 
-If you're happy with the changes, commit them:
+If you are happy with the changes, then commit them, using the following command:
 
 ```shell
 git add .; git commit -m "My changes"
 ```
 
-## Update the package
+### Updating the package
 
-For example, you can update to version `main` of the `wordpress` package:
+You can, for example, update to the `main` version of the `wordpress` package, using the following command:
 
 ```shell
 kpt pkg update wordpress@main
 ```
 
-This is a porcelain for manually updating the `upstream` section in the
-`Kptfile` :
+This is a porcelain for manually updating the `upstream` section in the `Kptfile`, as follows:
 
 ```yaml
 upstream:
@@ -303,46 +269,42 @@ upstream:
   updateStrategy: resource-merge
 ```
 
-and then running:
+and then running the following command:
 
 ```shell
 kpt pkg update wordpress
 ```
 
-The `update` command updates the local `wordpress` package and the dependent
-`mysql` package to the upstream version `main` by doing a 3-way merge between:
+The `update` command updates the local `wordpress` package and the dependent `mysql` package to the upstream version `main` by doing a three-way merge between the following:
 
-1. Original upstream commit
-2. New upstream commit
-3. Local (edited) package
+1. the original upstream commit
+2. the new upstream commit
+3. the local (edited) package
 
-Several different strategies are available to handle the merge. By default, the
-`resource-merge` strategy is used which performs a structural comparison of the
-resource using OpenAPI schema.
+Several different strategies are available for handling the merge. By default, the `resource-merge` strategy is used. This performs a structural comparison of the resource using the OpenAPI schema.
 
-Refer to the [update command reference](../../reference/cli/pkg/update/) for usage.
+See the [update command reference](../../reference/cli/pkg/update/) for usage.
 
-### Commit the updated resources
+### Committing the updated resources
 
-Once you have successfully updated the package, commit the changes:
+Once you have successfully updated the package, commit the changes, using the following command:
 
 ```shell
 git add .; git commit -m "Updated wordpress to main"
 ```
 ## Creating a package
 
-Creating a new package is simple. Use the `pkg init` command to initialize a directory as a kpt package with a minimal `Kptfile` and `README` files:
+Creating a package is a simple task. Use the `pkg init` command to initialize a directory as a kpt package with a minimal `Kptfile` and `README` files:
 
 ```shell
 kpt pkg init awesomeapp
 ```
 
-The command will automatically create the `awesomeapp` directory if it doesn't exist, eliminating the need to manually create the directory beforehand.
+This command automatically creates the `awesomeapp` directory, if it does not already exist, eliminating the need to manually create the directory beforehand.
 
-Refer to the [init command reference](../../reference/cli/pkg/init/) for usage.
+See the [init command reference](../../reference/cli/pkg/init/) for usage.
 
-The `info` section of the `Kptfile` contains some optional package metadata you
-may want to set. These fields are not consumed by any functionality in kpt:
+The `info` section of the `Kptfile` contains some optional package metadata that you may want to set. These fields are not consumed by any functionality in kpt:
 
 ```yaml
 apiVersion: kpt.dev/v1
@@ -363,18 +325,14 @@ info:
 
 ## Composing a package
 
-A package can be _composed_ of subpackages (_HAS A_ relationship). _Package
-composition_ is when you change the package hierarchy by adding or removing
-subpackages.
+A package can be _composed_ of subpackages (_HAS A_ relationship). _Package composition_ is when you change the package hierarchy by adding or removing subpackages.
 
-There are two different ways to add a subpackage to a package on the local
-filesystem:
+There are two different ways to add a subpackage to a package on the local filesystem:
 
-1. [Create a new package](#creating-a-package) in a subdirectory
-2. [Get an existing package](#getting-a-package) in a subdirectory
+1. [Create a new package](#creating-a-package) in a subdirectory.
+2. [Get an existing package](#getting-a-package) in a subdirectory.
 
-Let's revisit the `wordpress` package and see how it was composed in the first
-place. Currently, it has the following package hierarchy:
+Let us revisit the `wordpress` package and see how it was composed in the first place. Currently, it has the following package hierarchy:
 
 ```shell
 kpt pkg tree wordpress/
@@ -391,55 +349,53 @@ Package "wordpress"
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
-First, let's delete the `mysql` subpackage. Deleting a subpackage is done by
-simply deleting the subdirectory:
+First, delete the `mysql` subpackage. Deleting a subpackage is done by deleting the subdirectory, as follows:
 
 ```shell
 rm -r wordpress/mysql
 ```
 
-We're going to add back the `mysql` subpackage using the two different
-approaches:
+You now need to add back the `mysql` subpackage, using either of the following two approaches:
 
-### Create a new package
+- creating a package
+- getting an existing package
 
-Initialize the package:
+These two approaches are described in the following sections.
+
+### Creating a `mysql` subpackage
+
+Initialize the package, using the following command:
 
 ```shell
 kpt pkg init wordpress/mysql
 # author resources in mysql
 ```
 
-This will create the `wordpress/mysql` directory if it doesn't exist, and initialize it as a [dependent package](#getting-a-package).
+This creates the `wordpress/mysql` directory, if it does not already exist, and initializes it as a [dependent package](#getting-a-package).
 
-### Get an existing package
+### Getting an existing package
 
-Remove the existing directory if it exists:
+Remove the existing directory, using the following command:
 
 ```shell
 rm -rf wordpress/mysql
 ```
 
-Fetch the package:
+Fetch the package, using the following command:
 
 ```shell
 kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20 wordpress/mysql
 ```
 
-This creates an [independent package](#getting-a-package). If you wish to make this a dependent
-package, you can delete the `upstream` and `upstreamLock` sections of the
-`Kptfile` in `mysql` directory.
+This creates an [independent package](#getting-a-package). If you wish to make this a dependent package, then delete the `upstream` and `upstreamLock` sections of the `Kptfile` in the `mysql` directory.
 
 ## Publishing a package
 
-A kpt package is published as a Git subdirectory containing KRM resources.
-Publishing a package is just a normal Git push. This also means that any
-existing Git directory of KRM resources is a valid kpt package.
+A kpt package is published as a Git subdirectory containing the KRM resources. Publishing a package simply requires a normal Git push. This also means that any existing Git directory of the KRM resources is a valid kpt package.
 
-As an example, let's re-publish the local `wordpress` package to your own repo.
+As an example, republish the local `wordpress` package to your own repository.
 
-Start by initializing the the `wordpress` directory as a Git repo if you haven't
-already done so:
+Start by initializing the `wordpress` directory as a Git repository, if you have not already done so:
 
 ```shell
 cd wordpress; git init; git add .; git commit -m "My wordpress package"
@@ -451,7 +407,7 @@ Tag the commit:
 git tag v0.1
 ```
 
-Push the commit which requires you to have access to the repo:
+Push the commit, which requires you to have access to the repository:
 
 ```shell
 git push origin v0.1
@@ -463,21 +419,19 @@ You can then fetch the published package:
 kpt pkg get <MY_REPO_URL>/@v0.1
 ```
 
-### Monorepo Versioning
+### Monorepo versioning
 
-You may have a Git repo containing multiple packages. kpt provides a tagging
-convention to enable packages to be independently versioned.
+You may have a Git repository containing multiple packages. kpt provides a tagging convention to enable packages to be independently versioned.
 
-For example, let's assume the `wordpress` directory is not at the root of the
-repo but instead is in the directory `packages/wordpress`.
+For example, let us assume the `wordpress` directory is not at the root of the repository, but is instead in the `packages/wordpress` directory.
 
-Tag the commit:
+Tag the commit, using the following command:
 
 ```shell
 git tag packages/wordpress/v0.1
 ```
 
-Push the commit:
+Push the commit, using the following command:
 
 ```shell
 git push origin packages/wordpress/v0.1
