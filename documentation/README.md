@@ -42,7 +42,7 @@ git submodule update --init --recursive
 3. Do not use H1 (#) headers in the documents. Docsy generates an H1 header for every document
    consistent with the title of the document. Start the headings with H2 (##)
 
-4. Alerts (note/warning/critical boxes): There are three alert types available based on the importance of the information:
+4. There are three alert types available based on the importance of the information:
 
 | Alert type | Code              | Alert color |
 |------------|-------------------|-------------|
@@ -51,6 +51,12 @@ git submodule update --init --recursive
 | Critical   | `color="danger"`  | Red         |
 
 Make sure not to change the title of the alert type. It should always be either Note, Warning or Critical.
+
+```markdown
+{{%/* alert title="Note" color="primary" */%}}
+Important information here.
+{{%/* /alert */%}}
+```
 
 5. If you add any commands to the content inline, surround the command with backticks (\` \`), like `ls -la`
 
