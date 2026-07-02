@@ -115,8 +115,8 @@ func TestNewGitUpstreamRepo_noRefs(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	assert.Equal(t, 0, len(gur.Heads))
-	assert.Equal(t, 0, len(gur.Tags))
+	assert.Equal(t, 0, len(gur.Heads()))
+	assert.Equal(t, 0, len(gur.Tags()))
 }
 
 func TestNewGitUpstreamRepo(t *testing.T) {
@@ -158,6 +158,8 @@ func TestNewGitUpstreamRepo(t *testing.T) {
 	}
 
 	for tn, tc := range testCases {
+		sort.Strings(tc.expectedHeads)
+		sort.Strings(tc.expectedTags)
 		t.Run(tn, func(t *testing.T) {
 			repoContent := map[string][]testutil.Content{
 				testutil.Upstream: tc.repoContent,
@@ -172,8 +174,8 @@ func TestNewGitUpstreamRepo(t *testing.T) {
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			assert.EqualValues(t, tc.expectedHeads, toKeys(gur.Heads))
-			assert.EqualValues(t, tc.expectedTags, toKeys(gur.Tags))
+			assert.EqualValues(t, tc.expectedHeads, gur.Heads())
+			assert.EqualValues(t, tc.expectedTags, gur.Tags())
 		})
 	}
 }
@@ -359,11 +361,7 @@ func TestGitUpstreamRepo_GetRepo(t *testing.T) {
 				t.FailNow()
 			}
 			for _, r := range refs {
-				sha, found := gur.ResolveRef(r)
-				if !found {
-					// Assume the ref is a commit...
-					sha = r
-				}
+				sha := gur.ResolveRef(r)
 				_, err := runner.Run(fake.CtxWithDefaultPrinter(), "reset", "--hard", sha)
 				assert.NoError(t, err)
 			}
@@ -392,8 +390,13 @@ func TestGitUpstreamRepo_GetRepo_multipleUpdates(t *testing.T) {
 	g, _, clean := testutil.SetupReposAndWorkspace(t, repoContent)
 	defer clean()
 
-	firstRepoDir := getRepoAndVerify(t, g[testutil.Upstream].RepoDirectory, branchName)
-	_, err := os.Stat(filepath.Join(firstRepoDir, "deployment.yaml"))
+	gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	firstRepoDir := getRepoAndVerify(t, gur, branchName)
+	_, err = os.Stat(filepath.Join(firstRepoDir, "deployment.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -402,7 +405,7 @@ func TestGitUpstreamRepo_GetRepo_multipleUpdates(t *testing.T) {
 		t.FailNow()
 	}
 
-	secondRepoDir := getRepoAndVerify(t, g[testutil.Upstream].RepoDirectory, branchName)
+	secondRepoDir := getRepoAndVerify(t, gur, branchName)
 	_, err = os.Stat(filepath.Join(secondRepoDir, "configmap.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -411,11 +414,7 @@ func TestGitUpstreamRepo_GetRepo_multipleUpdates(t *testing.T) {
 	assert.Equal(t, firstRepoDir, secondRepoDir)
 }
 
-func getRepoAndVerify(t *testing.T, repo, branchName string) string {
-	gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), repo)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+func getRepoAndVerify(t *testing.T, gur internalgitutil.GitUpstreamRepo, branchName string) string {
 	dir, err := gur.GetRepo(fake.CtxWithDefaultPrinter(), []string{branchName})
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -433,11 +432,238 @@ func getRepoAndVerify(t *testing.T, repo, branchName string) string {
 	return dir
 }
 
-func toKeys(m map[string]string) []string {
-	keys := make([]string, 0)
-	for k := range m {
-		keys = append(keys, k)
+// TestGitUpstreamRepo_GetRepo_rejectsOptionInjection makes sure that a ref that
+// git would interpret as a command-line option (e.g. one read from an
+// attacker-controlled remote sub-package Kptfile) is rejected rather than
+// passed to git, preventing argument injection.
+func TestGitUpstreamRepo_GetRepo_rejectsOptionInjection(t *testing.T) {
+	repoContent := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: "main",
+			},
+		},
 	}
-	sort.Strings(keys)
-	return keys
+	g, _, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+	defer clean()
+
+	gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	_, err = gur.GetRepo(fake.CtxWithDefaultPrinter(), []string{"--output=../../../.bashrc"})
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must not begin with '-'")
+}
+
+// TestNewGitUpstreamRepo_rejectsOptionInjectionURI makes sure that a repo URI
+// that git would interpret as a command-line option (e.g. one read from an
+// attacker-controlled Kptfile upstream block) is rejected before it is ever
+// handed to git. Without this guard a value like `--upload-pack=<cmd>` would be
+// treated as an option to `git fetch`/`git ls-remote` and could execute an
+// arbitrary command.
+func TestNewGitUpstreamRepo_rejectsOptionInjectionURI(t *testing.T) {
+	testCases := map[string]string{
+		"upload-pack argument injection": "--upload-pack=touch /tmp/kpt-pwned",
+		"short option":                   "-o",
+		"long option with value":         "--output=/tmp/kpt-pwned",
+	}
+
+	for tn, uri := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			_, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), uri)
+			if !assert.Error(t, err) {
+				t.FailNow()
+			}
+			assert.Contains(t, err.Error(), "must not begin with '-'")
+		})
+	}
+}
+
+// TestGitUpstreamRepo_GetRepo_rejectsOptionInjectionVariants exercises a range
+// of option-injection payloads (including one hidden after a legitimate-looking
+// ref) to ensure every ref is validated before any of them reaches git.
+func TestGitUpstreamRepo_GetRepo_rejectsOptionInjectionVariants(t *testing.T) {
+	testCases := map[string]struct {
+		refs []string
+	}{
+		"upload-pack argument injection": {
+			refs: []string{"--upload-pack=touch /tmp/kpt-pwned"},
+		},
+		"short option injection": {
+			refs: []string{"-o"},
+		},
+		"output file write via show": {
+			refs: []string{"--output=/tmp/kpt-injection"},
+		},
+		"malicious ref after a valid one": {
+			refs: []string{"main", "--upload-pack=evil"},
+		},
+	}
+
+	repoContent := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: "main",
+			},
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			g, _, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+			defer clean()
+
+			gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			_, err = gur.GetRepo(fake.CtxWithDefaultPrinter(), tc.refs)
+			if !assert.Error(t, err) {
+				t.FailNow()
+			}
+			assert.Contains(t, err.Error(), "must not begin with '-'")
+		})
+	}
+}
+
+// TestGitUpstreamRepo_GetRepo_optionInjectionHasNoSideEffect verifies that a
+// rejected `--output=<file>` payload never causes git to write the file, proving
+// the option was never passed to git rather than merely surfacing an error.
+func TestGitUpstreamRepo_GetRepo_optionInjectionHasNoSideEffect(t *testing.T) {
+	repoContent := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: "main",
+			},
+		},
+	}
+	g, _, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+	defer clean()
+
+	gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	victim := filepath.Join(t.TempDir(), "victim.txt")
+	_, err = gur.GetRepo(fake.CtxWithDefaultPrinter(), []string{"--output=" + victim})
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "must not begin with '-'")
+
+	_, statErr := os.Stat(victim)
+	assert.True(t, os.IsNotExist(statErr),
+		"injected --output must not have caused git to create a file")
+}
+
+// TestGitUpstreamRepo_GetRepo_staleBranchRefetch verifies that when a branch is
+// moved to a new commit upstream after the broker was created, a subsequent
+// GetRepo fetches the new commit rather than serving the stale commit that the
+// branch pointed to at construction time. It also asserts that fetchedRefs is
+// keyed on the resolved commit SHA, so both the old and new commits are tracked.
+func TestGitUpstreamRepo_GetRepo_staleBranchRefetch(t *testing.T) {
+	branchName := "kpt-test-stale"
+	repoContent := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: branchName,
+			},
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.ConfigMapResource),
+				Branch: branchName,
+			},
+		},
+	}
+	g, _, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+	defer clean()
+
+	gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	firstRepoDir := getRepoAndVerify(t, gur, branchName)
+	firstSha, ok := gur.ResolveBranch(branchName)
+	if !assert.True(t, ok) {
+		t.FailNow()
+	}
+	// The first commit's content should be present, the second's should not.
+	_, err = os.Stat(filepath.Join(firstRepoDir, "deployment.yaml"))
+	assert.NoError(t, err)
+	// fetchedRefs is keyed by the resolved commit SHA, not the branch name.
+	assert.Equal(t, []string{firstSha}, gur.GetFetchedRefs())
+
+	// Move the branch to a new commit upstream.
+	if !assert.NoError(t, testutil.UpdateRepos(t, g, repoContent)) {
+		t.FailNow()
+	}
+
+	secondRepoDir := getRepoAndVerify(t, gur, branchName)
+	secondSha, ok := gur.ResolveBranch(branchName)
+	if !assert.True(t, ok) {
+		t.FailNow()
+	}
+	// The branch must now resolve to a different commit than before.
+	assert.NotEqual(t, firstSha, secondSha)
+	// The cache dir is reused, but it must now contain the new commit's content.
+	assert.Equal(t, firstRepoDir, secondRepoDir)
+	_, err = os.Stat(filepath.Join(secondRepoDir, "configmap.yaml"))
+	assert.NoError(t, err)
+
+	// Both the stale and current commits should be recorded as fetched, proving
+	// the moved branch was fetched again instead of skipped as already-fetched.
+	fetched := gur.GetFetchedRefs()
+	assert.Len(t, fetched, 2)
+	assert.Contains(t, fetched, firstSha)
+	assert.Contains(t, fetched, secondSha)
+}
+
+// TestGitUpstreamRepo_GetRepo_idempotentFetch verifies that fetching the same
+// unchanged branch twice does not re-fetch it or add a duplicate entry to
+// fetchedRefs, i.e. the commit-keyed cache is honored when nothing has moved.
+func TestGitUpstreamRepo_GetRepo_idempotentFetch(t *testing.T) {
+	branchName := "kpt-test-idempotent"
+	repoContent := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: branchName,
+			},
+		},
+	}
+	g, _, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+	defer clean()
+
+	gur, err := internalgitutil.NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), g[testutil.Upstream].RepoDirectory)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	getRepoAndVerify(t, gur, branchName)
+	firstFetched := gur.GetFetchedRefs()
+	if !assert.Len(t, firstFetched, 1) {
+		t.FailNow()
+	}
+
+	// A second GetRepo of the same, unchanged branch must not add a new entry.
+	getRepoAndVerify(t, gur, branchName)
+	secondFetched := gur.GetFetchedRefs()
+	assert.Equal(t, firstFetched, secondFetched)
+	assert.Len(t, secondFetched, 1)
 }

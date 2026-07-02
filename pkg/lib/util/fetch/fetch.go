@@ -99,12 +99,12 @@ type Cloner struct {
 	repoSpec *gitutil.RepoSpec
 
 	// cachedRepos
-	cachedRepo map[string]*internalgitutil.GitUpstreamRepo
+	cachedRepo map[string]internalgitutil.GitUpstreamRepo
 }
 
 type NewClonerOption func(*Cloner)
 
-func WithCachedRepo(r map[string]*internalgitutil.GitUpstreamRepo) NewClonerOption {
+func WithCachedRepo(r map[string]internalgitutil.GitUpstreamRepo) NewClonerOption {
 	return func(c *Cloner) {
 		c.cachedRepo = r
 	}
@@ -118,7 +118,7 @@ func NewCloner(r *gitutil.RepoSpec, opts ...NewClonerOption) *Cloner {
 		opt(c)
 	}
 	if c.cachedRepo == nil {
-		c.cachedRepo = make(map[string]*internalgitutil.GitUpstreamRepo)
+		c.cachedRepo = make(map[string]internalgitutil.GitUpstreamRepo)
 	}
 	return c
 }
@@ -202,10 +202,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 
 	// Find the commit SHA for the ref that was just fetched. We need the SHA
 	// rather than the ref to be able to do a hard reset of the cache repo.
-	commit, found := upstreamRepo.ResolveRef(c.repoSpec.Ref)
-	if !found {
-		commit = c.repoSpec.Ref
-	}
+	commit := upstreamRepo.ResolveRef(c.repoSpec.Ref)
 
 	// Reset the local repo to the commit we need. Doing a hard reset instead of
 	// a checkout means we don't create any local branches so we don't need to

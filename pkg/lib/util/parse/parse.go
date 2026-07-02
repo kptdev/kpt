@@ -200,11 +200,7 @@ func getRepoBranches(ctx context.Context, repo string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	branches := make([]string, 0, len(gur.Heads))
-	for head := range gur.Heads {
-		branches = append(branches, head)
-	}
-	return branches, nil
+	return gur.Heads(), nil
 }
 
 // isAmbiguousBranch checks if a given branch name is similar to other branch names.
