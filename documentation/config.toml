@@ -185,6 +185,6 @@ target = "_self"
 
 [[menu.main]]
 name = "Porch"
-url = "https://porch.kpt.dev/"
+url = "https://porch.kpt.dev/docs/"
 weight = 50
 target = "_self"
