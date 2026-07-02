@@ -42,17 +42,19 @@ git submodule update --init --recursive
 3. Do not use H1 (#) headers in the documents. Docsy generates an H1 header for every document
    consistent with the title of the document. Start the headings with H2 (##)
 
-4. Use the built-in alerts for notes and alerts
+4. There are three alert types available based on the importance of the information:
 
-   ```go-html-template
+   | Alert type | Code              | Alert color |
+   |------------|-------------------|-------------|
+   | Note       | `color="primary"` | Blue        |
+   | Warning    | `color="warning"` | Yellow      |
+   | Critical   | `color="danger"`  | Red         |
+
+   Make sure not to change the alert title. It should always be either `Note`, `Warning`, or `Critical`.
+
+   ```markdown
    {{%/* alert title="Note" color="primary" */%}}
-   This is a note.
-   {{%/* /alert */%}}
-   ```
-
-   ```go-html-template
-   {{%/* alert title="Warning" color="warning" */%}}
-   This is a warning.
+   Important information here.
    {{%/* /alert */%}}
    ```
 
