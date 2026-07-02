@@ -53,6 +53,9 @@ PKG_PATH:
 --allow-network:
   Allow functions to access network during pipeline execution. Default: `false`. Note that this is applicable to container based functions only.
 
+--image-prefix:
+  The container registry prefix to prepend to short image names when resolving functions. This allows customization of the default registry instead of using the hardcoded default (`ghcr.io/kptdev/krm-functions-catalog`). Can also be set via the KPT_IMAGE_PREFIX environment variable. The command-line flag takes precedence over the environment variable.
+
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
   to one of always, ifNotPresent, never. If unspecified, always will be the
@@ -89,6 +92,9 @@ kpt.dev/save-on-render-failure:
 #### Environment Variables
 
 ```shell
+KPT_IMAGE_PREFIX:
+  The default container registry prefix to use when resolving short image names. This can be overridden by the --image-prefix flag.
+
 KRM_FN_RUNTIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
