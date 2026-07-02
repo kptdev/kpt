@@ -24,6 +24,7 @@ import (
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
+	t.Setenv(runneroptions.PrefixEnvVar, "")
 	tempDir, err := os.MkdirTemp("", "")
 	if !assert.NoError(t, err) {
 		t.FailNow()

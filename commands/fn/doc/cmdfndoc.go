@@ -32,10 +32,11 @@ import (
 
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{
-		Ctx: ctx,
+		Ctx:           ctx,
+		RunnerOptions: runneroptions.RunnerOptions{},
 	}
 	c := &cobra.Command{
-		Use:     "doc --image=IMAGE",
+		Use:     "doc --image=IMAGE --image-prefix=PREFIX",
 		Args:    cobra.MaximumNArgs(0),
 		Short:   fndocs.DocShort,
 		Long:    fndocs.DocShort + "\n" + fndocs.DocLong,
@@ -44,6 +45,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
+	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
+		"The prefix to be used when converting from short path to the full url")
+
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -53,9 +57,10 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 }
 
 type Runner struct {
-	Image   string
-	Command *cobra.Command
-	Ctx     context.Context
+	Image         string
+	RunnerOptions runneroptions.RunnerOptions
+	Command       *cobra.Command
+	Ctx           context.Context
 }
 
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
@@ -63,9 +68,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 		return errors.New("image must be specified")
 	}
 
-	opts := runneroptions.RunnerOptions{}
-	opts.InitDefaults(runneroptions.DefaultImagePrefix())
-	image := opts.ResolveToImage(r.Image)
+	image := r.RunnerOptions.ResolveToImage(r.Image)
 	var out, errout bytes.Buffer
 	runArgs := []string{
 		"run",
