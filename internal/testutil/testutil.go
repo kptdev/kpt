@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import (
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
-	assertnow "gotest.tools/assert"
+	assertnow "gotest.tools/v3/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
