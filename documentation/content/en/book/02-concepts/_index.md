@@ -1,7 +1,7 @@
 ---
 title: "Chapter 2: Concepts"
 linkTitle: "Chapter 2: Concepts"
-description: This chapter describes what kpt is and what the main concepts are behind kpt.
+description: This chapter describes what kpt is and what the main concepts behind it are.
 toc: true
 menu:
   main:
@@ -13,7 +13,7 @@ menu:
 
 kpt stands for Kubernetes Package Transformation. It supports the management of configuration as data (CaD).
 
-*Configuration as data* is an approach to the management of configurations, including the configuration of infrastructure, policy, services, applications, and so on, which comprises the following actions:
+*Configuration as data* is an approach to the management of configurations, including the configuration of infrastructure, policy, services, applications, among others, which comprises the following actions:
 
 * Making configuration data the source of truth, stored separately from the live state.
 * Using a uniform, serializable data model to represent the configuration.
