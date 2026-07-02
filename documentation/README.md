@@ -44,19 +44,19 @@ git submodule update --init --recursive
 
 4. There are three alert types available based on the importance of the information:
 
-| Alert type | Code              | Alert color |
-|------------|-------------------|-------------|
-| Note       | `color="primary"` | Blue        |
-| Warning    | `color="warning"` | Yellow      |
-| Critical   | `color="danger"`  | Red         |
+   | Alert type | Code              | Alert color |
+   |------------|-------------------|-------------|
+   | Note       | `color="primary"` | Blue        |
+   | Warning    | `color="warning"` | Yellow      |
+   | Critical   | `color="danger"`  | Red         |
 
-Make sure not to change the title of the alert type. It should always be either Note, Warning or Critical.
+   Make sure not to change the alert title. It should always be either `Note`, `Warning`, or `Critical`.
 
-```markdown
-{{%/* alert title="Note" color="primary" */%}}
-Important information here.
-{{%/* /alert */%}}
-```
+   ```markdown
+   {{%/* alert title="Note" color="primary" */%}}
+   Important information here.
+   {{%/* /alert */%}}
+   ```
 
 5. If you add any commands to the content inline, surround the command with backticks (\` \`), like `ls -la`
 
