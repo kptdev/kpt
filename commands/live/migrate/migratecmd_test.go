@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,23 +40,6 @@ import (
 var testNamespace = "test-inventory-namespace"
 var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
-
-var rgInvObj = &unstructured.Unstructured{
-	Object: map[string]any{
-		"apiVersion": "kpt.dev/v1alpha1",
-		"kind":       "ResourceGroup",
-		"metadata": map[string]any{
-			"name":      inventoryObjName,
-			"namespace": testNamespace,
-			"labels": map[string]any{
-				common.InventoryLabel: testInventoryLabel,
-			},
-		},
-		"spec": map[string]any{
-			"resources": []any{},
-		},
-	},
-}
 
 var cmInvStr = `
 kind: ConfigMap
@@ -265,51 +248,6 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			}
 			if tc.expected.GetNamespace() != actual.Namespace() {
 				t.Errorf("expected ConfigMap (%#v), got (%#v)", tc.expected, actual)
-			}
-		})
-	}
-}
-
-func TestKptMigrate_findResourceGroupInv(t *testing.T) {
-	testCases := map[string]struct {
-		objs     []*unstructured.Unstructured
-		expected *unstructured.Unstructured
-		isError  bool
-	}{
-		"Empty objs returns an error": {
-			objs:     []*unstructured.Unstructured{},
-			expected: nil,
-			isError:  true,
-		},
-		"Objs without inventory obj returns an error": {
-			objs:     []*unstructured.Unstructured{pod1},
-			expected: nil,
-			isError:  true,
-		},
-		"Objs without ConfigMap inventory obj returns an error": {
-			objs:     []*unstructured.Unstructured{cmInvObj, pod1},
-			expected: nil,
-			isError:  true,
-		},
-		"Objs without ResourceGroup inventory obj returns ResourceGroup": {
-			objs:     []*unstructured.Unstructured{rgInvObj, pod1},
-			expected: rgInvObj,
-			isError:  false,
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			actual, err := findResourceGroupInv(tc.objs)
-			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
-				return
-			}
-			assert.NoError(t, err)
-			if tc.expected != actual {
-				t.Errorf("expected ResourceGroup (%#v), got (%#v)", tc.expected, actual)
 			}
 		})
 	}
