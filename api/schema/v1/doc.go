@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package schema provides types for identifying Kubernetes API resources by
+// Package v1 provides types for identifying Kubernetes API resources by
 // group, version, and kind without depending on k8s.io/apimachinery.
 //
 // Portions of this package are adapted from the Kubernetes apimachinery project:
@@ -20,4 +20,4 @@
 //
 // Copyright 2015 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
-package schema
+package v1
