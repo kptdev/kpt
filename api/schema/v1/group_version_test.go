@@ -11,12 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-// Portions of this file are adapted from the Kubernetes apimachinery project:
-// https://github.com/kubernetes/apimachinery/blob/v0.34.9/pkg/runtime/schema/group_version.go
-//
-// Copyright 2015 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
 
 package v1
 
@@ -85,4 +79,33 @@ func TestGroupVersionWithKind(t *testing.T) {
 	gv, err := ParseGroupVersion("apps/v2")
 	require.NoError(t, err)
 	assert.Equal(t, GroupVersionKind{Group: "apps", Version: "v2", Kind: "StatefulSet"}, gv.WithKind("StatefulSet"))
+}
+
+func TestGroupVersionKindToAPIVersionAndKind(t *testing.T) {
+	t.Parallel()
+
+	gvk := GroupVersionKind{Group: "kpt.dev", Version: "v1", Kind: "Kptfile"}
+	apiVersion, kind := gvk.ToAPIVersionAndKind()
+	assert.Equal(t, "kpt.dev/v1", apiVersion)
+	assert.Equal(t, "Kptfile", kind)
+
+	emptyAPIVersion, emptyKind := GroupVersionKind{}.ToAPIVersionAndKind()
+	assert.Equal(t, "", emptyAPIVersion)
+	assert.Equal(t, "", emptyKind)
+}
+
+func TestFromAPIVersionAndKind(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, GroupVersionKind{Group: "apps", Version: "v1", Kind: "Deployment"},
+		FromAPIVersionAndKind("apps/v1", "Deployment"))
+	assert.Equal(t, GroupVersionKind{Version: "v1", Kind: "ConfigMap"},
+		FromAPIVersionAndKind("v1", "ConfigMap"))
+}
+
+func TestParseGroupKind(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, GroupKind{Kind: "ConfigMap"}, ParseGroupKind("ConfigMap"))
+	assert.Equal(t, GroupKind{Group: "kpt.dev", Kind: "SetLabelsFn"}, ParseGroupKind("SetLabelsFn.kpt.dev"))
 }

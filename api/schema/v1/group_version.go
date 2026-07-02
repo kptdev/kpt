@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Portions of this file are adapted from the Kubernetes apimachinery project:
+// https://github.com/kubernetes/apimachinery/blob/v0.34.9/pkg/runtime/schema/group_version.go
+//
+// Copyright 2015 The Kubernetes Authors.
+// SPDX-License-Identifier: Apache-2.0
+
 package v1
 
 import (
@@ -41,6 +47,16 @@ func (gk GroupKind) String() string {
 	return gk.Kind + "." + gk.Group
 }
 
+// ParseGroupKind turns "Kind.group" string into a GroupKind struct.
+func ParseGroupKind(gk string) GroupKind {
+	i := strings.Index(gk, ".")
+	if i == -1 {
+		return GroupKind{Kind: gk}
+	}
+
+	return GroupKind{Group: gk[i+1:], Kind: gk[:i]}
+}
+
 // GroupVersionKind unambiguously identifies a kind. It doesn't anonymously include GroupVersion
 // to avoid automatic coercion. It doesn't use a GroupVersion to avoid custom marshalling.
 type GroupVersionKind struct {
@@ -64,6 +80,25 @@ func (gvk GroupVersionKind) GroupVersion() GroupVersion {
 
 func (gvk GroupVersionKind) String() string {
 	return gvk.Group + "/" + gvk.Version + ", Kind=" + gvk.Kind
+}
+
+// ToAPIVersionAndKind is a convenience method for satisfying runtime.Object on types that
+// do not use TypeMeta.
+func (gvk GroupVersionKind) ToAPIVersionAndKind() (string, string) {
+	if gvk.Empty() {
+		return "", ""
+	}
+	return gvk.GroupVersion().String(), gvk.Kind
+}
+
+// FromAPIVersionAndKind returns a GVK representing the provided fields for types that
+// do not use TypeMeta. This method exists to support test types and legacy serializations
+// that have a distinct group and kind.
+func FromAPIVersionAndKind(apiVersion, kind string) GroupVersionKind {
+	if gv, err := ParseGroupVersion(apiVersion); err == nil {
+		return GroupVersionKind{Group: gv.Group, Version: gv.Version, Kind: kind}
+	}
+	return GroupVersionKind{Kind: kind}
 }
 
 // GroupVersion contains the "group" and the "version", which uniquely identifies the API.
