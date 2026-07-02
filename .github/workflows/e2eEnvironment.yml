@@ -37,21 +37,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          path: go/src/github.com/kptdev/kpt
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          cache: true
-          cache-dependency-path: go/src/github.com/kptdev/kpt/go.sum
+          go-version-file: go.mod
       - name: Install Kind
         uses: helm/kind-action@v1
         with:
           version: v0.32.0
           install_only: true
       - name: Run Tests
-        working-directory: go/src/github.com/kptdev/kpt
         env:
           K8S_VERSION: ${{ matrix.version }}
         run: |

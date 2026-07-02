@@ -32,23 +32,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          path: go/src/github.com/kptdev/kpt
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          cache: true
-          cache-dependency-path: go/src/github.com/kptdev/kpt/go.sum
+          go-version-file: go.mod
       - name: Build
-        working-directory: go/src/github.com/kptdev/kpt
         run: |
           make build
       - name: Get dependencies
-        working-directory: go/src/github.com/kptdev/kpt
         run: |
           make install-mdrip
           make install-kind
       - name: Verify Examples
-        working-directory: go/src/github.com/kptdev/kpt
         run: make site-verify-examples
