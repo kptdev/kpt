@@ -1,7 +1,7 @@
 ---
 title: "Chapter 2: Concepts"
 linkTitle: "Chapter 2: Concepts"
-description: This chapter describes what kpt is and what the main concepts behind it are.
+description: This chapter describes what kpt is and what are the main concepts behind it.
 toc: true
 menu:
   main:
