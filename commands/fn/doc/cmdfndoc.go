@@ -46,7 +46,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
 	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
-		"The prefix to be used when converting from short path to the full url")
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
