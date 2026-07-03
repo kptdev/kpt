@@ -270,7 +270,7 @@ func (fr *FunctionRunner) SetFnConfig(conf *yaml.RNode) {
 // fnResult is updated with the function results returned by the kpt function.
 func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	if krmErr := kptfilev1.AreKRM(input); krmErr != nil {
-		return output, fmt.Errorf("input resource list must contain only KRM resources: %s", krmErr.Error())
+		return output, fmt.Errorf("input resource list must contain only KRM resources: %w", krmErr)
 	}
 
 	fnResult := fr.fnResult
@@ -285,7 +285,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		return output, pathErr
 	}
 	if krmErr := kptfilev1.AreKRM(output); krmErr != nil {
-		return output, fmt.Errorf("output resource list must contain only KRM resources: %s", krmErr.Error())
+		return output, fmt.Errorf("output resource list must contain only KRM resources: %w", krmErr)
 	}
 
 	// parse the results irrespective of the success/failure of fn exec

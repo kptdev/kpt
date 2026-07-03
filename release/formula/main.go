@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -43,7 +44,8 @@ func run(_ context.Context) error {
 	version := os.Args[1]
 	url := "https://github.com/kptdev/kpt/archive/" + version + ".tar.gz"
 
-	formula, err := buildFormula(http.DefaultClient, url)
+	httpClient := &http.Client{Timeout: 60 * time.Second}
+	formula, err := buildFormula(httpClient, url)
 	if err != nil {
 		return err
 	}

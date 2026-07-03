@@ -423,7 +423,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 	// make sure that the merge comments are added to all of them so that they are merged accurately
 	if err := addmergecomment.Process(localPath, updatedPath, originPath); err != nil {
 		return errors.E(op, kptfilev1.UniquePath(localPath),
-			fmt.Errorf("failed to add merge comments %q", err.Error()))
+			fmt.Errorf("failed to add merge comments: %w", err))
 	}
 	updatedUnfetched, err := pkg.IsPackageUnfetched(updatedPath)
 	if err != nil {

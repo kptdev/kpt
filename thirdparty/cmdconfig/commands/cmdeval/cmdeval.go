@@ -295,22 +295,22 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfilev1.KptFile) (*yaml.Node, error) {
 	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.runFns.Path, kptfilev1.KptFileName))
 	if err != nil {
-		return nil, fmt.Errorf("could not read Kptfile: %v", err)
+		return nil, fmt.Errorf("could not read Kptfile: %w", err)
 	}
 	mutatedKfAsBytes, err := yaml.Marshal(kf)
 	if err != nil {
-		return nil, fmt.Errorf("could not Marshal Kptfile into bytes: %v", err)
+		return nil, fmt.Errorf("could not Marshal Kptfile into bytes: %w", err)
 	}
 	mutatedKfAsRNode, err := yaml.Parse(string(mutatedKfAsBytes))
 	if err != nil {
-		return nil, fmt.Errorf("could not parse Kptfile: %v", err)
+		return nil, fmt.Errorf("could not parse Kptfile: %w", err)
 	}
 	// preserve comments and sync field order
 	if err := comments.CopyComments(kfAsRNode, mutatedKfAsRNode); err != nil {
-		return nil, fmt.Errorf("could not preserve Kptfile comments: %v", err)
+		return nil, fmt.Errorf("could not preserve Kptfile comments: %w", err)
 	}
 	if err := order.SyncOrder(kfAsRNode, mutatedKfAsRNode); err != nil {
-		return nil, fmt.Errorf("could not preserve Kptfile field order %v", err)
+		return nil, fmt.Errorf("could not preserve Kptfile field order: %w", err)
 	}
 	return mutatedKfAsRNode.YNode(), nil
 }

@@ -34,7 +34,6 @@ import (
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/live"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -320,21 +319,6 @@ func (mr *Runner) dryRunStrategy() common.DryRunStrategy {
 		return common.DryRunClient
 	}
 	return common.DryRunNone
-}
-
-// findResourceGroupInv returns the ResourceGroup inventory object from the
-// passed slice of objects, or nil and and error if there is a problem.
-func findResourceGroupInv(objs []*unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	for _, obj := range objs {
-		isInv, err := live.IsResourceGroupInventory(obj)
-		if err != nil {
-			return nil, err
-		}
-		if isInv {
-			return obj, nil
-		}
-	}
-	return nil, fmt.Errorf("resource group inventory object not found")
 }
 
 // validateParams validates input parameters and returns error if any

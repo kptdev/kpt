@@ -18,7 +18,7 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	schema "github.com/kptdev/kpt/api/schema/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
