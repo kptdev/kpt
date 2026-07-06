@@ -13,8 +13,8 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.21.6
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/kptdev/kpt/api v0.0.1
-	github.com/kptdev/krm-functions-sdk/go/fn v1.0.3
+	github.com/kptdev/kpt/api v0.0.2
+	github.com/kptdev/krm-functions-sdk/go/fn v1.1.0
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
@@ -24,7 +24,6 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
 	github.com/xlab/treeprint v1.2.0
-	golang.org/x/mod v0.36.0
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/v3 v3.5.2
 	k8s.io/api v0.36.1

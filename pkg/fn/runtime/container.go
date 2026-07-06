@@ -28,10 +28,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
-	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
 
@@ -61,6 +61,8 @@ const (
 	Podman  ContainerRuntime = "podman"
 	Nerdctl ContainerRuntime = "nerdctl"
 )
+
+var dockerVersionConstraint, _ = semver.NewConstraint(">=" + minSupportedDockerVersion)
 
 type ContainerRuntime string
 
@@ -420,11 +422,9 @@ func isSupportedDockerVersion(v string) error {
 	suggestedText := fmt.Sprintf(`docker client version must be %s or greater`, minSupportedDockerVersion)
 	// docker version output does not have a leading v which is required by semver, so we prefix it
 	currentDockerVersion := fmt.Sprintf("v%s", v)
-	if !semver.IsValid(currentDockerVersion) {
-		return fmt.Errorf("%s: found invalid version %s", suggestedText, currentDockerVersion)
-	}
-	// if currentDockerVersion is less than minDockerClientVersion, compare returns +1
-	if semver.Compare(minSupportedDockerVersion, currentDockerVersion) > 0 {
+	if ver, err := semver.NewVersion(currentDockerVersion); err != nil {
+		return fmt.Errorf("%s: found invalid version %s: %w", suggestedText, currentDockerVersion, err)
+	} else if !dockerVersionConstraint.Check(ver) {
 		return fmt.Errorf("%s: found %s", suggestedText, currentDockerVersion)
 	}
 	return nil
