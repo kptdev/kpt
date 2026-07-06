@@ -37,7 +37,6 @@ import (
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
 
-
 	// Image prefix resolution priority: --image-prefix flag, then $KPT_IMAGE_PREFIX, then the built-in GHCR prefix.
 	c := &cobra.Command{
 		Use:     "render [PKG_PATH] [flags]",
