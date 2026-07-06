@@ -19,6 +19,7 @@ import (
 	machineryschema "k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+// ToKptGVK converts an apimachinery GroupVersionKind to the kpt API schema GroupVersionKind.
 func ToKptGVK(gvk machineryschema.GroupVersionKind) kptapischema.GroupVersionKind {
 	return kptapischema.GroupVersionKind{
 		Group:   gvk.Group,
@@ -27,7 +28,8 @@ func ToKptGVK(gvk machineryschema.GroupVersionKind) kptapischema.GroupVersionKin
 	}
 }
 
-func FromKptGvk(gvk kptapischema.GroupVersionKind) machineryschema.GroupVersionKind {
+// FromKptGVK converts a kpt API schema GroupVersionKind to an apimachinery GroupVersionKind.
+func FromKptGVK(gvk kptapischema.GroupVersionKind) machineryschema.GroupVersionKind {
 	return machineryschema.GroupVersionKind{
 		Group:   gvk.Group,
 		Version: gvk.Version,
