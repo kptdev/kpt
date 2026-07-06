@@ -420,12 +420,10 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 // or is less than minSupportedDockerVersion
 func isSupportedDockerVersion(v string) error {
 	suggestedText := fmt.Sprintf(`docker client version must be %s or greater`, minSupportedDockerVersion)
-	// docker version output does not have a leading v which is required by semver, so we prefix it
-	currentDockerVersion := fmt.Sprintf("v%s", v)
-	if ver, err := semver.NewVersion(currentDockerVersion); err != nil {
-		return fmt.Errorf("%s: found invalid version %s: %w", suggestedText, currentDockerVersion, err)
+	if ver, err := semver.NewVersion(v); err != nil {
+		return fmt.Errorf("%s: found invalid version %s: %w", suggestedText, v, err)
 	} else if !dockerVersionConstraint.Check(ver) {
-		return fmt.Errorf("%s: found %s", suggestedText, currentDockerVersion)
+		return fmt.Errorf("%s: found %s", suggestedText, v)
 	}
 	return nil
 }
