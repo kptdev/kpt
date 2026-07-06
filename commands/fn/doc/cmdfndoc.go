@@ -36,7 +36,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		RunnerOptions: runneroptions.RunnerOptions{},
 	}
 	c := &cobra.Command{
-		Use:     "doc --image=IMAGE --image-prefix=PREFIX",
+		Use:     "doc --image=IMAGE [--image-prefix=PREFIX]",
 		Args:    cobra.MaximumNArgs(0),
 		Short:   fndocs.DocShort,
 		Long:    fndocs.DocShort + "\n" + fndocs.DocLong,
@@ -47,7 +47,6 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
 	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
 		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
-
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }

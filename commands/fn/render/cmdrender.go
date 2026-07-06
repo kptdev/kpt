@@ -37,9 +37,8 @@ import (
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
 
-	// find the image prefix
-	// priority order: CLI arg - env var - default
 
+	// Image prefix resolution priority: --image-prefix flag, then $KPT_IMAGE_PREFIX, then the built-in GHCR prefix.
 	c := &cobra.Command{
 		Use:     "render [PKG_PATH] [flags]",
 		Short:   docs.RenderShort,
@@ -50,8 +49,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	r.InitDefaults()
 	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
-		"The prefix to be used when converting from short path to the full url")
-
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",

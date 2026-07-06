@@ -48,8 +48,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command = c
 
 	r.Command.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
-		"The prefix to be used when converting from short path to the full url")
-
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 	r.Command.Flags().StringVarP(&r.Dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
