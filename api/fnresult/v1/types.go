@@ -1,4 +1,4 @@
-// Copyright 2021,2026 The kpt Authors
+// Copyright 2021, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	schema "github.com/kptdev/kpt/api/schema/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -151,7 +151,7 @@ func (i *ResultItem) String() string {
 }
 
 // Field is a modified version of sigs.k8s.io/kustomize/kyaml/fn/framework.Field
-// where CurrentValue and ProposedValue are strings instead of interface{} values.
+// where CurrentValue and ProposedValue are strings instead of the original any type.
 type Field struct {
 	Path string `yaml:"path,omitempty" json:"path,omitempty"`
 
@@ -166,7 +166,7 @@ var _ yaml.Unmarshaler = &Field{}
 func (in *Field) UnmarshalJSON(data []byte) error {
 	rNode, err := yaml.Parse(string(data))
 	if err != nil {
-		return fmt.Errorf("error parsing `field`: %v", err)
+		return fmt.Errorf("error parsing `field`: %w", err)
 	}
 
 	return in.unmarshalRNode(rNode)
@@ -190,7 +190,7 @@ func (in *Field) unmarshalRNode(rNode *yaml.RNode) error {
 		default:
 			in.CurrentValue, err = currentValue.String()
 			if err != nil {
-				return fmt.Errorf("error parsing `field.currentValue`: %v", err)
+				return fmt.Errorf("error parsing `field.currentValue`: %w", err)
 			}
 		}
 
@@ -204,7 +204,7 @@ func (in *Field) unmarshalRNode(rNode *yaml.RNode) error {
 		default:
 			in.ProposedValue, err = proposedValue.String()
 			if err != nil {
-				return fmt.Errorf("error parsing `field.proposedValue`: %v", err)
+				return fmt.Errorf("error parsing `field.proposedValue`: %w", err)
 			}
 		}
 

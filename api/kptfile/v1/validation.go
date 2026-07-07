@@ -173,7 +173,7 @@ func GetValidatedFnConfigFromPath(fsys filesys.FileSystem, pkgPath UniquePath, c
 		return nil, fmt.Errorf("functionConfig %q must not contain more than one config, got %d", configPath, len(nodes))
 	}
 	if err := IsKRM(nodes[0]); err != nil {
-		return nil, fmt.Errorf("functionConfig %q: %s", configPath, err.Error())
+		return nil, fmt.Errorf("functionConfig %q: %w", configPath, err)
 	}
 	return nodes[0], nil
 }
@@ -183,7 +183,7 @@ func AreKRM(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		if err := IsKRM(nodes[i]); err != nil {
 			path, _, _ := kioutil.GetFileAnnotations(nodes[i])
-			return fmt.Errorf("%s: %s", path, err.Error())
+			return fmt.Errorf("%s: %w", path, err)
 		}
 	}
 	return nil
