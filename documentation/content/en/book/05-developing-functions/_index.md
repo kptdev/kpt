@@ -141,7 +141,7 @@ Initialize your project.
 export FUNCTION_NAME=set-annotation
 
 # Get the "get-started" package.
-kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/go/get-started@master ${FUNCTION_NAME}
+kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/go/get-started@main ${FUNCTION_NAME}
 
 cd ${FUNCTION_NAME}
 
@@ -155,7 +155,7 @@ go mod tidy
 Take a look at the `main.go` (as below) and complete the `Run` function.
 
 ```go
-// Copyright 2022-2025 The kpt Authors
+// Copyright 2022, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -172,19 +172,26 @@ Take a look at the `main.go` (as below) and complete the `Run` function.
 package main
 
 import (
-	"context"
-	"os"
+        "context"
+        _ "embed"
+        "os"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+        "github.com/kptdev/krm-functions-sdk/go/fn"
 )
+
+//go:embed README.md
+var readme []byte
+
+//go:embed metadata.yaml
+var metadata []byte
 
 var _ fn.Runner = &YourFunction{}
 
 // TODO: Change to your functionConfig "Kind" name.
 type YourFunction struct {
-	FnConfigBool bool
-	FnConfigInt  int
-	FnConfigFoo  string
+        FnConfigBool bool
+        FnConfigInt  int
+        FnConfigFoo  string
 }
 
 // Run is the main function logic.
@@ -192,15 +199,15 @@ type YourFunction struct {
 // `functionConfig` is from the STDIN "ResourceList.FunctionConfig". The value has been assigned to the r attributes
 // `results` is the "ResourceList.Results" that you can write result info to.
 func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
-	// TODO: Write your code.
-	return true
+        // TODO: Write your code.
+        return true
 }
 
 func main() {
-	runner := fn.WithContext(context.Background(), &YourFunction{})
-	if err := fn.AsMain(runner); err != nil {
-		os.Exit(1)
-	}
+        runner := fn.WithContext(context.Background(), &YourFunction{})
+        if err := fn.AsMain(runner, fn.WithDocs(readme, metadata)); err != nil {
+                os.Exit(1)
+        }
 }
 ```
 
@@ -234,7 +241,7 @@ Learn more about the `KubeObject` from the [go documentation](https://pkg.go.dev
 The "get-started" package contains a `./testdata` directory. You can use this to test out your functions. 
 
 ```shell
-# Edit the `testdata/test1/resources.yaml` with your KRM resources. 
+# Edit the `testdata/noop-passthrough/resources.yaml` with your KRM resources. 
 # resources.yaml already has a `Deployment` and `Service` as test data. 
 vim testdata/test1/resources.yaml
 
@@ -290,7 +297,7 @@ EOF
 
 Run the KRM function
 ```shell
-{kpt fn source testdata; cat fn-config.yaml} | go run main.go
+{ kpt fn source testdata; cat fn-config.yaml; } | go run main.go
 ```
 
 Look for the "config.kubernetes.io/managed-by" annotation in the standard output:
@@ -349,7 +356,7 @@ docker build . -t ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 
 To verify the image using the same `./testdata` resources
 ```shell
-kpt fn eval ./testdata/test1/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
+kpt fn eval ./testdata/noop-passthrough/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
 ### Next Steps
