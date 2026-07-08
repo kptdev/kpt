@@ -70,11 +70,14 @@ dockers:
     image_templates:
       - "ghcr.io/kptdev/kpt:{{ .Tag }}"
     dockerfile: "release/images/Dockerfile"
-  - ids:
-      - linux-amd64
-    image_templates:
-      - "ghcr.io/kptdev/kpt-gcloud:{{ .Tag }}"
-    dockerfile: "release/images/Dockerfile-gcloud"
+    build_flag_templates:
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.description=kpt - Automate Kubernetes Configuration Editing"
+      - "--label=org.opencontainers.image.url=https://github.com/{{ .Env.GITHUB_REPOSITORY | default \"kptdev/kpt\" }}"
+      - "--label=org.opencontainers.image.source=https://github.com/{{ .Env.GITHUB_REPOSITORY | default \"kptdev/kpt\" }}"
+      - "--label=org.opencontainers.image.version={{ .Tag }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.created={{ now | date \"2006-01-02T15:04:05Z07:00\" }}"
 archives:
   - id: archived
     builds:
