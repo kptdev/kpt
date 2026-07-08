@@ -122,6 +122,9 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	var output io.Writer
 	outContent := bytes.Buffer{}
 	if r.dest != "" {

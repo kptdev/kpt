@@ -453,6 +453,10 @@ func (r *EvalFnRunner) validateOptionalFlags() error {
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// separate the optional flag validation to fix linter issue: cyclomatic complexity
+
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	if err := r.validateOptionalFlags(); err != nil {
 		return err
 	}

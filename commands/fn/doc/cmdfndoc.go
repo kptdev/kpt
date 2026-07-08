@@ -63,6 +63,9 @@ type Runner struct {
 }
 
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
