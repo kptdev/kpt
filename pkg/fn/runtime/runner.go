@@ -60,12 +60,18 @@ func NewRunner(
 		img := opts.ResolveToImage(f.Image)
 		f.Image = img
 
+		rcOpts := []regclient.Opt{
+			regclient.WithUserAgent(UserAgent),
+			regclient.WithDockerCreds(),
+		}
+
+		if opts.TLSConfig != nil {
+			// TODO
+		}
+
 		listers := []TagLister{
 			&RegClientLister{
-				client: regclient.New(
-					regclient.WithUserAgent(UserAgent),
-					regclient.WithDockerCreds(),
-				),
+				Client: regclient.New(rcOpts...),
 			},
 		}
 
