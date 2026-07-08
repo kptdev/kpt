@@ -17,9 +17,9 @@ package runneroptions
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
-	"net/url"
 )
 
 const (
@@ -87,17 +87,26 @@ func (opts RunnerOptions) ResolveToImage(image string) string {
 	return image
 }
 
+// ValidatePrefix checks that ImagePrefix is a valid registry path.
 func (opts RunnerOptions) ValidatePrefix() error {
 	if opts.ImagePrefix == "" {
 		return nil
 	}
-	// prefixes are registry paths without a url scheme, so I'll prepend one for validation purposes
-	u, err := url.Parse("https://" + strings.TrimRight(opts.ImagePrefix, "/"))
+	prefix := strings.TrimRight(opts.ImagePrefix, "/")
+	// Reject prefixes that include a URL scheme
+	if strings.Contains(prefix, "://") {
+		return fmt.Errorf("invalid image prefix %q: must not include a scheme (e.g. https://)", opts.ImagePrefix)
+	}
+	// Reject fragments and query strings
+	if strings.ContainsAny(prefix, "?#") {
+		return fmt.Errorf("invalid image prefix %q: must not contain '?' or '#'", opts.ImagePrefix)
+	}
+	// Prepend a scheme so url.Parse can validate the host/path structure
+	u, err := url.Parse("https://" + prefix)
 	if err != nil || u.Host == "" {
 		return fmt.Errorf("invalid image prefix %q: must be a valid registry path", opts.ImagePrefix)
 	}
 	return nil
-
 }
 
 type SingleLineFormatter struct {
