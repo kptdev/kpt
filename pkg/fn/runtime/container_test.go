@@ -24,7 +24,6 @@ import (
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestContainerFn(t *testing.T) {
@@ -126,23 +125,21 @@ func TestIsSupportedDockerVersion(t *testing.T) {
 		{
 			name:   "less than min version",
 			inputV: "20.9.1",
-			errMsg: "docker client version must be v20.10.0 or greater: found v20.9.1",
+			errMsg: "docker client version must be v20.10.0 or greater: found 20.9.1",
 		},
 		{
 			name:   "invalid semver",
 			inputV: "20..12.1",
-			errMsg: "docker client version must be v20.10.0 or greater: found invalid version v20..12.1",
+			errMsg: "docker client version must be v20.10.0 or greater: found invalid version 20..12.1",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require := require.New(t)
 			err := isSupportedDockerVersion(tt.inputV)
 			if tt.errMsg != "" {
-				require.NotNil(err)
-				require.Contains(err.Error(), tt.errMsg)
+				assert.ErrorContains(t, err, tt.errMsg)
 			} else {
-				require.NoError(err)
+				assert.NoError(t, err)
 			}
 		})
 	}

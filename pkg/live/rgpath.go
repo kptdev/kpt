@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
@@ -67,7 +68,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		// Skip if current file is a ResourceGroup resource. We do not want to apply/delete any ResourceGroup CRs when we
 		// run any `kpt live` commands on a package. Instead, we have specific logic in place for handling ResourceGroups in
 		// the live cluster.
-		if u.GroupVersionKind() == rgfilev1alpha1.ResourceGroupGVK() {
+		if kptfileutil.ToKptGVK(u.GroupVersionKind()) == rgfilev1alpha1.ResourceGroupGVK() {
 			continue
 		}
 		objs = append(objs, u)
