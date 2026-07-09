@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/regclient/regclient"
-	ref2 "github.com/regclient/regclient/types/ref"
+	regclientref "github.com/regclient/regclient/types/ref"
 )
 
 // RegClientLister is a TagLister using the regclient module to list remote OCI tags.
@@ -33,7 +33,7 @@ func (l *RegClientLister) Name() string {
 }
 
 func (l *RegClientLister) List(ctx context.Context, image string) ([]string, error) {
-	ref, err := ref2.New(image)
+	ref, err := regclientref.New(image)
 	if err != nil {
 		return nil, err
 	}

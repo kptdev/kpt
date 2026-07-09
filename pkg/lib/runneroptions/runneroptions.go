@@ -16,7 +16,6 @@
 package runneroptions
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/url"
 	"os"
@@ -85,7 +84,7 @@ type RunnerOptions struct {
 	// CelCostLimit is the maximum cost of a CEL evaluation.
 	CelCostLimit uint64
 
-	TLSConfig *tls.Config
+	ExtraTlsCerts [][]byte
 }
 
 type PackageIDType int8
