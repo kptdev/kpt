@@ -1,4 +1,4 @@
-# Copyright 2021, 2026 The kpt Authors
+# Copyright 2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Live E2E Tests using bash script.
+# Documentation verification workflow.
 #
 # Do not use workflow-level paths-ignore for required checks.
 # GitHub leaves skipped required workflows Pending forever.
 # Instead, we always run the workflow and skip individual jobs conditionally.
 
-name: Live E2E
+name: Docs
 on:
   pull_request:
   push:
@@ -31,66 +31,64 @@ jobs:
     name: detect changes
     runs-on: ubuntu-latest
     outputs:
-      live: ${{ steps.filter.outputs.live }}
+      docs: ${{ steps.filter.outputs.docs }}
     steps:
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v7
         id: filter
         with:
           filters: |
-            live:
-              - 'commands/live/**'
-              - 'e2e/live/**'
-              - 'pkg/live/**'
+            docs:
+              - 'documentation/**'
+              - '**.md'
 
-  live-e2e:
-    name: live-e2e-k8s${{ matrix.k8s }}
+  docs-verify-module:
+    name: docs-verify-module
     needs: changes
-    if: needs.changes.outputs.live == 'true'
+    if: needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - k8s: "1.35"
-          - k8s: "1.36"
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v6
+
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
-      - name: Install Kind
-        uses: helm/kind-action@v1
-        with:
-          version: v0.32.0
-          install_only: true
-      - name: Run Tests
-        env:
-          K8S_VERSION: ${{ matrix.k8s }}
-        run: |
-          ./e2e/live/end-to-end-test.sh -k $K8S_VERSION
+          go-version-file: documentation/go.mod
+          cache: false
 
-  live-e2e-gate:
-    name: live-e2e
-    needs: [changes, live-e2e]
+      - name: Verify go.sum is not empty
+        working-directory: documentation
+        run: |
+          if [ ! -s go.sum ]; then
+            echo "::error::documentation/go.sum is empty. This file must contain checksums for module dependencies."
+            echo "This is a Hugo module — do NOT use 'go mod tidy' as it strips Hugo-only entries."
+            echo "Restore go.sum from the main branch or run 'hugo mod tidy' instead."
+            exit 1
+          fi
+
+      - name: Verify module integrity
+        working-directory: documentation
+        run: go mod verify
+
+  docs-gate:
+    name: docs
+    needs: [changes, docs-verify-module]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check results
         run: |
-          # If no live changes, this check is not applicable, pass.
-          if [ "${{ needs.changes.outputs.live }}" = "false" ]; then
-            echo "No live changes, skipping Live E2E tests"
+          # If no docs changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.outputs.docs }}" = "false" ]; then
+            echo "No docs changes, skipping documentation checks"
             exit 0
           fi
           
-          # If any required job failed, fail this check.
-          if [ "${{ needs.live-e2e.result }}" = "failure" ]; then
-            echo "Live E2E tests failed"
+          # If required job failed, fail this check.
+          if [ "${{ needs.docs-verify-module.result }}" = "failure" ]; then
+            echo "Documentation verification failed"
             exit 1
           fi
           
-          echo "Live E2E tests passed"
-
+          echo "Documentation verification passed"

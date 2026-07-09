@@ -12,36 +12,57 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Go CI workflow for build, test, and lint.
+#
+# Do not use workflow-level paths-ignore for required checks.
+# GitHub leaves skipped required workflows Pending forever.
+# Instead, we always run the workflow and skip individual jobs conditionally.
+# See: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpull_requestpull_request_targetpathspaths-ignore
+
 name: Go
 on:
   pull_request:
-    paths-ignore:
-      - "Formula/**"
-      - "demos/**"
-      - "docs/**"
-      - "documentation/**"
-      - "firebase/**"
-      - "logo/**"
-      - "package-examples/**"
-#      - "release/images/**"
-#      - "release/tag/**"
-      - "site/**"
-      - "**.md"
   push:
     branches:
     - '!dependabot/*'
 
 jobs:
-  build-test-linux:
-    name: Build-test-kpt-CLI
+  # Detect which path groups changed to conditionally skip expensive jobs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v7
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'api/**'
+              - 'commands/**'
+              - 'e2e/**'
+              - 'internal/**'
+              - 'pkg/**'
+              - 'healthcheck/**'
+              - 'mdtogo/**'
+              - 'Makefile'
+              - 'go.mod'
+              - 'go.sum'
+              - 'main.go'
+
+  build-test:
+    name: build-test-${{ matrix.runtime }}
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         runtime: [docker, podman]
     steps:
-      # The CI complains about the podman not installed, adding some debugging info here.
-      - name: check podman
+      - name: Check runtime
         if: ${{ matrix.runtime == 'podman' }}
         run: |
           which podman
@@ -62,6 +83,9 @@ jobs:
           KRM_FN_RUNTIME: ${{ matrix.runtime }}
 
   build-macos:
+    name: build-macos
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: macos-latest
     steps:
       - name: Check out code
@@ -74,16 +98,3 @@ jobs:
         run: |
           make build
 
-# TODO: fix https://github.com/kptdev/kpt/issues/3463
-#  build-windows:
-#    runs-on: windows-2019
-#    steps:
-#      - name: Check out code
-#        uses: actions/checkout@v6
-#      - name: Set up Go
-#        uses: actions/setup-go@v6
-#        with:
-#          go-version-file: go.mod
-#      - name: Build
-#        run: |
-#          make build

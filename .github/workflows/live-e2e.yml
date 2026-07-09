@@ -12,27 +12,50 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "Kpt Live - Apply Tests"
+# Live Apply Tests using go test framework.
+#
+# Do not use workflow-level paths-ignore for required checks.
+# GitHub leaves skipped required workflows Pending forever.
+# Instead, we always run the workflow and skip individual jobs conditionally.
+
+name: Live Apply
 on:
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "documentation/**"
-      - "site/**"
   push:
     branches:
     - '!dependabot/*'
-    paths-ignore:
-      - "docs/**"
-      - "documentation/**"
-      - "site/**"
 
 jobs:
-  kind:
+  # Detect which path groups changed to conditionally skip expensive jobs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      live: ${{ steps.filter.outputs.live }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v7
+        id: filter
+        with:
+          filters: |
+            live:
+              - 'commands/live/**'
+              - 'e2e/live/**'
+              - 'pkg/live/**'
+
+  live-apply:
+    name: live-apply-k8s${{ matrix.k8s }}
+    needs: changes
+    if: needs.changes.outputs.live == 'true'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        version: ["1.35.5@sha256:ce977ae6d65918d0b58a5f8b5e940429c2ce42fa3a5619ec2bbc60b949c0ac95", "1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5"]
+        include:
+          - k8s: "1.35"
+            version: "1.35.5@sha256:ce977ae6d65918d0b58a5f8b5e940429c2ce42fa3a5619ec2bbc60b949c0ac95"
+          - k8s: "1.36"
+            version: "1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5"
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -50,3 +73,26 @@ jobs:
           K8S_VERSION: ${{ matrix.version }}
         run: |
           K8S_VERSION=$K8S_VERSION make test-live-apply
+
+  live-apply-gate:
+    name: live-apply
+    needs: [changes, live-apply]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          # If no live changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.outputs.live }}" = "false" ]; then
+            echo "No live changes, skipping Live Apply tests"
+            exit 0
+          fi
+          
+          # If any required job failed, fail this check.
+          if [ "${{ needs.live-apply.result }}" = "failure" ]; then
+            echo "Live Apply tests failed"
+            exit 1
+          fi
+          
+          echo "Live Apply tests passed"
+
