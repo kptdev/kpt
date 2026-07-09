@@ -58,21 +58,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-        with:
-          path: go/src/github.com/kptdev/kpt
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          cache: true
-          cache-dependency-path: go/src/github.com/kptdev/kpt/go.sum
+          go-version-file: go.mod
       - name: Install Kind
         uses: helm/kind-action@v1
         with:
           version: v0.32.0
           install_only: true
       - name: Run Tests
-        working-directory: go/src/github.com/kptdev/kpt
         env:
           K8S_VERSION: ${{ matrix.k8s }}
         run: |
@@ -87,14 +82,18 @@ jobs:
       - name: Check results
         run: |
           # If no live changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "changes job did not succeed"
+            exit 1
+          fi
           if [ "${{ needs.changes.outputs.live }}" = "false" ]; then
             echo "No live changes, skipping Live E2E tests"
             exit 0
           fi
           
-          # If any required job failed, fail this check.
-          if [ "${{ needs.live-e2e.result }}" = "failure" ]; then
-            echo "Live E2E tests failed"
+          # If any required job did not succeed, fail this check.
+          if [ "${{ needs.live-e2e.result }}" != "success" ]; then
+            echo "Live E2E tests failed or did not complete"
             exit 1
           fi
           

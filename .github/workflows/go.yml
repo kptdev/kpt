@@ -26,9 +26,6 @@ on:
     branches:
     - '!dependabot/*'
 
-env:
-  GOPATH: ${{ github.workspace }}/go
-
 jobs:
   # Detect which path groups changed to conditionally skip expensive jobs.
   changes:
@@ -73,16 +70,11 @@ jobs:
           podman version
       - name: Check out code
         uses: actions/checkout@v6
-        with:
-          path: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          cache: true
-          cache-dependency-path: go/src/github.com/kptdev/kpt/go.sum
+          go-version-file: go.mod
       - name: Build, Test, Lint
-        working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
@@ -99,16 +91,11 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v6
-        with:
-          path: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          cache: true
-          cache-dependency-path: go/src/github.com/kptdev/kpt/go.sum
+          go-version-file: go.mod
       - name: Build
-        working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |
           make build
 
@@ -121,15 +108,19 @@ jobs:
       - name: Check results
         run: |
           # If no code changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "changes job did not succeed"
+            exit 1
+          fi
           if [ "${{ needs.changes.outputs.code }}" = "false" ]; then
             echo "No code changes, skipping Go tests"
             exit 0
           fi
           
-          # If any required job failed, fail this check.
-          if [ "${{ needs.build-test.result }}" = "failure" ] || \
-             [ "${{ needs.build-macos.result }}" = "failure" ]; then
-            echo "Go tests failed"
+          # If any required job failed, cancelled, or skipped, fail this check.
+          if [ "${{ needs.build-test.result }}" != "success" ] || \
+             [ "${{ needs.build-macos.result }}" != "success" ]; then
+            echo "Go tests failed or did not complete"
             exit 1
           fi
           

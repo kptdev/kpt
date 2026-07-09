@@ -18,9 +18,6 @@ on:
     tags:
     - "api/v[0-9]+.[0-9]+.[0-9]+*"
 
-env:
-  GOPATH: ${{ github.workspace }}/go
-
 jobs:
   build:
     runs-on: ubuntu-latest

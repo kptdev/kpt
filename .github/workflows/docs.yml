@@ -81,14 +81,18 @@ jobs:
       - name: Check results
         run: |
           # If no docs changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "changes job did not succeed"
+            exit 1
+          fi
           if [ "${{ needs.changes.outputs.docs }}" = "false" ]; then
             echo "No docs changes, skipping documentation checks"
             exit 0
           fi
           
-          # If required job failed, fail this check.
-          if [ "${{ needs.docs-verify-module.result }}" = "failure" ]; then
-            echo "Documentation verification failed"
+          # If required job did not succeed, fail this check.
+          if [ "${{ needs.docs-verify-module.result }}" != "success" ]; then
+            echo "Documentation verification failed or did not complete"
             exit 1
           fi
           
