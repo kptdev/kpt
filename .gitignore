@@ -50,3 +50,4 @@ public/
 
 # Build directory
 .build/
+dist/
