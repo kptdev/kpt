@@ -12,28 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "Kpt Live - E2E Tests"
+# Live E2E Tests using bash script.
+#
+# Do not use workflow-level paths-ignore for required checks.
+# GitHub leaves skipped required workflows Pending forever.
+# Instead, we always run the workflow and skip individual jobs conditionally.
+
+name: Live E2E
 on:
   pull_request:
-    paths-ignore:
-      - "docs/**"
-      - "documentation/**"
-      - "site/**"
   push:
     branches:
     - '!dependabot/*'
-    paths-ignore:
-      - "docs/**"
-      - "documentation/**"
-      - "site/**"
 
 jobs:
-  kind:
+  # Detect which path groups changed to conditionally skip expensive jobs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      live: ${{ steps.filter.outputs.live }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            live:
+              - 'commands/live/**'
+              - 'e2e/live/**'
+              - 'pkg/live/**'
+              - '.github/workflows/e2eEnvironment.yml'
+
+  live-e2e:
+    name: live-e2e-k8s${{ matrix.k8s }}
+    needs: changes
+    if: needs.changes.outputs.live == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        version: ["1.35", "1.36"]
+        include:
+          - k8s: "1.35"
+          - k8s: "1.36"
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -48,6 +69,33 @@ jobs:
           install_only: true
       - name: Run Tests
         env:
-          K8S_VERSION: ${{ matrix.version }}
+          K8S_VERSION: ${{ matrix.k8s }}
         run: |
           ./e2e/live/end-to-end-test.sh -k $K8S_VERSION
+
+  live-e2e-gate:
+    name: live-e2e
+    needs: [changes, live-e2e]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          # If no live changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "changes job did not succeed"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.live }}" = "false" ]; then
+            echo "No live changes, skipping Live E2E tests"
+            exit 0
+          fi
+          
+          # If any required job did not succeed, fail this check.
+          if [ "${{ needs.live-e2e.result }}" != "success" ]; then
+            echo "Live E2E tests failed or did not complete"
+            exit 1
+          fi
+          
+          echo "Live E2E tests passed"
+
