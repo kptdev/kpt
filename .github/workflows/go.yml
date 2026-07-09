@@ -54,6 +54,7 @@ jobs:
               - 'go.mod'
               - 'go.sum'
               - 'main.go'
+              - '.github/workflows/go.yml'
 
   build-test:
     name: build-test-${{ matrix.runtime }}

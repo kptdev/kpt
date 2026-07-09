@@ -41,6 +41,7 @@ jobs:
             docs:
               - 'documentation/**'
               - '**.md'
+              - '.github/workflows/docs.yml'
 
   docs-verify-module:
     name: docs-verify-module

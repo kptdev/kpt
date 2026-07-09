@@ -42,6 +42,7 @@ jobs:
               - 'commands/live/**'
               - 'e2e/live/**'
               - 'pkg/live/**'
+              - '.github/workflows/e2eEnvironment.yml'
 
   live-e2e:
     name: live-e2e-k8s${{ matrix.k8s }}
