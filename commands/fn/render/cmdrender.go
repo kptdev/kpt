@@ -36,8 +36,8 @@ import (
 // NewRunner returns a command runner
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
-	r.InitDefaults()
 
+	// Image prefix resolution priority: --image-prefix flag, then $KPT_IMAGE_PREFIX, then the built-in GHCR prefix.
 	c := &cobra.Command{
 		Use:     "render [PKG_PATH] [flags]",
 		Short:   docs.RenderShort,
@@ -46,6 +46,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	r.InitDefaults()
+	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
@@ -119,6 +122,9 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	var output io.Writer
 	outContent := bytes.Buffer{}
 	if r.dest != "" {

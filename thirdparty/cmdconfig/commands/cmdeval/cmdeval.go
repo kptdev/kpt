@@ -46,6 +46,9 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		PreRunE: r.preRunE,
 	}
 	r.Command = c
+
+	r.Command.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 	r.Command.Flags().StringVarP(&r.Dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
@@ -450,6 +453,10 @@ func (r *EvalFnRunner) validateOptionalFlags() error {
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// separate the optional flag validation to fix linter issue: cyclomatic complexity
+
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	if err := r.validateOptionalFlags(); err != nil {
 		return err
 	}

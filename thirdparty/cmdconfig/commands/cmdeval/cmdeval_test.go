@@ -24,6 +24,7 @@ import (
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
+	t.Setenv(runneroptions.PrefixEnvVar, "")
 	tempDir, err := os.MkdirTemp("", "")
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -220,6 +221,7 @@ apiVersion: v1
 				ResultsDir: "foo/",
 				RunnerOptions: runneroptions.RunnerOptions{
 					ImagePullPolicy: runneroptions.IfNotPresentPull,
+					ImagePrefix:     runneroptions.GHCRImagePrefix,
 				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
@@ -261,6 +263,7 @@ apiVersion: v1
 				Path: dir,
 				RunnerOptions: runneroptions.RunnerOptions{
 					ImagePullPolicy: runneroptions.IfNotPresentPull,
+					ImagePrefix:     runneroptions.GHCRImagePrefix,
 				},
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
@@ -288,6 +291,7 @@ apiVersion: v1
 				AsCurrentUser: true,
 				RunnerOptions: runneroptions.RunnerOptions{
 					ImagePullPolicy: runneroptions.IfNotPresentPull,
+					ImagePrefix:     runneroptions.GHCRImagePrefix,
 				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
@@ -431,7 +435,6 @@ apiVersion: v1
 			if tt.expectedStruct != nil {
 				r.runFns.Function = nil
 				r.runFns.FnConfig = nil
-				r.runFns.RunnerOptions.ResolveToImage = nil
 				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
 				if !assert.Equal(t, *tt.expectedStruct, r.runFns) {
 					t.FailNow()

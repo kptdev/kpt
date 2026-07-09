@@ -49,12 +49,12 @@ func (gk GroupKind) String() string {
 
 // ParseGroupKind turns "Kind.group" string into a GroupKind struct.
 func ParseGroupKind(gk string) GroupKind {
-	i := strings.Index(gk, ".")
-	if i == -1 {
+	before, after, ok := strings.Cut(gk, ".")
+	if !ok {
 		return GroupKind{Kind: gk}
 	}
 
-	return GroupKind{Group: gk[i+1:], Kind: gk[:i]}
+	return GroupKind{Group: after, Kind: before}
 }
 
 // GroupVersionKind unambiguously identifies a kind. It doesn't anonymously include GroupVersion
