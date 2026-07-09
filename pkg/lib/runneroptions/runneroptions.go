@@ -16,7 +16,6 @@
 package runneroptions
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/url"
 	"os"
@@ -68,7 +67,7 @@ type RunnerOptions struct {
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
 
-	TLSConfig *tls.Config
+	ExtraTlsCerts [][]byte
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {

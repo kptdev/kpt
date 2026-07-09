@@ -35,6 +35,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/regclient/regclient"
+	regclientreg "github.com/regclient/regclient/scheme/reg"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -65,8 +66,8 @@ func NewRunner(
 			regclient.WithDockerCreds(),
 		}
 
-		if opts.TLSConfig != nil {
-			// TODO
+		if len(opts.ExtraTlsCerts) != 0 {
+			regclient.WithRegOpts(regclientreg.WithCerts(opts.ExtraTlsCerts))
 		}
 
 		listers := []TagLister{
