@@ -1,4 +1,4 @@
-# Copyright 2019 The kpt Authors
+# Copyright 2019,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -64,23 +64,27 @@ builds:
       - arm64
     ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
 
-dockers:
+dockers_v2:
   - ids:
       - linux-amd64
-    image_templates:
-      - "ghcr.io/kptdev/kpt:{{ .Tag }}"
-    dockerfile: "release/images/Dockerfile"
-    build_flag_templates:
-      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-      - "--label=org.opencontainers.image.description=kpt - Automate Kubernetes Configuration Editing"
-      - "--label=org.opencontainers.image.url=https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
-      - "--label=org.opencontainers.image.source=https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
-      - "--label=org.opencontainers.image.version={{ .Tag }}"
-      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.created={{ .Date }}"
+    images:
+      - ghcr.io/kptdev/kpt
+    tags:
+      - "{{ .Tag }}"
+    dockerfile: release/images/Dockerfile
+    platforms:
+      - linux/amd64
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.description: "kpt - Automate Kubernetes Configuration Editing"
+      org.opencontainers.image.url: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
+      org.opencontainers.image.source: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
+      org.opencontainers.image.version: "{{ .Tag }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.created: "{{ .Date }}"
 archives:
   - id: archived
-    builds:
+    ids:
       - darwin-amd64
       - darwin-arm64
       - linux-amd64
@@ -90,8 +94,8 @@ archives:
       - lib.zip*
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
   - id: bin-only
-    format: binary
-    builds:
+    formats: binary
+    ids:
       - darwin-amd64
       - darwin-arm64
       - linux-amd64
@@ -100,7 +104,7 @@ archives:
 checksum:
   name_template: "checksums.txt"
 snapshot:
-  name_template: "master"
+  version_template: "master"
 changelog:
   sort: asc
   filters:
