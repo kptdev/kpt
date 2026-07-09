@@ -76,9 +76,17 @@ fn-args:
 
 --image, i:
   Container image of the function to execute e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest`.
-  For convenience, if full image path is not specified, `ghcr.io/kptdev/krm-functions-catalog/` is added as default prefix.
+  For convenience, if full image path is not specified, a default prefix is added.
+  The default prefix is `ghcr.io/kptdev/krm-functions-catalog/`, but can be customized via the
+  `--image-prefix` flag or `KPT_IMAGE_PREFIX` environment variable.
   e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` you can pass `set-namespace:latest`.
   `eval` executes only one function, so do not use `--exec` flag with this flag.
+
+--image-prefix:
+  The container registry prefix to prepend to short image names when resolving functions.
+  This allows customization of the default registry instead of using the hardcoded default
+  (`ghcr.io/kptdev/krm-functions-catalog`). Can also be set via the KPT_IMAGE_PREFIX environment
+  variable. The command-line flag takes precedence over the environment variable.
 
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
@@ -152,6 +160,10 @@ fn-args:
 #### Environment Variables
 
 ```shell
+KPT_IMAGE_PREFIX:
+  The default container registry prefix to use when resolving short image names.
+  This can be overridden by the --image-prefix flag.
+
 KRM_FN_RUNTIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```

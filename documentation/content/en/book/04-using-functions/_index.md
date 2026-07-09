@@ -188,7 +188,14 @@ Details of these fields are set out below.
 
 #### `image`
 
-The `image` field specifies the container image for the function. You can specify an image from any container registry. If the registry is omitted, the default container registry for the functions catalog (`ghcr.io/kptdev/krm-functions-catalog`) is prepended automatically. For example, `set-labels:latest` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:latest`.
+The `image` field specifies the container image for the function. You can specify an image from any container registry. If the registry is omitted, a default prefix is prepended automatically. By default, this prefix is `ghcr.io/kptdev/krm-functions-catalog`. For example, `set-labels:latest` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:latest`.
+
+The default prefix can be customized in two ways:
+
+1. Using the `--image-prefix` flag on commands like `kpt fn render` and `kpt fn eval`
+2. Setting the `KPT_IMAGE_PREFIX` environment variable
+
+If both are specified, the command-line flag takes precedence over the environment variable.
 
 #### `tag`
 
