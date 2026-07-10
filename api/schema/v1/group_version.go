@@ -17,12 +17,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// +kubebuilder:object:generate=true
 package v1
 
 import (
 	"fmt"
 	"strings"
 )
+
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 // ParseResourceArg takes the common style of string which may be either `resource.group.com` or `resource.version.group.com`
 // and parses it out into both possibilities.  This code takes no responsibility for knowing which representation was intended
