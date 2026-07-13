@@ -1,0 +1,116 @@
+# Copyright 2026 The kpt Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# GoReleaser validation and snapshot workflow.
+#
+# Do not use workflow-level paths-ignore for required checks.
+# GitHub leaves skipped required workflows Pending forever.
+# Instead, we always run the workflow and skip individual jobs conditionally.
+
+name: Release Snapshot
+on:
+  pull_request:
+  push:
+    branches:
+    - '!dependabot/*'
+
+permissions:
+  contents: read
+
+jobs:
+  # Detect which path groups changed to conditionally skip expensive jobs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.filter.outputs.release }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            release:
+              - 'release/tag/**'
+              - 'release/images/**'
+              - '.github/workflows/release-goreleaser.yml'
+
+  goreleaser-check:
+    name: goreleaser-check
+    needs: changes
+    if: needs.changes.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Validate GoReleaser config
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: check -f release/tag/goreleaser.yaml
+
+  goreleaser-snapshot:
+    name: goreleaser-snapshot
+    needs: [changes, goreleaser-check]
+    if: needs.changes.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Snapshot release
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --snapshot --clean --verbose -f release/tag/goreleaser.yaml
+
+  release-snapshot-gate:
+    name: release-snapshot
+    needs: [changes, goreleaser-check, goreleaser-snapshot]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          # If no release changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "changes job did not succeed"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.release }}" = "false" ]; then
+            echo "No release changes, skipping GoReleaser checks"
+            exit 0
+          fi
+
+          # If any required job failed, cancelled, or skipped, fail this check.
+          if [ "${{ needs.goreleaser-check.result }}" != "success" ] || \
+             [ "${{ needs.goreleaser-snapshot.result }}" != "success" ]; then
+            echo "GoReleaser validation or snapshot failed or did not complete"
+            exit 1
+          fi
+
+          echo "GoReleaser validation and snapshot passed"

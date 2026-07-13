@@ -67,7 +67,7 @@ builds:
 dockers_v2:
   - ids:
       - linux-amd64
-#      - linux-arm64 # TODO: set this up correctly
+      - linux-arm64
     images:
       - ghcr.io/kptdev/kpt
     tags:
@@ -75,7 +75,7 @@ dockers_v2:
     dockerfile: release/images/Dockerfile
     platforms:
       - linux/amd64
-#      - linux/arm64 # TODO: set this up correctly
+      - linux/arm64
     labels:
       org.opencontainers.image.title: "{{ .ProjectName }}"
       org.opencontainers.image.description: "kpt - Automate Kubernetes Configuration Editing"
