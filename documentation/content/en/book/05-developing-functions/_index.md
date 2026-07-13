@@ -86,7 +86,7 @@ In order to enable functions to be developed in different toolchains and
 languages and be interoperable and backwards compatible, the kpt project created
 a standard for the inter-process communication between the orchestrator (i.e.
 kpt CLI) and functions. This standard was published as the
-[KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
+[KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/main/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
 and donated to the CNCF as part of the Kubernetes SIG-CLI.
 
 Understanding this specification enables you to have a deeper understanding of
@@ -131,7 +131,7 @@ In this quickstart, we will write a function called "set-annotation" that adds a
 
 #### Set up your project
 
-We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/master/go/get-started) package int he KRM Funxtions SDK,
+We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/main/go/get-started) package int he KRM Funxtions SDK,
 which contains a `main.go` file with some scaffolding code.
 
 Initialize your project.
@@ -172,11 +172,11 @@ Take a look at the `main.go` (as below) and complete the `Run` function.
 package main
 
 import (
-        "context"
-        _ "embed"
-        "os"
+	"context"
+	_ "embed"
+	"os"
 
-        "github.com/kptdev/krm-functions-sdk/go/fn"
+	"github.com/kptdev/krm-functions-sdk/go/fn"
 )
 
 //go:embed README.md
@@ -189,9 +189,9 @@ var _ fn.Runner = &YourFunction{}
 
 // TODO: Change to your functionConfig "Kind" name.
 type YourFunction struct {
-        FnConfigBool bool
-        FnConfigInt  int
-        FnConfigFoo  string
+	FnConfigBool bool
+	FnConfigInt  int
+	FnConfigFoo  string
 }
 
 // Run is the main function logic.
@@ -199,15 +199,15 @@ type YourFunction struct {
 // `functionConfig` is from the STDIN "ResourceList.FunctionConfig". The value has been assigned to the r attributes
 // `results` is the "ResourceList.Results" that you can write result info to.
 func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
-        // TODO: Write your code.
-        return true
+	// TODO: Write your code.
+	return true
 }
 
 func main() {
-        runner := fn.WithContext(context.Background(), &YourFunction{})
-        if err := fn.AsMain(runner, fn.WithDocs(readme, metadata)); err != nil {
-                os.Exit(1)
-        }
+	runner := fn.WithContext(context.Background(), &YourFunction{})
+	if err := fn.AsMain(runner, fn.WithDocs(readme, metadata)); err != nil {
+		os.Exit(1)
+	}
 }
 ```
 
@@ -345,7 +345,7 @@ Build the image
 
 The "get-started" package provides the `Dockerfile` that you can download using:
 ```shell
-wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/master/go/kfn/commands/embed/Dockerfile
+wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/main/go/kfn/commands/embed/Dockerfile
 ```
 
 ```shell
@@ -362,4 +362,4 @@ kpt fn eval ./testdata/noop-passthrough/resources.yaml --image ${FN_CONTAINER_RE
 ### Next Steps
 
 - See other [go documentation examples](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn/examples) to use KubeObject.
-- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/master/CONTRIBUTING.md)
+- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/main/CONTRIBUTING.md)
