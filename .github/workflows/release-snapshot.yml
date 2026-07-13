@@ -44,7 +44,7 @@ jobs:
             release:
               - 'release/tag/**'
               - 'release/images/**'
-              - '.github/workflows/release-goreleaser.yml'
+              - '.github/workflows/release-snapshot.yml'
 
   goreleaser-check:
     name: goreleaser-check
