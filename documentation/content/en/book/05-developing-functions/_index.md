@@ -86,7 +86,7 @@ In order to enable functions to be developed in different toolchains and
 languages and be interoperable and backwards compatible, the kpt project created
 a standard for the inter-process communication between the orchestrator (i.e.
 kpt CLI) and functions. This standard was published as the
-[KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
+[KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/main/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
 and donated to the CNCF as part of the Kubernetes SIG-CLI.
 
 Understanding this specification enables you to have a deeper understanding of
@@ -131,7 +131,7 @@ In this quickstart, we will write a function called "set-annotation" that adds a
 
 #### Set up your project
 
-We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/master/go/get-started) package int he KRM Funxtions SDK,
+We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/main/go/get-started) package int he KRM Funxtions SDK,
 which contains a `main.go` file with some scaffolding code.
 
 Initialize your project.
@@ -141,7 +141,7 @@ Initialize your project.
 export FUNCTION_NAME=set-annotation
 
 # Get the "get-started" package.
-kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/go/get-started@master ${FUNCTION_NAME}
+kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/go/get-started@main ${FUNCTION_NAME}
 
 cd ${FUNCTION_NAME}
 
@@ -155,7 +155,7 @@ go mod tidy
 Take a look at the `main.go` (as below) and complete the `Run` function.
 
 ```go
-// Copyright 2022-2025 The kpt Authors
+// Copyright 2022, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -173,10 +173,17 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"os"
 
 	"github.com/kptdev/krm-functions-sdk/go/fn"
 )
+
+//go:embed README.md
+var readme []byte
+
+//go:embed metadata.yaml
+var metadata []byte
 
 var _ fn.Runner = &YourFunction{}
 
@@ -198,7 +205,7 @@ func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items
 
 func main() {
 	runner := fn.WithContext(context.Background(), &YourFunction{})
-	if err := fn.AsMain(runner); err != nil {
+	if err := fn.AsMain(runner, fn.WithDocs(readme, metadata)); err != nil {
 		os.Exit(1)
 	}
 }
@@ -234,9 +241,9 @@ Learn more about the `KubeObject` from the [go documentation](https://pkg.go.dev
 The "get-started" package contains a `./testdata` directory. You can use this to test out your functions. 
 
 ```shell
-# Edit the `testdata/test1/resources.yaml` with your KRM resources. 
+# Edit the `testdata/noop-passthrough/resources.yaml` with your KRM resources. 
 # resources.yaml already has a `Deployment` and `Service` as test data. 
-vim testdata/test1/resources.yaml
+vim testdata/noop-passthrough/resources.yaml
 
 # Convert the KRM resources and FunctionConfig resource to `ResourceList`, and 
 # then pipe the ResourceList as StdIn to your function
@@ -290,7 +297,7 @@ EOF
 
 Run the KRM function
 ```shell
-{kpt fn source testdata; cat fn-config.yaml} | go run main.go
+{ kpt fn source testdata; cat fn-config.yaml; } | go run main.go
 ```
 
 Look for the "config.kubernetes.io/managed-by" annotation in the standard output:
@@ -338,7 +345,7 @@ Build the image
 
 The "get-started" package provides the `Dockerfile` that you can download using:
 ```shell
-wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/master/go/kfn/commands/embed/Dockerfile
+wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/main/go/kfn/commands/embed/Dockerfile
 ```
 
 ```shell
@@ -349,10 +356,10 @@ docker build . -t ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 
 To verify the image using the same `./testdata` resources
 ```shell
-kpt fn eval ./testdata/test1/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
+kpt fn eval ./testdata/noop-passthrough/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
 ### Next Steps
 
 - See other [go documentation examples](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn/examples) to use KubeObject.
-- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/master/CONTRIBUTING.md)
+- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/main/CONTRIBUTING.md)
