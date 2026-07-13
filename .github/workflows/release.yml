@@ -35,6 +35,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
       - name: Build, Test, Lint
         run: |
           git config --global user.email you@example.com
@@ -57,7 +61,7 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --skip=validate -f release/tag/goreleaser.yaml
+          args: release --skip=validate --verbose -f release/tag/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate SLSA subjects for provenance
