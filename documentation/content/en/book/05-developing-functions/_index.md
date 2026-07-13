@@ -243,7 +243,7 @@ The "get-started" package contains a `./testdata` directory. You can use this to
 ```shell
 # Edit the `testdata/noop-passthrough/resources.yaml` with your KRM resources. 
 # resources.yaml already has a `Deployment` and `Service` as test data. 
-vim testdata/test1/resources.yaml
+vim testdata/noop-passthrough/resources.yaml
 
 # Convert the KRM resources and FunctionConfig resource to `ResourceList`, and 
 # then pipe the ResourceList as StdIn to your function
