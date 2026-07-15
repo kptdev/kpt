@@ -24,7 +24,7 @@ import (
 
 const (
 	FuncGenPkgContext = "builtins/gen-pkg-context"
-	GHCRImagePrefix   = "ghcr.io/kptdev/krm-functions-catalog/"
+	GHCRImagePrefix   = "ghcr.io/kptdev/krm-functions-catalog"
 	PrefixEnvVar      = "KPT_IMAGE_PREFIX"
 )
 
@@ -76,7 +76,7 @@ func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 // ResolveToImage converts the KRM function short path to the full image url.
 // If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
 // A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
-func (opts RunnerOptions) ResolveToImage(image string) string {
+func (opts *RunnerOptions) ResolveToImage(image string) string {
 	prefix := strings.TrimRight(opts.ImagePrefix, "/")
 	if prefix == "" {
 		return image
@@ -88,7 +88,7 @@ func (opts RunnerOptions) ResolveToImage(image string) string {
 }
 
 // ValidatePrefix checks that ImagePrefix is a valid registry path.
-func (opts RunnerOptions) ValidatePrefix() error {
+func (opts *RunnerOptions) ValidatePrefix() error {
 	if opts.ImagePrefix == "" {
 		return nil
 	}
