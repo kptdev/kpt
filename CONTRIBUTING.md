@@ -202,5 +202,4 @@ documentation contributions.
   https://opensource.google.com/conduct/
 [code of conduct]: CODE_OF_CONDUCT.md
 [docsify]: https://docsify.js.org/
-[site/]: site/
 [w3 link checker]: https://validator.w3.org/checklink/
