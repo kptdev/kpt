@@ -73,6 +73,9 @@ fn-args:
 
 --fn-config:
   Path to the file containing `functionConfig` for the function.
+  The fn-config resource is used to configure the function but is not
+  treated as an input resource. The function will not modify the fn-config
+  file, even if it resides inside the package directory.
 
 --image, i:
   Container image of the function to execute e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest`.

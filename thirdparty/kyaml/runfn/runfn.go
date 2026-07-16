@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2019, 2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package runfn
@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
@@ -21,6 +22,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -189,6 +191,23 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		return err
 	}
 
+	// Exclude the fn-config file from processing when it resides inside the
+	// package. The fn-config is already passed separately via
+	// resourceList.functionConfig and should not be processed as a regular
+	// input resource. The excluded node is written back unmodified so the
+	// file is preserved on disk.
+	var fnConfigNode *yaml.RNode
+	if r.FnConfigPath != "" {
+		inputResources = slices.DeleteFunc(inputResources, func(node *yaml.RNode) bool {
+			p, _, _ := kioutil.GetFileAnnotations(node)
+			if p != "" && filepath.Join(string(r.uniquePath), p) == r.FnConfigPath {
+				fnConfigNode = node
+				return true
+			}
+			return false
+		})
+	}
+
 	selectedInput := inputResources
 
 	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
@@ -224,6 +243,11 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		if deleteAnnoErr != nil {
 			return deleteAnnoErr
 		}
+	}
+
+	// Add fn-config resource back (unmodified) so the writer preserves the file.
+	if fnConfigNode != nil {
+		outputResources = append(outputResources, fnConfigNode)
 	}
 
 	if err == nil {
