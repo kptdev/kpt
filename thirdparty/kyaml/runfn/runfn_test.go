@@ -549,6 +549,12 @@ data:
 					for _, n := range nodes {
 						meta, _ := n.GetMeta()
 						receivedNames = append(receivedNames, meta.Name)
+						// Mutate all received items so the "file unchanged"
+						// assertion would catch a regression if fn-config were
+						// accidentally included in items.
+						if err := n.PipeE(yaml.SetAnnotation("mutated", "true")); err != nil {
+							return nil, err
+						}
 					}
 					return nodes, nil
 				}), nil
