@@ -503,3 +503,85 @@ func TestStagingDirectoryNames(t *testing.T) {
 		})
 	}
 }
+
+// TestCommand_DiffOutputPaths verifies that diff output shows meaningful paths
+// instead of raw temp directory paths (https://github.com/kptdev/kpt/issues/591).
+func TestCommand_DiffOutputPaths(t *testing.T) {
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.DeploymentResource),
+					Branch: "main",
+					Tag:    "v1",
+				},
+				{
+					Pkg: pkgbuilder.NewRootPkg().
+						WithResource(pkgbuilder.DeploymentResource,
+							pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+				},
+			},
+		},
+		GetRef: "v1",
+		LocalChanges: []testutil.Content{
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "v1", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "v1", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource,
+						pkgbuilder.SetFieldPath("10", "spec", "replicas")),
+			},
+		},
+	}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+
+	localPath := g.LocalWorkspace.FullPackagePath()
+
+	tests := []struct {
+		name       string
+		diffType   diff.Type
+		diffTool   string
+		wantLocal  bool
+		wantLabels []string
+	}{
+		{"local", diff.TypeLocal, "diff", true, []string{"remote-v1/"}},
+		{"remote", diff.TypeRemote, "diff", false, []string{"remote-v1/", "target-main/"}},
+		{"combined", diff.TypeCombined, "diff", true, []string{"target-main/"}},
+		{"3way", diff.Type3Way, "echo", true, []string{"remote-v1", "target-main"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var out bytes.Buffer
+			diffToolOpts := "-r -i -w"
+			if tt.diffTool == "echo" {
+				diffToolOpts = ""
+			}
+			err := (&diff.Command{
+				Path:         localPath,
+				Ref:          "main",
+				DiffType:     tt.diffType,
+				DiffTool:     tt.diffTool,
+				DiffToolOpts: diffToolOpts,
+				Output:       &out,
+			}).Run(fake.CtxWithDefaultPrinter())
+			assert.NoError(t, err)
+
+			output := out.String()
+			if tt.wantLocal {
+				assert.Contains(t, output, localPath)
+			}
+			for _, label := range tt.wantLabels {
+				assert.Contains(t, output, label)
+			}
+		})
+	}
+}
