@@ -505,7 +505,6 @@ func TestStagingDirectoryNames(t *testing.T) {
 }
 
 // TestCommand_DiffOutputPaths verifies that diff output shows meaningful paths
-// instead of raw temp directory paths (https://github.com/kptdev/kpt/issues/591).
 func TestCommand_DiffOutputPaths(t *testing.T) {
 	g := &testutil.TestSetupManager{
 		T: t,
@@ -582,6 +581,8 @@ func TestCommand_DiffOutputPaths(t *testing.T) {
 			for _, label := range tt.wantLabels {
 				assert.Contains(t, output, label)
 			}
+			// Verify temp staging directory prefix is not in the output
+			assert.NotRegexp(t, regexp.MustCompile(`/kpt-[^/\s]+/(local|remote|target)-`), output)
 		})
 	}
 }

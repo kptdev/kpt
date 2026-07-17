@@ -298,10 +298,11 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 	}
 	cmd := exec.Command(d.DiffTool, args...)
 
-	// Capture output so we can replace temp paths with meaningful ones
+	// Capture stdout so we can replace temp paths with meaningful ones.
+	// Stderr goes directly to output since it won't contain staging paths.
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
-	cmd.Stderr = &buf
+	cmd.Stderr = d.Output
 
 	if d.Debug {
 		fmt.Fprintf(d.Output, "%s\n", strings.Join(cmd.Args, " "))
