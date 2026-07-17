@@ -55,8 +55,6 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Image, "image", "i", "", "run this image as a function")
 	r.Command.Flags().StringVar(
 		&r.Tag, "tag", "", "semantic version constraint for the image tag or exact tag replacement")
-	r.Command.Flags().StringArrayVarP(
-		&r.Keywords, "keywords", "k", nil, "filter functions that match one or more keywords")
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
 		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
 	_ = r.Command.RegisterFlagCompletionFunc("type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -141,7 +139,6 @@ type EvalFnRunner struct {
 	Image                string
 	Tag                  string
 	SaveFn               bool
-	Keywords             []string
 	FnType               string
 	Exec                 string
 	FnConfigPath         string

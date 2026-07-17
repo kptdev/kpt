@@ -162,14 +162,14 @@ that can be used to ensure all resources in a package use the same namespace.
 ```shell
 # You should be under the "./blueprint/basens" directory.
 # Make sure you have kpt autocomplete enabled.
-# How it works: 
+# How it works:
 # Reset your brain, assume you do not know how to use `kpt fn eval`, the goal
 # is to find and add a "namespace" function.
 # Press the keyboard key `tab` or `tab tab` after each flag `--type`,
-# `--keywords`, `--image`, `--fn-config` to see available choices, click `tab`
-# to autocomplete your choice or to see further options. 
+# `--image`, `--fn-config` to see available choices, click `tab`
+# to autocomplete your choice or to see further options.
 
-$ kpt fn eval --type mutator --keywords namespace --image set-namespace:latest --fn-config package-context.yaml
+$ kpt fn eval --type mutator --image set-namespace:latest --fn-config package-context.yaml
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:

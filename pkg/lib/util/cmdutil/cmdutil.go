@@ -114,21 +114,6 @@ func CheckDirectoryNotPresent(outDir string) error {
 	return nil
 }
 
-func GetKeywordsFromFlag(cmd *cobra.Command) []string {
-	flagVal := cmd.Flag("keywords").Value.String()
-	flagVal = strings.TrimPrefix(flagVal, "[")
-	flagVal = strings.TrimSuffix(flagVal, "]")
-	splitted := strings.Split(flagVal, ",")
-	var trimmed []string
-	for _, val := range splitted {
-		if strings.TrimSpace(val) == "" {
-			continue
-		}
-		trimmed = append(trimmed, strings.TrimSpace(val))
-	}
-	return trimmed
-}
-
 // InstallResourceGroupCRD will install the ResourceGroup CRD into the cluster.
 // The function will block until the CRD is either installed and established, or
 // an error was encountered.
