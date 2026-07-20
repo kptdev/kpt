@@ -148,6 +148,7 @@ func TestCmd(t *testing.T) {
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams, false)
 			runner.Command.SetArgs(tc.args)
+			runner.namespaceChecker = func(_ string) error { return nil }
 			runner.applyRunner = func(_ *Runner, inv inventory.Info,
 				_ []*unstructured.Unstructured, _ common.DryRunStrategy) error {
 				tc.applyCallbackFunc(t, runner, inv)

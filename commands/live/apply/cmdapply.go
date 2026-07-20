@@ -28,6 +28,7 @@ import (
 	alphaprinterstable "github.com/kptdev/kpt/pkg/printer/table"
 	"github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -53,6 +54,9 @@ func NewRunner(
 		factory:     factory,
 		applyRunner: runApply,
 		alpha:       alpha,
+	}
+	r.namespaceChecker = func(namespace string) error {
+		return checkNamespaceExists(factory, namespace)
 	}
 	c := &cobra.Command{
 		Use:     "apply [PKG_PATH | -]",
@@ -124,6 +128,7 @@ type Runner struct {
 
 	applyRunner func(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructured,
 		dryRunStrategy common.DryRunStrategy) error
+	namespaceChecker func(namespace string) error
 }
 
 func (r *Runner) preRunE(cmd *cobra.Command, _ []string) error {
@@ -189,6 +194,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	objs, err = live.Flatten(objs)
 	if err != nil {
 		return err
+	}
+
+	if !live.NamespaceInObjects(objs, inv.Namespace) {
+		if err := r.namespaceChecker(inv.Namespace); err != nil {
+			return err
+		}
 	}
 
 	invInfo, err := live.ToInventoryInfo(inv)
@@ -288,4 +299,18 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 		printer = printers.GetPrinter(r.output, r.ioStreams)
 	}
 	return printer.Print(ch, dryRunStrategy, r.printStatusEvents)
+}
+
+func checkNamespaceExists(f util.Factory, namespace string) error {
+	clientset, err := f.KubernetesClientSet()
+	if err != nil {
+		return err
+	}
+
+	_, err = clientset.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return fmt.Errorf("inventory namespace %q does not exist", namespace)
+	}
+
+	return err
 }

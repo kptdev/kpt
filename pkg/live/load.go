@@ -321,6 +321,16 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 	return nil
 }
 
+// NamespaceInObjects return true if any object in objs is a Namespace with the given name
+func NamespaceInObjects(objs []*unstructured.Unstructured, namespace string) bool {
+	for _, obj := range objs {
+		if obj.GetKind() == "Namespace" && obj.GetName() == namespace {
+			return true
+		}
+	}
+	return false
+}
+
 func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {
 	// Create and return ResourceGroup custom resource as inventory object.
 
