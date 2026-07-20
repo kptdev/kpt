@@ -73,6 +73,10 @@ VERSION:
 
   # Show changes using the diff command with recursive options.
   kpt pkg diff @master --diff-tool meld --diff-tool-opts "-r"
+
+--debug:
+  When true, prints additional debug information and does not delete the
+  staged package directories used for comparison. Defaults to false.
 ```
 
 #### Environment Variables

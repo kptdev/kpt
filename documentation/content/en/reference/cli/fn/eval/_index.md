@@ -53,6 +53,11 @@ fn-args:
 #### Flags
 
 ```shell
+--allow-alpha-wasm:
+  Allow alpha wasm functions to be run. If true, you can specify a wasm image
+  with --image flag or a path to a wasm file (must have the .wasm file
+  extension) with --exec flag. Defaults to false.
+
 --as-current-user:
   Use the `uid` and `gid` of the kpt process for container function execution.
   By default, container function is executed as `nobody` user. You may want to use
@@ -108,7 +113,7 @@ fn-args:
 --match-api-version:
   Select resources matching the given apiVersion.
 
---match-kind
+--match-kind:
   Select resources matching the given kind.
 
 --match-name:
@@ -116,6 +121,38 @@ fn-args:
   
 --match-namespace:
   Select resources matching the given namespace.
+
+--match-annotations:
+  Select resources matching the given annotations. The value should be in
+  `key=value` format. Can be specified multiple times to match multiple
+  annotations.
+
+--match-labels:
+  Select resources matching the given labels. The value should be in
+  `key=value` format. Can be specified multiple times to match multiple
+  labels.
+
+--exclude-api-version:
+  Exclude resources matching the given apiVersion.
+
+--exclude-kind:
+  Exclude resources matching the given kind.
+
+--exclude-name:
+  Exclude resources matching the given name.
+
+--exclude-namespace:
+  Exclude resources matching the given namespace.
+
+--exclude-annotations:
+  Exclude resources matching the given annotations. The value should be in
+  `key=value` format. Can be specified multiple times to match multiple
+  annotations.
+
+--exclude-labels:
+  Exclude resources matching the given labels. The value should be in
+  `key=value` format. Can be specified multiple times to match multiple
+  labels.
 
 --mount:
   List of storage options to enable reading from the local filesytem. By default,

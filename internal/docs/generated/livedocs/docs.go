@@ -89,6 +89,15 @@ Flags:
     for all resources. Default is ` + "`" + `false` + "`" + `.
   
     Does not apply for the ` + "`" + `table` + "`" + ` output format.
+  
+  --status-policy:
+    Determines which status information should be saved in the inventory
+    (if compatible). The available options are:
+  
+      * all: Save status for all resources in the inventory.
+      * none: Do not save any status information in the inventory.
+  
+    The default value is ` + "`" + `all` + "`" + `.
 `
 var ApplyExamples = `
   # apply resources in the current directory
@@ -148,6 +157,15 @@ Flags:
     for all resources. Default is ` + "`" + `false` + "`" + `.
   
     Does not apply for the ` + "`" + `table` + "`" + ` output format.
+  
+  --status-policy:
+    Determines which status information should be saved in the inventory
+    (if compatible). The available options are:
+  
+      * all: Save status for all resources in the inventory.
+      * none: Do not save any status information in the inventory.
+  
+    The default value is ` + "`" + `all` + "`" + `.
 `
 var DestroyExamples = `
   # remove all resources in the current package from the cluster.
@@ -184,6 +202,9 @@ Flags:
     for the package. If not provided, kpt will check if all the resources
     in the package belong in the same namespace. If they do, that namespace will
     be used. If they do not, the namespace in the user's context will be chosen.
+  
+  --quiet:
+    If true, do not print output message for initialization. Defaults to false.
   
   --rg-file:
     The name used for the file created for the ResourceGroup CR. Defaults to
@@ -235,6 +256,10 @@ Flags:
     The namespace for the ResourceGroup resource that contains the inventory
     for the package. If not provided, it defaults to the same namespace as the
     existing inventory object.
+  
+  --rg-file:
+    The file path to the ResourceGroup object. Defaults to
+    'resourcegroup.yaml'.
 `
 var MigrateExamples = `
   # Migrate the package in the current directory.

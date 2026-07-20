@@ -32,26 +32,28 @@ FILE | DIR:
   Binary files are skipped. Defaults to the current directory.
 ```
 
-<!--mdtogo-->
-
 #### Flags
 
 ```shell
---annotate
-  Annotate resources with their file origins.
+--annotate:
+  Annotate resources with their file origins. Defaults to false.
 
---format
-  Format resource before printing. Defaults to true.
+--format:
+  Format resource config YAML before printing (reorders fields to canonical
+  order). Defaults to true.
 
---recurse-subpackages, -R
+--recurse-subpackages, -R:
   Print resources recursively in all the nested subpackages. Defaults to true.
 
---strip-comments
-  Remove comments from yaml.
+--strip-comments:
+  Remove comments from yaml. Defaults to false.
 
---style
-  yaml styles to apply. May be 'TaggedStyle', 'DoubleQuotedStyle', 'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
+--style:
+  yaml styles to apply. May be 'TaggedStyle', 'DoubleQuotedStyle',
+  'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
 ```
+
+<!--mdtogo-->
 
 ### Examples
 
