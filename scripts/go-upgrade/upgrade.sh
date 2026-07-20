@@ -62,6 +62,7 @@ Subcommands:
 Options:
   --repo=NAME   Run only against the specified repository
   --dry-run     Show what would change without modifying files
+  --continue    Don't fail-fast; accumulate errors and report at end
   --push        After operations, create branch, commit, push, and raise PR
   --for=CMD     With 'push' subcommand: specify which upgrade was done
                 (go-version, lint-version, cross-deps, generate-docs, all). Default: all
@@ -89,6 +90,8 @@ parse_args() {
         SUBCOMMAND="$arg" ;;
       --dry-run)
         DRY_RUN=true ;;
+      --continue)
+        FAIL_FAST=false ;;
       --push)
         GIT_PUSH=true ;;
       --for=*)

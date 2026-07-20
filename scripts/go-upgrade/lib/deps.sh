@@ -37,12 +37,20 @@ build_module_map() {
 # Find which repo owns a dependency path
 find_dep_repo() {
   local dep="$1"
+  local best_repo=""
+  local best_len=0
   for mod_path in "${!MOD_PATH_TO_REPO[@]}"; do
     if [[ "$dep" == "$mod_path" || "$dep" == "$mod_path/"* ]]; then
-      echo "${MOD_PATH_TO_REPO[$mod_path]}"
-      return
+      local len=${#mod_path}
+      if (( len > best_len )); then
+        best_len=$len
+        best_repo="${MOD_PATH_TO_REPO[$mod_path]}"
+      fi
     fi
   done
+  if [[ -n "$best_repo" ]]; then
+    echo "$best_repo"
+  fi
 }
 
 # Resolve the latest stable version of a module.

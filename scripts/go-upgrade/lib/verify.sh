@@ -29,7 +29,12 @@ verify_module() {
   fi
   if [[ -z "$has_packages" ]]; then
     if command -v hugo >/dev/null 2>&1; then
-      (cd "$abs_dir" && hugo mod tidy 2>&1) || true
+      if ! (cd "$abs_dir" && hugo mod tidy 2>&1); then
+        record_failure "hugo mod tidy: $(rel_path "$abs_dir")"
+        return 1
+      fi
+    else
+      warn "hugo not installed; skipping hugo mod tidy for $(rel_path "$abs_dir")"
     fi
     return 0
   fi
