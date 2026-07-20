@@ -16,6 +16,7 @@
 package diff
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -245,6 +246,7 @@ func (c *Command) DefaultValues() {
 			DiffToolOpts: c.DiffToolOpts,
 			Debug:        c.Debug,
 			Output:       c.Output,
+			LocalPath:    c.Path,
 		}
 	}
 }
@@ -271,6 +273,10 @@ type defaultPkgDiffer struct {
 	// Output is an io.Writer where command will write the output of the
 	// command.
 	Output io.Writer
+
+	// LocalPath is the original local package path on the user's filesystem.
+	// Used to replace temp staging paths in diff output with the real path.
+	LocalPath string
 }
 
 func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
@@ -278,8 +284,8 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 	if err := addmergecomment.Process(pkgs...); err != nil {
 		return err
 	}
-	for _, pkg := range pkgs {
-		if err := d.prepareForDiff(pkg); err != nil {
+	for _, pkgPath := range pkgs {
+		if err := d.prepareForDiff(pkgPath); err != nil {
 			return err
 		}
 	}
@@ -291,7 +297,11 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 		args = pkgs
 	}
 	cmd := exec.Command(d.DiffTool, args...)
-	cmd.Stdout = d.Output
+
+	// Capture stdout so we can replace temp paths with meaningful ones.
+	// Stderr goes directly to output since it won't contain staging paths.
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
 	cmd.Stderr = d.Output
 
 	if d.Debug {
@@ -310,6 +320,21 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 			fmt.Printf(exitCodeDiffWarning, d.DiffTool, d.DiffType)
 		}
 	}
+
+	// Replace temp staging paths with meaningful ones in the output.
+	// The local staging path is replaced with the real filesystem path.
+	// Remote staging paths are replaced with their semantic directory name.
+	output := buf.String()
+	for _, stagingPath := range pkgs {
+		name := filepath.Base(stagingPath)
+		if d.LocalPath != "" && strings.HasPrefix(name, LocalPackageSource+"-") {
+			output = strings.ReplaceAll(output, stagingPath, d.LocalPath)
+		} else {
+			output = strings.ReplaceAll(output, stagingPath, name)
+		}
+	}
+	fmt.Fprint(d.Output, output)
+
 	return err
 }
 
