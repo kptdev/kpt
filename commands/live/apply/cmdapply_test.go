@@ -23,12 +23,56 @@ import (
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	k8sfake "k8s.io/client-go/kubernetes/fake"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 )
+
+func TestCheckNamespaceExistsWithClient(t *testing.T) {
+	testCases := map[string]struct {
+		namespace      string
+		existingNs     string
+		expectedErrMsg string
+	}{
+		"namespace exists": {
+			namespace:  "my-ns",
+			existingNs: "my-ns",
+		},
+		"namespace does not exist": {
+			namespace:      "missing-ns",
+			existingNs:     "other-ns",
+			expectedErrMsg: `inventory namespace "missing-ns" does not exist`,
+		},
+		"empty namespace defaults to default and exists": {
+			namespace:  "",
+			existingNs: "default",
+		},
+		"empty namespace defaults to default but default missing": {
+			namespace:      "",
+			existingNs:     "other-ns",
+			expectedErrMsg: `inventory namespace "default" does not exist`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			clientset := k8sfake.NewSimpleClientset(&corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{Name: tc.existingNs},
+			})
+			err := checkNamespaceExists(clientset, tc.namespace)
+			if tc.expectedErrMsg != "" {
+				assert.EqualError(t, err, tc.expectedErrMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
 
 func TestCmd(t *testing.T) {
 	testCases := map[string]struct {

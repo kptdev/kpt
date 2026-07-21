@@ -32,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/flagutils"
 	"sigs.k8s.io/cli-utils/pkg/apply"
@@ -56,7 +57,11 @@ func NewRunner(
 		alpha:       alpha,
 	}
 	r.namespaceChecker = func(namespace string) error {
-		return checkNamespaceExists(factory, namespace)
+		clientset, err := factory.KubernetesClientSet()
+		if err != nil {
+			return err
+		}
+		return checkNamespaceExists(clientset, namespace)
 	}
 	c := &cobra.Command{
 		Use:     "apply [PKG_PATH | -]",
@@ -301,16 +306,13 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 	return printer.Print(ch, dryRunStrategy, r.printStatusEvents)
 }
 
-func checkNamespaceExists(f util.Factory, namespace string) error {
-	clientset, err := f.KubernetesClientSet()
-	if err != nil {
-		return err
+func checkNamespaceExists(clientset kubernetes.Interface, namespace string) error {
+	if namespace == "" {
+		namespace = "default"
 	}
-
-	_, err = clientset.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	_, err := clientset.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		return fmt.Errorf("inventory namespace %q does not exist", namespace)
 	}
-
 	return err
 }
