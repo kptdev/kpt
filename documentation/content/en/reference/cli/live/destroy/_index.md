@@ -65,6 +65,15 @@ PKG_PATH | -:
   for all resources. Default is `false`.
 
   Does not apply for the `table` output format.
+
+--status-policy:
+  Determines which status information should be saved in the inventory
+  (if compatible). The available options are:
+
+    * all: Save status for all resources in the inventory.
+    * none: Do not save any status information in the inventory.
+
+  The default value is `all`.
 ```
 
 <!--mdtogo-->

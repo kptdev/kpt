@@ -45,6 +45,11 @@ PKG_PATH:
 #### Flags
 
 ```shell
+--allow-alpha-wasm:
+  Allow wasm to be used during pipeline execution. When enabled, function
+  images that are wasm modules will be executed using the wasm runtime
+  instead of a container runtime. Defaults to false.
+
 --allow-exec:
   Allow executable binaries to run as function. Note that executable binaries
   can perform privileged operations on your system, so ensure that binaries

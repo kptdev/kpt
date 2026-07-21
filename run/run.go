@@ -35,6 +35,50 @@ import (
 
 var pgr []string
 
+// usageTemplate is a custom Cobra usage template that suppresses the
+// auto-generated local Flags section for commands whose Long description
+// already documents all flags (detected by the presence of "Flags:" in the
+// Long text). Commands without a "Flags:" section in their Long description
+// (e.g. group commands, commands with no flags) continue to show the default
+// Cobra flag table.
+//
+// This template is based on cobra.Command's defaultUsageTemplate from:
+// https://github.com/spf13/cobra/blob/main/command.go
+//
+// The only difference from the Cobra default is that the local Flags section
+// is conditionally rendered: it is suppressed when the Long description
+// already contains a "Flags:" section, avoiding duplicate flag documentation.
+const usageTemplate = `Usage:{{if .Runnable}}
+  {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
+
+Available Commands:{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
+
+{{.Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .AllChildCommandsHaveGroup}}
+
+Additional Commands:{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if not (contains .Long "Flags:")}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+
 func GetMain(ctx context.Context) *cobra.Command {
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
 	cmd := &cobra.Command{
@@ -58,6 +102,11 @@ func GetMain(ctx context.Context) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+
+	// Register a "contains" template function for use in the custom usage
+	// template below.
+	cobra.AddTemplateFunc("contains", strings.Contains)
+	cmd.SetUsageTemplate(usageTemplate)
 
 	cmd.PersistentFlags().BoolVar(&printer.TruncateOutput, "truncate-output", true,
 		"Enable the truncation for output")

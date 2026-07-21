@@ -18,6 +18,25 @@ Args:
     package files: KRM resources (YAML/JSON) are formatted by default,
     and non-KRM text files (e.g., README.md) are shown as raw content.
     Binary files are skipped. Defaults to the current directory.
+
+Flags:
+
+  --annotate:
+    Annotate resources with their file origins. Defaults to false.
+  
+  --format:
+    Format resource config YAML before printing (reorders fields to canonical
+    order). Defaults to true.
+  
+  --recurse-subpackages, -R:
+    Print resources recursively in all the nested subpackages. Defaults to true.
+  
+  --strip-comments:
+    Remove comments from yaml. Defaults to false.
+  
+  --style:
+    yaml styles to apply. May be 'TaggedStyle', 'DoubleQuotedStyle',
+    'LiteralStyle', 'FoldedStyle', 'FlowStyle'.
 `
 var CatExamples = `
   # Print all package contents from current directory.
@@ -73,6 +92,10 @@ Flags:
   
     # Show changes using the diff command with recursive options.
     kpt pkg diff @master --diff-tool meld --diff-tool-opts "-r"
+  
+  --debug:
+    When true, prints additional debug information and does not delete the
+    staged package directories used for comparison. Defaults to false.
 
 Environment Variables:
 
@@ -211,6 +234,13 @@ var InitExamples = `
 var TreeShort = `Display resources, files and packages in a tree structure.`
 var TreeLong = `
   kpt pkg tree [DIR]
+
+Args:
+
+  DIR:
+    Path to a local package directory. Defaults to the current directory.
+    Displays KRM resources with their Kind and Name, and non-KRM text files
+    as plain filenames. Dotfiles and symlinks are excluded.
 `
 var TreeExamples = `
   # Show resources in the current directory.

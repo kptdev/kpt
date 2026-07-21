@@ -51,6 +51,9 @@ PKG_PATH:
   in the package belong in the same namespace. If they do, that namespace will
   be used. If they do not, the namespace in the user's context will be chosen.
 
+--quiet:
+  If true, do not print output message for initialization. Defaults to false.
+
 --rg-file:
   The name used for the file created for the ResourceGroup CR. Defaults to
   'resourcegroup.yaml'.

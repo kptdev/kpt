@@ -62,6 +62,10 @@ PKG_PATH:
   The namespace for the ResourceGroup resource that contains the inventory
   for the package. If not provided, it defaults to the same namespace as the
   existing inventory object.
+
+--rg-file:
+  The file path to the ResourceGroup object. Defaults to
+  'resourcegroup.yaml'.
 ```
 
 <!--mdtogo-->

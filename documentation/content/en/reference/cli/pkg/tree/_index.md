@@ -21,14 +21,16 @@ description: |
 kpt pkg tree [DIR]
 ```
 
-<!--mdtogo-->
-
 #### Args
 
 ```shell
 DIR:
-  Path to a directory containing KRM resource(s). Defaults to the current working directory.
+  Path to a local package directory. Defaults to the current directory.
+  Displays KRM resources with their Kind and Name, and non-KRM text files
+  as plain filenames. Dotfiles and symlinks are excluded.
 ```
+
+<!--mdtogo-->
 
 ### Examples
 
