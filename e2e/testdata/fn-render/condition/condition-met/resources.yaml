@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: met-config
+data:
+  key: value-met
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: met-app
+spec:
+  replicas: 1

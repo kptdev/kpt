@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -201,6 +202,10 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 		Branch: "master",
 	})
 	defer clean()
+
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping: symlinks are not consistently supported on Windows")
+	}
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 

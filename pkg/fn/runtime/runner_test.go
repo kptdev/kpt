@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -88,7 +88,7 @@ data: {foo: bar}
 				assert.NoError(t, err, "unexpected error")
 				_, err = tmp.WriteString(c.configFileContent)
 				assert.NoError(t, err, "unexpected error")
-				c.fn.ConfigPath = path.Base(tmp.Name())
+				c.fn.ConfigPath = filepath.Base(tmp.Name())
 			}
 			fsys := filesys.MakeFsOnDisk()
 			cn, err := newFnConfig(fsys, &c.fn, kptfilev1.UniquePath(os.TempDir()))

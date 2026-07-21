@@ -361,6 +361,20 @@ type Function struct {
 	// `Exclude` are used to specify resources on which the function should NOT be executed.
 	// If not specified, all resources selected by `Selectors` are selected.
 	Exclusions []Selector `yaml:"exclude,omitempty" json:"exclude,omitempty"`
+
+	// CelCondition is an optional CEL expression (exposed as 'when' in YAML) that determines whether this
+	// function should be executed. The expression is evaluated against the list
+	// of KRM resources passed to this function step (after `Selectors` and
+	// `Exclude` have been applied) and should return a boolean value.
+	// If omitted or evaluates to true, the function executes normally.
+	// If evaluates to false, the function is skipped.
+	//
+	// Example: Check if a specific ConfigMap exists among the selected resources:
+	//   when: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"
+	//
+	// Example: Check resource count among the selected resources:
+	//   when: "resources.filter(r, r.kind == 'Deployment').size() > 0"
+	CelCondition string `yaml:"when,omitempty" json:"when,omitempty"`
 }
 
 // Selector specifies the selection criteria
@@ -413,8 +427,11 @@ type Status struct {
 	RenderStatus *RenderStatus `yaml:"renderStatus,omitempty" json:"renderStatus,omitempty"`
 }
 
-// IsEmpty returns true if the Status has no meaningful content.
-func (s Status) IsEmpty() bool {
+// IsEmpty returns true if the status has no conditions and no render status.
+func (s *Status) IsEmpty() bool {
+	if s == nil {
+		return true
+	}
 	return len(s.Conditions) == 0 && s.RenderStatus == nil
 }
 
@@ -435,9 +452,12 @@ type PipelineStepResult struct {
 	ExecutionError string `yaml:"executionError,omitempty" json:"executionError,omitempty"`
 	Stderr         string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
 	ExitCode       int    `yaml:"exitCode" json:"exitCode"`
-
-	Results      []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
-	ErrorResults []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+	Results        []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	ErrorResults   []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+	// When is the CEL condition expression that was evaluated
+	When string `yaml:"when,omitempty" json:"when,omitempty"`
+	// Skipped indicates if the function was skipped due to a condition
+	Skipped bool `yaml:"skipped,omitempty" json:"skipped,omitempty"`
 }
 
 type Condition struct {

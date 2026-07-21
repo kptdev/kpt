@@ -66,11 +66,36 @@ type RunnerOptions struct {
 	// ImagePrefix determines the prefix ResolveToImage will use when resolving a
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
+
+	// CELEnvironment is the shared CEL environment used to evaluate function conditions.
+	// It is initialized by InitCELEnvironment and reused across all function runners.
+	// It may be nil until InitCELEnvironment has been called successfully.
+	CELEnvironment *CELEnvironment
+
+	// CelCheckFrequency is the number of CEL evaluation steps before an interruption is checked.
+	CelCheckFrequency uint
+
+	// CelCostLimit is the maximum cost of a CEL evaluation.
+	CelCostLimit uint64
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
 	opts.ImagePrefix = defaultImagePrefix
+	opts.CelCheckFrequency = 100
+	opts.CelCostLimit = 1000000
+}
+
+// InitCELEnvironment initializes the CEL environment for condition evaluation.
+// This should be called separately after InitDefaults to allow proper error handling.
+// Returns an error if CEL environment creation fails.
+func (opts *RunnerOptions) InitCELEnvironment() error {
+	celEnv, err := NewCELEnvironment()
+	if err != nil {
+		return fmt.Errorf("failed to initialise CEL environment: %w", err)
+	}
+	opts.CELEnvironment = celEnv
+	return nil
 }
 
 // ResolveToImage converts the KRM function short path to the full image url.

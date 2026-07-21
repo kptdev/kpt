@@ -88,6 +88,12 @@ type Runner struct {
 
 func (r *Runner) InitDefaults() {
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	// Initialize CEL environment for condition evaluation
+	// Fail early if initialization does not succeed because we might
+	// need CEL to evaluate conditions
+	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize CEL environment: %v\n", err)
+	}
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {

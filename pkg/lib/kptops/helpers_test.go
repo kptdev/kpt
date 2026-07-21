@@ -39,12 +39,12 @@ var testFunctions = map[string]framework.ResourceListProcessorFunc{
 	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest": setNamespace,
 }
 
-// runtime is a test-only FunctionRuntime that resolves functions from testFunctions.
-type runtime struct{}
+// testRuntime is a test-only FunctionRuntime that resolves functions from testFunctions.
+type testRuntime struct{}
 
-var _ FunctionRuntime = &runtime{}
+var _ FunctionRuntime = &testRuntime{}
 
-func (e *runtime) GetRunner(_ context.Context, funct *kptfilev1.Function) (fn.FunctionRunner, error) {
+func (e *testRuntime) GetRunner(_ context.Context, funct *kptfilev1.Function) (fn.FunctionRunner, error) {
 	processor, ok := testFunctions[funct.Image]
 	if !ok {
 		return nil, &fn.NotFoundError{Function: *funct}
@@ -52,7 +52,7 @@ func (e *runtime) GetRunner(_ context.Context, funct *kptfilev1.Function) (fn.Fu
 	return &runner{processor: processor}, nil
 }
 
-func (e *runtime) Close() error { return nil }
+func (e *testRuntime) Close() error { return nil }
 
 type runner struct {
 	processor framework.ResourceListProcessorFunc

@@ -103,9 +103,10 @@ spec:
 	r := Renderer{
 		PkgPath:    "/a/b/c",
 		FileSystem: fs,
-		Runtime:    &runtime{},
+		Runtime:    &testRuntime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	_ = r.RunnerOptions.InitCELEnvironment()
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -217,9 +218,10 @@ spec:
 	r := Renderer{
 		PkgPath:    "/app",
 		FileSystem: fs,
-		Runtime:    &runtime{},
+		Runtime:    &testRuntime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	_ = r.RunnerOptions.InitCELEnvironment()
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
