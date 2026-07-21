@@ -43,7 +43,7 @@ documents for [`kpt fn render`]({{% relref "/reference/cli/fn/render" %}}) and [
 
 ### Kubernetes cluster
 
-To deploy the examples, you need a Kubernetes cluster and a configured kubectl context.
+To deploy the examples, you need a Kubernetes cluster and a configured kubeconfig context.
 
 For testing purposes, the [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) tool is useful for running an ephemeral Kubernetes
 cluster on your local host.

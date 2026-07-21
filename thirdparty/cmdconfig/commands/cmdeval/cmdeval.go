@@ -118,6 +118,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.excludeAnnotations, "exclude-annotations", []string{}, "exclude resources matching the given annotations")
 	r.Command.Flags().StringArrayVar(
 		&r.excludeLabels, "exclude-labels", []string{}, "exclude resources matching the given labels")
+	r.Command.Flags().StringVar(
+		&r.CelCondition, "condition", "", "conditional expression to determine if function should be run")
 
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)
@@ -161,11 +163,19 @@ type EvalFnRunner struct {
 	excludeLabels       []string
 	excludeAnnotations  []string
 
+	CelCondition string
+
 	runFns runfn.RunFns
 }
 
 func (r *EvalFnRunner) InitDefaults() {
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	// Initialize CEL environment for condition evaluation
+	// Fail early if initialization does not succeed because we might
+	// need CEL to evaluate conditions
+	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize CEL environment: %v\n", err)
+	}
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -199,6 +209,7 @@ func (r *EvalFnRunner) NewFunction() *kptfilev1.Function {
 	if !r.Exclusion.IsEmpty() {
 		newFn.Exclusions = []kptfilev1.Selector{r.Exclusion}
 	}
+	newFn.CelCondition = r.CelCondition
 	if r.FnConfigPath != "" {
 		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
 		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.runFns.Path)
@@ -557,6 +568,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		ContinueOnEmptyResult: true,
 		Selector:              r.Selector,
 		Exclusion:             r.Exclusion,
+		CelCondition:          r.CelCondition,
 		RunnerOptions:         r.RunnerOptions,
 	}
 

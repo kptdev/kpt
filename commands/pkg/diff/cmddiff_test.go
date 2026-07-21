@@ -17,6 +17,8 @@ package diff_test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/kptdev/kpt/commands/pkg/diff"
@@ -75,6 +77,10 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	dir := t.TempDir()
 	defer testutil.Chdir(t, dir)()
 
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping symlink diff test on Windows")
+	}
+
 	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
@@ -88,7 +94,8 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	assert.NoError(t, err)
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir"), r.Path)
+	expected := filepath.Join(cwd, "path", "to", "pkg", "dir")
+	assert.Equal(t, strings.ToLower(expected), strings.ToLower(r.Path))
 }
 
 var NoOpRunE = func(_ *cobra.Command, _ []string) error { return nil }

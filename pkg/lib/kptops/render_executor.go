@@ -26,7 +26,7 @@ import (
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
-	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
+	"github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -48,6 +48,9 @@ var errAllowedExecNotSpecified = fmt.Errorf("must run with `--allow-exec` option
 type Renderer struct {
 	// PkgPath is the absolute path to the root package
 	PkgPath string
+
+	// DisplayName is an optional human-readable name for the package shown in output
+	DisplayName string
 
 	// Runtime knows how to pick a function runner for a given function
 	Runtime fn.FunctionRuntime
@@ -77,6 +80,13 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	root, err := newPkgNode(e.FileSystem, e.PkgPath, nil)
 	if err != nil {
 		return nil, errors.E(op, kptfilev1.UniquePath(e.PkgPath), err)
+	}
+
+	// Initialize CEL environment if not already initialized
+	if e.RunnerOptions.CELEnvironment == nil {
+		if err := e.RunnerOptions.InitCELEnvironment(); err != nil {
+			return nil, fmt.Errorf("failed to initialize CEL environment: %w", err)
+		}
 	}
 
 	// initialize hydration context
@@ -297,7 +307,7 @@ func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.
 
 func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresultv1.ResultList) error {
 	e.fnResultsList = fnResults
-	resultsFile, err := fnruntime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
+	resultsFile, err := runtime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
@@ -312,6 +322,9 @@ func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresultv1.Resu
 type hydrationContext struct {
 	// root points to the root pkg of hydration graph
 	root *pkgNode
+
+	// rootName is the display name of the root package
+	rootName string
 
 	// pkgs refers to the packages undergoing hydration. pkgs are key'd by their
 	// unique paths.
@@ -772,27 +785,23 @@ func resolvePackageName(p *pkg.Pkg, typ runneroptions.PackageIDType) string {
 
 			return string(p.DisplayPath)
 		}
+		return string(p.UniquePath)
 	case runneroptions.KptfileMeta:
-		kptfile, err := p.Kptfile()
-		if err == nil && kptfile.Name != "" {
-			return kptfile.Name
+		kf, err := p.Kptfile()
+		if err == nil && kf.Name != "" {
+			return kf.Name
 		}
+		return string(p.UniquePath)
+	default:
+		return string(p.UniquePath)
 	}
-
-	return "<unknown>"
 }
 
-// runMutators runs a set of mutators functions on given input resources.
 func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return nil, err
 	}
-
-	if len(pl.Mutators) == 0 {
-		return input, nil
-	}
-
 	mutators, failIdx, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
 	if err != nil {
 		// Capture execution error (e.g. missing exec, image resolution failure)
@@ -834,7 +843,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				return nil, err
 			}
 		}
+		hctx.mutationSteps = append(hctx.mutationSteps, stepResult)
 
+<<<<<<< HEAD
 		// select the resources on which function should be applied
 		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
@@ -855,11 +866,13 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				input = append(input, fnConfigNode)
 			}
 			clearAnnotationsOnMutFailure(input)
-			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
+			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err, mutator))
 			return input, err
 		}
-		hctx.executedFunctionCnt++
-		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
+		if !mutator.WasSkipped() {
+			hctx.executedFunctionCnt++
+		}
+		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil, mutator))
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
 			// merge the output resources with input resources
@@ -879,21 +892,14 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			input = append(input, fnConfigNode)
 		}
 	}
+
 	return input, nil
 }
 
-// runValidators runs a set of validator functions on input resources.
-// We bail out on first validation failure today, but the logic can be
-// improved to report multiple failures. Reporting multiple failures
-// will require changes to the way we print errors
 func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) error {
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return err
-	}
-
-	if len(pl.Validators) == 0 {
-		return nil
 	}
 
 	for i := range pl.Validators {
@@ -944,11 +950,13 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 	}
 
 	if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
-		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
+		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err, validator))
 		return err
 	}
-	hctx.executedFunctionCnt++
-	hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
+	if !validator.WasSkipped() {
+		hctx.executedFunctionCnt++
+	}
+	hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil, validator))
 	return nil
 }
 
@@ -1158,11 +1166,15 @@ func pruneResources(fsys filesys.FileSystem, hctx *hydrationContext) error {
 
 // captureStepResult builds a PipelineStepResult from the fnresult.Result items
 // appended since resultCountBeforeExec.
-func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, resultCountBeforeExec int, execErr error) kptfilev1.PipelineStepResult {
+func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, resultCountBeforeExec int, execErr error, runner *fnruntime.FunctionRunner) kptfilev1.PipelineStepResult {
 	step := kptfilev1.PipelineStepResult{
 		Name:     fn.Name,
 		Image:    fn.Image,
 		ExecPath: fn.Exec,
+		When:     fn.Condition,
+	}
+	if runner != nil && runner.WasSkipped() {
+		step.Skipped = true
 	}
 	if resultCountBeforeExec < len(fnResults.Items) {
 		last := fnResults.Items[len(fnResults.Items)-1]
@@ -1174,23 +1186,144 @@ func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, 
 				step.ErrorResults = append(step.ErrorResults, ri)
 			}
 		}
-	} else if execErr != nil {
-		step.ExitCode = 1
+	}
+	if execErr != nil {
 		step.ExecutionError = execErr.Error()
+		if execErr, ok := errors.AsType[*runtime.ExecError](execErr); ok {
+			step.ExitCode = execErr.ExitCode
+		} else if step.ExitCode == 0 {
+			step.ExitCode = 1
+		}
 	}
 	return step
 }
 
-// preExecFailureStep creates a PipelineStepResult for errors that occur before
-// the function is executed (e.g. image pull failure, missing exec permission).
-// ExitCode is set to 1 to indicate failure; the executionError field provides
-// the specific reason the function could not be started.
 func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStepResult {
-	return kptfilev1.PipelineStepResult{
+	step := kptfilev1.PipelineStepResult{
 		Name:           fn.Name,
 		Image:          fn.Image,
 		ExecPath:       fn.Exec,
-		ExitCode:       1,
+		When:           fn.Condition,
 		ExecutionError: err.Error(),
+		ExitCode:       1,
 	}
+	if execErr, ok := errors.AsType[*runtime.ExecError](err); ok {
+		step.ExitCode = execErr.ExitCode
+	}
+	return step
+}
+
+func (pn *pkgNode) runFn(ctx context.Context, hctx *hydrationContext, f *kptfilev1.Function, input []*yaml.RNode) ([]*yaml.RNode, error) {
+	fnRunner, err := runtime.NewRunner(ctx, hctx.fileSystem, f, pn.pkg.UniquePath, hctx.fnResults, hctx.runnerOptions, hctx.runtime)
+	if err != nil {
+		return nil, err
+	}
+
+	return fnRunner.Filter(input)
+}
+
+func trackInputFiles(hctx *hydrationContext, relPath string, resources []*yaml.RNode) error {
+	if hctx.inputFiles == nil {
+		hctx.inputFiles = sets.NewString()
+	}
+
+	for _, r := range resources {
+		path, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		hctx.inputFiles.Insert(filepath.Join(relPath, path))
+	}
+	return nil
+}
+
+func trackOutputFiles(hctx *hydrationContext) error {
+	hctx.outputFiles = sets.NewString()
+
+	for _, r := range hctx.root.resources {
+		pkgPath, err := pkg.GetPkgPathAnnotation(r)
+		if err != nil {
+			return err
+		}
+
+		relPath, err := kptfilev1.UniquePath(pkgPath).RelativePathTo(hctx.root.pkg.UniquePath)
+		if err != nil {
+			return err
+		}
+
+		path, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		hctx.outputFiles.Insert(filepath.Join(relPath, path))
+	}
+	return nil
+}
+
+func pruneResources(fs filesys.FileSystem, hctx *hydrationContext) error {
+	pruneFiles := hctx.inputFiles.Difference(hctx.outputFiles)
+
+	for _, file := range pruneFiles.List() {
+		err := fs.RemoveAll(filepath.Join(string(hctx.root.pkg.UniquePath), file))
+		if err != nil {
+			return err
+		}
+
+		err = removeEmptyDir(fs, filepath.Dir(filepath.Join(string(hctx.root.pkg.UniquePath), file)), string(hctx.root.pkg.UniquePath))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func removeEmptyDir(fs filesys.FileSystem, dirPath string, rootPath string) error {
+	if dirPath == rootPath {
+		return nil
+	}
+
+	files, err := fs.ReadDir(dirPath)
+	if err != nil {
+		return err
+	}
+
+	if len(files) == 0 {
+		err := fs.RemoveAll(dirPath)
+		if err != nil {
+			return err
+		}
+		return removeEmptyDir(fs, filepath.Dir(dirPath), rootPath)
+	}
+	return nil
+}
+
+// GetFnResultsList returns the gathered results from the function execution.
+func (e *Renderer) GetFnResultsList() *fnresultv1.ResultList {
+	return e.fnResultsList
+}
+
+func NewContainerRuntime(ctx context.Context, fsys filesys.FileSystem, opts runneroptions.RunnerOptions) (fn.FunctionRuntime, error) {
+	var rt fn.FunctionRuntime
+
+	if opts.AllowExec {
+		rt = runtime.NewExecRuntime(fsys)
+	} else {
+		containerRuntimeEnv := os.Getenv(runtime.ContainerRuntimeEnv)
+		containerRuntime, err := runtime.StringToContainerRuntime(containerRuntimeEnv)
+		if err != nil {
+			return nil, err
+		}
+
+		switch containerRuntime {
+		case runtime.Docker:
+			rt = runtime.NewDockerRuntime()
+		case runtime.Podman:
+			rt = runtime.NewPodmanRuntime()
+
+		default:
+			return nil, fmt.Errorf("unsupported container runtime %q", containerRuntimeEnv)
+		}
+	}
+
+	return rt, nil
 }

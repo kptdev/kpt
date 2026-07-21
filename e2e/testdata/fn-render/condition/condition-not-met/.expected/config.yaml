@@ -1,0 +1,6 @@
+stdErr: |
+  Package: "condition-not-met"
+  [SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/no-op:latest" (celCondition not met)
+  Successfully executed 0 function(s) in 1 package(s).
+
+diffStripRegEx: "index [a-f0-9]+\\.\\.[a-f0-9]+ 100644\\r?\\n"

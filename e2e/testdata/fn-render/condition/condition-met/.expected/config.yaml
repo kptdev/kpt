@@ -1,0 +1,8 @@
+
+stdErr: |
+  Package: "condition-met"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/no-op:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/no-op:latest" in 0s
+  Successfully executed 1 function(s) in 1 package(s).
+
+diffStripRegEx: "index [a-f0-9]+\\.\\.[a-f0-9]+ 100644\\r?\\n"

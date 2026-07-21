@@ -11,18 +11,17 @@ index 01b45db..600b54c 100644
 +    - type: Rendered
 +      status: "False"
 +      reason: RenderFailed
-+      message: |-
++      message: |
 +        pkg.render: pkg ./db:
-+        	pipeline.run: already handled error
++        	pipeline.run: exit status 1
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+        stderr: 'failed to evaluate function: error: function failure'
 +        exitCode: 1
-+        results:
++        errorResults:
 +          - message: 'statefulset-filter:4:42: got newline, want primary expression'
 +            severity: error
-+        errorResults:
++        results:
 +          - message: 'statefulset-filter:4:42: got newline, want primary expression'
 +            severity: error
 +    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
