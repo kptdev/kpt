@@ -400,7 +400,12 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "link")
-	assert.NoError(t, err)
+	if err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("skipping symlink get test on Windows: %v", err)
+		}
+		t.Fatalf("failed to create symlink: %v", err)
+	}
 
 	r := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE

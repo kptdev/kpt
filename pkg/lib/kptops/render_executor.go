@@ -26,7 +26,7 @@ import (
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
-	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
+	"github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -48,6 +48,9 @@ var errAllowedExecNotSpecified = fmt.Errorf("must run with `--allow-exec` option
 type Renderer struct {
 	// PkgPath is the absolute path to the root package
 	PkgPath string
+
+	// DisplayName is an optional human-readable name for the package shown in output
+	DisplayName string
 
 	// Runtime knows how to pick a function runner for a given function
 	Runtime fn.FunctionRuntime
@@ -77,6 +80,13 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	root, err := newPkgNode(e.FileSystem, e.PkgPath, nil)
 	if err != nil {
 		return nil, errors.E(op, kptfilev1.UniquePath(e.PkgPath), err)
+	}
+
+	// Initialize CEL environment if not already initialized
+	if e.RunnerOptions.CELEnvironment == nil {
+		if err := e.RunnerOptions.InitCELEnvironment(); err != nil {
+			return nil, fmt.Errorf("failed to initialize CEL environment: %w", err)
+		}
 	}
 
 	// initialize hydration context
@@ -297,7 +307,7 @@ func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.
 
 func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresultv1.ResultList) error {
 	e.fnResultsList = fnResults
-	resultsFile, err := fnruntime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
+	resultsFile, err := runtime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
@@ -312,6 +322,9 @@ func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresultv1.Resu
 type hydrationContext struct {
 	// root points to the root pkg of hydration graph
 	root *pkgNode
+
+	// rootName is the display name of the root package
+	rootName string
 
 	// pkgs refers to the packages undergoing hydration. pkgs are key'd by their
 	// unique paths.
@@ -771,365 +784,210 @@ func resolvePackageName(p *pkg.Pkg, typ runneroptions.PackageIDType) string {
 
 			return string(p.DisplayPath)
 		}
+		return string(p.UniquePath)
 	case runneroptions.KptfileMeta:
-		kptfile, err := p.Kptfile()
-		if err == nil && kptfile.Name != "" {
-			return kptfile.Name
+		kf, err := p.Kptfile()
+		if err == nil && kf.Name != "" {
+			return kf.Name
 		}
+		return string(p.UniquePath)
+	default:
+		return string(p.UniquePath)
 	}
-
-	return "<unknown>"
 }
 
-// runMutators runs a set of mutators functions on given input resources.
 func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return nil, err
 	}
+	output := input
 
-	if len(pl.Mutators) == 0 {
-		return input, nil
-	}
+	for _, f := range pl.Mutators {
+		currOutput, fnErr := pn.runFn(ctx, hctx, &f, output)
 
-	mutators, failIdx, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
-	if err != nil {
-		// Capture execution error (e.g. missing exec, image resolution failure)
-		hctx.mutationSteps = append(hctx.mutationSteps, preExecFailureStep(pl.Mutators[failIdx], err))
-		return nil, err
-	}
-
-	for i, mutator := range mutators {
-		resultCountBeforeExec := len(hctx.fnResults.Items)
-
-		selectors := pl.Mutators[i].Selectors
-		exclusions := pl.Mutators[i].Exclusions
-
-		if len(selectors) > 0 || len(exclusions) > 0 {
-			// set kpt-resource-id annotation on each resource before mutation
-			err = fnruntime.SetResourceIDs(input)
-			if err != nil {
-				return nil, err
+		// Record pipeline step result for RenderStatus
+		stepResult := kptfilev1.PipelineStepResult{
+			Image:    f.Image,
+			ExecPath: f.Exec,
+		}
+		if fnErr != nil {
+			stepResult.ExecutionError = fnErr.Error()
+			if execErr, ok := errors.AsType[*runtime.ExecError](fnErr); ok {
+				stepResult.ExitCode = execErr.ExitCode
+			} else {
+				stepResult.ExitCode = 1
 			}
 		}
+		// If the function was skipped due to a CEL condition, mark skipped in RenderStatus
+		if runner, ok := hctx.runtime.GetRunnerIfPresent(ctx, &f); ok && runner != nil {
+			if fr, ok := runner.(*runtime.FunctionRunner); ok && fr.WasSkipped() {
+				stepResult.Skipped = true
+			}
+		}
+		hctx.mutationSteps = append(hctx.mutationSteps, stepResult)
 
-		if err := pn.refreshFnConfig(mutator, input, pl.Mutators[i].ConfigPath); err != nil {
-			return nil, err
+		if fnErr != nil {
+			return currOutput, fnErr
 		}
 
-		// select the resources on which function should be applied
-		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
-		if err != nil {
-			return nil, err
-		}
-		output := &kio.PackageBuffer{}
-		// create a kio pipeline from kyaml library to execute the function chains
-		mutation := kio.Pipeline{
-			Inputs: []kio.Reader{
-				&kio.PackageBuffer{Nodes: selectedInput},
-			},
-			Filters: []kio.Filter{mutator},
-			Outputs: []kio.Writer{output},
-		}
-		err = mutation.Execute()
-		if err != nil {
-			clearAnnotationsOnMutFailure(input)
-			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
-			return input, err
-		}
 		hctx.executedFunctionCnt++
-		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
-
-		if len(selectors) > 0 || len(exclusions) > 0 {
-			// merge the output resources with input resources
-			input = fnruntime.MergeWithInput(output.Nodes, selectedInput, input)
-			// delete the kpt-resource-id annotation on each resource
-			err = fnruntime.DeleteResourceIDs(input)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			input = output.Nodes
-		}
+		output = currOutput
 	}
-	return input, nil
+
+	return output, nil
 }
 
-// runValidators runs a set of validator functions on input resources.
-// We bail out on first validation failure today, but the logic can be
-// improved to report multiple failures. Reporting multiple failures
-// will require changes to the way we print errors
 func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) error {
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return err
 	}
 
-	if len(pl.Validators) == 0 {
-		return nil
-	}
+	for _, f := range pl.Validators {
+		_, fnErr := pn.runFn(ctx, hctx, &f, input)
 
-	for i := range pl.Validators {
-		function := pl.Validators[i]
-		resultCountBeforeExec := len(hctx.fnResults.Items)
-		// validators are run on a copy of mutated resources to ensure
-		// resources are not mutated.
-		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, function.Exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
-		if err != nil {
-			return err
+		// Record pipeline step result for RenderStatus
+		stepResult := kptfilev1.PipelineStepResult{
+			Image:    f.Image,
+			ExecPath: f.Exec,
 		}
-		var validator *fnruntime.FunctionRunner
-		displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
-		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
-			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
-			return errAllowedExecNotSpecified
-		}
-		opts := hctx.runnerOptions
-		opts.SetPkgPathAnnotation = true
-		opts.DisplayResourceCount = displayResourceCount
-		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
-		if err != nil {
-			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
-			return err
-		}
-
-		if err := pn.refreshFnConfig(validator, input, function.ConfigPath); err != nil {
-			return err
-		}
-
-		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
-			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
-			return err
-		}
-		hctx.executedFunctionCnt++
-		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
-	}
-	return nil
-}
-
-func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
-	for _, resource := range input {
-		output = append(output, resource.Copy())
-	}
-	return
-}
-
-// refreshFnConfig updates the runner's functionConfig from the in-memory input
-// to pick up any mutations applied earlier in the pipeline.
-func (pn *pkgNode) refreshFnConfig(runner *fnruntime.FunctionRunner, input []*yaml.RNode, configPath string) error {
-	if configPath == "" {
-		return nil
-	}
-	for _, r := range input {
-		pkgPath, err := pkg.GetPkgPathAnnotation(r)
-		if err != nil {
-			return err
-		}
-		currPath, _, err := kioutil.GetFileAnnotations(r)
-		if err != nil {
-			return err
-		}
-		if pkgPath == pn.pkg.UniquePath.String() && currPath == configPath {
-			runner.SetFnConfig(r)
-			break
-		}
-	}
-	return nil
-}
-
-// clearAnnotationsOnMutFailure removes annotations that are added during mutation when mutation fails.
-func clearAnnotationsOnMutFailure(input []*yaml.RNode) {
-	annotations := []string{
-		"config.k8s.io/id",
-		"internal.config.kubernetes.io/annotations-migration-resource-id",
-		"internal.config.kubernetes.io/id",
-		fnruntime.ResourceIDAnnotation,
-	}
-	for _, r := range input {
-		for _, annotation := range annotations {
-			_ = r.PipeE(yaml.ClearAnnotation(annotation))
-		}
-	}
-}
-
-// path (location) of a KRM resources is tracked in a special key in
-// metadata.annotation field that is used to write the resources to the filesystem.
-// When resources are read from local filesystem or generated at a package level, the
-// path annotation in a resource points to path relative to that package. But the resources
-// are written to the file system at the root package level, so
-// the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
-// adjustRelPath updates the path annotation by prepending the path of the package
-// relative to the root package.
-func adjustRelPath(hctx *hydrationContext) error {
-	resources := hctx.root.resources
-	for _, r := range resources {
-		pkgPath, err := pkg.GetPkgPathAnnotation(r)
-		if err != nil {
-			return err
-		}
-		// Note: kioutil.GetFileAnnotation returns OS specific
-		// paths today, https://github.com/kubernetes-sigs/kustomize/issues/3749
-		currPath, _, err := kioutil.GetFileAnnotations(r)
-		if err != nil {
-			return err
-		}
-		newPath, err := pathRelToRoot(string(hctx.root.pkg.UniquePath), pkgPath, currPath)
-		if err != nil {
-			return err
-		}
-		// in kyaml v0.12.0, we are supporting both the new path annotation key
-		// internal.config.kubernetes.io/path, as well as the legacy one config.kubernetes.io/path
-		if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
-			return err
-		}
-		if err = r.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, newPath)); err != nil { // nolint:staticcheck
-			return err
-		}
-		if err = pkg.RemovePkgPathAnnotation(r); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// pathRelToRoot computes resource's path relative to root package given:
-// rootPkgPath: absolute path to the root package
-// subpkgPath: absolute path to subpackage
-// resourcePath: resource's path relative to the subpackage
-// All the inputs paths are assumed to be OS specific.
-func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath string, err error) {
-	if !filepath.IsAbs(rootPkgPath) {
-		return "", fmt.Errorf("root package path %q must be absolute", rootPkgPath)
-	}
-
-	if !filepath.IsAbs(subPkgPath) {
-		return "", fmt.Errorf("subpackage path %q must be absolute", subPkgPath)
-	}
-
-	if subPkgPath == "" {
-		// empty subpackage path means resource belongs to the root package
-		return resourcePath, nil
-	}
-
-	// subpackage's path relative to the root package
-	subPkgRelPath, err := filepath.Rel(rootPkgPath, subPkgPath)
-	if err != nil {
-		return "", fmt.Errorf("subpackage %q must be relative to %q: %w",
-			rootPkgPath, subPkgPath, err)
-	}
-	// Note: Rel("/tmp", "/a") = "../", which isn't valid for our use-case.
-	dotdot := ".." + string(os.PathSeparator)
-	if strings.HasPrefix(subPkgRelPath, dotdot) || subPkgRelPath == ".." {
-		return "", fmt.Errorf("subpackage %q is not a descendant of %q", subPkgPath, rootPkgPath)
-	}
-	relativePath = filepath.Join(subPkgRelPath, filepath.Clean(resourcePath))
-	return relativePath, nil
-}
-
-// fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath kptfilev1.UniquePath, fns []kptfilev1.Function) ([]*fnruntime.FunctionRunner, int, error) {
-	var runners []*fnruntime.FunctionRunner
-	for i := range fns {
-		var err error
-		var runner *fnruntime.FunctionRunner
-		displayResourceCount := false
-		if len(fns[i].Selectors) > 0 || len(fns[i].Exclusions) > 0 {
-			displayResourceCount = true
-		}
-		if fns[i].Exec != "" && !hctx.runnerOptions.AllowExec {
-			return nil, i, errAllowedExecNotSpecified
-		}
-		opts := hctx.runnerOptions
-		opts.SetPkgPathAnnotation = true
-		opts.DisplayResourceCount = displayResourceCount
-		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &fns[i], pkgPath, hctx.fnResults, opts, hctx.runtime)
-		if err != nil {
-			return nil, i, err
-		}
-		runners = append(runners, runner)
-	}
-	return runners, -1, nil
-}
-
-// trackInputFiles records file paths of input resources in the hydration context.
-func trackInputFiles(hctx *hydrationContext, relPath string, input []*yaml.RNode) error {
-	if hctx.inputFiles == nil {
-		hctx.inputFiles = sets.String{}
-	}
-	for _, r := range input {
-		path, _, err := kioutil.GetFileAnnotations(r)
-		if err != nil {
-			return fmt.Errorf("path annotation missing: %w", err)
-		}
-		path = filepath.Join(relPath, filepath.Clean(path))
-		hctx.inputFiles.Insert(path)
-	}
-	return nil
-}
-
-// trackOutputFiles records the file paths of output resources in the hydration
-// context. It should be invoked post hydration.
-func trackOutputFiles(hctx *hydrationContext) error {
-	outputSet := sets.String{}
-
-	for _, r := range hctx.root.resources {
-		path, _, err := kioutil.GetFileAnnotations(r)
-		if err != nil {
-			return fmt.Errorf("path annotation missing: %w", err)
-		}
-		outputSet.Insert(path)
-	}
-	hctx.outputFiles = outputSet
-	return nil
-}
-
-// pruneResources compares the input and output of the hydration and prunes
-// resources that are no longer present in the output of the hydration.
-func pruneResources(fsys filesys.FileSystem, hctx *hydrationContext) error {
-	filesToBeDeleted := hctx.inputFiles.Difference(hctx.outputFiles)
-	for f := range filesToBeDeleted {
-		if err := fsys.RemoveAll(filepath.Join(string(hctx.root.pkg.UniquePath), f)); err != nil {
-			return fmt.Errorf("failed to delete file: %w", err)
-		}
-	}
-	return nil
-}
-
-// captureStepResult builds a PipelineStepResult from the fnresult.Result items
-// appended since resultCountBeforeExec.
-func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, resultCountBeforeExec int, execErr error) kptfilev1.PipelineStepResult {
-	step := kptfilev1.PipelineStepResult{
-		Name:     fn.Name,
-		Image:    fn.Image,
-		ExecPath: fn.Exec,
-	}
-	if resultCountBeforeExec < len(fnResults.Items) {
-		last := fnResults.Items[len(fnResults.Items)-1]
-		step.Stderr = last.Stderr
-		step.ExitCode = last.ExitCode
-		step.Results = last.Results
-		for _, ri := range step.Results {
-			if ri.Severity == framework.Error {
-				step.ErrorResults = append(step.ErrorResults, ri)
+		if fnErr != nil {
+			stepResult.ExecutionError = fnErr.Error()
+			if execErr, ok := errors.AsType[*runtime.ExecError](fnErr); ok {
+				stepResult.ExitCode = execErr.ExitCode
+			} else {
+				stepResult.ExitCode = 1
 			}
 		}
-	} else if execErr != nil {
-		step.ExitCode = 1
-		step.ExecutionError = execErr.Error()
+		// If the function was skipped due to a CEL condition, mark skipped in RenderStatus
+		if runner, ok := hctx.runtime.GetRunnerIfPresent(ctx, &f); ok && runner != nil {
+			if fr, ok := runner.(*runtime.FunctionRunner); ok && fr.WasSkipped() {
+				stepResult.Skipped = true
+			}
+		}
+		hctx.validationSteps = append(hctx.validationSteps, stepResult)
+
+		if fnErr != nil {
+			return fnErr
+		}
+		hctx.executedFunctionCnt++
 	}
-	return step
+
+	return nil
 }
 
-// preExecFailureStep creates a PipelineStepResult for errors that occur before
-// the function is executed (e.g. image pull failure, missing exec permission).
-// ExitCode is set to 1 to indicate failure; the executionError field provides
-// the specific reason the function could not be started.
-func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStepResult {
-	return kptfilev1.PipelineStepResult{
-		Name:           fn.Name,
-		Image:          fn.Image,
-		ExecPath:       fn.Exec,
-		ExitCode:       1,
-		ExecutionError: err.Error(),
+func (pn *pkgNode) runFn(ctx context.Context, hctx *hydrationContext, f *kptfilev1.Function, input []*yaml.RNode) ([]*yaml.RNode, error) {
+	fnRunner, err := runtime.NewRunner(ctx, hctx.fileSystem, f, pn.pkg.UniquePath, hctx.fnResults, hctx.runnerOptions, hctx.runtime)
+	if err != nil {
+		return nil, err
 	}
+
+	return fnRunner.Filter(input)
+}
+
+func trackInputFiles(hctx *hydrationContext, relPath string, resources []*yaml.RNode) error {
+	if hctx.inputFiles == nil {
+		hctx.inputFiles = sets.NewString()
+	}
+
+	for _, r := range resources {
+		path, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		hctx.inputFiles.Insert(filepath.Join(relPath, path))
+	}
+	return nil
+}
+
+func trackOutputFiles(hctx *hydrationContext) error {
+	hctx.outputFiles = sets.NewString()
+
+	for _, r := range hctx.root.resources {
+		pkgPath, err := pkg.GetPkgPathAnnotation(r)
+		if err != nil {
+			return err
+		}
+
+		relPath, err := kptfilev1.UniquePath(pkgPath).RelativePathTo(hctx.root.pkg.UniquePath)
+		if err != nil {
+			return err
+		}
+
+		path, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		hctx.outputFiles.Insert(filepath.Join(relPath, path))
+	}
+	return nil
+}
+
+func pruneResources(fs filesys.FileSystem, hctx *hydrationContext) error {
+	pruneFiles := hctx.inputFiles.Difference(hctx.outputFiles)
+
+	for _, file := range pruneFiles.List() {
+		err := fs.RemoveAll(filepath.Join(string(hctx.root.pkg.UniquePath), file))
+		if err != nil {
+			return err
+		}
+
+		err = removeEmptyDir(fs, filepath.Dir(filepath.Join(string(hctx.root.pkg.UniquePath), file)), string(hctx.root.pkg.UniquePath))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func removeEmptyDir(fs filesys.FileSystem, dirPath string, rootPath string) error {
+	if dirPath == rootPath {
+		return nil
+	}
+
+	files, err := fs.ReadDir(dirPath)
+	if err != nil {
+		return err
+	}
+
+	if len(files) == 0 {
+		err := fs.RemoveAll(dirPath)
+		if err != nil {
+			return err
+		}
+		return removeEmptyDir(fs, filepath.Dir(dirPath), rootPath)
+	}
+	return nil
+}
+
+// GetFnResultsList returns the gathered results from the function execution.
+func (e *Renderer) GetFnResultsList() *fnresultv1.ResultList {
+	return e.fnResultsList
+}
+
+func NewContainerRuntime(ctx context.Context, fsys filesys.FileSystem, opts runneroptions.RunnerOptions) (fn.FunctionRuntime, error) {
+	var rt fn.FunctionRuntime
+
+	if opts.AllowExec {
+		rt = runtime.NewExecRuntime(fsys)
+	} else {
+		containerRuntimeEnv := os.Getenv(runtime.ContainerRuntimeEnv)
+		containerRuntime, err := runtime.StringToContainerRuntime(containerRuntimeEnv)
+		if err != nil {
+			return nil, err
+		}
+
+		switch containerRuntime {
+		case runtime.Docker:
+			rt = runtime.NewDockerRuntime()
+		case runtime.Podman:
+			rt = runtime.NewPodmanRuntime()
+
+		default:
+			return nil, fmt.Errorf("unsupported container runtime %q", containerRuntimeEnv)
+		}
+	}
+
+	return rt, nil
 }
