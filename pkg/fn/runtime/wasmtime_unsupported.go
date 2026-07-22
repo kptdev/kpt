@@ -25,16 +25,16 @@ import (
 )
 
 const (
-	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/kptdev/kpt"
+	msg = "wasmtime support is not compiled into this binary. Binaries with wasmtime is available at github.com/kptdev/kpt"
 )
 
 type WasmtimeFn struct {
 }
 
 func NewWasmtimeFn(loader WasmLoader) (*WasmtimeFn, error) {
-	return nil, fmt.Errorf(msg)
+	return nil, fmt.Errorf("%s", msg)
 }
 
 func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
-	return fmt.Errorf(msg)
+	return fmt.Errorf("%s", msg)
 }

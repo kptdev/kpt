@@ -206,7 +206,7 @@ type InventoryFilter struct {
 }
 
 func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if GroupVersionKindForObject(object) != kptfilev1.KptFileGVK() {
+	if GroupVersionKindForObject(object).String() != kptfilev1.KptFileGVK().String() {
 		return object, nil
 	}
 
@@ -241,7 +241,7 @@ func GroupVersionKindForObject(object *yaml.RNode) schema.GroupVersionKind {
 }
 
 func (r *RGFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if GroupVersionKindForObject(object) != rgfilev1alpha1.ResourceGroupGVK() {
+	if GroupVersionKindForObject(object).String() != rgfilev1alpha1.ResourceGroupGVK().String() {
 		return object, nil
 	}
 

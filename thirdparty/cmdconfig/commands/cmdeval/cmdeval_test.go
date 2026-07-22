@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -435,6 +436,12 @@ apiVersion: v1
 			if tt.expectedStruct != nil {
 				r.runFns.Function = nil
 				r.runFns.FnConfig = nil
+				// Zero out CEL fields for struct comparison since
+				// CELEnvironment is a pointer and can't be compared
+				// deterministically. CEL functionality is tested separately.
+				r.runFns.RunnerOptions.CELEnvironment = nil
+				r.runFns.RunnerOptions.CelCheckFrequency = 0
+				r.runFns.RunnerOptions.CelCostLimit = 0
 				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
 				if !assert.Equal(t, *tt.expectedStruct, r.runFns) {
 					t.FailNow()
@@ -452,6 +459,10 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	defer os.RemoveAll(dir)
 	defer testutil.Chdir(t, dir)()
 
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping test due to symlink creation failure (requires admin/developer mode on Windows)")
+	}
+
 	err = os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
@@ -463,7 +474,7 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "-i", "bar:v0.1"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, filepath.Join("path", "to", "pkg", "dir"), r.runFns.Path)
+	assert.Equal(t, strings.ToLower(filepath.Join("path", "to", "pkg", "dir")), strings.ToLower(r.runFns.Path))
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.

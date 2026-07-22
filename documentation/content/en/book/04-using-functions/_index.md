@@ -346,6 +346,69 @@ pipeline:
 
 It is recommended to use unique function names for all the functions in the Kptfile function pipeline. If the `name` is specified, then the `kpt pkg update` will merge each function pipeline list as an associative list, using `name` as the merge key. An unspecified `name`, or duplicated names, may result in unexpected merges.
 
+### Specifying `when`
+
+The `when` field lets you skip a function based on the current state of the resources in the package.
+It takes a [CEL](https://cel.dev/) expression that is evaluated against the resource list. If the expression
+returns `true`, the function runs. If it returns `false`, the function is skipped.
+
+The expression receives a variable called `resources`, which is a list of all KRM resources passed to
+this function step (after `selectors` and `exclude` have been applied). Each resource is a map with
+the standard fields `apiVersion`, `kind`, and `metadata`. Depending on the resource, fields such as
+`spec` and `status` may also be present.
+
+For example, only run the `set-labels` function if a `ConfigMap` named `app-config` exists in the package:
+
+```yaml
+# wordpress/Kptfile (Excerpt)
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: wordpress
+      when: resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'app-config')
+```
+
+When you render the package, kpt shows whether the function ran or was skipped:
+
+```shell
+$ kpt fn render wordpress
+Package "wordpress":
+
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+
+Successfully executed 1 function(s) in 1 package(s).
+```
+
+If the condition is not met:
+
+```shell
+$ kpt fn render wordpress
+Package "wordpress":
+
+[SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" (condition not met)
+
+Successfully executed 0 function(s) in 1 package(s).
+```
+
+Some useful CEL expression patterns:
+
+- Check if a resource of a specific kind exists:
+  `resources.exists(r, r.kind == 'Deployment')`
+- Check if a specific resource exists by name:
+  `resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')`
+- Check the count of resources:
+  `resources.filter(r, r.kind == 'Deployment').size() > 0`
+
+The `when` field can be combined with `selectors` and `exclude`. The condition is evaluated
+after selectors and exclusions are applied, so `resources` only contains the resources that
+passed the selection criteria.
+
 ### Specifying `selectors`
 
 In some cases, it is necessary to invoke the function only on a subset of resources based on certain selection criteria. This can be accomplished using selectors. At a high level, the selectors work as follows:

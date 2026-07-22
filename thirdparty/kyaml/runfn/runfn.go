@@ -96,7 +96,8 @@ type RunFns struct {
 
 	Selector kptfilev1.Selector
 
-	Exclusion kptfilev1.Selector
+	Exclusion    kptfilev1.Selector
+	CelCondition string
 }
 
 // Execute runs the command
@@ -435,5 +436,15 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		opts.DisplayResourceCount = true
 	}
 
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
+	runner, err := fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
+	if err != nil {
+		return nil, err
+	}
+	if r.CelCondition != "" {
+		if opts.CELEnvironment == nil {
+			return nil, fmt.Errorf("CelCondition specified for function %q but no CEL environment is configured in RunnerOptions", fnResult.Image)
+		}
+		runner.SetCelCondition(r.CelCondition, opts.CELEnvironment)
+	}
+	return runner, nil
 }
