@@ -6,37 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-
-	"github.com/regclient/regclient"
-	regclientref "github.com/regclient/regclient/types/ref"
 )
-
-// RegClientLister is a TagLister using the regclient module to list remote OCI tags.
-type RegClientLister struct {
-	client *regclient.RegClient
-}
-
-var _ TagLister = &RegClientLister{}
-
-func (l *RegClientLister) Name() string {
-	return "regclient"
-}
-
-func (l *RegClientLister) List(ctx context.Context, image string) ([]string, error) {
-	ref, err := regclientref.New(image)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() { _ = l.client.Close(ctx, ref) }()
-
-	tagList, err := l.client.TagList(ctx, ref)
-	if err != nil {
-		return nil, err
-	}
-
-	return tagList.GetTags()
-}
 
 // LocalLister is a TagLister using the given CLI tool to list local OCI tags
 type LocalLister struct {

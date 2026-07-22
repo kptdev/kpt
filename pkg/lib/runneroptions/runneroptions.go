@@ -66,6 +66,8 @@ type RunnerOptions struct {
 	// ImagePrefix determines the prefix ResolveToImage will use when resolving a
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
+
+	ExtraTlsCerts [][]byte
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
