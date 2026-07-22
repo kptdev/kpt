@@ -39,9 +39,13 @@ jobs:
         with:
           filters: |
             live:
+              - 'api/**'
               - 'commands/live/**'
+              - 'commands/pkg/**'
               - 'e2e/live/**'
-              - 'pkg/live/**'
+              - 'pkg/**'
+              - 'go.mod'
+              - 'go.sum'
               - '.github/workflows/live-e2e.yml'
 
   live-apply:
