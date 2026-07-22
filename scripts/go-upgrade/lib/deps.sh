@@ -118,17 +118,6 @@ cmd_cross_deps() {
 
       step "  cross-deps: $(rel_path "$mod_abs")"
 
-      if [[ "$DRY_RUN" == true ]]; then
-        for dep in "${cross_deps[@]}"; do
-          if is_excluded_dep "$name" "$dep"; then
-            log "    skip (excluded): ${dep}"
-          else
-            log "    ${dep} → (latest published)"
-          fi
-        done
-        continue
-      fi
-
       local upgrade_args=()
       for dep in "${cross_deps[@]}"; do
         if is_excluded_dep "$name" "$dep"; then

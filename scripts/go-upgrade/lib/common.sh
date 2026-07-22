@@ -129,12 +129,9 @@ check_deps() {
   # Only require Go (and enforce exact version) when we will run Go tooling.
   case "$SUBCOMMAND" in
     go-version|cross-deps|all|generate-docs)
-      # go-version --dry-run only inspects go.mod files.
-      if [[ "$SUBCOMMAND" != "go-version" || "$DRY_RUN" == false ]]; then
-        command -v go >/dev/null 2>&1 || { err "go is required but not installed"; exit 1; }
-      fi
+      command -v go >/dev/null 2>&1 || { err "go is required but not installed"; exit 1; }
       # Only enforce exact Go version when running module verification or dependency updates.
-      if [[ "$DRY_RUN" == false && "$SUBCOMMAND" != "generate-docs" ]]; then
+      if [[ "$SUBCOMMAND" != "generate-docs" ]]; then
         local installed_go
         installed_go="$(go version | awk '{print $3}' | sed 's/^go//')"
         if [[ "$installed_go" != "$TARGET_GO_VERSION" ]]; then

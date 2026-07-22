@@ -40,7 +40,6 @@ source "${SCRIPT_DIR}/lib/push.sh"
 
 # --- Options ---
 FAIL_FAST=true
-DRY_RUN=false
 GIT_PUSH=false
 FILTER_REPO=""
 SUBCOMMAND=""
@@ -61,7 +60,6 @@ Subcommands:
 
 Options:
   --repo=NAME   Run only against the specified repository
-  --dry-run     Show what would change without modifying files
   --continue    Don't fail-fast; accumulate errors and report at end
   --push        After operations, create branch, commit, push, and raise PR
   --for=CMD     With 'push' subcommand: specify which upgrade was done
@@ -88,8 +86,6 @@ parse_args() {
           usage
         fi
         SUBCOMMAND="$arg" ;;
-      --dry-run)
-        DRY_RUN=true ;;
       --continue)
         FAIL_FAST=false ;;
       --push)
@@ -146,7 +142,6 @@ main() {
   log "Target Go: ${TARGET_GO_VERSION}"
   log "Target golangci-lint: ${TARGET_GOLANGCI_LINT_VERSION}"
   log "Fork owner: ${FORK_OWNER}"
-  if [[ "$DRY_RUN" == true ]]; then log "Mode: dry-run"; fi
   if [[ "$GIT_PUSH" == true ]]; then log "Mode: push enabled"; fi
   if [[ -n "$FILTER_REPO" ]]; then log "Repo filter: ${FILTER_REPO}"; fi
   echo ""
@@ -183,7 +178,7 @@ main() {
       ;;
   esac
 
-  if [[ "$push_done" == false && "$GIT_PUSH" == true && "$DRY_RUN" == false ]]; then
+  if [[ "$push_done" == false && "$GIT_PUSH" == true ]]; then
     if [[ ${#FAILURES[@]} -gt 0 ]]; then
       warn "Skipping push: ${#FAILURES[@]} failure(s) during upgrade"
     else
@@ -192,7 +187,7 @@ main() {
   fi
 
   echo ""
-  if [[ "$DRY_RUN" == false ]]; then show_git_status; fi
+  show_git_status
   report_failures || exit 1
 }
 

@@ -38,18 +38,9 @@ cmd_go_version() {
         continue
       fi
 
-      if [[ "$DRY_RUN" == true ]]; then
-        log "  [dry-run] $(rel_path "$mod_abs"): ${current} → ${TARGET_GO_VERSION}"
-        continue
-      fi
-
       sed -i.bak "s/^go .*/go ${TARGET_GO_VERSION}/" "$gomod" && rm -f "${gomod}.bak"
       log "  $(rel_path "$mod_abs"): ${current} → ${TARGET_GO_VERSION}"
     done <<< "$modules"
-
-    if [[ "$DRY_RUN" == true ]]; then
-      continue
-    fi
 
     while IFS= read -r mod_abs; do
       [[ -z "$mod_abs" ]] && continue
@@ -93,11 +84,6 @@ cmd_lint_version() {
       continue
     fi
 
-    if [[ "$DRY_RUN" == true ]]; then
-      log "  [dry-run] ${name}: ${current} → ${TARGET_GOLANGCI_LINT_VERSION}"
-      continue
-    fi
-
     sed -i.bak -E "s/(GOLANGCI_LINT_VERSION[[:space:]]*[:?]?=[[:space:]]*)[0-9.]+/\1${TARGET_GOLANGCI_LINT_VERSION}/" "$makefile" && rm -f "${makefile}.bak"
     log "  ${name}: ${current} → ${TARGET_GOLANGCI_LINT_VERSION}"
   done < <(active_repos)
@@ -117,12 +103,6 @@ cmd_generate_docs() {
   # Respect --repo filter: skip if filtering to a different repo
   if [[ -n "$FILTER_REPO" && "$FILTER_REPO" != "krm-functions-catalog" ]]; then
     log "  skipped: generate-docs only applies to krm-functions-catalog"
-    return
-  fi
-
-  if [[ "$DRY_RUN" == true ]]; then
-    log "  [dry-run] would run: make generate-docs in krm-functions-catalog"
-    (cd "$catalog_dir" && cd scripts/generate_docs && go run . generate --dry-run 2>&1) || true
     return
   fi
 

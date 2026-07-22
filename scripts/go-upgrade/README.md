@@ -19,9 +19,6 @@ krm-functions-sdk  (leaf — no upstream deps)
 ## Quick Start
 
 ```bash
-# Preview what would change
-./upgrade.sh go-version --dry-run
-
 # Upgrade Go version across all repos
 ./upgrade.sh go-version
 
@@ -60,7 +57,6 @@ krm-functions-sdk  (leaf — no upstream deps)
 |---|---|
 | `--repo=NAME` | Scope to a single repository |
 | `--continue` | Don't fail-fast; accumulate errors and report at end |
-| `--dry-run` | Show what would change without modifying files |
 | `--push` | After successful operations, create branch, commit, push, and raise draft PR |
 | `--for=CMD` | With `push` subcommand: specify which upgrade was done (default: `all`) |
 
