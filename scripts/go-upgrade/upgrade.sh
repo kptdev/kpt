@@ -63,7 +63,7 @@ Options:
   --repo=NAME   Run only against the specified repository
   --continue    Don't fail-fast; accumulate errors and report at end
   --push        After operations, create branch, commit, push, and raise PR
-  --force, -f   Override upstream push protection (allows push when FORK_OWNER is kptdev)
+  --force, -f   Override upstream push protection (allows push to kptdev)
   --for=CMD     With 'push' subcommand: specify which upgrade was done
                 (go-version, lint-version, cross-deps, generate-docs, all). Default: all
 

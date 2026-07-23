@@ -138,9 +138,12 @@ Automated via go-upgrade script (AI-assisted development)."
     log "  committed: ${branch_name}"
 
     # Push — protect against accidental pushes to upstream
-    if [[ "$FORK_OWNER" == "kptdev" && "${FORCE:-false}" != true ]]; then
-      err "  ${name}: refusing to push to upstream org 'kptdev'. Use --force to override."
-      record_failure "push blocked: ${name} (FORK_OWNER is 'kptdev')"
+    local origin_url origin_owner
+    origin_url=$(cd "$dir" && (git remote get-url --push origin 2>/dev/null || git remote get-url origin))
+    origin_owner=$(echo "$origin_url" | sed -E 's|.*[:/]([^/]+)/[^/]+(\.git)?$|\1|')
+    if [[ ("$FORK_OWNER" == "kptdev" || "$origin_owner" == "kptdev") && "${FORCE:-false}" != true ]]; then
+      err "  ${name}: refusing to push to upstream org 'kptdev' (FORK_OWNER=${FORK_OWNER}, origin owner=${origin_owner}). Use --force to override."
+      record_failure "push blocked: ${name} (upstream protection)"
       continue
     fi
 
@@ -158,8 +161,7 @@ Automated via go-upgrade script (AI-assisted development)."
     fi
 
     # Determine head ref and repository IDs for cross-fork PR
-    local origin_repo
-    origin_repo=$(cd "$dir" && git remote get-url origin | sed -E 's|.*[:/]([^/]+/[^/]+)\.git$|\1|')
+    local origin_repo="${origin_owner}/$(echo "$origin_url" | sed -E 's|.*[:/][^/]+/||; s|\.git$||')"
 
     log "  PR: ${origin_repo}:${branch_name} → ${target}:${base_branch}"
     log "  commits ahead: $(cd "$dir" && git log --oneline "origin/${base_branch}..HEAD" | wc -l)"
@@ -170,7 +172,6 @@ Automated via go-upgrade script (AI-assisted development)."
     # Use GraphQL mutation with headRepositoryId for reliable cross-fork PRs
     local target_owner="${target%%/*}"
     local target_name="${target##*/}"
-    local origin_owner="${origin_repo%%/*}"
     local origin_name="${origin_repo##*/}"
 
     local target_repo_id origin_repo_id
