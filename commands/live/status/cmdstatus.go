@@ -16,6 +16,7 @@ package status
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
@@ -27,6 +28,9 @@ import (
 	"sigs.k8s.io/cli-utils/cmd/status"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func NewRunner(ctx context.Context, factory util.Factory,
@@ -90,5 +94,36 @@ func (rir *RGInventoryLoader) GetInvInfo(cmd *cobra.Command, args []string) (inv
 		return nil, err
 	}
 
+	if err := verifyInventoryExists(rir.ctx, rir.factory, invInfo); err != nil {
+		return nil, err
+	}
+
 	return invInfo, nil
+}
+
+func verifyInventoryExists(ctx context.Context, f util.Factory, invInfo inventory.Info) error {
+	dynClient, err := f.DynamicClient()
+	if err != nil {
+		return err
+	}
+
+	mapper, err := f.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+
+	mapping, err := mapper.RESTMapping(live.ResourceGroupGVK.GroupKind(), live.ResourceGroupGVK.Version)
+	if err != nil {
+		return err
+	}
+
+	_, err = dynClient.Resource(mapping.Resource).Namespace(invInfo.Namespace()).Get(ctx, invInfo.Name(), metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return fmt.Errorf("inventory ResourceGroup %q not found in namespace %q", invInfo.Name(), invInfo.Namespace())
+		}
+		return err
+	}
+
+	return nil
 }
