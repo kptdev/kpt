@@ -137,7 +137,13 @@ Automated via go-upgrade script (AI-assisted development)."
 
     log "  committed: ${branch_name}"
 
-    # Push
+    # Push — protect against accidental pushes to upstream
+    if [[ "$FORK_OWNER" == "kptdev" && "${FORCE:-false}" != true ]]; then
+      err "  ${name}: refusing to push to upstream org 'kptdev'. Use --force to override."
+      record_failure "push blocked: ${name} (FORK_OWNER is 'kptdev')"
+      continue
+    fi
+
     if ! (cd "$dir" && git push -u origin "$branch_name" 2>&1); then
       record_failure "push: ${name}"
       continue
