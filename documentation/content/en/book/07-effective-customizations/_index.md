@@ -91,14 +91,14 @@ pipeline:
    directly by the user.
 1. Attributes like resource names which are often updated by consumers to add prefixes or suffixes
    (e.g. *-dev, *-stage, *-prod, na1-*, eu1-*) are best handled by the
-   [ensure-name-substring](https://catalog.kpt.dev/function-catalog/ensure-name-substring/v0.2/) function that will handle dependency
+   [ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.2/) function that will handle dependency
    updates as well as capture all the resources in the package.
 1. Instead of setting a particular value on a resource, a bulk operation can be applied to all the resources that fit a
    particular interface.  This can be done by a custom function or by the
-   [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/),
-   [search-and-replace](https://catalog.kpt.dev/function-catalog/search-replace/v0.2/),
-   [set-labels](https://catalog.kpt.dev/function-catalog/set-labels/v0.2/) and
-   [set-annotations](https://catalog.kpt.dev/function-catalog/set-annotations/v0.1/) functions.
+   [set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/),
+   [search-and-replace](https://catalog.kpt.dev/search-replace/v0.2/),
+   [set-labels](https://catalog.kpt.dev/set-labels/v0.2/) and
+   [set-annotations](https://catalog.kpt.dev/set-annotations/v0.1/) functions.
 
 The new bucket configuration:
 
@@ -139,17 +139,17 @@ pipeline:
 ```
 
 The mark up in the resource configuration YAML showing where the namespace value should
-go is no longer needed.  The [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/) function is smart enough to 
+go is no longer needed.  The [set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/) function is smart enough to 
 find all the appropriate resources that need the namespace.
 
 We have put in the starter name `bucket` and have an
-[ensure-name-substring](https://catalog.kpt.dev/function-catalog/ensure-name-substring/v0.2/) 
+[ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.2/) 
 that shows the package consumer that the project ID prefix is what we suggest.
 However if they have a different naming convention they can alter the name 
 prefix or suffix on all the resources in the package.
 
 Since we are trying to set the annotation to the project ID we can run the 
-[set-annotations](https://catalog.kpt.dev/function-catalog/set-annotations/v0.1/)
+[set-annotations](https://catalog.kpt.dev/set-annotations/v0.1/)
 function once and the annotation is set on all the resources in the package. 
 If we add additional resources or whole sub packages, we will get the consistent annotations across all resources 
 without having to find all the places where annotations should go.
@@ -216,7 +216,7 @@ the package author's rules are not clear and not easily validated.
 ### Solution:
 
 1. General ways to describe policy already exist.  kpt has a
-[gatekeeper](https://catalog.kpt.dev/function-catalog/gatekeeper/v0.2/)
+[gatekeeper](https://catalog.kpt.dev/gatekeeper/v0.2/)
 function that allows the author to describe intended limitations for a class 
 of resources or the entire package. This gives the consumer the freedom to customize 
 and get an error or a warning when the policy is violated. 
@@ -225,7 +225,7 @@ In the sample provided by the function, we see how to provide a policy that will
 clearly describe the intent using the [Rego policy language](https://www.openpolicyagent.org/docs/policy-language)
 of the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/):
 
-The Kptfile uses the [gatekeeper](https://catalog.kpt.dev/function-catalog/gatekeeper/v0.2/) function to
+The Kptfile uses the [gatekeeper](https://catalog.kpt.dev/gatekeeper/v0.2/) function to
 ensure that resources comply with this policy every time `kpt fn render` is used.
 
 
