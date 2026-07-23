@@ -90,7 +90,9 @@ Use `T` parameter to filter tests by regex (e.g., `T=fnconfig` for function conf
 make test-live-apply
 ```
 
-Requires KinD with Kubernetes 1.33.4 and 1.34.0 (specific SHAs pinned in CI). These tests use Kind internally. Timeout is 20 minutes.
+Requires KinD with Kubernetres versions defined in `jobs.kind.strategy.matrix.version` path of the
+[e2e test workflows](.github/workflows/live-e2e.yml) (specific SHAs pinned in CI). These tests use Kind
+internally. Timeout is 20 minutes.
 
 ### Linting
 
@@ -146,7 +148,7 @@ git config --global user.name "Your Name"
   * Executes: `make all` + `make test-docker`
   * Triggered on PRs (except changes limited to ignored paths like `**.md`) and pushes (pushes exclude dependabot branches)
 * **.github/workflows/e2eEnvironment.yml**: KinD-based e2e tests
-  * Tests Kubernetes 1.33 and 1.34 with KinD v0.30.0
+  * Tests Kubernetes versions defined in `jobs.kind.strategy.matrix.version` with KinD (KinD version in `jobs.kind.steps["Install KinD"].with.version`)
   * Runs `./e2e/live/end-to-end-test.sh -k <K8S_VERSION>`
 * **.github/workflows/live-e2e.yml**: Live apply e2e tests
   * Tests with pinned Kubernetes image SHAs
@@ -160,6 +162,7 @@ git config --global user.name "Your Name"
 * **documentation/**: Hugo-based website published to kpt.dev
   * Run `make serve` from `documentation/` (serves docs locally)
   * Requires `npm install` first (run in `documentation/`)
+  * Documentation shold follow the [style guide for documentation](documentation/README.md#style-guide-for-documentation) 
 
 * **e2e/**: End-to-end test suites
   * Contains testdata directories for function render/eval tests
@@ -183,7 +186,7 @@ git config --global user.name "Your Name"
 
 * **Copyright Headers**: All files must have Apache 2.0 license header
   * Use format: // Copyright YEAR The kpt Authors (or year range if modified)
-  * Year should match creation year, or creation-to-modification year range
+  * Year should match creation year, or creation-to-modification year range (see the [instructions in Porch for more details](https://porch.kpt.dev/docs/12_contributing/code-contribution/#update-copyright-on-files))
 * **Developer Certificate of Origin (DCO)**: Commits must be signed with -s flag
 * **Large Features**: Require reviewed and merged design document (use /docs/design-docs/00-template.md as template)
 * **AI Usage**: Must declare AI usage in the PR description; `Assisted-by: AGENT_NAME:MODEL_VERSION` attribution in
@@ -216,7 +219,7 @@ If `make test-docker` fails due to missing Docker/Podman:
 
 For e2e live tests (`make test-live-apply`):
 
-* KinD v0.30.0 is auto-installed by CI workflow
+* KinD is auto-installed by CI workflow
 * Requires Docker running in background
 * Tests use specific Kubernetes image SHAs (see live-e2e.yml matrix)
 * Timeout is 20 minutes; allow sufficient time
