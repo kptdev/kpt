@@ -80,6 +80,10 @@ The Kptfile supports annotations that control package-level behavior:
   post-order.
 - **`kpt.dev/save-on-render-failure`**: When set to `"true"`, this annotation saves partially rendered resources to disk, even when rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is essential for programmatic package rendering scenarios, where preserving partial progress is valuable.
 
+These annotations are read from the Kptfile of the invoked package and applied to all subpackages recursively. In case
+if these annotations are defined in the Kptfile of the subpackages, they are ignored. If an subpackage is rendered
+directly the renreded subpackages annotations will be used.
+
 ### Status Conditions
 
 The Kptfile includes a `status.conditions` field that provides a declarative way to track the execution status of kpt operations. This makes package management operations observable and traceable.
