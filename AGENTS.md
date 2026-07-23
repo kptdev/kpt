@@ -239,7 +239,7 @@ If changes modify CLI documentation in documentation/content/en/reference/cli/:
 
 ### Known CI Skips
 
-* Windows build currently disabled (see `.github/workflows/go.yml` line 88-104, issue #3463)
+* Windows build currently disabled (see `.github/workflows/go.yml`, issue #3463)
 * Some linters disabled: `funlen`, `gosec` (marked TODO in `.golangci.yml`)
 
 ## Environment Variables
