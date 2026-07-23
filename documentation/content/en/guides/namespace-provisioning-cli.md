@@ -155,8 +155,8 @@ Package "basens"
 
 Before we add more resources to the package, let's configure our package to
 ensure that the namespace for new resources in the package is set correctly.
-kpt offers a set of common functions as part of the [Functions Catalog](https://catalog.kpt.dev/function-catalog/)
-and it has a [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/) function
+kpt offers a set of common functions as part of the [Functions Catalog](https://catalog.kpt.dev/)
+and it has a [set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/) function
 that can be used to ensure all resources in a package use the same namespace.
 
 ```shell
@@ -211,7 +211,7 @@ Successfully executed 1 function(s) in 1 package(s).
 ```
 
 Note: if you are curious about how KRM functions are implemented. Take a look
-at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/master/functions/go/set-namespace/transformer/namespace.go)
+at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/main/functions/go/set-namespace/transformer/namespace.go)
 to get a feel for the implementation. You can also check out [Chapter 5: Developing Functions](https://kpt.dev/book/05-developing-functions/)
 of the kpt book.
 
@@ -249,7 +249,7 @@ subjects:
 To enable automatic customization of this role binding for an instance of a
 namespace package, we can bind the value of package instance name to the group
 name in the above role binding resource. We will use the
-[apply-replacements function](https://catalog.kpt.dev/function-catalog/apply-replacements/v0.1/)
+[apply-replacements function](https://catalog.kpt.dev/apply-replacements/v0.1/)
 from kpt-function-catalog for binding the values.
 Here is an snippet that does that:
 

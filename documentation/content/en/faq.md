@@ -101,7 +101,7 @@ For a more complete explanation, see the [rationale].
 
 Yes. kpt supports plugging in solutions which generate or manipulate
 configuration, e.g. from DSLs and templates. This may be performed using the
-[Functions Catalog](https://catalog.kpt.dev/function-catalog). The generated output may be modified directly, and merged
+[Functions Catalog](https://catalog.kpt.dev). The generated output may be modified directly, and merged
 when regenerated.
 
 ### I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with kpt?
