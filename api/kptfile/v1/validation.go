@@ -90,10 +90,26 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 	}
 	// TODO(droot): validate the exec
 
-	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
+	configSources := 0
+	if len(f.ConfigMap) != 0 {
+		configSources++
+	}
+	if f.ConfigPath != "" {
+		configSources++
+	}
+	if f.ConfigRef != nil {
+		configSources++
+	}
+	if configSources > 1 {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: "functionConfig must not specify both `configMap` and `configPath` at the same time",
+			Reason: "functionConfig must specify at most one of `configMap`, `configPath`, or `configRef`",
+		}
+	}
+
+	if f.ConfigRef != nil {
+		if err := f.ConfigRef.validate(fnType, idx); err != nil {
+			return err
 		}
 	}
 
@@ -150,6 +166,23 @@ func validateFnConfigPathSyntax(p string) error {
 		// Allowing outside path opens up an attack vector that allows
 		// reading any YAML file on package consumer's machine.
 		return fmt.Errorf("path must not be outside the package")
+	}
+	return nil
+}
+
+// validate checks that the ResourceReference has the required fields set.
+func (r *ResourceReference) validate(fnType string, idx int) error {
+	if r.Kind == "" {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef.kind", fnType, idx),
+			Reason: "configRef must specify `kind`",
+		}
+	}
+	if r.Name == "" {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef.name", fnType, idx),
+			Reason: "configRef must specify `name`",
+		}
 	}
 	return nil
 }

@@ -810,6 +810,17 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			return nil, err
 		}
 
+		if pl.Mutators[i].ConfigRef != nil {
+			// Resolve configRef from the current input resources. Like configPath,
+			// the referenced resource may have been mutated by earlier pipeline steps,
+			// so we resolve it fresh before each execution.
+			resolved, err := fnruntime.ResolveConfigRef(pl.Mutators[i].ConfigRef, pn.pkg.UniquePath, input)
+			if err != nil {
+				return nil, err
+			}
+			mutator.SetFnConfig(resolved)
+		}
+
 		selectors := pl.Mutators[i].Selectors
 		exclusions := pl.Mutators[i].Exclusions
 
