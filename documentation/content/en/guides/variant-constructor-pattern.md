@@ -49,12 +49,12 @@ then the `metadata.name` uniquely identifies the resource in a cluster. If the r
 is namespace scoped, then (`metadata.namespace`, `metadata.name`) together identifies the
 resource uniquely.
 
-The [Function Catalog](https://catalog.kpt.dev/function-catalog/) provides two function that help
+The [Function Catalog](https://catalog.kpt.dev/) provides two function that help
 with customizing the identify of the resources:
 
-1. [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/): sets the
+1. [set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/): sets the
    namespace for all resources in the package.
-2. [ensure-name-substring](https://catalog.kpt.dev/function-catalog/ensure-name-substring/v0.2/):
+2. [ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.2/):
    sets the name of the resources in the package.
 
 You can use appropriate functions from the catalog or implement a custom
@@ -63,9 +63,9 @@ function to ensure unique identities for all resources.
 ## Customizing non-identifier fields of resources
 
 Packages can use other functions such as
-[set-labels](https://catalog.kpt.dev/function-catalog/set-labels/v0.2/),
-[set-annotations](https://catalog.kpt.dev/function-catalog/set-annotations/v0.1/),
-[apply-replacements](https://catalog.kpt.dev/function-catalog/apply-replacements/v0.1/),
+[set-labels](https://catalog.kpt.dev/set-labels/v0.2/),
+[set-annotations](https://catalog.kpt.dev/set-annotations/v0.1/),
+[apply-replacements](https://catalog.kpt.dev/apply-replacements/v0.1/),
 or custom functions to transform other fields of resources.
 
 ## Core mechanism
@@ -76,7 +76,7 @@ Enabling automatic variant construction involves two steps:
 2. Generating inputs for the functions declarared in the package
 
 Here is an example of `Kptfile` of a package that uses
-[set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/) and a custom
+[set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/) and a custom
  function called `apply-transform` to enable customization.
 
 ```Kptfile

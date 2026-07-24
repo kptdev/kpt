@@ -15,7 +15,7 @@ menu:
 ---
 
  > Before you start developing your custom function, check out the
-[Functions Catalog](https://catalog.kpt.dev/function-catalog ":target=_self") in case there is
+[Functions Catalog](https://catalog.kpt.dev ":target=_self") in case there is
 an existing function that meets your needs. This is an ever-growing catalog of
 functions that we consider to be generally useful to many users. If your use
 case fits that description, please
@@ -86,7 +86,7 @@ In order to enable functions to be developed in different toolchains and
 languages and be interoperable and backwards compatible, the kpt project created
 a standard for the inter-process communication between the orchestrator (i.e.
 kpt CLI) and functions. This standard was published as the
-[KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/main/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
+[KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
 and donated to the CNCF as part of the Kubernetes SIG-CLI.
 
 Understanding this specification enables you to have a deeper understanding of

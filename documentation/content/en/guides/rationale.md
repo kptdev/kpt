@@ -64,7 +64,7 @@ These resource representations were intended to form the core of a declarative d
 to support pre-deployment validation, preview, and approval and post-deployment auditing, versioning, and undo. 
 
 kpt supports management of
-[Configuration as Data](https://github.com/kptdev/kpt/blob/main/docs/design-docs/06-config-as-data.md).
+[Configuration as Data]({{< relref "/book/02-concepts/#configuration-as-data-key-principles" >}}).
 The core ideas are simple:
 
 * uses a uniform, serializable data model to represent configuration
@@ -86,7 +86,7 @@ in other approches, notably packaging and a client-side CLI.
 
 kpt enables WYSIWYG management of configuration similar to how the live state can be modified with traditional
 imperative tools, thus eliminating this dichotomy:
-<img src="https://raw.githubusercontent.com/kptdev/kpt/main/docs/design-docs/CaD%20Overview.svg">
+<img src="/images/cad-overview.svg">
 
 Configuration as Data is a novel approach that doesn’t sacrifice usability or the potential for higher-level automation
 in order to enable reproducibility. Instead, it supports an interoperable, WYSIWYG, automatable configuration authoring

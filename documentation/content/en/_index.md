@@ -45,7 +45,7 @@ kpt is an open source project and anyone can [contribute](https://github.com/kpt
 # For users
 
 To get familiar with kpt, the best way to start is with the first 4 chapters of the kpt [Book]({{< relref "book" >}}).
-Furthermore it is useful to check the [references]({{< relref "reference" >}}) and the catalog of [selected krm functions](https://catalog.kpt.dev/function-catalog).
+Furthermore it is useful to check the [references]({{< relref "reference" >}}) and the catalog of [selected krm functions](https://catalog.kpt.dev).
 
 Use our [public Dosu space](https://github.dosu.com/kptdev/kpt) to ask anything about kpt.
 
