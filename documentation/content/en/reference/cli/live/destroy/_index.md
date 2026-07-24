@@ -74,6 +74,16 @@ PKG_PATH | -:
     * none: Do not save any status information in the inventory.
 
   The default value is `all`.
+
+--delete-propagation-policy:
+  The propagation policy that should be used when deleting resources. The
+  default value here is 'Background'. The other options are 'Foreground' and 'Orphan'.
+
+--delete-timeout:
+  The threshold for how long to wait for all resources to be deleted before
+  giving up. If this flag is not set, kpt live destroy will wait until
+  interrupted. In most cases, it would also make sense to set the
+  --delete-propagation-policy to Foreground when this flag is set.
 ```
 
 <!--mdtogo-->
