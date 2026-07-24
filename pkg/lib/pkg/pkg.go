@@ -449,10 +449,20 @@ func (p *Pkg) ValidatePipeline() error {
 		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
 			errs = append(errs, makeStepValidationErr("mutator", i, fn.Name, fn.Image, fn.ConfigPath))
 		}
+		if fn.ConfigRef != nil {
+			if err := validateConfigRefExists("mutators", i, fn, resources); err != nil {
+				errs = append(errs, err)
+			}
+		}
 	}
 	for i, fn := range pl.Validators {
 		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
 			errs = append(errs, makeStepValidationErr("validator", i, fn.Name, fn.Image, fn.ConfigPath))
+		}
+		if fn.ConfigRef != nil {
+			if err := validateConfigRefExists("validators", i, fn, resources); err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
 	return stderrors.Join(errs...)
@@ -464,6 +474,40 @@ func makeStepValidationErr(stepType string, i int, fnName, fnImage, configPath s
 		Value: configPath,
 		Reason: fmt.Sprintf("functionConfig resource for %s %q is missing from path %q, this also occurs if %q is part of a subpackage",
 			stepType, PipelineStepNameOrImage(fnName, fnImage), configPath, configPath),
+	}
+}
+
+// validateConfigRefExists checks that the resource referenced by configRef exists
+// among the given resources.
+func validateConfigRefExists(fnType string, i int, fn kptfilev1.Function, resources []*yaml.RNode) error {
+	ref := fn.ConfigRef
+	for _, r := range resources {
+		meta, err := r.GetMeta()
+		if err != nil {
+			continue
+		}
+		if ref.APIVersion != "" && meta.APIVersion != ref.APIVersion {
+			continue
+		}
+		if meta.Kind != ref.Kind {
+			continue
+		}
+		if meta.Name != ref.Name {
+			continue
+		}
+		if ref.Namespace != "" && meta.Namespace != ref.Namespace {
+			continue
+		}
+		return nil // found
+	}
+	refDesc := ref.Kind + "/" + ref.Name
+	if ref.APIVersion != "" {
+		refDesc = ref.APIVersion + "/" + refDesc
+	}
+	return &kptfilev1.ValidateError{
+		Field:  fmt.Sprintf("pipeline.%s[%d].configRef", fnType, i),
+		Value:  refDesc,
+		Reason: fmt.Sprintf("referenced resource %q not found in package for function %q", refDesc, PipelineStepNameOrImage(fn.Name, fn.Image)),
 	}
 }
 

@@ -51,8 +51,13 @@ func NewRunner(
 	fnResults *fnresultv1.ResultList,
 	opts runneroptions.RunnerOptions,
 	runtime fn.FunctionRuntime,
+	resources ...[]*yaml.RNode,
 ) (*FunctionRunner, error) {
-	config, err := newFnConfig(fsys, f, pkgPath)
+	var inputResources []*yaml.RNode
+	if len(resources) > 0 {
+		inputResources = resources[0]
+	}
+	config, err := newFnConfig(fsys, f, pkgPath, inputResources)
 	if err != nil {
 		return nil, err
 	}
@@ -505,7 +510,7 @@ func enforcePathInvariants(nodes []*yaml.RNode) error {
 	return nil
 }
 
-func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfilev1.UniquePath) (*yaml.RNode, error) {
+func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfilev1.UniquePath, resources []*yaml.RNode) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
 	fn := errors.Fn(f.Image)
 
@@ -535,9 +540,61 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfile
 			return nil, errors.E(op, fn, err)
 		}
 		return configNode, nil
+	case f.ConfigRef != nil:
+		if resources == nil {
+			// Resources not available yet (e.g. during mutator chain construction).
+			// Config will be resolved from the input list before execution.
+			return nil, nil
+		}
+		node, err := ResolveConfigRef(f.ConfigRef, pkgPath, resources)
+		if err != nil {
+			return nil, errors.E(op, fn, err)
+		}
+		return node, nil
 	}
 	// no need to return ConfigMap if no config given
 	return nil, nil
+}
+
+// ResolveConfigRef searches the resource list for a resource matching the given
+// ResourceReference. It returns the matching resource or an error if no match
+// or multiple matches are found.
+func ResolveConfigRef(ref *kptfilev1.ResourceReference, pkgPath kptfilev1.UniquePath, resources []*yaml.RNode) (*yaml.RNode, error) {
+	var matches []*yaml.RNode
+	for _, r := range resources {
+		meta, err := r.GetMeta()
+		if err != nil {
+			continue
+		}
+		// If pkgPath is set, only match resources belonging to this package.
+		if pkgPath != "" {
+			resPkgPath, _ := pkg.GetPkgPathAnnotation(r)
+			if resPkgPath != "" && resPkgPath != string(pkgPath) {
+				continue
+			}
+		}
+		if ref.APIVersion != "" && meta.APIVersion != ref.APIVersion {
+			continue
+		}
+		if meta.Kind != ref.Kind {
+			continue
+		}
+		if meta.Name != ref.Name {
+			continue
+		}
+		if ref.Namespace != "" && meta.Namespace != ref.Namespace {
+			continue
+		}
+		matches = append(matches, r)
+	}
+	switch len(matches) {
+	case 0:
+		return nil, fmt.Errorf("configRef: resource %s/%s %q not found in package", ref.APIVersion, ref.Kind, ref.Name)
+	case 1:
+		return matches[0], nil
+	default:
+		return nil, fmt.Errorf("configRef: resource %s/%s %q matched %d resources, must match exactly one", ref.APIVersion, ref.Kind, ref.Name, len(matches))
+	}
 }
 
 // hasTagOrDigest reports whether the image reference contains an explicit tag or digest.

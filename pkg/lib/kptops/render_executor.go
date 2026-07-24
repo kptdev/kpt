@@ -787,6 +787,17 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			}
 		}
 
+		if pl.Mutators[i].ConfigRef != nil {
+			// Resolve configRef from the current input resources. Like configPath,
+			// the referenced resource may have been mutated by earlier pipeline steps,
+			// so we resolve it fresh before each execution.
+			resolved, err := fnruntime.ResolveConfigRef(pl.Mutators[i].ConfigRef, pn.pkg.UniquePath, input)
+			if err != nil {
+				return nil, err
+			}
+			mutator.SetFnConfig(resolved)
+		}
+
 		selectors := pl.Mutators[i].Selectors
 		exclusions := pl.Mutators[i].Exclusions
 
@@ -870,7 +881,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
+		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime, input)
 		if err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err

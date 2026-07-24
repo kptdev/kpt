@@ -346,6 +346,11 @@ type Function struct {
 	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.
 	ConfigMap map[string]string `yaml:"configMap,omitempty" json:"configMap,omitempty"`
 
+	// `ConfigRef` references an existing resource in the package as the function config.
+	// The resource is identified by apiVersion, kind, and name. This is mutually exclusive
+	// with `configPath` and `configMap`.
+	ConfigRef *ResourceReference `yaml:"configRef,omitempty" json:"configRef,omitempty"`
+
 	// `Name` is used to uniquely identify the function declaration
 	// this is primarily used for merging function declaration with upstream counterparts
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
@@ -361,6 +366,20 @@ type Function struct {
 	// `Exclude` are used to specify resources on which the function should NOT be executed.
 	// If not specified, all resources selected by `Selectors` are selected.
 	Exclusions []Selector `yaml:"exclude,omitempty" json:"exclude,omitempty"`
+}
+
+// ResourceReference identifies a resource within the package by its API identity.
+type ResourceReference struct {
+	// APIVersion of the referenced resource (e.g. "v1"). Optional; when omitted,
+	// matches resources regardless of apiVersion.
+	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
+	// Kind of the referenced resource (e.g. "ConfigMap"). Required.
+	Kind string `yaml:"kind" json:"kind"`
+	// Name of the referenced resource. Required.
+	Name string `yaml:"name" json:"name"`
+	// Namespace of the referenced resource. Optional; when omitted, matches
+	// resources regardless of namespace.
+	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 }
 
 // Selector specifies the selection criteria
