@@ -122,7 +122,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selectedInput: `apiVersion: apps/v1
@@ -130,7 +130,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			output: `apiVersion: apps/v1
@@ -139,7 +139,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			expected: `apiVersion: apps/v1
@@ -148,7 +148,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3
 `,
@@ -160,35 +160,35 @@ kind: Deployment
 metadata:
   name: nginx-deployment-0
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "1"
+    internal.config.kubernetes.io/kpt-resource-id: "1"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-2
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "2"
+    internal.config.kubernetes.io/kpt-resource-id: "2"
 `,
 			selectedInput: `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-0
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "1"
+    internal.config.kubernetes.io/kpt-resource-id: "1"
 `,
 			output: `apiVersion: apps/v1
 kind: Deployment
@@ -196,7 +196,7 @@ metadata:
   name: nginx-deployment-0
   namespace: staging # transformed
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1 # generated resource
 kind: Deployment
@@ -209,14 +209,14 @@ metadata:
   name: nginx-deployment-0
   namespace: staging # transformed
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-2
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "2"
+    internal.config.kubernetes.io/kpt-resource-id: "2"
 ---
 apiVersion: apps/v1 # generated resource
 kind: Deployment
@@ -1005,7 +1005,7 @@ metadata:
     config.k8s.io/id: "123"
     internal.config.kubernetes.io/annotations-migration-resource-id: "456"
     internal.config.kubernetes.io/id: "789"
-    internal.config.k8s.io/kpt-resource-id: "abc"
+    internal.config.kubernetes.io/kpt-resource-id: "abc"
     other.annotation: "keep"`,
 			hasNonRenderingAnnotation: true,
 		},
@@ -1041,7 +1041,7 @@ metadata:
 				assert.NotContains(t, annotations, "config.k8s.io/id")
 				assert.NotContains(t, annotations, "internal.config.kubernetes.io/annotations-migration-resource-id")
 				assert.NotContains(t, annotations, "internal.config.kubernetes.io/id")
-				assert.NotContains(t, annotations, "internal.config.k8s.io/kpt-resource-id")
+				assert.NotContains(t, annotations, "internal.config.kubernetes.io/kpt-resource-id")
 				// Verify other.annotation is preserved after clearing
 				if tc.hasNonRenderingAnnotation {
 					assert.Contains(t, annotations, "other.annotation")
