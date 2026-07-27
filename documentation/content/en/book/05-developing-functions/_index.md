@@ -93,6 +93,13 @@ Understanding this specification enables you to have a deeper understanding of
 how things work under the hood. It also enables to create your own toolchain for
 function development if you so desire.
 
+Each resource in the `ResourceList` carries an `internal.config.kubernetes.io/path`
+annotation indicating its file path relative to the package directory. When a
+function creates new resources, it should set this annotation to a path relative
+to the same package directory. See the
+[annotations reference](/reference/annotations/#path-annotation-details)
+for full details.
+
 As an example, you can see the `ResourceList` containing resources in the
 `wordpress` package:
 
