@@ -363,3 +363,4 @@ kpt fn eval ./testdata/noop-passthrough/resources.yaml --image ${FN_CONTAINER_RE
 
 - See other [go documentation examples](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn/examples) to use KubeObject.
 - To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/main/CONTRIBUTING.md)
+- For the `metadata.yaml` schema reference (required fields, allowed tags), see the [metadata schema documentation](https://catalog.kpt.dev/metadata-schema/)
