@@ -139,6 +139,10 @@ type Pkg struct {
 	// be used for display purposes and is subject to change.
 	DisplayPath kptfilev1.DisplayPath
 
+	// DisplayName is a non-unique identifier used for logging.
+	// Overrides UniquePath and DisplayPath in the logs if set.
+	DisplayName string
+
 	// rootPkgParentDirPath is the absolute path to the parent directory of root package,
 	// root package is defined as the package on which the command is invoked by user
 	// this must be same for all the nested subpackages in root package

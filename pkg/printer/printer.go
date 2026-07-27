@@ -59,20 +59,20 @@ func NewOpt() *Options {
 	return &Options{}
 }
 
-// Pkg sets the package unique path in options
-func (opt *Options) Pkg(p kptfilev1.UniquePath) *Options {
+// Path sets the package unique path in options
+func (opt *Options) Path(p kptfilev1.UniquePath) *Options {
 	opt.PkgPath = p
 	return opt
 }
 
-// PkgDisplayPath sets the package display path in options
-func (opt *Options) PkgDisplay(p kptfilev1.DisplayPath) *Options {
+// DisplayPath sets the package display path in options
+func (opt *Options) DisplayPath(p kptfilev1.DisplayPath) *Options {
 	opt.PkgDisplayPath = p
 	return opt
 }
 
-// PkgName sets the package display name in options
-func (opt *Options) PkgName(name string) *Options {
+// DisplayName sets the package display name in options
+func (opt *Options) DisplayName(name string) *Options {
 	opt.PkgDisplayName = name
 	return opt
 }

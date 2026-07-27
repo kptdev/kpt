@@ -713,7 +713,10 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
 	// package structure. We should have function to get the relative package
 	// path here.
-	prOpts := printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath).PkgName(hctx.rootName)
+	prOpts := printer.NewOpt().
+		DisplayName(pn.pkg.DisplayName).
+		DisplayPath(pn.pkg.DisplayPath).
+		DisplayName(hctx.rootName)
 	pr.OptPrintf(prOpts, "\n")
 
 	pl, err := pn.pkg.Pipeline()

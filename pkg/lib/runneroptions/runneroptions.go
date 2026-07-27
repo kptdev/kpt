@@ -66,6 +66,13 @@ type RunnerOptions struct {
 	// ImagePrefix determines the prefix ResolveToImage will use when resolving a
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
+
+	// PackageName is the optional display name of the package. Purely for logging.
+	PackageName string
+
+	// TruncateImageName determines whether the full image name or just the base
+	// name and the tag will be logged.
+	TruncateImageName bool
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {

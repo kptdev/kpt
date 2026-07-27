@@ -25,7 +25,7 @@ func TestOptPrintf_WithDisplayPath(t *testing.T) {
 	var buf bytes.Buffer
 	pr := New(&buf, &buf)
 
-	opt := NewOpt().PkgDisplay("my/display/path")
+	opt := NewOpt().DisplayPath("my/display/path")
 	pr.OptPrintf(opt, ": operation completed\n")
 
 	expected := "Package: \"my/display/path\": operation completed\n"
@@ -39,11 +39,26 @@ func TestOptPrintf_WithUniquePath(t *testing.T) {
 	var buf bytes.Buffer
 	pr := New(&buf, &buf)
 
-	opt := NewOpt().Pkg("my/unique/path")
+	opt := NewOpt().Path("my/unique/path")
 	pr.OptPrintf(opt, ": sync successful\n")
 
 	// RelativePath may fail, so fallback to absolute path
 	expected := "Package: \"my/unique/path\": sync successful\n"
+
+	if buf.String() != expected {
+		t.Errorf("Expected %q, got %q", expected, buf.String())
+	}
+}
+
+func TestOptPrintf_WithDisplayName(t *testing.T) {
+	var buf bytes.Buffer
+	pr := New(&buf, &buf)
+
+	opt := NewOpt().DisplayName("my-repo.my-package.v1")
+	pr.OptPrintf(opt, ": sync successful\n")
+
+	// RelativePath may fail, so fallback to absolute path
+	expected := "Package: \"my-repo.my-package.v1\": sync successful\n"
 
 	if buf.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, buf.String())

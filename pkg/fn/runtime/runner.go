@@ -225,19 +225,26 @@ type FunctionRunner struct {
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
+	fnName := fr.name
+	if fr.opts.TruncateImageName {
+		baseName, tag := baseNameAndTag(fr.name)
+		if tag != "" {
+			fnName = fmt.Sprintf("%s (%s)", baseName, tag)
+		} else {
+			fnName = baseName
+		}
+	}
 	if !fr.disableCLIOutput {
 		if fr.opts.AllowWasm {
-			if fr.opts.DisplayResourceCount {
-				pr.Printf("[RUNNING] WASM %q on %d resource(s)", fr.name, len(input))
-			} else {
-				pr.Printf("[RUNNING] WASM %q", fr.name)
-			}
+			pr.Printf("[RUNNING] WASM %q", fnName)
 		} else {
-			if fr.opts.DisplayResourceCount {
-				pr.Printf("[RUNNING] %q on %d resource(s)", fr.name, len(input))
-			} else {
-				pr.Printf("[RUNNING] %q", fr.name)
-			}
+			pr.Printf("[RUNNING] %q", fnName)
+		}
+		if fr.opts.DisplayResourceCount {
+			pr.Printf(" on %d resource(s)", len(input))
+		}
+		if fr.opts.PackageName != "" {
+			pr.Printf(" on package %q", fr.opts.PackageName)
 		}
 		pr.Printf("\n")
 	}
@@ -245,7 +252,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	output, err = fr.do(input)
 	if err != nil {
 		printOpt := printer.NewOpt()
-		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
+		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
@@ -254,11 +261,34 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
-		pr.Printf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
+		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
+}
+
+func baseNameAndTag(name string) (string, string) {
+	tag := ""
+
+	// remove digest if present
+	if at := strings.Index(name, "@"); at > -1 {
+		name = name[:at]
+	}
+
+	lastSlash := strings.LastIndex(name, "/")
+
+	if lastSlash > -1 {
+		name = name[lastSlash+1:]
+	}
+
+	firstColon := strings.Index(name, ":")
+
+	if firstColon > -1 {
+		name, tag = name[:firstColon], name[firstColon+1:]
+	}
+
+	return name, tag
 }
 
 // SetFnConfig updates the functionConfig for the FunctionRunner instance.
