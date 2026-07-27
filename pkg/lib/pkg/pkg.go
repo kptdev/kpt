@@ -150,6 +150,10 @@ type Pkg struct {
 
 	// A package can contain zero or one ResourceGroup object.
 	rgFile *rgfilev1alpha1.ResourceGroup
+
+	// Parent is a pointer to the parent package.
+	// Nil if this is a root package.
+	Parent *Pkg
 }
 
 // New returns a pkg given an absolute OS-defined path.
@@ -232,6 +236,7 @@ func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 		if err != nil {
 			return subPkgs, fmt.Errorf("failed to read package at path %q: %w", subPkgPath, err)
 		}
+		subPkg.Parent = p
 		if err := p.adjustDisplayPathForSubpkg(subPkg); err != nil {
 			return subPkgs, fmt.Errorf("failed to resolve display path for %q: %w", subPkgPath, err)
 		}
