@@ -68,6 +68,7 @@ type RunnerOptions struct {
 	ImagePrefix string
 
 	// PackageName is the optional display name of the package. Purely for logging.
+	// TODO: this does not account for subpackages
 	PackageName string
 
 	// TruncateImageName determines whether the full image name or just the base

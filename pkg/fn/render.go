@@ -24,6 +24,9 @@ import (
 type RenderOptions struct {
 	PkgPath string
 	Runtime FunctionRuntime
+
+	// Deprecated: use RunnerOptions.PackageName instead
+	//
 	// DisplayName is a human-readable name used for logs and diagnostics.
 	// It is not intended to be a unique or stable identifier; if empty, no
 	// explicit display name was provided.

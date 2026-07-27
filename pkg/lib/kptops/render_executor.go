@@ -66,9 +66,6 @@ type Renderer struct {
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
-
-	// DisplayName is an optional field to modify the package name displayed in logs
-	DisplayName string
 }
 
 // Execute runs a pipeline.
@@ -84,13 +81,12 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root:           root,
-		pkgDisplayName: e.DisplayName,
-		pkgs:           map[kptfilev1.UniquePath]*pkgNode{},
-		fnResults:      fnresultv1.NewResultList(),
-		runnerOptions:  e.RunnerOptions,
-		fileSystem:     e.FileSystem,
-		runtime:        e.Runtime,
+		root:          root,
+		pkgs:          map[kptfilev1.UniquePath]*pkgNode{},
+		fnResults:     fnresultv1.NewResultList(),
+		runnerOptions: e.RunnerOptions,
+		fileSystem:    e.FileSystem,
+		runtime:       e.Runtime,
 	}
 
 	kptfile, err := kptfileutil.ReadKptfile(e.FileSystem, e.PkgPath)
@@ -351,8 +347,6 @@ type hydrationContext struct {
 
 	// function runtime
 	runtime fn.FunctionRuntime
-
-	pkgDisplayName string
 }
 
 // pkgNode represents a package being hydrated. Think of it as a node in the hydration DAG.
@@ -715,7 +709,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// path here.
 	prOpts := printer.NewOpt().
 		DisplayPath(pn.pkg.DisplayPath).
-		DisplayName(hctx.pkgDisplayName)
+		DisplayName(hctx.runnerOptions.PackageName)
 	pr.OptPrintf(prOpts, "\n")
 
 	pl, err := pn.pkg.Pipeline()
@@ -737,11 +731,11 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
-		return mutatedResources, errors.E(op, hctx.pkgDisplayName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.PackageName, pn.pkg.UniquePath, err)
 	}
 
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
-		return mutatedResources, errors.E(op, hctx.pkgDisplayName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.PackageName, pn.pkg.UniquePath, err)
 	}
 	return mutatedResources, nil
 }
@@ -852,9 +846,6 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		if opts.PackageName == "" {
-			opts.PackageName = hctx.pkgDisplayName
-		}
 		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
@@ -1010,9 +1001,6 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath kptfilev1.Uniq
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		if opts.PackageName == "" {
-			opts.PackageName = hctx.pkgDisplayName
-		}
 		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &fns[i], pkgPath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			return nil, i, err

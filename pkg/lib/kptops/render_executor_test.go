@@ -315,24 +315,22 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 	tests := []struct {
 		name          string
 		renderBfs     bool
-		expectedOrder func(output string) bool
+		orderedOutput []string
 	}{
 		{
 			name:      "Use hydrateBfsOrder with renderBfs true",
 			renderBfs: true,
-			expectedOrder: func(output string) bool {
-				rootIndex := strings.Index(output, `Package: "root"`)            // First
-				siblingIndex := strings.Index(output, `Package: "root/sibling"`) // Second
-				return rootIndex < siblingIndex
+			orderedOutput: []string{
+				`Package: "root"`,
+				`Package: "root/sibling"`,
 			},
 		},
 		{
 			name:      "Use default hydrate with renderBfs false",
 			renderBfs: false,
-			expectedOrder: func(output string) bool {
-				siblingIndex := strings.Index(output, `Package: "root/sibling"`) // First
-				rootIndex := strings.Index(output, `Package: "root"`)            // Fourth
-				return rootIndex > siblingIndex
+			orderedOutput: []string{
+				`Package: "root/sibling"`,
+				`Package: "root"`,
 			},
 		},
 	}
@@ -347,9 +345,20 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 			assert.Equal(t, 0, len(fnResults.Items))
 
 			output := outputBuffer.String()
-			assert.True(t, tc.expectedOrder(output))
+			assertOrder(t, output, tc.orderedOutput...)
 		})
 	}
+}
+
+func assertOrder(t *testing.T, output string, expected ...string) {
+	indices := make([]int, len(expected))
+	for i, logLine := range expected {
+		indices[i] = strings.Index(output, logLine)
+	}
+
+	assert.IsIncreasing(t, indices,
+		"Logs order differs from expected:\n%v\nActual:\n%s",
+		strings.Join(expected, "\n"), output)
 }
 
 func TestHydrate_ErrorCases(t *testing.T) {
