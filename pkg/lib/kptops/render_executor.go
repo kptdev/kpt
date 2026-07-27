@@ -708,8 +708,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// package structure. We should have function to get the relative package
 	// path here.
 	prOpts := printer.NewOpt().
+		Path(pn.pkg.UniquePath).
 		DisplayPath(pn.pkg.DisplayPath).
-		DisplayName(hctx.runnerOptions.PackageName)
+		DisplayName(hctx.runnerOptions.RootPackageName)
 	pr.OptPrintf(prOpts, "\n")
 
 	pl, err := pn.pkg.Pipeline()
@@ -731,11 +732,11 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
-		return mutatedResources, errors.E(op, hctx.runnerOptions.PackageName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.RootPackageName, pn.pkg.UniquePath, err)
 	}
 
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
-		return mutatedResources, errors.E(op, hctx.runnerOptions.PackageName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.RootPackageName, pn.pkg.UniquePath, err)
 	}
 	return mutatedResources, nil
 }

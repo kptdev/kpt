@@ -243,17 +243,19 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		if fr.opts.DisplayResourceCount {
 			pr.Printf(" on %d resource(s)", len(input))
 		}
-		if fr.opts.PackageName != "" {
-			pr.Printf(" on package %q", fr.opts.PackageName)
+		if fr.opts.RootPackageName != "" {
+			pr.Printf(" on package %q", fr.opts.RootPackageName)
+		} else if fr.pkgPath != "" {
+			pr.Printf(" on package at path %q", fr.pkgPath)
 		}
 		pr.Printf("\n")
 	}
 	t0 := time.Now()
 	output, err = fr.do(input)
+	printerOpts := printer.NewOpt().DisplayName(fr.opts.RootPackageName).Path(fr.pkgPath)
 	if err != nil {
-		printOpt := printer.NewOpt()
-		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printOpt)
+		pr.OptPrintf(printerOpts, "[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
+		printFnResult(fr.ctx, fr.fnResult, printerOpts)
 		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
@@ -261,8 +263,8 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
-		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
+		pr.OptPrintf(printerOpts, "[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
+		printFnResult(fr.ctx, fr.fnResult, printerOpts)
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err

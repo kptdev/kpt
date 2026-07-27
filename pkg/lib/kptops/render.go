@@ -40,8 +40,8 @@ type renderer struct {
 var _ fn.Renderer = &renderer{}
 
 func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresultv1.ResultList, error) {
-	if opts.DisplayName != "" && r.runnerOptions.PackageName == "" { //nolint:staticcheck // SA1019
-		r.runnerOptions.PackageName = opts.DisplayName //nolint:staticcheck // SA1019
+	if opts.DisplayName != "" && r.runnerOptions.RootPackageName == "" { //nolint:staticcheck // SA1019
+		r.runnerOptions.RootPackageName = opts.DisplayName //nolint:staticcheck // SA1019
 	}
 
 	rr := Renderer{

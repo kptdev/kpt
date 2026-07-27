@@ -67,9 +67,9 @@ type RunnerOptions struct {
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
 
-	// PackageName is the optional display name of the package. Purely for logging.
+	// RootPackageName is the optional display name of the package. Purely for logging.
 	// TODO: this does not account for subpackages
-	PackageName string
+	RootPackageName string
 
 	// TruncateImageName determines whether the full image name or just the base
 	// name and the tag will be logged.
