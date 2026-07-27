@@ -36,7 +36,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: kptfilev1.Selector{
@@ -51,7 +51,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: kptfilev1.Selector{
@@ -67,7 +67,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: kptfilev1.Selector{
@@ -82,7 +82,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: kptfilev1.Selector{
@@ -98,7 +98,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: kptfilev1.Selector{
@@ -117,7 +117,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
+    internal.config.kubernetes.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: kptfilev1.Selector{
