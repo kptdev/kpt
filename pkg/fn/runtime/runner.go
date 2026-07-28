@@ -51,13 +51,8 @@ func NewRunner(
 	fnResults *fnresultv1.ResultList,
 	opts runneroptions.RunnerOptions,
 	runtime fn.FunctionRuntime,
-	resources ...[]*yaml.RNode,
 ) (*FunctionRunner, error) {
-	var inputResources []*yaml.RNode
-	if len(resources) > 0 {
-		inputResources = resources[0]
-	}
-	config, err := newFnConfig(fsys, f, pkgPath, inputResources)
+	config, err := newFnConfig(fsys, f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -510,7 +505,7 @@ func enforcePathInvariants(nodes []*yaml.RNode) error {
 	return nil
 }
 
-func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfilev1.UniquePath, resources []*yaml.RNode) (*yaml.RNode, error) {
+func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfilev1.UniquePath) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
 	fn := errors.Fn(f.Image)
 
@@ -540,17 +535,6 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfile
 			return nil, errors.E(op, fn, err)
 		}
 		return configNode, nil
-	case f.ConfigRef != nil:
-		if resources == nil {
-			// Resources not available yet (e.g. during mutator chain construction).
-			// Config will be resolved from the input list before execution.
-			return nil, nil
-		}
-		node, err := ResolveConfigRef(f.ConfigRef, pkgPath, resources)
-		if err != nil {
-			return nil, errors.E(op, fn, err)
-		}
-		return node, nil
 	}
 	// no need to return ConfigMap if no config given
 	return nil, nil
@@ -573,19 +557,9 @@ func ResolveConfigRef(ref *kptfilev1.ResourceReference, pkgPath kptfilev1.Unique
 				continue
 			}
 		}
-		if ref.APIVersion != "" && meta.APIVersion != ref.APIVersion {
-			continue
+		if ref.Matches(meta) {
+			matches = append(matches, r)
 		}
-		if meta.Kind != ref.Kind {
-			continue
-		}
-		if meta.Name != ref.Name {
-			continue
-		}
-		if ref.Namespace != "" && meta.Namespace != ref.Namespace {
-			continue
-		}
-		matches = append(matches, r)
 	}
 	switch len(matches) {
 	case 0:

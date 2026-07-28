@@ -382,6 +382,24 @@ type ResourceReference struct {
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 }
 
+// Matches reports whether the given resource metadata satisfies this reference.
+// Optional fields (APIVersion, Namespace) only filter when non-empty.
+func (r *ResourceReference) Matches(meta yaml.ResourceMeta) bool {
+	if r.APIVersion != "" && meta.APIVersion != r.APIVersion {
+		return false
+	}
+	if meta.Kind != r.Kind {
+		return false
+	}
+	if meta.Name != r.Name {
+		return false
+	}
+	if r.Namespace != "" && meta.Namespace != r.Namespace {
+		return false
+	}
+	return true
+}
+
 // Selector specifies the selection criteria
 // please update IsEmpty method if more properties are added
 type Selector struct {

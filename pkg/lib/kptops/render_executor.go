@@ -791,6 +791,8 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			// Resolve configRef from the current input resources. Like configPath,
 			// the referenced resource may have been mutated by earlier pipeline steps,
 			// so we resolve it fresh before each execution.
+			// Note: the resource remains in the input list (same as configPath behaviour)
+			// so that mutations to it are preserved across pipeline steps.
 			resolved, err := fnruntime.ResolveConfigRef(pl.Mutators[i].ConfigRef, pn.pkg.UniquePath, input)
 			if err != nil {
 				return nil, err
@@ -869,7 +871,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if err != nil {
 			return err
 		}
-		var validator kio.Filter
+		var validator *fnruntime.FunctionRunner
 		displayResourceCount := false
 		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
 			displayResourceCount = true
@@ -881,10 +883,18 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime, input)
+		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
+		}
+		if function.ConfigRef != nil {
+			resolved, err := fnruntime.ResolveConfigRef(function.ConfigRef, pn.pkg.UniquePath, input)
+			if err != nil {
+				hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
+				return err
+			}
+			validator.SetFnConfig(resolved)
 		}
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))

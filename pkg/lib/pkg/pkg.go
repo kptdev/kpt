@@ -486,19 +486,9 @@ func validateConfigRefExists(fnType string, i int, fn kptfilev1.Function, resour
 		if err != nil {
 			continue
 		}
-		if ref.APIVersion != "" && meta.APIVersion != ref.APIVersion {
-			continue
+		if ref.Matches(meta) {
+			return nil // found
 		}
-		if meta.Kind != ref.Kind {
-			continue
-		}
-		if meta.Name != ref.Name {
-			continue
-		}
-		if ref.Namespace != "" && meta.Namespace != ref.Namespace {
-			continue
-		}
-		return nil // found
 	}
 	refDesc := ref.Kind + "/" + ref.Name
 	if ref.APIVersion != "" {
