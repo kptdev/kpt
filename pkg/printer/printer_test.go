@@ -26,9 +26,9 @@ func TestOptPrintf_WithDisplayPath(t *testing.T) {
 	pr := New(&buf, &buf)
 
 	opt := NewOpt().DisplayPath("my/display/path")
-	pr.OptPrintf(opt, ": operation completed\n")
+	pr.OptPrintf(opt, " operation completed\n")
 
-	expected := "Package: \"my/display/path\": operation completed\n"
+	expected := "Package \"my/display/path\": operation completed\n"
 
 	if buf.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, buf.String())
@@ -40,10 +40,10 @@ func TestOptPrintf_WithUniquePath(t *testing.T) {
 	pr := New(&buf, &buf)
 
 	opt := NewOpt().Path("my/unique/path")
-	pr.OptPrintf(opt, ": sync successful\n")
+	pr.OptPrintf(opt, " sync successful\n")
 
 	// RelativePath may fail, so fallback to absolute path
-	expected := "Package: \"my/unique/path\": sync successful\n"
+	expected := "Package \"my/unique/path\": sync successful\n"
 
 	if buf.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, buf.String())
@@ -55,10 +55,10 @@ func TestOptPrintf_WithDisplayName(t *testing.T) {
 	pr := New(&buf, &buf)
 
 	opt := NewOpt().DisplayName("my-repo.my-package.v1")
-	pr.OptPrintf(opt, ": sync successful\n")
+	pr.OptPrintf(opt, " sync successful\n")
 
 	// RelativePath may fail, so fallback to absolute path
-	expected := "Package: \"my-repo.my-package.v1\": sync successful\n"
+	expected := "Package \"my-repo.my-package.v1\": sync successful\n"
 
 	if buf.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, buf.String())
@@ -84,7 +84,7 @@ func TestPrintPackage_WithLeadingNewline(t *testing.T) {
 	p := &pkg.Pkg{DisplayPath: "my/package/path"}
 	pr.PrintPackage(p, true)
 
-	expected := "\nPackage: \"my/package/path\"\n"
+	expected := "\nPackage \"my/package/path\":\n"
 	if buf.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, buf.String())
 	}
@@ -97,7 +97,7 @@ func TestPrintPackage_WithoutLeadingNewline(t *testing.T) {
 	p := &pkg.Pkg{DisplayPath: "another/package"}
 	pr.PrintPackage(p, false)
 
-	expected := "Package: \"another/package\"\n"
+	expected := "Package \"another/package\":\n"
 	if buf.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, buf.String())
 	}

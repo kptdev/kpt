@@ -703,14 +703,19 @@ func buildPipelineInputWithScopedVisibility(node *pkgNode, childrenMap map[kptfi
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
 func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
+
+	// TODO: the way this constructs the subpackage name does not fit Porch
+	hctx.runnerOptions.FullDisplayName = resolveFullDisplayName(pn.pkg, hctx.runnerOptions.RootDisplayName)
+
 	pr := printer.FromContextOrDie(ctx)
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
-	// package structure. We should have function to get the relative package
-	// path here.
+	//       package structure. We should have function to get the relative package
+	//       path here.
+	// ^^^^^ did they mean something like pn.pkg.UniquePath.RelativePath()?
 	prOpts := printer.NewOpt().
 		Path(pn.pkg.UniquePath).
 		DisplayPath(pn.pkg.DisplayPath).
-		DisplayName(hctx.runnerOptions.RootPackageName)
+		DisplayName(hctx.runnerOptions.FullDisplayName)
 	pr.OptPrintf(prOpts, "\n")
 
 	pl, err := pn.pkg.Pipeline()
@@ -732,13 +737,49 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
-		return mutatedResources, errors.E(op, hctx.runnerOptions.RootPackageName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.FullDisplayName, pn.pkg.UniquePath, err)
 	}
 
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
-		return mutatedResources, errors.E(op, hctx.runnerOptions.RootPackageName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.FullDisplayName, pn.pkg.UniquePath, err)
 	}
 	return mutatedResources, nil
+}
+
+// resolveFullDisplayName constructs the "display name" of the current (sub)package
+// based on the parents' Kptfile metadata.name.
+// If `root` is non-empty, we substitute the first package's name.
+func resolveFullDisplayName(p *pkg.Pkg, root string) string {
+	var names []string
+	for pp := p; pp != nil; pp = pp.Parent {
+		names = append(names, resolvePackageName(pp))
+	}
+
+	slices.Reverse(names)
+	if root != "" {
+		names[0] = root
+	}
+	return strings.Join(names, "/")
+}
+
+func resolvePackageName(p *pkg.Pkg) string {
+	kptfile, err := p.Kptfile()
+	// try Kptfile metadata name first
+	if err == nil && kptfile.Name != "" {
+		return kptfile.Name
+	}
+
+	// try the basename of the directory
+	if p.DisplayPath != "" {
+		if lastSlash := strings.Index(string(p.DisplayPath), "/"); lastSlash > -1 {
+			return string(p.DisplayPath)[lastSlash+1:]
+		}
+
+		return string(p.DisplayPath)
+	}
+
+	// this should never happen
+	return "<UNKNOWN>"
 }
 
 // runMutators runs a set of mutators functions on given input resources.

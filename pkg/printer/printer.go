@@ -29,7 +29,7 @@ import (
 var TruncateOutput bool
 
 const (
-	packagePrefixFormat = "Package: %q"
+	packagePrefixFormat = "Package %q:"
 )
 
 // Printer defines capabilities to display content in kpt CLI.
@@ -123,7 +123,7 @@ func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
 		fmt.Fprint(pr.errStream, "\n")
 	}
-	fmt.Fprintf(pr.errStream, "Package: %q\n", p.DisplayPath)
+	fmt.Fprintf(pr.errStream, "Package %q:\n", p.DisplayPath)
 }
 
 // Printf is the wrapper over fmt.Printf that displays the output.

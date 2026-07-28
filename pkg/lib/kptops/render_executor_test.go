@@ -321,16 +321,16 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 			name:      "Use hydrateBfsOrder with renderBfs true",
 			renderBfs: true,
 			orderedOutput: []string{
-				`Package: "root"`,
-				`Package: "root/sibling"`,
+				`Package "root-package":`,
+				`Package "root-package/sibling-package":`,
 			},
 		},
 		{
 			name:      "Use default hydrate with renderBfs false",
 			renderBfs: false,
 			orderedOutput: []string{
-				`Package: "root/sibling"`,
-				`Package: "root"`,
+				`Package "root-package/sibling-package":`,
+				`Package "root-package":`,
 			},
 		},
 	}

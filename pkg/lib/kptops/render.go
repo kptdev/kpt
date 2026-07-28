@@ -40,8 +40,8 @@ type renderer struct {
 var _ fn.Renderer = &renderer{}
 
 func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresultv1.ResultList, error) {
-	if opts.DisplayName != "" && r.runnerOptions.RootPackageName == "" { //nolint:staticcheck // SA1019
-		r.runnerOptions.RootPackageName = opts.DisplayName //nolint:staticcheck // SA1019
+	if opts.DisplayName != "" && r.runnerOptions.RootDisplayName == "" { //nolint:staticcheck // SA1019
+		r.runnerOptions.RootDisplayName = opts.DisplayName //nolint:staticcheck // SA1019
 	}
 
 	rr := Renderer{
@@ -58,7 +58,7 @@ type packagePrinter struct{}
 var _ printer.Printer = &packagePrinter{}
 
 const (
-	packagePrefixFormat = "Package: %q"
+	packagePrefixFormat = "Package %q:"
 	logDepth            = 2
 )
 
@@ -82,11 +82,11 @@ func (p *packagePrinter) OptPrintf(opt *printer.Options, format string, args ...
 	var prefix string
 	switch {
 	case opt.PkgDisplayName != "":
-		prefix = fmt.Sprintf("Package %q: ", opt.PkgDisplayName)
+		prefix = fmt.Sprintf(packagePrefixFormat, opt.PkgDisplayName)
 	case !opt.PkgDisplayPath.Empty():
-		prefix = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath))
+		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgDisplayPath))
 	case !opt.PkgPath.Empty():
-		prefix = fmt.Sprintf("Package %q: ", string(opt.PkgPath))
+		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgPath))
 	}
 	p.printfDepth(logDepth, prefix+format, args...)
 }

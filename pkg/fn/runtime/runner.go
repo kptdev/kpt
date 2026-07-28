@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -225,6 +226,7 @@ type FunctionRunner struct {
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
+	// prOpts := printer.NewOpt().DisplayName(fr.opts.FullDisplayName).Path(fr.pkgPath)
 	fnName := fr.name
 	if fr.opts.TruncateImageName {
 		baseName, tag := baseNameAndTag(fr.name)
@@ -235,27 +237,28 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		}
 	}
 	if !fr.disableCLIOutput {
+		sb := strings.Builder{}
+		sb.WriteString("[RUNNING] ")
 		if fr.opts.AllowWasm {
-			pr.Printf("[RUNNING] WASM %q", fnName)
-		} else {
-			pr.Printf("[RUNNING] %q", fnName)
+			sb.WriteString("WASM ")
 		}
+		sb.WriteString(strconv.Quote(fnName))
 		if fr.opts.DisplayResourceCount {
-			pr.Printf(" on %d resource(s)", len(input))
+			sb.WriteString(" on " + strconv.Itoa(len(input)) + " resource(s)")
 		}
-		if fr.opts.RootPackageName != "" {
-			pr.Printf(" on package %q", fr.opts.RootPackageName)
+		if fr.opts.FullDisplayName != "" {
+			sb.WriteString(" on package " + strconv.Quote(fr.opts.FullDisplayName))
 		} else if fr.pkgPath != "" {
-			pr.Printf(" on package at path %q", fr.pkgPath)
+			sb.WriteString(" on package at path " + strconv.Quote(fr.pkgPath.String()))
 		}
-		pr.Printf("\n")
+		sb.WriteString("\n")
+		pr.Printf("%s", sb.String()) // TODO: use OptPrintf
 	}
 	t0 := time.Now()
 	output, err = fr.do(input)
-	printerOpts := printer.NewOpt().DisplayName(fr.opts.RootPackageName).Path(fr.pkgPath)
 	if err != nil {
-		pr.OptPrintf(printerOpts, "[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printerOpts)
+		pr.OptPrintf(printer.NewOpt(), "[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100)) // TODO: use OptPrintf correctly
+		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())                                                       // TODO: pass opts
 		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
@@ -263,8 +266,8 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
-		pr.OptPrintf(printerOpts, "[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printerOpts)
+		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100)) // TODO: use OptPrintf
+		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())                                  // TODO: pass opts
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
