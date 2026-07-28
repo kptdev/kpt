@@ -393,7 +393,7 @@ Successfully executed 2 function(s) in 1 package(s).
 
 # examine the output of backend package
 $ kpt pkg tree backend
-Package "backend"
+Package "backend" (independent)
 ├── [Kptfile]  Kptfile backend
 ├── [namespace.yaml]  Namespace backend
 ├── [package-context.yaml]  ConfigMap kptfile.kpt.dev

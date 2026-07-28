@@ -144,13 +144,13 @@ View the package hierarchy using the `tree` command:
 
 ```shell
 kpt pkg tree wordpress/
-Package "wordpress"
+Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql"
+└── Package "mysql" (dependent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
