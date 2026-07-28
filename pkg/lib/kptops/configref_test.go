@@ -32,6 +32,38 @@ spec:
   replicas: 3
 `
 
+// configRefTestSetup holds the filesystem and renderer for configRef tests.
+type configRefTestSetup struct {
+	fs filesys.FileSystem
+	r  Renderer
+}
+
+// setupConfigRefTest creates an in-memory filesystem populated with the given
+// Kptfile, optional function config, and the standard test deployment resource,
+// then returns a ready-to-use Renderer. Pass an empty string for fnConfig to
+// skip writing fn-config.yaml.
+func setupConfigRefTest(t *testing.T, kptfile, fnConfig string) configRefTestSetup {
+	t.Helper()
+
+	fs := filesys.MakeFsInMemory()
+	require.NoError(t, fs.MkdirAll("/pkg"))
+	require.NoError(t, fs.WriteFile("/pkg/Kptfile", []byte(kptfile)))
+	if fnConfig != "" {
+		require.NoError(t, fs.WriteFile("/pkg/fn-config.yaml", []byte(fnConfig)))
+	}
+	require.NoError(t, fs.WriteFile("/pkg/resources.yaml", []byte(testDeploymentResource)))
+
+	r := Renderer{
+		PkgPath:    "/pkg",
+		FileSystem: fs,
+		Runtime:    &runtime{},
+	}
+	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
+
+	return configRefTestSetup{fs: fs, r: r}
+}
+
 func TestRenderWithConfigRef_Mutator(t *testing.T) {
 	kptfile := `apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -57,27 +89,13 @@ data:
   namespace: production
 `
 
-	resources := testDeploymentResource
+	ts := setupConfigRefTest(t, kptfile, fnConfig)
 
-	fs := filesys.MakeFsInMemory()
-	require.NoError(t, fs.MkdirAll("/pkg"))
-	require.NoError(t, fs.WriteFile("/pkg/Kptfile", []byte(kptfile)))
-	require.NoError(t, fs.WriteFile("/pkg/fn-config.yaml", []byte(fnConfig)))
-	require.NoError(t, fs.WriteFile("/pkg/resources.yaml", []byte(resources)))
-
-	r := Renderer{
-		PkgPath:    "/pkg",
-		FileSystem: fs,
-		Runtime:    &runtime{},
-	}
-	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
-
-	_, err := r.Execute(fake.CtxWithDefaultPrinter())
+	_, err := ts.r.Execute(fake.CtxWithDefaultPrinter())
 	require.NoError(t, err)
 
 	// Verify the deployment got the namespace set
-	res, err := fs.ReadFile("/pkg/resources.yaml")
+	res, err := ts.fs.ReadFile("/pkg/resources.yaml")
 	require.NoError(t, err)
 	assert.Contains(t, string(res), "namespace: production")
 }
@@ -112,27 +130,13 @@ data:
   env: staging
 `
 
-	resources := testDeploymentResource
+	ts := setupConfigRefTest(t, kptfile, fnConfig)
 
-	fs := filesys.MakeFsInMemory()
-	require.NoError(t, fs.MkdirAll("/pkg"))
-	require.NoError(t, fs.WriteFile("/pkg/Kptfile", []byte(kptfile)))
-	require.NoError(t, fs.WriteFile("/pkg/fn-config.yaml", []byte(fnConfig)))
-	require.NoError(t, fs.WriteFile("/pkg/resources.yaml", []byte(resources)))
-
-	r := Renderer{
-		PkgPath:    "/pkg",
-		FileSystem: fs,
-		Runtime:    &runtime{},
-	}
-	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
-
-	_, err := r.Execute(fake.CtxWithDefaultPrinter())
+	_, err := ts.r.Execute(fake.CtxWithDefaultPrinter())
 	require.NoError(t, err)
 
 	// Verify the mutator ran (namespace set) and the validator didn't error
-	res, err := fs.ReadFile("/pkg/resources.yaml")
+	res, err := ts.fs.ReadFile("/pkg/resources.yaml")
 	require.NoError(t, err)
 	assert.Contains(t, string(res), "namespace: staging")
 }
@@ -153,22 +157,9 @@ pipeline:
         name: does-not-exist
 `
 
-	resources := testDeploymentResource
+	ts := setupConfigRefTest(t, kptfile, "")
 
-	fs := filesys.MakeFsInMemory()
-	require.NoError(t, fs.MkdirAll("/pkg"))
-	require.NoError(t, fs.WriteFile("/pkg/Kptfile", []byte(kptfile)))
-	require.NoError(t, fs.WriteFile("/pkg/resources.yaml", []byte(resources)))
-
-	r := Renderer{
-		PkgPath:    "/pkg",
-		FileSystem: fs,
-		Runtime:    &runtime{},
-	}
-	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
-
-	_, err := r.Execute(fake.CtxWithDefaultPrinter())
+	_, err := ts.r.Execute(fake.CtxWithDefaultPrinter())
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "does-not-exist")
 }
@@ -200,26 +191,12 @@ data:
   namespace: filtered
 `
 
-	resources := testDeploymentResource
+	ts := setupConfigRefTest(t, kptfile, fnConfig)
 
-	fs := filesys.MakeFsInMemory()
-	require.NoError(t, fs.MkdirAll("/pkg"))
-	require.NoError(t, fs.WriteFile("/pkg/Kptfile", []byte(kptfile)))
-	require.NoError(t, fs.WriteFile("/pkg/fn-config.yaml", []byte(fnConfig)))
-	require.NoError(t, fs.WriteFile("/pkg/resources.yaml", []byte(resources)))
-
-	r := Renderer{
-		PkgPath:    "/pkg",
-		FileSystem: fs,
-		Runtime:    &runtime{},
-	}
-	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
-
-	_, err := r.Execute(fake.CtxWithDefaultPrinter())
+	_, err := ts.r.Execute(fake.CtxWithDefaultPrinter())
 	require.NoError(t, err)
 
-	res, err := fs.ReadFile("/pkg/resources.yaml")
+	res, err := ts.fs.ReadFile("/pkg/resources.yaml")
 	require.NoError(t, err)
 	assert.Contains(t, string(res), "namespace: filtered")
 }
@@ -254,27 +231,13 @@ data:
   namespace: chained
 `
 
-	resources := testDeploymentResource
+	ts := setupConfigRefTest(t, kptfile, fnConfig)
 
-	fs := filesys.MakeFsInMemory()
-	require.NoError(t, fs.MkdirAll("/pkg"))
-	require.NoError(t, fs.WriteFile("/pkg/Kptfile", []byte(kptfile)))
-	require.NoError(t, fs.WriteFile("/pkg/fn-config.yaml", []byte(fnConfig)))
-	require.NoError(t, fs.WriteFile("/pkg/resources.yaml", []byte(resources)))
-
-	r := Renderer{
-		PkgPath:    "/pkg",
-		FileSystem: fs,
-		Runtime:    &runtime{},
-	}
-	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
-
-	_, err := r.Execute(fake.CtxWithDefaultPrinter())
+	_, err := ts.r.Execute(fake.CtxWithDefaultPrinter())
 	require.NoError(t, err)
 
 	// Verify the second mutator got the config and set the namespace
-	res, err := fs.ReadFile("/pkg/resources.yaml")
+	res, err := ts.fs.ReadFile("/pkg/resources.yaml")
 	require.NoError(t, err)
 	assert.Contains(t, string(res), "namespace: chained")
 }
