@@ -1,0 +1,17 @@
+diff --git a/Kptfile b/Kptfile
+index 2942092..e7b7790 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -11,3 +11,12 @@ pipeline:
+     - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
+       configMap:
+         strict: "true"
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
++        exitCode: 0

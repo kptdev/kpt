@@ -1,0 +1,37 @@
+diff --git a/Kptfile b/Kptfile
+index 3701834..4ea9a98 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -10,3 +10,32 @@ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+       configPath: package-context.yaml
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
++        exitCode: 0
++        results:
++          - message: set 7 labels in total
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
++        exitCode: 0
++        results:
++          - message: set 9 labels in total
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
++        exitCode: 0
++        results:
++          - message: all matching namespaces are already "example". no value changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        exitCode: 0
