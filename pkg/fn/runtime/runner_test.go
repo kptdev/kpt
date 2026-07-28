@@ -91,7 +91,7 @@ data: {foo: bar}
 				c.fn.ConfigPath = path.Base(tmp.Name())
 			}
 			fsys := filesys.MakeFsOnDisk()
-			cn, err := newFnConfig(fsys, &c.fn, kptfilev1.UniquePath(os.TempDir()), nil)
+			cn, err := newFnConfig(fsys, &c.fn, kptfilev1.UniquePath(os.TempDir()))
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")
@@ -941,10 +941,10 @@ data:
 	}
 
 	tests := []struct {
-		name        string
-		ref         *kptfilev1.ResourceReference
-		expectName  string
-		expectErr   string
+		name       string
+		ref        *kptfilev1.ResourceReference
+		expectName string
+		expectErr  string
 	}{
 		{
 			name: "match by kind and name",

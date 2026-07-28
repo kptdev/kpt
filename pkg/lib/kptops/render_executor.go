@@ -814,6 +814,8 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			// Resolve configRef from the current input resources. Like configPath,
 			// the referenced resource may have been mutated by earlier pipeline steps,
 			// so we resolve it fresh before each execution.
+			// Note: the resource remains in the input list (same as configPath behaviour)
+			// so that mutations to it are preserved across pipeline steps.
 			resolved, err := fnruntime.ResolveConfigRef(pl.Mutators[i].ConfigRef, pn.pkg.UniquePath, input)
 			if err != nil {
 				return nil, err
@@ -924,6 +926,15 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			&fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
 			return err
+		}
+
+		if function.ConfigRef != nil {
+			resolved, err := fnruntime.ResolveConfigRef(function.ConfigRef, pn.pkg.UniquePath, input)
+			if err != nil {
+				hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
+				return err
+			}
+			validator.SetFnConfig(resolved)
 		}
 
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
