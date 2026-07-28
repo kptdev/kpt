@@ -36,7 +36,8 @@ When a function creates new resources, it should set this annotation to a path
 relative to the same package directory. kpt handles adjusting paths to be
 relative to the root package before writing to disk.
 
-For `kpt fn eval DIR`, the path is relative to DIR.
+For `kpt fn eval DIR`, the path is relative to the package directory DIR
+(the directory passed as the evaluation target).
 
 [config.kubernetes.io/depends-on]: /reference/annotations/depends-on/
 [config.kubernetes.io/apply-time-mutation]: /reference/annotations/apply-time-mutation/
