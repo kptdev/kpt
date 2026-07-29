@@ -90,7 +90,7 @@ Use `T` parameter to filter tests by regex (e.g., `T=fnconfig` for function conf
 make test-live-apply
 ```
 
-Requires KinD with Kubernetres versions defined in `jobs.kind.strategy.matrix.version` path of the
+Requires KinD with Kubernetes versions defined in `jobs.kind.strategy.matrix.version` path of the
 [e2e test workflows](.github/workflows/live-e2e.yml) (specific SHAs pinned in CI). These tests use Kind
 internally. Timeout is 20 minutes.
 
