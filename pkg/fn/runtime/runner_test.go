@@ -924,7 +924,7 @@ data:
 				Kind: "ConfigMap",
 				Name: "nonexistent",
 			},
-			expectErr: `configRef: resource /ConfigMap "nonexistent" not found in package`,
+			expectErr: `configRef: resource ConfigMap "nonexistent" not found in package`,
 		},
 		{
 			name: "no match - wrong kind",
@@ -932,7 +932,7 @@ data:
 				Kind: "Secret",
 				Name: "my-config",
 			},
-			expectErr: `configRef: resource /Secret "my-config" not found in package`,
+			expectErr: `configRef: resource Secret "my-config" not found in package`,
 		},
 		{
 			name: "no match - apiVersion mismatch",
@@ -950,7 +950,7 @@ data:
 				Name:      "other-config",
 				Namespace: "production",
 			},
-			expectErr: `configRef: resource /ConfigMap "other-config" not found in package`,
+			expectErr: `configRef: resource ConfigMap "other-config" in namespace "production" not found in package`,
 		},
 	}
 

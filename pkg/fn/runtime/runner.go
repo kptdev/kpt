@@ -563,12 +563,29 @@ func ResolveConfigRef(ref *kptfilev1.ResourceReference, pkgPath kptfilev1.Unique
 	}
 	switch len(matches) {
 	case 0:
-		return nil, fmt.Errorf("configRef: resource %s/%s %q not found in package", ref.APIVersion, ref.Kind, ref.Name)
+		return nil, fmt.Errorf("configRef: resource %s not found in package", formatResourceRef(ref))
 	case 1:
 		return matches[0], nil
 	default:
-		return nil, fmt.Errorf("configRef: resource %s/%s %q matched %d resources, must match exactly one", ref.APIVersion, ref.Kind, ref.Name, len(matches))
+		return nil, fmt.Errorf("configRef: resource %s matched %d resources, must match exactly one", formatResourceRef(ref), len(matches))
 	}
+}
+
+// formatResourceRef produces a human-readable representation of a resource
+// reference for error messages. It omits empty fields to avoid confusing
+// output like "/ConfigMap".
+func formatResourceRef(ref *kptfilev1.ResourceReference) string {
+	var s string
+	if ref.APIVersion != "" {
+		s = ref.APIVersion + "/" + ref.Kind
+	} else {
+		s = ref.Kind
+	}
+	s += " " + fmt.Sprintf("%q", ref.Name)
+	if ref.Namespace != "" {
+		s += " in namespace " + fmt.Sprintf("%q", ref.Namespace)
+	}
+	return s
 }
 
 // hasTagOrDigest reports whether the image reference contains an explicit tag or digest.

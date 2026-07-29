@@ -477,27 +477,44 @@ func makeStepValidationErr(stepType string, i int, fnName, fnImage, configPath s
 	}
 }
 
-// validateConfigRefExists checks that the resource referenced by configRef exists
-// among the given resources.
+// validateConfigRefExists checks that the resource referenced by configRef
+// resolves to exactly one resource among the given resources.
 func validateConfigRefExists(fnType string, i int, fn kptfilev1.Function, resources []*yaml.RNode) error {
 	ref := fn.ConfigRef
+	matchCount := 0
 	for _, r := range resources {
 		meta, err := r.GetMeta()
 		if err != nil {
 			continue
 		}
 		if ref.Matches(meta) {
-			return nil // found
+			matchCount++
 		}
 	}
-	refDesc := ref.Kind + "/" + ref.Name
+
+	refDesc := ref.Kind + " " + fmt.Sprintf("%q", ref.Name)
 	if ref.APIVersion != "" {
 		refDesc = ref.APIVersion + "/" + refDesc
 	}
-	return &kptfilev1.ValidateError{
-		Field:  fmt.Sprintf("pipeline.%s[%d].configRef", fnType, i),
-		Value:  refDesc,
-		Reason: fmt.Sprintf("referenced resource %q not found in package for function %q", refDesc, PipelineStepNameOrImage(fn.Name, fn.Image)),
+	if ref.Namespace != "" {
+		refDesc += " in namespace " + fmt.Sprintf("%q", ref.Namespace)
+	}
+
+	switch {
+	case matchCount == 0:
+		return &kptfilev1.ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef", fnType, i),
+			Value:  refDesc,
+			Reason: fmt.Sprintf("referenced resource %s not found in package for function %q", refDesc, PipelineStepNameOrImage(fn.Name, fn.Image)),
+		}
+	case matchCount > 1:
+		return &kptfilev1.ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef", fnType, i),
+			Value:  refDesc,
+			Reason: fmt.Sprintf("referenced resource %s matched %d resources, must match exactly one; use namespace to disambiguate", refDesc, matchCount),
+		}
+	default:
+		return nil
 	}
 }
 
