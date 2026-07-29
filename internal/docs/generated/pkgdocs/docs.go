@@ -257,7 +257,7 @@ var TreeExamples = `
   └── Package "mysql" (dependent)
       ├── [Kptfile]  Kptfile mysql
       ├── [deployment.yaml]  Deployment wordpress-mysql
-      └── [deployment.yaml]  Service wordpress-mysql
+      └── [service.yaml]  Service wordpress-mysql
 `
 
 var UpdateShort = `Apply upstream package updates.`

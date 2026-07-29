@@ -154,7 +154,7 @@ Package "wordpress" (independent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [service.yaml]  Service wordpress-mysql
 ```
 
 This _package hierarchy_ contains two packages:

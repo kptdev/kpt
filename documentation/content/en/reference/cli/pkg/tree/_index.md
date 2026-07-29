@@ -63,7 +63,7 @@ Package "wordpress" (independent)
 └── Package "mysql" (dependent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [service.yaml]  Service wordpress-mysql
 ```
 
 <!--mdtogo-->
