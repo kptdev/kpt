@@ -241,3 +241,48 @@ data:
 	require.NoError(t, err)
 	assert.Contains(t, string(res), "namespace: chained")
 }
+
+func TestRenderWithConfigRef_AmbiguousMatch(t *testing.T) {
+	// configRef that matches multiple resources should fail at validation
+	kptfile := `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+  annotations:
+    config.kubernetes.io/local-config: "true"
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+      configRef:
+        kind: ConfigMap
+        name: ns-config
+`
+
+	// Two ConfigMaps with the same name but different namespaces
+	fnConfig := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ns-config
+  namespace: ns-a
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  namespace: production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ns-config
+  namespace: ns-b
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  namespace: staging
+`
+
+	ts := setupConfigRefTest(t, kptfile, fnConfig)
+
+	_, err := ts.r.Execute(fake.CtxWithDefaultPrinter())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "matched 2 resources")
+}
