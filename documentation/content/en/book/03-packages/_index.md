@@ -148,7 +148,7 @@ Package "wordpress" (independent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [service.yaml]  Service wordpress-mysql
 ```
 
 See the [tree command reference](../../reference/cli/pkg/tree/) for usage.
@@ -362,7 +362,7 @@ Package "wordpress" (independent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [service.yaml]  Service wordpress-mysql
 ```
 
 First, delete the `mysql` subpackage. Deleting a subpackage is done by deleting the subdirectory, as follows:

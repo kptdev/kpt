@@ -38,6 +38,8 @@ const (
 	TreeStructurePackage TreeStructure = "directory"
 	// %q holds the package name
 	PkgNameFormat = "Package %q"
+	// PkgNameWithDepFormat formats a package name with its dependency type,
+	PkgNameWithDepFormat = PkgNameFormat + " (%s)"
 
 	// PkgTypeIndependent indicates a package with its own upstream source.
 	PkgTypeIndependent = "independent"
@@ -186,7 +188,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		// has no upstream source (e.g. created with kpt pkg init).
 		pkgType := packageType(p.Root)
 		if pkgType == PkgTypeIndependent {
-			tree.SetValue(fmt.Sprintf(PkgNameFormat+" (%s)", filepath.Base(p.Root), pkgType))
+			tree.SetValue(fmt.Sprintf(PkgNameWithDepFormat, filepath.Base(p.Root), pkgType))
 		} else {
 			tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
 		}
@@ -215,7 +217,7 @@ func branchName(root, dirRelPath string) string {
 	// It is a package (has Kptfile). Determine if independent or dependent.
 	pkgType := packageType(pkgDir)
 	if pkgType != "" {
-		return fmt.Sprintf(PkgNameFormat+" (%s)", name, pkgType)
+		return fmt.Sprintf(PkgNameWithDepFormat, name, pkgType)
 	}
 	return fmt.Sprintf(PkgNameFormat, name)
 }
