@@ -51,66 +51,84 @@ func TestPackageExamples(t *testing.T) {
 			if !c.Config.Sequential {
 				t.Parallel()
 			}
-
-			pkgSrc := filepath.Join(pkgExamplesDir, name)
-			if _, err := os.Stat(filepath.Join(pkgSrc, "Kptfile")); err != nil {
-				t.Fatalf("package-example %q does not have a Kptfile: %v", name, err)
-			}
-
-			// Create a merged directory: package content + test fixtures
-			tmpDir, err := os.MkdirTemp("", "kpt-pkg-examples-e2e-*")
-			if err != nil {
-				t.Fatalf("failed to create temp dir: %v", err)
-			}
-			defer os.RemoveAll(tmpDir)
-
-			mergedPkg := filepath.Join(tmpDir, name)
-
-			// Copy the actual package content
-			if out, err := exec.Command("cp", "-r", pkgSrc, mergedPkg).CombinedOutput(); err != nil {
-				t.Fatalf("failed to copy package: %v\n%s", err, out)
-			}
-
-			// Copy the test fixtures (.expected, .krmignore) on top
-			testFixtures := c.Path
-			entries, err := os.ReadDir(testFixtures)
-			if err != nil {
-				t.Fatalf("failed to read test fixtures dir: %v", err)
-			}
-			for _, entry := range entries {
-				src := filepath.Join(testFixtures, entry.Name())
-				dst := filepath.Join(mergedPkg, entry.Name())
-				if out, err := exec.Command("cp", "-r", src, dst).CombinedOutput(); err != nil {
-					t.Fatalf("failed to copy fixture %s: %v\n%s", entry.Name(), err, out)
-				}
-			}
-
-			// Use the standard runner on the merged package
-			mergedCase := runner.TestCase{
-				Path:   mergedPkg,
-				Config: c.Config,
-			}
-
-			r, err := runner.NewRunner(t, mergedCase, c.Config.TestType)
-			if err != nil {
-				t.Fatalf("failed to create test runner: %v", err)
-			}
-			if r.Skip() {
-				t.Skip()
-			}
-			if err := r.Run(); err != nil {
-				t.Fatalf("failed when running test: %v", err)
-			}
-
-			if updateExpected {
-				// Copy generated expected output back to testdata
-				generatedExpected := filepath.Join(mergedPkg, ".expected")
-				targetExpected := filepath.Join(testFixtures, ".expected")
-				if out, cpErr := exec.Command("cp", "-r", generatedExpected+"/.", targetExpected).CombinedOutput(); cpErr != nil {
-					t.Fatalf("failed to copy updated expected output: %v\n%s", cpErr, out)
-				}
-				t.Logf("updated expected output for %s", name)
-			}
+			runPackageExampleCase(t, pkgExamplesDir, name, c, updateExpected)
 		})
 	}
+}
+
+func runPackageExampleCase(t *testing.T, pkgExamplesDir, name string, c runner.TestCase, updateExpected bool) {
+	t.Helper()
+
+	pkgSrc := filepath.Join(pkgExamplesDir, name)
+	if _, err := os.Stat(filepath.Join(pkgSrc, "Kptfile")); err != nil {
+		t.Fatalf("package-example %q does not have a Kptfile: %v", name, err)
+	}
+
+	mergedPkg := prepareMergedPackage(t, pkgSrc, name, c.Path)
+
+	mergedCase := runner.TestCase{
+		Path:   mergedPkg,
+		Config: c.Config,
+	}
+
+	r, err := runner.NewRunner(t, mergedCase, c.Config.TestType)
+	if err != nil {
+		t.Fatalf("failed to create test runner: %v", err)
+	}
+	if r.Skip() {
+		t.Skip()
+	}
+	if err := r.Run(); err != nil {
+		t.Fatalf("failed when running test: %v", err)
+	}
+
+	if updateExpected {
+		copyUpdatedExpectedOutput(t, mergedPkg, c.Path)
+	}
+}
+
+// prepareMergedPackage creates a temporary directory containing the package
+// content overlaid with test fixtures, and returns the path to the merged package.
+func prepareMergedPackage(t *testing.T, pkgSrc, name, testFixturesDir string) string {
+	t.Helper()
+
+	tmpDir, err := os.MkdirTemp("", "kpt-pkg-examples-e2e-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+
+	mergedPkg := filepath.Join(tmpDir, name)
+
+	// Copy the actual package content
+	if out, err := exec.Command("cp", "-r", pkgSrc, mergedPkg).CombinedOutput(); err != nil {
+		t.Fatalf("failed to copy package: %v\n%s", err, out)
+	}
+
+	// Copy the test fixtures (.expected, .krmignore) on top
+	entries, err := os.ReadDir(testFixturesDir)
+	if err != nil {
+		t.Fatalf("failed to read test fixtures dir: %v", err)
+	}
+	for _, entry := range entries {
+		src := filepath.Join(testFixturesDir, entry.Name())
+		dst := filepath.Join(mergedPkg, entry.Name())
+		if out, err := exec.Command("cp", "-r", src, dst).CombinedOutput(); err != nil {
+			t.Fatalf("failed to copy fixture %s: %v\n%s", entry.Name(), err, out)
+		}
+	}
+
+	return mergedPkg
+}
+
+// copyUpdatedExpectedOutput copies generated expected output back to the testdata directory.
+func copyUpdatedExpectedOutput(t *testing.T, mergedPkg, testFixturesDir string) {
+	t.Helper()
+
+	generatedExpected := filepath.Join(mergedPkg, ".expected")
+	targetExpected := filepath.Join(testFixturesDir, ".expected")
+	if out, err := exec.Command("cp", "-r", generatedExpected+"/.", targetExpected).CombinedOutput(); err != nil {
+		t.Fatalf("failed to copy updated expected output: %v\n%s", err, out)
+	}
+	t.Logf("updated expected output for %s", filepath.Base(mergedPkg))
 }
