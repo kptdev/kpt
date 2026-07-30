@@ -73,7 +73,7 @@ func TestCmd(t *testing.T) {
 			args:                []string{"--delete-propagation-policy", "noSuchPolicy"},
 			namespace:           "testns",
 			destroyCallbackFunc: failOnDestroy,
-			expectedErrorMsg:    "prune propagation policy must be one of Background, Foreground, Orphan",
+			expectedErrorMsg:    "delete propagation policy must be one of Background, Foreground, Orphan",
 		},
 		"destroy accepts Foreground delete-propagation-policy": {
 			args: []string{

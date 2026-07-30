@@ -125,7 +125,7 @@ func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
 
 	r.deletePropPolicy, err = flagutils.ConvertPropagationPolicy(r.deletePropagationPolicyString)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete propagation policy must be one of Background, Foreground, Orphan")
 	}
 
 	if found := printers.ValidatePrinterType(r.output); !found {
