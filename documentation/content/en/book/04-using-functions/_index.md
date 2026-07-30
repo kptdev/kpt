@@ -281,6 +281,8 @@ The `functionConfig` field is an optional meta resource containing the arguments
 
 The general way to provide a `functionConfig` of the arbitrary kind (core or custom resources) is to declare the resource in a separate file, in the same directory as the `Kptfile`, and refer to it using the `configPath` field.
 
+A function will not modify its own `configPath` resource. The resource is passed to the function as configuration only — it will not appear as one of the input resources that the function acts upon. Other functions in the pipeline can still see and modify the file.
+
 For example:
 
 ```yaml
