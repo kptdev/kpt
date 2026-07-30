@@ -66,6 +66,28 @@ func (p *Pipeline) validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
 }
 
 func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkgPath UniquePath) error {
+	if err := f.validateExecutor(fnType, idx); err != nil {
+		return err
+	}
+	if err := f.validateConfigSources(fnType, idx); err != nil {
+		return err
+	}
+	if f.ConfigRef != nil {
+		if err := f.ConfigRef.validate(fnType, idx); err != nil {
+			return err
+		}
+	}
+	if f.ConfigPath != "" {
+		if err := f.validateConfigPath(fsys, fnType, idx, pkgPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateExecutor checks that exactly one of Image or Exec is specified and that
+// the image reference is syntactically valid.
+func (f *Function) validateExecutor(fnType string, idx int) error {
 	if f.Image == "" && f.Exec == "" {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
@@ -79,8 +101,7 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 		}
 	}
 	if f.Image != "" {
-		err := ValidateFunctionImageURL(f.Image)
-		if err != nil {
+		if err := ValidateFunctionImageURL(f.Image); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].image", fnType, idx),
 				Value:  f.Image,
@@ -89,7 +110,11 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 		}
 	}
 	// TODO(droot): validate the exec
+	return nil
+}
 
+// validateConfigSources ensures at most one of configMap, configPath, or configRef is set.
+func (f *Function) validateConfigSources(fnType string, idx int) error {
 	configSources := 0
 	if len(f.ConfigMap) != 0 {
 		configSources++
@@ -106,27 +131,23 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 			Reason: "functionConfig must specify at most one of `configMap`, `configPath`, or `configRef`",
 		}
 	}
+	return nil
+}
 
-	if f.ConfigRef != nil {
-		if err := f.ConfigRef.validate(fnType, idx); err != nil {
-			return err
+// validateConfigPath validates the configPath syntax and verifies the referenced file exists.
+func (f *Function) validateConfigPath(fsys filesys.FileSystem, fnType string, idx int, pkgPath UniquePath) error {
+	if err := validateFnConfigPathSyntax(f.ConfigPath); err != nil {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
+			Value:  f.ConfigPath,
+			Reason: err.Error(),
 		}
 	}
-
-	if f.ConfigPath != "" {
-		if err := validateFnConfigPathSyntax(f.ConfigPath); err != nil {
-			return &ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
-				Value:  f.ConfigPath,
-				Reason: err.Error(),
-			}
-		}
-		if _, err := GetValidatedFnConfigFromPath(fsys, pkgPath, f.ConfigPath); err != nil {
-			return &ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
-				Value:  f.ConfigPath,
-				Reason: err.Error(),
-			}
+	if _, err := GetValidatedFnConfigFromPath(fsys, pkgPath, f.ConfigPath); err != nil {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
+			Value:  f.ConfigPath,
+			Reason: err.Error(),
 		}
 	}
 	return nil
