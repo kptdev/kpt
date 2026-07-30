@@ -1465,3 +1465,197 @@ pipeline:
 	exists := result.mockFS.Exists(filepath.Join(result.pkgPath, "fn-config.yaml"))
 	assert.True(t, exists, "fn-config.yaml should still exist on disk after failed render")
 }
+
+// mutatingMockFnRuntime is a test FunctionRuntime where the first invocation
+// adds a data key to any ConfigMap named "fn-config" in items. This lets us
+// verify that subsequent functions receive the refreshed (mutated) config via
+// excludeAndRefreshFnConfig.
+type mutatingMockFnRuntime struct {
+	// capturedFnConfigData records the functionConfig's data map for each invocation.
+	capturedFnConfigData []map[string]string
+	// capturedItems records the resource names received in items for each invocation.
+	capturedItems [][]string
+}
+
+func (m *mutatingMockFnRuntime) GetRunner(_ context.Context, _ *kptfilev1.Function) (fn.FunctionRunner, error) {
+	return &mutatingMockFnRunner{runtime: m}, nil
+}
+
+// mutatingMockFnRunner mutates any ConfigMap named "fn-config" in items on its
+// first invocation by adding "mutated-by: first-fn" to the data map. Subsequent
+// invocations pass through unmodified but capture the functionConfig data.
+type mutatingMockFnRunner struct {
+	runtime *mutatingMockFnRuntime
+}
+
+func (r *mutatingMockFnRunner) Run(reader io.Reader, writer io.Writer) error {
+	rw := &kio.ByteReadWriter{
+		Reader:                reader,
+		Writer:                writer,
+		KeepReaderAnnotations: true,
+		WrappingAPIVersion:    kio.ResourceListAPIVersion,
+		WrappingKind:          kio.ResourceListKind,
+	}
+	nodes, err := rw.Read()
+	if err != nil {
+		return err
+	}
+
+	// Record items
+	var names []string
+	for _, node := range nodes {
+		names = append(names, node.GetName())
+	}
+	r.runtime.capturedItems = append(r.runtime.capturedItems, names)
+
+	// Capture functionConfig data
+	if rw.FunctionConfig != nil {
+		r.runtime.capturedFnConfigData = append(r.runtime.capturedFnConfigData, rw.FunctionConfig.GetDataMap())
+	} else {
+		r.runtime.capturedFnConfigData = append(r.runtime.capturedFnConfigData, nil)
+	}
+
+	// On first invocation, mutate any ConfigMap named "fn-config" in items
+	// by adding a data key. This simulates a mutator that modifies a resource
+	// which happens to be another function's fn-config.
+	invocation := len(r.runtime.capturedItems) - 1
+	if invocation == 0 {
+		for _, node := range nodes {
+			if node.GetName() == "fn-config" && node.GetKind() == "ConfigMap" {
+				dataMap := node.GetDataMap()
+				if dataMap == nil {
+					dataMap = map[string]string{}
+				}
+				dataMap["mutated-by"] = "first-fn"
+				node.SetDataMap(dataMap)
+				break
+			}
+		}
+	}
+
+	return rw.Write(nodes)
+}
+
+func TestRunMutators_RefreshFnConfigFromPrecedingMutator(t *testing.T) {
+	// This test verifies that when mutator-1 (no configPath) modifies a resource
+	// that is used as mutator-2's functionConfig (via configPath), mutator-2 sees
+	// the updated in-memory version via excludeAndRefreshFnConfig.
+	//
+	// Setup: mutator-1 has no configPath so it sees fn-config in items and mutates it.
+	//        mutator-2 uses fn-config.yaml as configPath, so it's excluded from items
+	//        but passed via functionConfig (refreshed from the mutated input).
+
+	mock := &mutatingMockFnRuntime{}
+	mockFS := filesys.MakeFsInMemory()
+	pkgPath := "/test-pkg"
+	assert.NoError(t, mockFS.Mkdir(pkgPath))
+
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  mutators:
+    - image: mock-mutator-1:latest
+    - image: mock-mutator-2:latest
+      configPath: fn-config.yaml
+`)))
+
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "fn-config.yaml"), []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fn-config
+data:
+  key: original-value
+`)))
+
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "deployment.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 1
+`)))
+
+	var outputBuffer bytes.Buffer
+	ctx := printer.WithContext(context.Background(), printer.New(&outputBuffer, &outputBuffer))
+
+	renderer := &Renderer{
+		PkgPath:    pkgPath,
+		Runtime:    mock,
+		FileSystem: mockFS,
+	}
+
+	_, err := renderer.Execute(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(mock.capturedFnConfigData), "expected 2 mutator invocations")
+
+	// First mutator has no configPath, so functionConfig is nil
+	assert.Nil(t, mock.capturedFnConfigData[0],
+		"first mutator should have no functionConfig (no configPath)")
+
+	// First mutator sees fn-config in items and mutates it
+	assert.Contains(t, mock.capturedItems[0], "fn-config",
+		"first mutator should see fn-config in items")
+
+	// Second mutator should receive the refreshed fn-config as functionConfig
+	// with the mutation applied by the first mutator
+	assert.Equal(t, "first-fn", mock.capturedFnConfigData[1]["mutated-by"],
+		"second mutator should receive the fn-config mutated by the first mutator")
+	assert.Equal(t, "original-value", mock.capturedFnConfigData[1]["key"],
+		"second mutator should still see original data alongside mutation")
+
+	// Second mutator should NOT see fn-config in items (it's its own config)
+	assert.NotContains(t, mock.capturedItems[1], "fn-config",
+		"second mutator should NOT see its own fn-config in items")
+}
+
+func TestRunMutators_NoConfigPathSeesAllResources(t *testing.T) {
+	// When a function has no configPath, it should see all resources including
+	// other functions' fn-configs. excludeAndRefreshFnConfig is a no-op.
+
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  mutators:
+    - image: mock-fn:latest
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	assert.Equal(t, 1, len(result.mock.capturedItems), "expected 1 function invocation")
+
+	// Function should see all resources including fn-config
+	assert.Contains(t, result.mock.capturedItems[0], "fn-config",
+		"function with no configPath should see fn-config in its items")
+	assert.Contains(t, result.mock.capturedItems[0], "my-deployment",
+		"function with no configPath should see deployment in its items")
+}
+
+func TestRunValidators_NoConfigPathSeesAllResources(t *testing.T) {
+	// Same as above but for validators.
+
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  validators:
+    - image: mock-validator:latest
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	assert.Equal(t, 1, len(result.mock.capturedItems), "expected 1 validator invocation")
+
+	// Validator should see all resources including fn-config
+	assert.Contains(t, result.mock.capturedItems[0], "fn-config",
+		"validator with no configPath should see fn-config in its items")
+	assert.Contains(t, result.mock.capturedItems[0], "my-deployment",
+		"validator with no configPath should see deployment in its items")
+}
