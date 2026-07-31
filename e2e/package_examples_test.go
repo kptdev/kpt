@@ -39,6 +39,8 @@ func TestPackageExamples(t *testing.T) {
 	pkgExamplesDir := filepath.Join("..", "package-examples")
 	updateExpected := strings.ToLower(os.Getenv("KPT_E2E_UPDATE_EXPECTED")) == "true"
 
+	checkOrScaffoldTestdata(t, pkgExamplesDir, testdataDir, updateExpected)
+
 	cases, err := runner.ScanTestCases(testdataDir)
 	if err != nil {
 		t.Fatalf("failed to scan test cases: %s", err)
@@ -131,4 +133,38 @@ func copyUpdatedExpectedOutput(t *testing.T, mergedPkg, testFixturesDir string) 
 		t.Fatalf("failed to copy updated expected output: %v\n%s", err, out)
 	}
 	t.Logf("updated expected output for %s", filepath.Base(mergedPkg))
+}
+
+// checkOrScaffoldTestdata verifies that every package-example directory has a
+// corresponding entry in testdata. When updateExpected is false, missing entries
+// cause the test to fail. When true, the minimum fixture structure is created
+// so that ScanTestCases can pick it up and generate expected output.
+func checkOrScaffoldTestdata(t *testing.T, pkgExamplesDir, testdataDir string, updateExpected bool) {
+	t.Helper()
+	examples, err := os.ReadDir(pkgExamplesDir)
+	if err != nil {
+		t.Fatalf("failed to read package-examples directory: %v", err)
+	}
+	for _, entry := range examples {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), "_") {
+			continue
+		}
+		fixtureDir := filepath.Join(testdataDir, entry.Name())
+		if _, err := os.Stat(fixtureDir); !os.IsNotExist(err) {
+			continue
+		}
+		if !updateExpected {
+			t.Errorf("package-example %q has no corresponding testdata in %s; "+
+				"add a test fixture or run with KPT_E2E_UPDATE_EXPECTED=true to generate one",
+				entry.Name(), testdataDir)
+			continue
+		}
+		if err := os.MkdirAll(filepath.Join(fixtureDir, ".expected"), 0755); err != nil {
+			t.Fatalf("failed to scaffold testdata for %q: %v", entry.Name(), err)
+		}
+		if err := os.WriteFile(filepath.Join(fixtureDir, ".krmignore"), []byte(".expected\n"), 0644); err != nil {
+			t.Fatalf("failed to write .krmignore for %q: %v", entry.Name(), err)
+		}
+		t.Logf("scaffolded testdata for new example %q", entry.Name())
+	}
 }
