@@ -858,7 +858,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if err != nil {
 			return err
 		}
-		var validator kio.Filter
+		var validator *fnruntime.FunctionRunner
 		displayResourceCount := false
 		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
 			displayResourceCount = true
@@ -875,6 +875,28 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
 		}
+
+		if function.ConfigPath != "" {
+			// functionConfigs are included in the function inputs during `render`
+			// and as a result, they can be mutated during the `render`.
+			// So functionConfigs needs be updated in the FunctionRunner instance
+			// before every run, same as for mutators.
+			for _, r := range input {
+				pkgPath, err := pkg.GetPkgPathAnnotation(r)
+				if err != nil {
+					return err
+				}
+				currPath, _, err := kioutil.GetFileAnnotations(r)
+				if err != nil {
+					return err
+				}
+				if pkgPath == pn.pkg.UniquePath.String() && currPath == function.ConfigPath {
+					validator.SetFnConfig(r)
+					break
+				}
+			}
+		}
+
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
