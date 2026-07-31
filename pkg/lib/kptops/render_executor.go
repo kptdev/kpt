@@ -859,10 +859,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			return err
 		}
 		var validator *fnruntime.FunctionRunner
-		displayResourceCount := false
-		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
-			displayResourceCount = true
-		}
+		displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
 			return errAllowedExecNotSpecified
