@@ -20,11 +20,11 @@ stdErrStripLines:
   - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
 
 stdErr: |
-  Package: "exclude"
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+  Package "exclude":
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s) on package "exclude"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
   [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 2 resource(s)
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 2 resource(s) on package "exclude"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
   [Results]: [info]: set 3 labels in total
   Successfully executed 2 function(s) in 1 package(s).
