@@ -247,7 +247,7 @@ metadata:
 
 func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, context.Context) {
 	var outputBuffer bytes.Buffer
-	ctx := context.Background()
+	ctx := t.Context()
 	ctx = printer.WithContext(ctx, printer.New(&outputBuffer, &outputBuffer))
 
 	mockFileSystem := filesys.MakeFsInMemory()
@@ -302,10 +302,13 @@ metadata:
 `))
 	assert.NoError(t, err)
 
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
 	renderer := &Renderer{
 		PkgPath:        rootPkgPath,
 		ResultsDirPath: "/results",
 		FileSystem:     mockFileSystem,
+		RunnerOptions:  opts,
 	}
 
 	return renderer, &outputBuffer, ctx
@@ -321,16 +324,16 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 			name:      "Use hydrateBfsOrder with renderBfs true",
 			renderBfs: true,
 			orderedOutput: []string{
-				`Package "root-package":`,
-				`Package "root-package/sibling-package":`,
+				`Package "root":`,
+				`Package "root/sibling":`,
 			},
 		},
 		{
 			name:      "Use default hydrate with renderBfs false",
 			renderBfs: false,
 			orderedOutput: []string{
-				`Package "root-package/sibling-package":`,
-				`Package "root-package":`,
+				`Package "root/sibling":`,
+				`Package "root":`,
 			},
 		},
 	}

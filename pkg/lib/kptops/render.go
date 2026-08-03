@@ -40,9 +40,10 @@ type renderer struct {
 var _ fn.Renderer = &renderer{}
 
 func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresultv1.ResultList, error) {
-	if opts.DisplayName != "" && r.runnerOptions.RootDisplayName == "" { //nolint:staticcheck // SA1019
-		r.runnerOptions.RootDisplayName = opts.DisplayName //nolint:staticcheck // SA1019
-	}
+	// TODO: deal with this
+	// if opts.DisplayName != "" && r.runnerOptions.RootDisplayName == "" { //nolint:staticcheck // SA1019
+	//	 r.runnerOptions.RootDisplayName = opts.DisplayName //nolint:staticcheck // SA1019
+	// }
 
 	rr := Renderer{
 		PkgPath:       opts.PkgPath,

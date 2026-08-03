@@ -704,8 +704,7 @@ func buildPipelineInputWithScopedVisibility(node *pkgNode, childrenMap map[kptfi
 func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
 
-	// TODO: the way this constructs the subpackage name does not fit Porch
-	hctx.runnerOptions.FullDisplayName = resolveFullDisplayName(pn.pkg, hctx.runnerOptions.RootDisplayName)
+	hctx.runnerOptions.FullDisplayName = resolveFullDisplayName(pn.pkg, hctx.runnerOptions.LogOptions)
 
 	pr := printer.FromContextOrDie(ctx)
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
@@ -749,37 +748,34 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 // resolveFullDisplayName constructs the "display name" of the current (sub)package
 // based on the parents' Kptfile metadata.name.
 // If `root` is non-empty, we substitute the first package's name.
-func resolveFullDisplayName(p *pkg.Pkg, root string) string {
+func resolveFullDisplayName(p *pkg.Pkg, opts runneroptions.LogOptions) string {
 	var names []string
 	for pp := p; pp != nil; pp = pp.Parent {
-		names = append(names, resolvePackageName(pp))
+		names = append(names, resolvePackageName(pp, opts.PkgNameID))
 	}
 
 	slices.Reverse(names)
-	if root != "" {
-		names[0] = root
-	}
-	return strings.Join(names, "/")
+	return fmt.Sprintf(opts.PkgNameFormat, strings.Join(names, opts.PkgNameSep))
 }
 
-func resolvePackageName(p *pkg.Pkg) string {
-	kptfile, err := p.Kptfile()
-	// try Kptfile metadata name first
-	if err == nil && kptfile.Name != "" {
-		return kptfile.Name
-	}
+func resolvePackageName(p *pkg.Pkg, typ runneroptions.PackageIDType) string {
+	switch typ {
+	case runneroptions.DirName:
+		if p.DisplayPath != "" {
+			if lastSlash := strings.LastIndex(string(p.DisplayPath), "/"); lastSlash > -1 {
+				return string(p.DisplayPath)[lastSlash+1:]
+			}
 
-	// try the basename of the directory
-	if p.DisplayPath != "" {
-		if lastSlash := strings.Index(string(p.DisplayPath), "/"); lastSlash > -1 {
-			return string(p.DisplayPath)[lastSlash+1:]
+			return string(p.DisplayPath)
 		}
-
-		return string(p.DisplayPath)
+	case runneroptions.KptfileMeta:
+		kptfile, err := p.Kptfile()
+		if err == nil && kptfile.Name != "" {
+			return kptfile.Name
+		}
 	}
 
-	// this should never happen
-	return "<UNKNOWN>"
+	return "<unknown>"
 }
 
 // runMutators runs a set of mutators functions on given input resources.

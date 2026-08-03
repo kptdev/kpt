@@ -228,7 +228,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	pr := printer.FromContextOrDie(fr.ctx)
 	// prOpts := printer.NewOpt().DisplayName(fr.opts.FullDisplayName).Path(fr.pkgPath)
 	fnName := fr.name
-	if fr.opts.TruncateImageName {
+	if fr.opts.LogOptions.TruncateImageName {
 		baseName, tag := baseNameAndTag(fr.name)
 		if tag != "" {
 			fnName = fmt.Sprintf("%s (%s)", baseName, tag)

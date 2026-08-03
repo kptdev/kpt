@@ -222,6 +222,7 @@ apiVersion: v1
 				RunnerOptions: runneroptions.RunnerOptions{
 					ImagePullPolicy: runneroptions.IfNotPresentPull,
 					ImagePrefix:     runneroptions.GHCRImagePrefix,
+					LogOptions:      runneroptions.DefaultLogOptions(),
 				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
@@ -264,6 +265,7 @@ apiVersion: v1
 				RunnerOptions: runneroptions.RunnerOptions{
 					ImagePullPolicy: runneroptions.IfNotPresentPull,
 					ImagePrefix:     runneroptions.GHCRImagePrefix,
+					LogOptions:      runneroptions.DefaultLogOptions(),
 				},
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
@@ -292,6 +294,7 @@ apiVersion: v1
 				RunnerOptions: runneroptions.RunnerOptions{
 					ImagePullPolicy: runneroptions.IfNotPresentPull,
 					ImagePrefix:     runneroptions.GHCRImagePrefix,
+					LogOptions:      runneroptions.DefaultLogOptions(),
 				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,

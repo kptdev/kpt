@@ -67,22 +67,60 @@ type RunnerOptions struct {
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
 
-	// RootDisplayName is the optional display name for the *root* package.
-	// Only used for logging. Subpackage names will be appended with slashes.
-	RootDisplayName string
+	LogOptions LogOptions
 
 	// FullDisplayName is the resolved display name of the package or subpackage.
 	// Meant for internal usage, like the render executor.
 	FullDisplayName string
+}
+
+type PackageIDType int8
+
+const (
+	// Use directory name to identify the package/subpackage
+	DirName PackageIDType = iota
+	// Use Kptfile metadata.name to identify the package/subpackage
+	KptfileMeta
+)
+
+type LogOptions struct {
+	PkgNameFormat string
+	PkgNameSep    string
+	PkgNameID     PackageIDType
 
 	// TruncateImageName determines whether the full image name or just the base
 	// name and the tag will be logged.
 	TruncateImageName bool
 }
 
+func (o *LogOptions) IsZero() bool {
+	return o.PkgNameFormat == "" && o.PkgNameSep == "" && o.PkgNameID == 0 && !o.TruncateImageName
+}
+
+func (o *LogOptions) FillDefaults() {
+	defaults := DefaultLogOptions()
+	if o.PkgNameFormat == "" {
+		o.PkgNameFormat = defaults.PkgNameFormat
+	}
+	if o.PkgNameSep == "" {
+		o.PkgNameSep = defaults.PkgNameSep
+	}
+}
+
+func DefaultLogOptions() LogOptions {
+	return LogOptions{
+		PkgNameFormat: "%s",
+		PkgNameSep:    "/",
+		PkgNameID:     DirName,
+
+		TruncateImageName: false,
+	}
+}
+
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
 	opts.ImagePrefix = defaultImagePrefix
+	opts.LogOptions = DefaultLogOptions()
 }
 
 // ResolveToImage converts the KRM function short path to the full image url.
