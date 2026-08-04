@@ -765,28 +765,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	for i, mutator := range mutators {
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 
-		if pl.Mutators[i].ConfigPath != "" {
-			// functionConfigs are included in the function inputs during `render`
-			// and as a result, they can be mutated during the `render`.
-			// So functionConfigs needs be updated in the FunctionRunner instance
-			// before every run.
-			for _, r := range input {
-				pkgPath, err := pkg.GetPkgPathAnnotation(r)
-				if err != nil {
-					return nil, err
-				}
-				currPath, _, err := kioutil.GetFileAnnotations(r)
-				if err != nil {
-					return nil, err
-				}
-				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
-					currPath == pl.Mutators[i].ConfigPath { // configPath matches
-					mutator.SetFnConfig(r)
-					continue
-				}
-			}
-		}
-
 		selectors := pl.Mutators[i].Selectors
 		exclusions := pl.Mutators[i].Exclusions
 
