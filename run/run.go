@@ -261,8 +261,6 @@ func hideFlags(cmd *cobra.Command) {
 		"vmodule",
 
 		// Flags related to apiserver
-		"as",
-		"as-group",
 		"cache-dir",
 		"certificate-authority",
 		"client-certificate",
