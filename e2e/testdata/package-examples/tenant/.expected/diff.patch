@@ -1,0 +1,99 @@
+diff --git a/Kptfile b/Kptfile
+index dedb208..a441383 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -12,3 +12,20 @@ pipeline:
+   validators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+       configPath: ns-invariant.yaml
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
++        exitCode: 0
++        results:
++          - message: all matching namespaces are already "tenant-name". no value changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        exitCode: 0
+diff --git a/namespace.yaml b/namespace.yaml
+index ac09027..3764d5f 100644
+--- a/namespace.yaml
++++ b/namespace.yaml
+@@ -11,7 +11,6 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ apiVersion: v1
+ kind: Namespace
+ metadata:
+diff --git a/ns-invariant.yaml b/ns-invariant.yaml
+index f233cc8..3079e9b 100644
+--- a/ns-invariant.yaml
++++ b/ns-invariant.yaml
+@@ -11,19 +11,8 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: ns-invariant
+-source: |
+-  def ensure_one_namespace(resource_list):
+-    num_ns = 0
+-    for resource in resource_list["items"]:
+-      if resource["apiVersion"] == "v1" and resource["kind"] == "Namespace":
+-        num_ns += 1
+-    # only one namespace is allowed
+-    if num_ns > 1:
+-      fail("pkg must contain single namespace") 
+-
+-  ensure_one_namespace(ctx.resource_list)
+\ No newline at end of file
++source: "def ensure_one_namespace(resource_list):\n  num_ns = 0\n  for resource in resource_list[\"items\"]:\n    if resource[\"apiVersion\"] == \"v1\" and resource[\"kind\"] == \"Namespace\":\n      num_ns += 1\n  # only one namespace is allowed\n  if num_ns > 1:\n    fail(\"pkg must contain single namespace\") \n\nensure_one_namespace(ctx.resource_list)"
+diff --git a/quota.yaml b/quota.yaml
+index c0b7b18..96f2090 100644
+--- a/quota.yaml
++++ b/quota.yaml
+@@ -11,7 +11,6 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ apiVersion: v1
+ kind: ResourceQuota
+ metadata:
+diff --git a/role-binding.yaml b/role-binding.yaml
+index bb5ccb3..b57e59f 100644
+--- a/role-binding.yaml
++++ b/role-binding.yaml
+@@ -11,7 +11,6 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ apiVersion: rbac.authorization.k8s.io/v1beta1
+ kind: RoleBinding
+ metadata:
+diff --git a/service-account.yaml b/service-account.yaml
+index 0e37426..5b6be1f 100644
+--- a/service-account.yaml
++++ b/service-account.yaml
+@@ -11,7 +11,6 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ apiVersion: v1
+ kind: ServiceAccount
+ metadata:

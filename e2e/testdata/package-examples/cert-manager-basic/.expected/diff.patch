@@ -1,0 +1,545 @@
+diff --git a/Kptfile b/Kptfile
+index 6362f4b..ee8f5d1 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -6,3 +6,8 @@ metadata:
+     config.kubernetes.io/local-config: "true"
+ info:
+   description: CertManager Package (https://cert-manager.io)
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
+diff --git a/cainjector/clusterrole-cert-manager-cainjector.yaml b/cainjector/clusterrole-cert-manager-cainjector.yaml
+index f50f7b2..bee1ab4 100644
+--- a/cainjector/clusterrole-cert-manager-cainjector.yaml
++++ b/cainjector/clusterrole-cert-manager-cainjector.yaml
+@@ -28,4 +28,3 @@ rules:
+   - apiGroups: ["apiextensions.k8s.io"]
+     resources: ["customresourcedefinitions"]
+     verbs: ["get", "list", "watch", "update"]
+-
+diff --git a/cainjector/clusterrolebinding-cert-manager-cainjector.yaml b/cainjector/clusterrolebinding-cert-manager-cainjector.yaml
+index 25f7415..5c3d014 100644
+--- a/cainjector/clusterrolebinding-cert-manager-cainjector.yaml
++++ b/cainjector/clusterrolebinding-cert-manager-cainjector.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager-cainjector
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cainjector/deployment-cert-manager-cainjector.yaml b/cainjector/deployment-cert-manager-cainjector.yaml
+index 2a8b441..2a5f297 100644
+--- a/cainjector/deployment-cert-manager-cainjector.yaml
++++ b/cainjector/deployment-cert-manager-cainjector.yaml
+@@ -34,15 +34,14 @@ spec:
+           image: "quay.io/jetstack/cert-manager-cainjector:v1.8.2"
+           imagePullPolicy: IfNotPresent
+           args:
+-          - --v=2
+-          - --leader-election-namespace=kube-system
++            - --v=2
++            - --leader-election-namespace=kube-system
+           env:
+-          - name: POD_NAMESPACE
+-            valueFrom:
+-              fieldRef:
+-                fieldPath: metadata.namespace
++            - name: POD_NAMESPACE
++              valueFrom:
++                fieldRef:
++                  fieldPath: metadata.namespace
+           securityContext:
+             allowPrivilegeEscalation: false
+       nodeSelector:
+         kubernetes.io/os: linux
+-
+diff --git a/cainjector/role-cert-manager-cainjector-leaderelection.yaml b/cainjector/role-cert-manager-cainjector-leaderelection.yaml
+index f552b3e..ea13126 100644
+--- a/cainjector/role-cert-manager-cainjector-leaderelection.yaml
++++ b/cainjector/role-cert-manager-cainjector-leaderelection.yaml
+@@ -24,4 +24,3 @@ rules:
+   - apiGroups: ["coordination.k8s.io"]
+     resources: ["leases"]
+     verbs: ["create"]
+-
+diff --git a/cainjector/rolebinding-cert-manager-cainjector-leaderelection.yaml b/cainjector/rolebinding-cert-manager-cainjector-leaderelection.yaml
+index 47cb026..c55888e 100644
+--- a/cainjector/rolebinding-cert-manager-cainjector-leaderelection.yaml
++++ b/cainjector/rolebinding-cert-manager-cainjector-leaderelection.yaml
+@@ -20,4 +20,3 @@ subjects:
+   - kind: ServiceAccount
+     name: cert-manager-cainjector
+     namespace: cert-manager
+-
+diff --git a/cainjector/serviceaccount-cert-manager-cainjector.yaml b/cainjector/serviceaccount-cert-manager-cainjector.yaml
+index 64bc6e9..dfc6074 100644
+--- a/cainjector/serviceaccount-cert-manager-cainjector.yaml
++++ b/cainjector/serviceaccount-cert-manager-cainjector.yaml
+@@ -11,4 +11,3 @@ metadata:
+     app.kubernetes.io/instance: cert-manager
+     app.kubernetes.io/component: "cainjector"
+     app.kubernetes.io/version: "v1.8.2"
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-approve-cert-manager-io.yaml b/cert-manager/clusterrole-cert-manager-controller-approve-cert-manager-io.yaml
+index c217d3e..971b305 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-approve-cert-manager-io.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-approve-cert-manager-io.yaml
+@@ -15,4 +15,3 @@ rules:
+     resources: ["signers"]
+     verbs: ["approve"]
+     resourceNames: ["issuers.cert-manager.io/*", "clusterissuers.cert-manager.io/*"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-certificates.yaml b/cert-manager/clusterrole-cert-manager-controller-certificates.yaml
+index 35d5e27..06add19 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-certificates.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-certificates.yaml
+@@ -32,4 +32,3 @@ rules:
+   - apiGroups: [""]
+     resources: ["events"]
+     verbs: ["create", "patch"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-certificatesigningrequests.yaml b/cert-manager/clusterrole-cert-manager-controller-certificatesigningrequests.yaml
+index fecd592..9265271 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-certificatesigningrequests.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-certificatesigningrequests.yaml
+@@ -26,4 +26,3 @@ rules:
+   - apiGroups: ["authorization.k8s.io"]
+     resources: ["subjectaccessreviews"]
+     verbs: ["create"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-challenges.yaml b/cert-manager/clusterrole-cert-manager-controller-challenges.yaml
+index 354412f..dd4c64f 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-challenges.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-challenges.yaml
+@@ -38,8 +38,8 @@ rules:
+   - apiGroups: ["networking.k8s.io"]
+     resources: ["ingresses"]
+     verbs: ["get", "list", "watch", "create", "delete", "update"]
+-  - apiGroups: [ "gateway.networking.k8s.io" ]
+-    resources: [ "httproutes" ]
++  - apiGroups: ["gateway.networking.k8s.io"]
++    resources: ["httproutes"]
+     verbs: ["get", "list", "watch", "create", "delete", "update"]
+   # We require the ability to specify a custom hostname when we are creating
+   # new ingress resources.
+@@ -57,4 +57,3 @@ rules:
+   - apiGroups: [""]
+     resources: ["secrets"]
+     verbs: ["get", "list", "watch"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-clusterissuers.yaml b/cert-manager/clusterrole-cert-manager-controller-clusterissuers.yaml
+index 7a8b52c..b25fadf 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-clusterissuers.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-clusterissuers.yaml
+@@ -23,4 +23,3 @@ rules:
+   - apiGroups: [""]
+     resources: ["events"]
+     verbs: ["create", "patch"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-ingress-shim.yaml b/cert-manager/clusterrole-cert-manager-controller-ingress-shim.yaml
+index ea1779f..56b4339 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-ingress-shim.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-ingress-shim.yaml
+@@ -35,4 +35,3 @@ rules:
+   - apiGroups: [""]
+     resources: ["events"]
+     verbs: ["create", "patch"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-issuers.yaml b/cert-manager/clusterrole-cert-manager-controller-issuers.yaml
+index 7330d6d..4bb32ac 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-issuers.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-issuers.yaml
+@@ -23,4 +23,3 @@ rules:
+   - apiGroups: [""]
+     resources: ["events"]
+     verbs: ["create", "patch"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-controller-orders.yaml b/cert-manager/clusterrole-cert-manager-controller-orders.yaml
+index 2520992..54d6e16 100644
+--- a/cert-manager/clusterrole-cert-manager-controller-orders.yaml
++++ b/cert-manager/clusterrole-cert-manager-controller-orders.yaml
+@@ -35,4 +35,3 @@ rules:
+   - apiGroups: [""]
+     resources: ["events"]
+     verbs: ["create", "patch"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-edit.yaml b/cert-manager/clusterrole-cert-manager-edit.yaml
+index 8c57433..4777488 100644
+--- a/cert-manager/clusterrole-cert-manager-edit.yaml
++++ b/cert-manager/clusterrole-cert-manager-edit.yaml
+@@ -21,4 +21,3 @@ rules:
+   - apiGroups: ["acme.cert-manager.io"]
+     resources: ["challenges", "orders"]
+     verbs: ["create", "delete", "deletecollection", "patch", "update"]
+-
+diff --git a/cert-manager/clusterrole-cert-manager-view.yaml b/cert-manager/clusterrole-cert-manager-view.yaml
+index 9e15379..f5d8298 100644
+--- a/cert-manager/clusterrole-cert-manager-view.yaml
++++ b/cert-manager/clusterrole-cert-manager-view.yaml
+@@ -19,4 +19,3 @@ rules:
+   - apiGroups: ["acme.cert-manager.io"]
+     resources: ["challenges", "orders"]
+     verbs: ["get", "list", "watch"]
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-approve-cert-manager-io.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-approve-cert-manager-io.yaml
+index 7a2f3f2..632c2d7 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-approve-cert-manager-io.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-approve-cert-manager-io.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-certificates.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-certificates.yaml
+index 992c61b..2b3dda3 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-certificates.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-certificates.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-certificatesigningrequests.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-certificatesigningrequests.yaml
+index fd1f843..1d1d02e 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-certificatesigningrequests.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-certificatesigningrequests.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-challenges.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-challenges.yaml
+index 7ff71b7..b11b588 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-challenges.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-challenges.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-clusterissuers.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-clusterissuers.yaml
+index a5d3d55..9799add 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-clusterissuers.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-clusterissuers.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-ingress-shim.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-ingress-shim.yaml
+index a8b2ba3..12059f9 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-ingress-shim.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-ingress-shim.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-issuers.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-issuers.yaml
+index b1ca638..646aed0 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-issuers.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-issuers.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/clusterrolebinding-cert-manager-controller-orders.yaml b/cert-manager/clusterrolebinding-cert-manager-controller-orders.yaml
+index eb88a61..f083d0c 100644
+--- a/cert-manager/clusterrolebinding-cert-manager-controller-orders.yaml
++++ b/cert-manager/clusterrolebinding-cert-manager-controller-orders.yaml
+@@ -17,4 +17,3 @@ subjects:
+   - name: cert-manager
+     namespace: "cert-manager"
+     kind: ServiceAccount
+-
+diff --git a/cert-manager/deployment-cert-manager.yaml b/cert-manager/deployment-cert-manager.yaml
+index 0133262..cd4eabd 100644
+--- a/cert-manager/deployment-cert-manager.yaml
++++ b/cert-manager/deployment-cert-manager.yaml
+@@ -32,27 +32,25 @@ spec:
+     spec:
+       serviceAccountName: cert-manager
+       securityContext:
+-        
+         runAsNonRoot: true
+       containers:
+         - name: cert-manager
+           image: "quay.io/jetstack/cert-manager-controller:v1.8.2"
+           imagePullPolicy: IfNotPresent
+           args:
+-          - --v=2
+-          - --cluster-resource-namespace=$(POD_NAMESPACE)
+-          - --leader-election-namespace=kube-system
++            - --v=2
++            - --cluster-resource-namespace=$(POD_NAMESPACE)
++            - --leader-election-namespace=kube-system
+           ports:
+-          - containerPort: 9402
+-            name: http-metrics
+-            protocol: TCP
++            - containerPort: 9402
++              name: http-metrics
++              protocol: TCP
+           securityContext:
+             allowPrivilegeEscalation: false
+           env:
+-          - name: POD_NAMESPACE
+-            valueFrom:
+-              fieldRef:
+-                fieldPath: metadata.namespace
++            - name: POD_NAMESPACE
++              valueFrom:
++                fieldRef:
++                  fieldPath: metadata.namespace
+       nodeSelector:
+         kubernetes.io/os: linux
+-
+diff --git a/cert-manager/namespace-cert-manager.yaml b/cert-manager/namespace-cert-manager.yaml
+index 4bd8eb7..2788051 100644
+--- a/cert-manager/namespace-cert-manager.yaml
++++ b/cert-manager/namespace-cert-manager.yaml
+@@ -22,4 +22,3 @@ metadata:
+     app.kubernetes.io/instance: 'cert-manager'
+     # Generated labels
+     app.kubernetes.io/version: "v1.8.2"
+-
+diff --git a/cert-manager/role-cert-manager-leaderelection.yaml b/cert-manager/role-cert-manager-leaderelection.yaml
+index cd7db33..197f63d 100644
+--- a/cert-manager/role-cert-manager-leaderelection.yaml
++++ b/cert-manager/role-cert-manager-leaderelection.yaml
+@@ -18,4 +18,3 @@ rules:
+   - apiGroups: ["coordination.k8s.io"]
+     resources: ["leases"]
+     verbs: ["create"]
+-
+diff --git a/cert-manager/rolebinding-cert-manager-leaderelection.yaml b/cert-manager/rolebinding-cert-manager-leaderelection.yaml
+index f95b529..8e203ec 100644
+--- a/cert-manager/rolebinding-cert-manager-leaderelection.yaml
++++ b/cert-manager/rolebinding-cert-manager-leaderelection.yaml
+@@ -21,4 +21,3 @@ subjects:
+     kind: ServiceAccount
+     name: cert-manager
+     namespace: cert-manager
+-
+diff --git a/cert-manager/service-cert-manager.yaml b/cert-manager/service-cert-manager.yaml
+index 2f23d6c..f9c88c0 100644
+--- a/cert-manager/service-cert-manager.yaml
++++ b/cert-manager/service-cert-manager.yaml
+@@ -21,4 +21,3 @@ spec:
+     app.kubernetes.io/name: cert-manager
+     app.kubernetes.io/instance: cert-manager
+     app.kubernetes.io/component: "controller"
+-
+diff --git a/cert-manager/serviceaccount-cert-manager.yaml b/cert-manager/serviceaccount-cert-manager.yaml
+index 6a8e7ec..df96d78 100644
+--- a/cert-manager/serviceaccount-cert-manager.yaml
++++ b/cert-manager/serviceaccount-cert-manager.yaml
+@@ -11,4 +11,3 @@ metadata:
+     app.kubernetes.io/instance: cert-manager
+     app.kubernetes.io/component: "controller"
+     app.kubernetes.io/version: "v1.8.2"
+-
+diff --git a/crds/customresourcedefinition-certificaterequests-cert-manager-io.yaml b/crds/customresourcedefinition-certificaterequests-cert-manager-io.yaml
+index a5edbdc..da567d9 100644
+--- a/crds/customresourcedefinition-certificaterequests-cert-manager-io.yaml
++++ b/crds/customresourcedefinition-certificaterequests-cert-manager-io.yaml
+@@ -197,4 +197,3 @@ spec:
+                   format: date-time
+       served: true
+       storage: true
+-
+diff --git a/crds/customresourcedefinition-certificates-cert-manager-io.yaml b/crds/customresourcedefinition-certificates-cert-manager-io.yaml
+index 077e165..c78c9f2 100644
+--- a/crds/customresourcedefinition-certificates-cert-manager-io.yaml
++++ b/crds/customresourcedefinition-certificates-cert-manager-io.yaml
+@@ -367,4 +367,3 @@ spec:
+                   type: integer
+       served: true
+       storage: true
+-
+diff --git a/crds/customresourcedefinition-challenges-acme-cert-manager-io.yaml b/crds/customresourcedefinition-challenges-acme-cert-manager-io.yaml
+index 5f3b69b..4dec994 100644
+--- a/crds/customresourcedefinition-challenges-acme-cert-manager-io.yaml
++++ b/crds/customresourcedefinition-challenges-acme-cert-manager-io.yaml
+@@ -1032,4 +1032,3 @@ spec:
+       storage: true
+       subresources:
+         status: {}
+-
+diff --git a/crds/customresourcedefinition-clusterissuers-cert-manager-io.yaml b/crds/customresourcedefinition-clusterissuers-cert-manager-io.yaml
+index e3db794..23e95b5 100644
+--- a/crds/customresourcedefinition-clusterissuers-cert-manager-io.yaml
++++ b/crds/customresourcedefinition-clusterissuers-cert-manager-io.yaml
+@@ -1247,4 +1247,3 @@ spec:
+                   x-kubernetes-list-type: map
+       served: true
+       storage: true
+-
+diff --git a/crds/customresourcedefinition-issuers-cert-manager-io.yaml b/crds/customresourcedefinition-issuers-cert-manager-io.yaml
+index 1f585ca..4e3e2c6 100644
+--- a/crds/customresourcedefinition-issuers-cert-manager-io.yaml
++++ b/crds/customresourcedefinition-issuers-cert-manager-io.yaml
+@@ -1249,4 +1249,3 @@ spec:
+                   x-kubernetes-list-type: map
+       served: true
+       storage: true
+-
+diff --git a/crds/customresourcedefinition-orders-acme-cert-manager-io.yaml b/crds/customresourcedefinition-orders-acme-cert-manager-io.yaml
+index 7d4477f..b30190c 100644
+--- a/crds/customresourcedefinition-orders-acme-cert-manager-io.yaml
++++ b/crds/customresourcedefinition-orders-acme-cert-manager-io.yaml
+@@ -181,4 +181,3 @@ spec:
+                   type: string
+       served: true
+       storage: true
+-
+diff --git a/webhook/clusterrole-cert-manager-webhook-subjectaccessreviews.yaml b/webhook/clusterrole-cert-manager-webhook-subjectaccessreviews.yaml
+index 4a62244..9d17db9 100644
+--- a/webhook/clusterrole-cert-manager-webhook-subjectaccessreviews.yaml
++++ b/webhook/clusterrole-cert-manager-webhook-subjectaccessreviews.yaml
+@@ -13,4 +13,3 @@ rules:
+ - apiGroups: ["authorization.k8s.io"]
+   resources: ["subjectaccessreviews"]
+   verbs: ["create"]
+-
+diff --git a/webhook/clusterrolebinding-cert-manager-webhook-subjectaccessreviews.yaml b/webhook/clusterrolebinding-cert-manager-webhook-subjectaccessreviews.yaml
+index 62c6733..40566cf 100644
+--- a/webhook/clusterrolebinding-cert-manager-webhook-subjectaccessreviews.yaml
++++ b/webhook/clusterrolebinding-cert-manager-webhook-subjectaccessreviews.yaml
+@@ -18,4 +18,3 @@ subjects:
+   kind: ServiceAccount
+   name: cert-manager-webhook
+   namespace: cert-manager
+-
+diff --git a/webhook/configmap-cert-manager-webhook.yaml b/webhook/configmap-cert-manager-webhook.yaml
+index 38cc4ec..d9dea58 100644
+--- a/webhook/configmap-cert-manager-webhook.yaml
++++ b/webhook/configmap-cert-manager-webhook.yaml
+@@ -10,4 +10,3 @@ metadata:
+     app.kubernetes.io/instance: cert-manager
+     app.kubernetes.io/component: "webhook"
+ data:
+-
+diff --git a/webhook/deployment-cert-manager-webhook.yaml b/webhook/deployment-cert-manager-webhook.yaml
+index ae62549..04d473b 100644
+--- a/webhook/deployment-cert-manager-webhook.yaml
++++ b/webhook/deployment-cert-manager-webhook.yaml
+@@ -34,15 +34,15 @@ spec:
+           image: "quay.io/jetstack/cert-manager-webhook:v1.8.2"
+           imagePullPolicy: IfNotPresent
+           args:
+-          - --v=2
+-          - --secure-port=10250
+-          - --dynamic-serving-ca-secret-namespace=$(POD_NAMESPACE)
+-          - --dynamic-serving-ca-secret-name=cert-manager-webhook-ca
+-          - --dynamic-serving-dns-names=cert-manager-webhook,cert-manager-webhook.cert-manager,cert-manager-webhook.cert-manager.svc
++            - --v=2
++            - --secure-port=10250
++            - --dynamic-serving-ca-secret-namespace=$(POD_NAMESPACE)
++            - --dynamic-serving-ca-secret-name=cert-manager-webhook-ca
++            - --dynamic-serving-dns-names=cert-manager-webhook,cert-manager-webhook.cert-manager,cert-manager-webhook.cert-manager.svc
+           ports:
+-          - name: https
+-            protocol: TCP
+-            containerPort: 10250
++            - name: https
++              protocol: TCP
++              containerPort: 10250
+           livenessProbe:
+             httpGet:
+               path: /livez
+@@ -66,10 +66,9 @@ spec:
+           securityContext:
+             allowPrivilegeEscalation: false
+           env:
+-          - name: POD_NAMESPACE
+-            valueFrom:
+-              fieldRef:
+-                fieldPath: metadata.namespace
++            - name: POD_NAMESPACE
++              valueFrom:
++                fieldRef:
++                  fieldPath: metadata.namespace
+       nodeSelector:
+         kubernetes.io/os: linux
+-
+diff --git a/webhook/mutatingwebhookconfiguration-cert-manager-webhook.yaml b/webhook/mutatingwebhookconfiguration-cert-manager-webhook.yaml
+index 419f238..21794ef 100644
+--- a/webhook/mutatingwebhookconfiguration-cert-manager-webhook.yaml
++++ b/webhook/mutatingwebhookconfiguration-cert-manager-webhook.yaml
+@@ -38,4 +38,3 @@ webhooks:
+         name: cert-manager-webhook
+         namespace: "cert-manager"
+         path: /mutate
+-
+diff --git a/webhook/role-cert-manager-webhook-dynamic-serving.yaml b/webhook/role-cert-manager-webhook-dynamic-serving.yaml
+index 59809b4..5e79aba 100644
+--- a/webhook/role-cert-manager-webhook-dynamic-serving.yaml
++++ b/webhook/role-cert-manager-webhook-dynamic-serving.yaml
+@@ -20,4 +20,3 @@ rules:
+ - apiGroups: [""]
+   resources: ["secrets"]
+   verbs: ["create"]
+-
+diff --git a/webhook/rolebinding-cert-manager-webhook-dynamic-serving.yaml b/webhook/rolebinding-cert-manager-webhook-dynamic-serving.yaml
+index 1a87590..c4596c5 100644
+--- a/webhook/rolebinding-cert-manager-webhook-dynamic-serving.yaml
++++ b/webhook/rolebinding-cert-manager-webhook-dynamic-serving.yaml
+@@ -19,4 +19,3 @@ subjects:
+   kind: ServiceAccount
+   name: cert-manager-webhook
+   namespace: cert-manager
+-
+diff --git a/webhook/service-cert-manager-webhook.yaml b/webhook/service-cert-manager-webhook.yaml
+index 9f75c78..5b2dd8c 100644
+--- a/webhook/service-cert-manager-webhook.yaml
++++ b/webhook/service-cert-manager-webhook.yaml
+@@ -21,4 +21,3 @@ spec:
+     app.kubernetes.io/name: webhook
+     app.kubernetes.io/instance: cert-manager
+     app.kubernetes.io/component: "webhook"
+-
+diff --git a/webhook/serviceaccount-cert-manager-webhook.yaml b/webhook/serviceaccount-cert-manager-webhook.yaml
+index 3ad5647..a66c791 100644
+--- a/webhook/serviceaccount-cert-manager-webhook.yaml
++++ b/webhook/serviceaccount-cert-manager-webhook.yaml
+@@ -11,4 +11,3 @@ metadata:
+     app.kubernetes.io/instance: cert-manager
+     app.kubernetes.io/component: "webhook"
+     app.kubernetes.io/version: "v1.8.2"
+-
+diff --git a/webhook/validatingwebhookconfiguration-cert-manager-webhook.yaml b/webhook/validatingwebhookconfiguration-cert-manager-webhook.yaml
+index 5aa546f..ddb7823 100644
+--- a/webhook/validatingwebhookconfiguration-cert-manager-webhook.yaml
++++ b/webhook/validatingwebhookconfiguration-cert-manager-webhook.yaml
+@@ -15,14 +15,14 @@ webhooks:
+   - name: webhook.cert-manager.io
+     namespaceSelector:
+       matchExpressions:
+-      - key: "cert-manager.io/disable-validation"
+-        operator: "NotIn"
+-        values:
+-        - "true"
+-      - key: "name"
+-        operator: "NotIn"
+-        values:
+-        - cert-manager
++        - key: "cert-manager.io/disable-validation"
++          operator: "NotIn"
++          values:
++            - "true"
++        - key: "name"
++          operator: "NotIn"
++          values:
++            - cert-manager
+     rules:
+       - apiGroups:
+           - "cert-manager.io"
+@@ -47,4 +47,3 @@ webhooks:
+         name: cert-manager-webhook
+         namespace: "cert-manager"
+         path: /validate
+-
