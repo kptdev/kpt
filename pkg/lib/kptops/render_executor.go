@@ -797,6 +797,11 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				return nil, err
 			}
 		}
+
+		if err := pn.refreshFnConfig(mutator, input, pl.Mutators[i].ConfigPath); err != nil {
+			return nil, err
+		}
+
 		// select the resources on which function should be applied
 		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
