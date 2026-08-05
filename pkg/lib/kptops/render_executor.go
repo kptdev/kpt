@@ -765,28 +765,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	for i, mutator := range mutators {
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 
-		if pl.Mutators[i].ConfigPath != "" {
-			// functionConfigs are included in the function inputs during `render`
-			// and as a result, they can be mutated during the `render`.
-			// So functionConfigs needs be updated in the FunctionRunner instance
-			// before every run.
-			for _, r := range input {
-				pkgPath, err := pkg.GetPkgPathAnnotation(r)
-				if err != nil {
-					return nil, err
-				}
-				currPath, _, err := kioutil.GetFileAnnotations(r)
-				if err != nil {
-					return nil, err
-				}
-				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
-					currPath == pl.Mutators[i].ConfigPath { // configPath matches
-					mutator.SetFnConfig(r)
-					continue
-				}
-			}
-		}
-
 		selectors := pl.Mutators[i].Selectors
 		exclusions := pl.Mutators[i].Exclusions
 
@@ -797,6 +775,11 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				return nil, err
 			}
 		}
+
+		if err := pn.refreshFnConfig(mutator, input, pl.Mutators[i].ConfigPath); err != nil {
+			return nil, err
+		}
+
 		// select the resources on which function should be applied
 		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
@@ -858,11 +841,8 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if err != nil {
 			return err
 		}
-		var validator kio.Filter
-		displayResourceCount := false
-		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
-			displayResourceCount = true
-		}
+		var validator *fnruntime.FunctionRunner
+		displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
 			return errAllowedExecNotSpecified
@@ -875,6 +855,11 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
 		}
+
+		if err := pn.refreshFnConfig(validator, input, function.ConfigPath); err != nil {
+			return err
+		}
+
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
@@ -890,6 +875,29 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 		output = append(output, resource.Copy())
 	}
 	return
+}
+
+// refreshFnConfig updates the runner's functionConfig from the in-memory input
+// to pick up any mutations applied earlier in the pipeline.
+func (pn *pkgNode) refreshFnConfig(runner *fnruntime.FunctionRunner, input []*yaml.RNode, configPath string) error {
+	if configPath == "" {
+		return nil
+	}
+	for _, r := range input {
+		pkgPath, err := pkg.GetPkgPathAnnotation(r)
+		if err != nil {
+			return err
+		}
+		currPath, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		if pkgPath == pn.pkg.UniquePath.String() && currPath == configPath {
+			runner.SetFnConfig(r)
+			break
+		}
+	}
+	return nil
 }
 
 // clearAnnotationsOnMutFailure removes annotations that are added during mutation when mutation fails.

@@ -27,7 +27,9 @@ import (
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -1047,6 +1049,82 @@ metadata:
 					assert.Contains(t, annotations, "other.annotation")
 				}
 			}
+		})
+	}
+}
+
+func TestRunValidators_RefreshFnConfigFromInMemoryInput(t *testing.T) {
+	// This test verifies that when a mutator modifies a resource that is used as
+	// a validator's functionConfig (via configPath), the validator sees the
+	// updated in-memory version rather than the stale on-disk version.
+
+	tests := []struct {
+		name      string
+		renderBfs bool
+	}{
+		{name: "DFS rendering", renderBfs: false},
+		{name: "BFS rendering", renderBfs: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockFS := filesys.MakeFsInMemory()
+			pkgPath := rootString
+			assert.NoError(t, mockFS.Mkdir(pkgPath))
+
+			kptfileContent := fmt.Appendf(nil, `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+  annotations:
+    kpt.dev/bfs-rendering: %q
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        env: production
+  validators:
+    - image: ghcr.io/test/check-fnconfig-labels:latest
+      configPath: validator-config.yaml
+`, fmt.Sprintf("%t", tc.renderBfs))
+			assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "Kptfile"), kptfileContent))
+
+			validatorConfig := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: validator-config
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  check: labels
+`
+			assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "validator-config.yaml"), []byte(validatorConfig)))
+
+			deployment := `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+`
+			assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "deployment.yaml"), []byte(deployment)))
+
+			r := &Renderer{
+				PkgPath:    pkgPath,
+				FileSystem: mockFS,
+				Runtime:    &runtime{},
+			}
+			r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+			r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
+
+			ctx := fake.CtxWithDefaultPrinter()
+			_, err := r.Execute(ctx)
+			assert.NoError(t, err, "validator should pass because it receives the mutated functionConfig with 'env' label")
+
+			// Verify the validator config was indeed mutated (written with labels)
+			res, err := mockFS.ReadFile(filepath.Join(pkgPath, "validator-config.yaml"))
+			assert.NoError(t, err)
+			assert.Contains(t, string(res), "env: production", "validator-config.yaml should have the label added by the mutator")
 		})
 	}
 }
