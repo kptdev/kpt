@@ -1,0 +1,39 @@
+diff --git a/Kptfile b/Kptfile
+index 380fe6c..f07be93 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,3 +4,12 @@ metadata:
+   name: kustomize-pkg
+ info:
+   description: kustomize kpt package
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
++        exitCode: 0
+diff --git a/overlays/dev/kustomization.yaml b/overlays/dev/kustomization.yaml
+index 05b5c2f..50eddd0 100644
+--- a/overlays/dev/kustomization.yaml
++++ b/overlays/dev/kustomization.yaml
+@@ -24,5 +24,5 @@ patches:
+   target:
+     kind: Deployment
+ commonLabels:
+-    environ: dev
++  environ: dev
+ namePrefix: dev-
+diff --git a/overlays/prod/kustomization.yaml b/overlays/prod/kustomization.yaml
+index ca8c54e..3cd2ba3 100644
+--- a/overlays/prod/kustomization.yaml
++++ b/overlays/prod/kustomization.yaml
+@@ -24,5 +24,5 @@ patches:
+   target:
+     kind: Deployment
+ commonLabels:
+-    environ: prod
++  environ: prod
+ namePrefix: prod-

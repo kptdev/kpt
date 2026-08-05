@@ -32,6 +32,10 @@ jobs:
         with:
           go-version-file: api/go.mod
           cache-dependency-path: api/go.sum
+      - name: Check for replace directives in api/go.mod
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: api
       - name: Build, test, lint (api module)
         run: |
           git config --global user.email you@example.com

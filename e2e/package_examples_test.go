@@ -1,0 +1,170 @@
+//go:build docker
+
+// Copyright 2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package e2e_test
+
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/kptdev/kpt/pkg/test/runner"
+)
+
+// TestPackageExamples runs e2e tests against the package-examples directory.
+// Test fixtures (expected output) are stored in e2e/testdata/package-examples/
+// while the actual packages live in the top-level package-examples/ directory.
+// This keeps documentation examples clean of test-specific files.
+//
+// To generate or update expected output:
+//
+//	KPT_E2E_UPDATE_EXPECTED=true go test --tags=docker --run=TestPackageExamples ./e2e/
+func TestPackageExamples(t *testing.T) {
+	testdataDir := filepath.Join(".", "testdata", "package-examples")
+	pkgExamplesDir := filepath.Join("..", "package-examples")
+	updateExpected := strings.ToLower(os.Getenv("KPT_E2E_UPDATE_EXPECTED")) == "true"
+
+	checkOrScaffoldTestdata(t, pkgExamplesDir, testdataDir, updateExpected)
+
+	cases, err := runner.ScanTestCases(testdataDir)
+	if err != nil {
+		t.Fatalf("failed to scan test cases: %s", err)
+	}
+
+	for _, c := range *cases {
+		c := c
+		name := filepath.Base(c.Path)
+		t.Run(name, func(t *testing.T) {
+			if !c.Config.Sequential {
+				t.Parallel()
+			}
+			runPackageExampleCase(t, pkgExamplesDir, name, c, updateExpected)
+		})
+	}
+}
+
+func runPackageExampleCase(t *testing.T, pkgExamplesDir, name string, c runner.TestCase, updateExpected bool) {
+	t.Helper()
+
+	pkgSrc := filepath.Join(pkgExamplesDir, name)
+	if _, err := os.Stat(filepath.Join(pkgSrc, "Kptfile")); err != nil {
+		t.Fatalf("package-example %q does not have a Kptfile: %v", name, err)
+	}
+
+	mergedPkg := prepareMergedPackage(t, pkgSrc, name, c.Path)
+
+	mergedCase := runner.TestCase{
+		Path:   mergedPkg,
+		Config: c.Config,
+	}
+
+	r, err := runner.NewRunner(t, mergedCase, c.Config.TestType)
+	if err != nil {
+		t.Fatalf("failed to create test runner: %v", err)
+	}
+	if r.Skip() {
+		t.Skip()
+	}
+	if err := r.Run(); err != nil {
+		t.Fatalf("failed when running test: %v", err)
+	}
+
+	if updateExpected {
+		copyUpdatedExpectedOutput(t, mergedPkg, c.Path)
+	}
+}
+
+// prepareMergedPackage creates a temporary directory containing the package
+// content overlaid with test fixtures, and returns the path to the merged package.
+func prepareMergedPackage(t *testing.T, pkgSrc, name, testFixturesDir string) string {
+	t.Helper()
+
+	tmpDir, err := os.MkdirTemp("", "kpt-pkg-examples-e2e-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	t.Cleanup(func() { os.RemoveAll(tmpDir) })
+
+	mergedPkg := filepath.Join(tmpDir, name)
+
+	// Copy the actual package content
+	if out, err := exec.Command("cp", "-r", pkgSrc, mergedPkg).CombinedOutput(); err != nil {
+		t.Fatalf("failed to copy package: %v\n%s", err, out)
+	}
+
+	// Copy the test fixtures (.expected, .krmignore) on top
+	entries, err := os.ReadDir(testFixturesDir)
+	if err != nil {
+		t.Fatalf("failed to read test fixtures dir: %v", err)
+	}
+	for _, entry := range entries {
+		src := filepath.Join(testFixturesDir, entry.Name())
+		dst := filepath.Join(mergedPkg, entry.Name())
+		if out, err := exec.Command("cp", "-r", src, dst).CombinedOutput(); err != nil {
+			t.Fatalf("failed to copy fixture %s: %v\n%s", entry.Name(), err, out)
+		}
+	}
+
+	return mergedPkg
+}
+
+// copyUpdatedExpectedOutput copies generated expected output back to the testdata directory.
+func copyUpdatedExpectedOutput(t *testing.T, mergedPkg, testFixturesDir string) {
+	t.Helper()
+
+	generatedExpected := filepath.Join(mergedPkg, ".expected")
+	targetExpected := filepath.Join(testFixturesDir, ".expected")
+	if out, err := exec.Command("cp", "-r", generatedExpected+"/.", targetExpected).CombinedOutput(); err != nil {
+		t.Fatalf("failed to copy updated expected output: %v\n%s", err, out)
+	}
+	t.Logf("updated expected output for %s", filepath.Base(mergedPkg))
+}
+
+// checkOrScaffoldTestdata verifies that every package-example directory has a
+// corresponding entry in testdata. When updateExpected is false, missing entries
+// cause the test to fail. When true, the minimum fixture structure is created
+// so that ScanTestCases can pick it up and generate expected output.
+func checkOrScaffoldTestdata(t *testing.T, pkgExamplesDir, testdataDir string, updateExpected bool) {
+	t.Helper()
+	examples, err := os.ReadDir(pkgExamplesDir)
+	if err != nil {
+		t.Fatalf("failed to read package-examples directory: %v", err)
+	}
+	for _, entry := range examples {
+		if !entry.IsDir() || strings.HasPrefix(entry.Name(), "_") {
+			continue
+		}
+		fixtureDir := filepath.Join(testdataDir, entry.Name())
+		if _, err := os.Stat(fixtureDir); !os.IsNotExist(err) {
+			continue
+		}
+		if !updateExpected {
+			t.Errorf("package-example %q has no corresponding testdata in %s; "+
+				"add a test fixture or run with KPT_E2E_UPDATE_EXPECTED=true to generate one",
+				entry.Name(), testdataDir)
+			continue
+		}
+		if err := os.MkdirAll(filepath.Join(fixtureDir, ".expected"), 0755); err != nil {
+			t.Fatalf("failed to scaffold testdata for %q: %v", entry.Name(), err)
+		}
+		if err := os.WriteFile(filepath.Join(fixtureDir, ".krmignore"), []byte(".expected\n"), 0644); err != nil {
+			t.Fatalf("failed to write .krmignore for %q: %v", entry.Name(), err)
+		}
+		t.Logf("scaffolded testdata for new example %q", entry.Name())
+	}
+}

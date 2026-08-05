@@ -37,6 +37,7 @@ import (
 var testFunctions = map[string]framework.ResourceListProcessorFunc{
 	"ghcr.io/kptdev/krm-functions-catalog/set-labels:latest":    setLabels,
 	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest": setNamespace,
+	"ghcr.io/test/check-fnconfig-labels:latest":                 checkFnConfigLabels,
 }
 
 // runtime is a test-only FunctionRuntime that resolves functions from testFunctions.
@@ -119,4 +120,18 @@ func validGVK(rn *kyaml.RNode, apiVersion, kind string) bool {
 		return false
 	}
 	return meta.APIVersion == apiVersion && meta.Kind == kind
+}
+
+// checkFnConfigLabels is a test-only validator that verifies its functionConfig
+// has a specific label. This is used to test that validators receive updated
+// functionConfig from in-memory input after mutators have modified it.
+func checkFnConfigLabels(rl *framework.ResourceList) error {
+	if rl.FunctionConfig == nil {
+		return errors.New("functionConfig is nil")
+	}
+	labels := rl.FunctionConfig.GetLabels()
+	if _, ok := labels["env"]; !ok {
+		return fmt.Errorf("functionConfig is stale - missing 'env' label that mutator should have added; labels: %v", labels)
+	}
+	return nil
 }
