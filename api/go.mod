@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt/api
 
-go 1.26.5
+go 1.24.0
 
 require (
 	github.com/distribution/reference v0.6.0
