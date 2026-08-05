@@ -396,104 +396,24 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 		})
 	}
 }
-func TestRunPipeline_DoesNotPrintSubpkgNameWhenPipelineIsEmpty(t *testing.T) {
-	var outputBuffer bytes.Buffer
-	ctx := context.Background()
-	ctx = printer.WithContext(ctx, printer.New(&outputBuffer, &outputBuffer))
-
-	mockFileSystem := filesys.MakeFsInMemory()
-
-	rootPkgPath := rootString
-	err := mockFileSystem.Mkdir(rootPkgPath)
-	assert.NoError(t, err)
-
-	subPkgPath := subPkgString
-	err = mockFileSystem.Mkdir(subPkgPath)
-	assert.NoError(t, err)
-
-	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: root-package
-pipeline:
-  mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
-      configMap:
-        app: myapp
-`))
-	assert.NoError(t, err)
-
-	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "resources.yaml"), []byte(`apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: root-cm
-`))
-	assert.NoError(t, err)
-
-	// Subpackage has no pipeline
-	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+func TestRunPipeline_SubpkgNameDisplay(t *testing.T) {
+	tests := []struct {
+		name             string
+		subPkgKptfile    string
+		expectSubPkgName bool
+	}{
+		{
+			name: "does not print subpkg name when pipeline is empty",
+			subPkgKptfile: `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: sub-package
-`))
-	assert.NoError(t, err)
-
-	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "resources.yaml"), []byte(`apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: sub-cm
-`))
-	assert.NoError(t, err)
-
-	renderer := &Renderer{
-		PkgPath:    rootPkgPath,
-		FileSystem: mockFileSystem,
-		Runtime:    &runtime{},
-	}
-
-	_, err = renderer.Execute(ctx)
-	assert.NoError(t, err)
-
-	output := outputBuffer.String()
-	assert.Contains(t, output, `Package: "root"`)
-	assert.NotContains(t, output, `Package: "root/subpkg"`)
-}
-func TestRunPipeline_PrintsSubpkgNameWhenPipelineIsNotEmpty(t *testing.T) {
-	var outputBuffer bytes.Buffer
-	ctx := context.Background()
-	ctx = printer.WithContext(ctx, printer.New(&outputBuffer, &outputBuffer))
-
-	mockFileSystem := filesys.MakeFsInMemory()
-
-	rootPkgPath := rootString
-	err := mockFileSystem.Mkdir(rootPkgPath)
-	assert.NoError(t, err)
-
-	subPkgPath := subPkgString
-	err = mockFileSystem.Mkdir(subPkgPath)
-	assert.NoError(t, err)
-
-	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: root-package
-pipeline:
-  mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
-      configMap:
-        app: myapp
-`))
-	assert.NoError(t, err)
-
-	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "resources.yaml"), []byte(`apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: root-cm
-`))
-	assert.NoError(t, err)
-
-	// Subpackage has a pipeline
-	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+`,
+			expectSubPkgName: false,
+		},
+		{
+			name: "prints subpkg name when pipeline is not empty",
+			subPkgKptfile: `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: sub-package
@@ -502,28 +422,74 @@ pipeline:
     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: backend
-`))
-	assert.NoError(t, err)
+`,
+			expectSubPkgName: true,
+		},
+	}
 
-	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var outputBuffer bytes.Buffer
+			ctx := context.Background()
+			ctx = printer.WithContext(ctx, printer.New(&outputBuffer, &outputBuffer))
+
+			mockFileSystem := filesys.MakeFsInMemory()
+
+			rootPkgPath := rootString
+			err := mockFileSystem.Mkdir(rootPkgPath)
+			assert.NoError(t, err)
+
+			subPkgPath := subPkgString
+			err = mockFileSystem.Mkdir(subPkgPath)
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: myapp
+`))
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: root-cm
+`))
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(tc.subPkgKptfile))
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "resources.yaml"), []byte(`apiVersion: v1
 kind: ConfigMap
 metadata:
   name: sub-cm
 `))
-	assert.NoError(t, err)
+			assert.NoError(t, err)
 
-	renderer := &Renderer{
-		PkgPath:    rootPkgPath,
-		FileSystem: mockFileSystem,
-		Runtime:    &runtime{},
+			renderer := &Renderer{
+				PkgPath:    rootPkgPath,
+				FileSystem: mockFileSystem,
+				Runtime:    &runtime{},
+			}
+
+			_, err = renderer.Execute(ctx)
+			assert.NoError(t, err)
+
+			output := outputBuffer.String()
+			assert.Contains(t, output, `Package: "root"`)
+			if tc.expectSubPkgName {
+				assert.Contains(t, output, `Package: "root/subpkg"`)
+			} else {
+				assert.NotContains(t, output, `Package: "root/subpkg"`)
+			}
+		})
 	}
-
-	_, err = renderer.Execute(ctx)
-	assert.NoError(t, err)
-
-	output := outputBuffer.String()
-	assert.Contains(t, output, `Package: "root"`)
-	assert.Contains(t, output, `Package: "root/subpkg"`)
 }
 
 func assertOrder(t *testing.T, output string, expected ...string) {
