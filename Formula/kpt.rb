@@ -1,4 +1,4 @@
-# Copyright 2019 The kpt Authors
+# Copyright 2019, 2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 class Kpt < Formula
   desc "A toolchain for composing, customizing, and deploying Kubernetes packages at scale"
   homepage "https://kpt.dev"
-  url "https://github.com/kptdev/kpt/archive/v1.0.0-beta.61.tar.gz"
-  sha256 "308e809ac79c5cc72672a0119a654805ee151a94659542166194d1660f69c4c9"
+  url "https://github.com/kptdev/kpt/archive/v1.0.0-beta.67.tar.gz"
+  sha256 "358f6dc09e0ed494432d1b669ee1a9133bc20c285defbdc495ca29994b43b424"
 
   depends_on "go" => :build
 
