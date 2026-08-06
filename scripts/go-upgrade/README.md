@@ -58,6 +58,7 @@ krm-functions-sdk  (leaf — no upstream deps)
 | `--repo=NAME` | Scope to a single repository |
 | `--continue` | Don't fail-fast; accumulate errors and report at end |
 | `--push` | After successful operations, create branch, commit, push, and raise draft PR |
+| `--force`, `-f` | Override upstream push protection (allows push to `kptdev`) |
 | `--for=CMD` | With `push` subcommand: specify which upgrade was done (default: `all`) |
 
 ## Configuration
@@ -68,12 +69,18 @@ Edit `config.env` to change target versions, repositories, or exclusions.
 
 The `FORK_OWNER` variable controls which GitHub org/user to clone from. All repo URLs are derived from it. Defaults to `Nordix` (shared development forks). PRs always target upstream `kptdev/*` regardless of fork owner.
 
+If `FORK_OWNER` is set to `kptdev`, the script will refuse to push branches to prevent accidental upstream modifications. The check also inspects the actual `origin` remote URL of the cloned workspace, so it catches stale workspaces previously cloned from upstream even if `FORK_OWNER` has since changed. Use `--force` to override this protection.
+
 ```bash
 # Use your personal fork
 FORK_OWNER=myuser ./upgrade.sh go-version
 
 # Default: uses Nordix forks
 ./upgrade.sh go-version
+
+# Push to kptdev (blocked by default)
+FORK_OWNER=kptdev ./upgrade.sh all --push        # ← blocked
+FORK_OWNER=kptdev ./upgrade.sh all --push --force # ← allowed
 ```
 
 ### Target Versions

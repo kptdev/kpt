@@ -765,28 +765,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	for i, mutator := range mutators {
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 
-		if pl.Mutators[i].ConfigPath != "" {
-			// functionConfigs are included in the function inputs during `render`
-			// and as a result, they can be mutated during the `render`.
-			// So functionConfigs needs be updated in the FunctionRunner instance
-			// before every run.
-			for _, r := range input {
-				pkgPath, err := pkg.GetPkgPathAnnotation(r)
-				if err != nil {
-					return nil, err
-				}
-				currPath, _, err := kioutil.GetFileAnnotations(r)
-				if err != nil {
-					return nil, err
-				}
-				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
-					currPath == pl.Mutators[i].ConfigPath { // configPath matches
-					mutator.SetFnConfig(r)
-					continue
-				}
-			}
-		}
-
 		if pl.Mutators[i].ConfigRef != nil {
 			// Resolve configRef from the current input resources. Like configPath,
 			// the referenced resource may have been mutated by earlier pipeline steps,
@@ -810,6 +788,11 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				return nil, err
 			}
 		}
+
+		if err := pn.refreshFnConfig(mutator, input, pl.Mutators[i].ConfigPath); err != nil {
+			return nil, err
+		}
+
 		// select the resources on which function should be applied
 		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
@@ -892,6 +875,10 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 		return err
 	}
 
+	if err := pn.refreshFnConfig(validator, input, function.ConfigPath); err != nil {
+		return err
+	}
+
 	if function.ConfigRef != nil {
 		resolved, err := fnruntime.ResolveConfigRef(function.ConfigRef, pn.pkg.UniquePath, input)
 		if err != nil {
@@ -924,6 +911,29 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 		output = append(output, resource.Copy())
 	}
 	return
+}
+
+// refreshFnConfig updates the runner's functionConfig from the in-memory input
+// to pick up any mutations applied earlier in the pipeline.
+func (pn *pkgNode) refreshFnConfig(runner *fnruntime.FunctionRunner, input []*yaml.RNode, configPath string) error {
+	if configPath == "" {
+		return nil
+	}
+	for _, r := range input {
+		pkgPath, err := pkg.GetPkgPathAnnotation(r)
+		if err != nil {
+			return err
+		}
+		currPath, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return err
+		}
+		if pkgPath == pn.pkg.UniquePath.String() && currPath == configPath {
+			runner.SetFnConfig(r)
+			break
+		}
+	}
+	return nil
 }
 
 // clearAnnotationsOnMutFailure removes annotations that are added during mutation when mutation fails.

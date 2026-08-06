@@ -1,0 +1,184 @@
+diff --git a/Kptfile b/Kptfile
+index efb547b..24a6944 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -6,3 +6,8 @@ metadata:
+     config.kubernetes.io/local-config: "true"
+ info:
+   description: sample description
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
+diff --git a/admission-webhook/clusterrole-ingress-nginx-admission.yaml b/admission-webhook/clusterrole-ingress-nginx-admission.yaml
+index 6fd0e8e..930aad2 100644
+--- a/admission-webhook/clusterrole-ingress-nginx-admission.yaml
++++ b/admission-webhook/clusterrole-ingress-nginx-admission.yaml
+@@ -16,4 +16,3 @@ rules:
+   verbs:
+   - get
+   - update
+-
+diff --git a/admission-webhook/clusterrolebinding-ingress-nginx-admission.yaml b/admission-webhook/clusterrolebinding-ingress-nginx-admission.yaml
+index 05849b9..8c8b0de 100644
+--- a/admission-webhook/clusterrolebinding-ingress-nginx-admission.yaml
++++ b/admission-webhook/clusterrolebinding-ingress-nginx-admission.yaml
+@@ -16,4 +16,3 @@ subjects:
+ - kind: ServiceAccount
+   name: ingress-nginx-admission
+   namespace: ingress-nginx
+-
+diff --git a/admission-webhook/job-ingress-nginx-admission-create.yaml b/admission-webhook/job-ingress-nginx-admission-create.yaml
+index 3d13a42..42108d9 100644
+--- a/admission-webhook/job-ingress-nginx-admission-create.yaml
++++ b/admission-webhook/job-ingress-nginx-admission-create.yaml
+@@ -44,4 +44,3 @@ spec:
+         runAsNonRoot: true
+         runAsUser: 2000
+       serviceAccountName: ingress-nginx-admission
+-
+diff --git a/admission-webhook/job-ingress-nginx-admission-patch.yaml b/admission-webhook/job-ingress-nginx-admission-patch.yaml
+index 36ba4f0..55897a9 100644
+--- a/admission-webhook/job-ingress-nginx-admission-patch.yaml
++++ b/admission-webhook/job-ingress-nginx-admission-patch.yaml
+@@ -46,4 +46,3 @@ spec:
+         runAsNonRoot: true
+         runAsUser: 2000
+       serviceAccountName: ingress-nginx-admission
+-
+diff --git a/admission-webhook/role-ingress-nginx-admission.yaml b/admission-webhook/role-ingress-nginx-admission.yaml
+index 7d45572..8f77f52 100644
+--- a/admission-webhook/role-ingress-nginx-admission.yaml
++++ b/admission-webhook/role-ingress-nginx-admission.yaml
+@@ -17,4 +17,3 @@ rules:
+   verbs:
+   - get
+   - create
+-
+diff --git a/admission-webhook/rolebinding-ingress-nginx-admission.yaml b/admission-webhook/rolebinding-ingress-nginx-admission.yaml
+index 347d092..b804674 100644
+--- a/admission-webhook/rolebinding-ingress-nginx-admission.yaml
++++ b/admission-webhook/rolebinding-ingress-nginx-admission.yaml
+@@ -17,4 +17,3 @@ subjects:
+ - kind: ServiceAccount
+   name: ingress-nginx-admission
+   namespace: ingress-nginx
+-
+diff --git a/admission-webhook/serviceaccount-ingress-nginx-admission.yaml b/admission-webhook/serviceaccount-ingress-nginx-admission.yaml
+index 8730444..b1c650e 100644
+--- a/admission-webhook/serviceaccount-ingress-nginx-admission.yaml
++++ b/admission-webhook/serviceaccount-ingress-nginx-admission.yaml
+@@ -9,4 +9,3 @@ metadata:
+     app.kubernetes.io/version: 1.3.0
+   name: ingress-nginx-admission
+   namespace: ingress-nginx
+-
+diff --git a/admission-webhook/validatingwebhookconfiguration-ingress-nginx-admission.yaml b/admission-webhook/validatingwebhookconfiguration-ingress-nginx-admission.yaml
+index e77ab00..bc6b9f1 100644
+--- a/admission-webhook/validatingwebhookconfiguration-ingress-nginx-admission.yaml
++++ b/admission-webhook/validatingwebhookconfiguration-ingress-nginx-admission.yaml
+@@ -30,4 +30,3 @@ webhooks:
+     resources:
+     - ingresses
+   sideEffects: None
+-
+diff --git a/controller/clusterrole-ingress-nginx.yaml b/controller/clusterrole-ingress-nginx.yaml
+index 998a94e..5ae596a 100644
+--- a/controller/clusterrole-ingress-nginx.yaml
++++ b/controller/clusterrole-ingress-nginx.yaml
+@@ -71,4 +71,3 @@ rules:
+   - get
+   - list
+   - watch
+-
+diff --git a/controller/clusterrolebinding-ingress-nginx.yaml b/controller/clusterrolebinding-ingress-nginx.yaml
+index 868bd7a..658f8dc 100644
+--- a/controller/clusterrolebinding-ingress-nginx.yaml
++++ b/controller/clusterrolebinding-ingress-nginx.yaml
+@@ -16,4 +16,3 @@ subjects:
+ - kind: ServiceAccount
+   name: ingress-nginx
+   namespace: ingress-nginx
+-
+diff --git a/controller/configmap-ingress-nginx-controller.yaml b/controller/configmap-ingress-nginx-controller.yaml
+index b0192ab..666a899 100644
+--- a/controller/configmap-ingress-nginx-controller.yaml
++++ b/controller/configmap-ingress-nginx-controller.yaml
+@@ -11,4 +11,3 @@ metadata:
+     app.kubernetes.io/version: 1.3.0
+   name: ingress-nginx-controller
+   namespace: ingress-nginx
+-
+diff --git a/controller/deployment-ingress-nginx-controller.yaml b/controller/deployment-ingress-nginx-controller.yaml
+index a81fe40..6502d30 100644
+--- a/controller/deployment-ingress-nginx-controller.yaml
++++ b/controller/deployment-ingress-nginx-controller.yaml
+@@ -109,4 +109,3 @@ spec:
+       - name: webhook-cert
+         secret:
+           secretName: ingress-nginx-admission
+-
+diff --git a/controller/ingressclass-nginx.yaml b/controller/ingressclass-nginx.yaml
+index fa3ca43..99b4ec4 100644
+--- a/controller/ingressclass-nginx.yaml
++++ b/controller/ingressclass-nginx.yaml
+@@ -10,4 +10,3 @@ metadata:
+   name: nginx
+ spec:
+   controller: k8s.io/ingress-nginx
+-
+diff --git a/controller/namespace-ingress-nginx.yaml b/controller/namespace-ingress-nginx.yaml
+index b2e697c..6869a24 100644
+--- a/controller/namespace-ingress-nginx.yaml
++++ b/controller/namespace-ingress-nginx.yaml
+@@ -6,4 +6,3 @@ metadata:
+     app.kubernetes.io/name: ingress-nginx
+     app.kubernetes.io/component: controller
+   name: ingress-nginx
+-
+diff --git a/controller/role-ingress-nginx.yaml b/controller/role-ingress-nginx.yaml
+index bcf8929..ca27a85 100644
+--- a/controller/role-ingress-nginx.yaml
++++ b/controller/role-ingress-nginx.yaml
+@@ -94,4 +94,3 @@ rules:
+   verbs:
+   - create
+   - patch
+-
+diff --git a/controller/rolebinding-ingress-nginx.yaml b/controller/rolebinding-ingress-nginx.yaml
+index eeb75f1..dcc3607 100644
+--- a/controller/rolebinding-ingress-nginx.yaml
++++ b/controller/rolebinding-ingress-nginx.yaml
+@@ -17,4 +17,3 @@ subjects:
+ - kind: ServiceAccount
+   name: ingress-nginx
+   namespace: ingress-nginx
+-
+diff --git a/controller/service-ingress-nginx-controller-admission.yaml b/controller/service-ingress-nginx-controller-admission.yaml
+index 35fc1d6..2e87600 100644
+--- a/controller/service-ingress-nginx-controller-admission.yaml
++++ b/controller/service-ingress-nginx-controller-admission.yaml
+@@ -20,4 +20,3 @@ spec:
+     app.kubernetes.io/instance: ingress-nginx
+     app.kubernetes.io/name: ingress-nginx
+   type: ClusterIP
+-
+diff --git a/controller/service-ingress-nginx-controller.yaml b/controller/service-ingress-nginx-controller.yaml
+index 497c6c9..1b5da16 100644
+--- a/controller/service-ingress-nginx-controller.yaml
++++ b/controller/service-ingress-nginx-controller.yaml
+@@ -27,4 +27,3 @@ spec:
+     app.kubernetes.io/instance: ingress-nginx
+     app.kubernetes.io/name: ingress-nginx
+   type: LoadBalancer
+-
+diff --git a/controller/serviceaccount-ingress-nginx.yaml b/controller/serviceaccount-ingress-nginx.yaml
+index 30371bf..a30617f 100644
+--- a/controller/serviceaccount-ingress-nginx.yaml
++++ b/controller/serviceaccount-ingress-nginx.yaml
+@@ -10,4 +10,3 @@ metadata:
+     app.kubernetes.io/version: 1.3.0
+   name: ingress-nginx
+   namespace: ingress-nginx
+-
