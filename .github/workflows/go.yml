@@ -70,18 +70,30 @@ jobs:
           podman version
       - name: Check out code
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - name: Build, Test, Lint
+      - name: Configure Git
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
-          make all
-          make test-docker
+      - name: Lint and Format
+        run: make fix vet fmt lint
+      - name: Test with Coverage
+        run: make test-coverage
+      - name: Docker Runtime Tests
+        run: make test-docker
         env:
           KRM_FN_RUNTIME: ${{ matrix.runtime }}
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-report-${{ matrix.runtime }}
+          path: ./coverage.out
+          retention-days: 1
 
   build-macos:
     name: build-macos
@@ -98,6 +110,21 @@ jobs:
       - name: Build
         run: |
           make build
+
+  save-pr-number:
+    name: Save PR Number
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save PR number
+        run: echo ${{ github.event.number }} > PR_NUMBER.txt
+
+      - name: Archive PR number
+        uses: actions/upload-artifact@v6
+        with:
+          name: PR_NUMBER
+          path: PR_NUMBER.txt
+          retention-days: 1
 
   go-gate:
     name: go
