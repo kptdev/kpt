@@ -46,7 +46,7 @@ This pipeline declares the following two functions:
 - `set-label`: this is a mutator function which adds a set of labels to the resources.
 - `kubeconform`: this is a validator function which validates the resources against their OpenAPI schemas.
 
-See the [Functions Catalog](https://catalog.kpt.dev/function-catalog) for details about how to use a particular function.
+See the [Functions Catalog](https://catalog.kpt.dev) for details about how to use a particular function.
 
 There are two differences between the mutator functions and the validator functions:
 

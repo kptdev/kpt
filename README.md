@@ -55,7 +55,7 @@ The kpt toolchain includes the following components:
   be used to create functions to transform and/or validate the YAML KRM input/output format, but we provide SDKs to
   simplify the function authoring process in [Go](https://kpt.dev/book/05-developing-functions/#developing-in-Go).
 
-- [**Function catalog**](https://github.com/kptdev/krm-functions-catalog): A [catalog](https://catalog.kpt.dev/function-catalog) of
+- [**Function catalog**](https://github.com/kptdev/krm-functions-catalog): A [catalog](https://catalog.kpt.dev) of
   off-the-shelf, tested functions. kpt makes configuration easy to create and transform, via reusable functions. Because
   they are expected to be used for in-place transformation, the functions need to be idempotent.
 

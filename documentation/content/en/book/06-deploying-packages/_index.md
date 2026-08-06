@@ -122,7 +122,7 @@ and namespace of the `ResourceGroup` resource. Refer to the
 [init command reference](../../reference/cli/live/init/) for usage.
 
 {{< warning type=warning >}}
-Once a package is applied to the cluster, do not change the `ResourceGroup` CR. Doing so corrupts the association between the package and the inventory in the cluster, possibly leading to unpredictible and destructive operations.
+Once a package is applied to the cluster, do not change the `ResourceGroup` CR. Doing so corrupts the association between the package and the inventory in the cluster, possibly leading to unpredictable and destructive operations.
 {{< /warning >}}
 
 ## Applying a Package

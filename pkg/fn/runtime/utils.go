@@ -28,7 +28,7 @@ import (
 // ResourceIDAnnotation is used to uniquely identify the resource during round trip
 // to and from a function execution. This annotation is meant to be consumed by
 // kpt during round trip and should be deleted after that
-const ResourceIDAnnotation = "internal.config.k8s.io/kpt-resource-id"
+const ResourceIDAnnotation = "internal.config.kubernetes.io/kpt-resource-id"
 
 // SaveResults saves results gathered from running the pipeline at specified dir in the input FileSystem.
 func SaveResults(fsys filesys.FileSystem, resultsDir string, fnResults *fnresultv1.ResultList) (string, error) {
