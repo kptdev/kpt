@@ -19,10 +19,14 @@ stdErr: |
   Package "short-image-path":
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "short-image-path"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
-  [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+    [Results]:
+      [info]: namespace [default] updated to "staging", 1 value(s) changed
+      [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "short-image-path"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
-  [Results]: [info]: set 4 labels in total
+    [Results]:
+      [info]: set 4 labels in total
+
   Successfully executed 2 function(s) in 1 package(s).
   For complete results, see results/results.yaml
 

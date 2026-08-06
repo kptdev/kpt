@@ -25,8 +25,12 @@ stdErr: |
   Package "no-fnconfig":
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "no-fnconfig"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
-  [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+    [Results]:
+      [info]: namespace [default] updated to "staging", 1 value(s) changed
+      [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "no-fnconfig"
   [FAIL] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
-  [Results]: [info]: `FunctionConfig` is not given
-   Stderr: failed to evaluate function: error: function failure  Exit code: 1
+    [Results]:
+      [info]: `FunctionConfig` is not given
+      failed to evaluate function: error: function failure
+    Exit code: 1

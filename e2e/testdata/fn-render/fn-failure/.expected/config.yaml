@@ -19,6 +19,9 @@ stdErr: |
   Package "fn-failure":
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest" on package "fn-failure"
   [FAIL] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest" in 0s
-  [Results]: [error]: httpbin-gen:3:73: got newline, want primary expression
-   Stderr: failed to evaluate function: error: function failure  Exit code: 1
+    [Results]:
+      [error]: httpbin-gen:3:73: got newline, want primary expression
+    Stderr:
+      failed to evaluate function: error: function failure
+    Exit code: 1
 
