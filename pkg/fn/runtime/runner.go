@@ -257,8 +257,8 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	t0 := time.Now()
 	output, err = fr.do(input)
 	if err != nil {
-		pr.OptPrintf(printer.NewOpt(), "[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100)) // TODO: use OptPrintf correctly
-		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())                                                       // TODO: pass opts
+		pr.Printf("[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
+		printFnResult(fr.ctx, fr.fnResult)
 		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
@@ -266,8 +266,8 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
-		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond*100)) // TODO: use OptPrintf
-		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())                                  // TODO: pass opts
+		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
+		printFnResult(fr.ctx, fr.fnResult)
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
@@ -466,7 +466,7 @@ func populateResourceRef(item *yaml.RNode, resultItem *fnresultv1.ResultItem) er
 }
 
 // printFnResult prints given function result in a user-friendly format on kpt CLI.
-func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, opt *printer.Options) {
+func printFnResult(ctx context.Context, fnResult *fnresultv1.Result) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(fnResult.Results) > 0 {
 		// function returned structured results
@@ -478,9 +478,12 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, opt *printe
 			Title:     "[Results]",
 			Lines:     lines,
 			UseQuote:  false,
-			Separator: ", ",
+			Separator: "\n",
+
+			Indent:     2,
+			LineIndent: 2,
 		}
-		pr.OptPrintf(opt, "%s\n", ri.String())
+		pr.Printf("%s\n", ri.String())
 	}
 }
 
@@ -489,7 +492,7 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, opt *printe
 func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
 	printFnStderr(ctx, fnErr.Stderr)
-	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
+	pr.Printf("  Exit code: %d\n", fnErr.ExitCode)
 }
 
 // printFnStderr prints given stdErr in a user friendly format on kpt CLI.
@@ -500,9 +503,12 @@ func printFnStderr(ctx context.Context, stdErr string) {
 			Title:     "Stderr",
 			Lines:     strings.Split(stdErr, "\n"),
 			UseQuote:  false,
-			Separator: ", ",
+			Separator: "\n",
+
+			Indent:     2,
+			LineIndent: 2,
 		}
-		pr.Printf(" %s", errLine.String())
+		pr.Printf("%s\n", errLine.String())
 	}
 }
 

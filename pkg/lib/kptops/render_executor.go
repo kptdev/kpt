@@ -742,6 +742,9 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
 		return mutatedResources, errors.E(op, hctx.runnerOptions.FullDisplayName, pn.pkg.UniquePath, err)
 	}
+
+	pr.Printf("\n")
+
 	return mutatedResources, nil
 }
 

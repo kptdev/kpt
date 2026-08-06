@@ -202,11 +202,12 @@ pipeline:
 
 # render the package to ensure we have a working package.
 $ kpt fn render
-Package "tenant": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+Package "tenant":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "tenant"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
+
 Successfully executed 1 function(s) in 1 package(s).
 ```
 
@@ -380,11 +381,11 @@ Render the `backend` package so that the package is customized for the `backend`
 
 $ kpt fn render backend
 Package "backend":
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "backend"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 900ms
   Results:
     [info]: namespace "example" updated to "backend", 3 values changed
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" on package "backend"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
 
 Successfully executed 2 function(s) in 1 package(s).

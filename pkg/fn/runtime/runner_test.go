@@ -113,7 +113,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  false,
 				Separator: ", ",
 			},
-			expected: `Summary: line1, line2, line3`,
+			expected: "Summary:\nline1, line2, line3",
 		},
 		"single line with quotes and space separator": {
 			sf: &runneroptions.SingleLineFormatter{
@@ -122,7 +122,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  true,
 				Separator: " ",
 			},
-			expected: `Summary: "line1" "line2" "line3"`,
+			expected: "Summary:\n\"line1\" \"line2\" \"line3\"",
 		},
 		"single line with newline suppression": {
 			sf: &runneroptions.SingleLineFormatter{
@@ -131,7 +131,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  false,
 				Separator: ", ",
 			},
-			expected: `Summary: line1, line2 extra, line3`,
+			expected: "Summary:\nline1, line2 extra, line3",
 		},
 		"empty lines": {
 			sf: &runneroptions.SingleLineFormatter{
@@ -140,7 +140,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  false,
 				Separator: ", ",
 			},
-			expected: `Empty: `,
+			expected: "Empty:\n",
 		},
 	}
 
@@ -596,7 +596,7 @@ func TestPrintFnStderr(t *testing.T) {
 4
 5`,
 			truncateOutput: true,
-			expected:       ` Stderr: 0, 1, 2, 3, 4, 5`,
+			expected:       "  Stderr:\n    0\n    1\n    2\n    3\n    4\n    5\n",
 		},
 		"non-truncated output": {
 			input: `0
@@ -606,7 +606,7 @@ func TestPrintFnStderr(t *testing.T) {
 4
 5`,
 			truncateOutput: false,
-			expected:       ` Stderr: 0, 1, 2, 3, 4, 5`,
+			expected:       "  Stderr:\n    0\n    1\n    2\n    3\n    4\n    5\n",
 		},
 	}
 	cleanupFunc := func() func() {
