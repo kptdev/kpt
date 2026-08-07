@@ -89,7 +89,7 @@ func TestPackagePrinter(t *testing.T) {
 		var errBuf bytes.Buffer
 		p := printer.New(io.Discard, &errBuf)
 
-		opt := printer.NewOpt().PkgName("my-package")
+		opt := printer.NewOpt().DisplayName("my-package")
 
 		p.OptPrintf(opt, "test message")
 		output := errBuf.String()
@@ -101,7 +101,7 @@ func TestPackagePrinter(t *testing.T) {
 		var errBuf bytes.Buffer
 		p := printer.New(io.Discard, &errBuf)
 
-		opt := printer.NewOpt().PkgDisplay("display/path")
+		opt := printer.NewOpt().DisplayPath("display/path")
 
 		p.OptPrintf(opt, "test message")
 		output := errBuf.String()
@@ -113,7 +113,7 @@ func TestPackagePrinter(t *testing.T) {
 		var errBuf bytes.Buffer
 		p := printer.New(io.Discard, &errBuf)
 
-		opt := printer.NewOpt().Pkg("unique/path")
+		opt := printer.NewOpt().Path("unique/path")
 
 		p.OptPrintf(opt, "test message")
 		output := errBuf.String()
@@ -126,9 +126,9 @@ func TestPackagePrinter(t *testing.T) {
 		p := printer.New(io.Discard, &errBuf)
 
 		opt := printer.NewOpt().
-			PkgName("display-name").
-			PkgDisplay("display/path").
-			Pkg("unique/path")
+			DisplayName("display-name").
+			DisplayPath("display/path").
+			Path("unique/path")
 
 		p.OptPrintf(opt, "test message")
 		output := errBuf.String()
@@ -199,7 +199,7 @@ func TestPackagePrinterStub(t *testing.T) {
 
 	t.Run("OptPrintf stub with options", func(t *testing.T) {
 		p := &packagePrinter{}
-		opt := printer.NewOpt().PkgName("my-package")
+		opt := printer.NewOpt().DisplayName("my-package")
 
 		assert.NotPanics(t, func() {
 			p.OptPrintf(opt, "test message")

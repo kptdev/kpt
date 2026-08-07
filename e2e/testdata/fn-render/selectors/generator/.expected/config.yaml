@@ -20,20 +20,28 @@ stdErrStripLines:
   - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
 
 stdErr: |
-  Package: "generator/db"
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest"
+  Package "generator/db":
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest" on package "generator/db"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest" in 0s
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s) on package "generator/db"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
-  [Results]: [info]: namespace [default] updated to "db", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 1 resource(s)
+    [Results]:
+      [info]: namespace [default] updated to "db", 1 value(s) changed
+      [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 1 resource(s) on package "generator/db"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
-  [Results]: [info]: set 3 labels in total
-  Package: "generator"
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+    [Results]:
+      [info]: set 3 labels in total
+
+  Package "generator":
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s) on package "generator"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
-  [Results]: [info]: namespace [db] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 1 resource(s)
+    [Results]:
+      [info]: namespace [db] updated to "staging", 1 value(s) changed
+      [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 1 resource(s) on package "generator"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
-  [Results]: [info]: set 3 labels in total
+    [Results]:
+      [info]: set 3 labels in total
+
   Successfully executed 5 function(s) in 2 package(s).

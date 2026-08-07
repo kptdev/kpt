@@ -66,9 +66,6 @@ type Renderer struct {
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
-
-	// DisplayName is an optional field to modify the package name displayed in logs
-	DisplayName string
 }
 
 // Execute runs a pipeline.
@@ -85,7 +82,6 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	// initialize hydration context
 	hctx := &hydrationContext{
 		root:          root,
-		rootName:      e.DisplayName,
 		pkgs:          map[kptfilev1.UniquePath]*pkgNode{},
 		fnResults:     fnresultv1.NewResultList(),
 		runnerOptions: e.RunnerOptions,
@@ -351,8 +347,6 @@ type hydrationContext struct {
 
 	// function runtime
 	runtime fn.FunctionRuntime
-
-	rootName string
 }
 
 // pkgNode represents a package being hydrated. Think of it as a node in the hydration DAG.
@@ -709,11 +703,18 @@ func buildPipelineInputWithScopedVisibility(node *pkgNode, childrenMap map[kptfi
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
 func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
+
+	hctx.runnerOptions.FullDisplayName = resolveFullDisplayName(pn.pkg, hctx.runnerOptions.LogOptions)
+
 	pr := printer.FromContextOrDie(ctx)
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
-	// package structure. We should have function to get the relative package
-	// path here.
-	prOpts := printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath).PkgName(hctx.rootName)
+	//       package structure. We should have function to get the relative package
+	//       path here.
+	// ^^^^^ did they mean something like pn.pkg.UniquePath.RelativePath()?
+	prOpts := printer.NewOpt().
+		Path(pn.pkg.UniquePath).
+		DisplayPath(pn.pkg.DisplayPath).
+		DisplayName(hctx.runnerOptions.FullDisplayName)
 	pr.OptPrintf(prOpts, "\n")
 
 	pl, err := pn.pkg.Pipeline()
@@ -735,13 +736,49 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
-		return mutatedResources, errors.E(op, hctx.rootName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.FullDisplayName, pn.pkg.UniquePath, err)
 	}
 
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
-		return mutatedResources, errors.E(op, hctx.rootName, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.runnerOptions.FullDisplayName, pn.pkg.UniquePath, err)
 	}
+
+	pr.Printf("\n")
+
 	return mutatedResources, nil
+}
+
+// resolveFullDisplayName constructs the "display name" of the current (sub)package
+// based on the parents' Kptfile metadata.name.
+// If `root` is non-empty, we substitute the first package's name.
+func resolveFullDisplayName(p *pkg.Pkg, opts runneroptions.LogOptions) string {
+	var names []string
+	for pp := p; pp != nil; pp = pp.Parent {
+		names = append(names, resolvePackageName(pp, opts.PkgNameID))
+	}
+
+	slices.Reverse(names)
+	return fmt.Sprintf(opts.PkgNameFormat, strings.Join(names, opts.PkgNameSep))
+}
+
+func resolvePackageName(p *pkg.Pkg, typ runneroptions.PackageIDType) string {
+	switch typ {
+	case runneroptions.DirName:
+		if p.DisplayPath != "" {
+			if lastSlash := strings.LastIndex(string(p.DisplayPath), "/"); lastSlash > -1 {
+				return string(p.DisplayPath)[lastSlash+1:]
+			}
+
+			return string(p.DisplayPath)
+		}
+	case runneroptions.KptfileMeta:
+		kptfile, err := p.Kptfile()
+		if err == nil && kptfile.Name != "" {
+			return kptfile.Name
+		}
+	}
+
+	return "<unknown>"
 }
 
 // runMutators runs a set of mutators functions on given input resources.
@@ -869,7 +906,7 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 		return errAllowedExecNotSpecified
 	}
 
-	validator, err := pn.createValidatorRunner(ctx, hctx, function)
+	validator, err := pn.createValidatorRunner(ctx, hctx, &function)
 	if err != nil {
 		hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 		return err
@@ -898,12 +935,12 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 }
 
 // createValidatorRunner constructs a FunctionRunner for the given validator function.
-func (pn *pkgNode) createValidatorRunner(ctx context.Context, hctx *hydrationContext, function kptfilev1.Function) (*fnruntime.FunctionRunner, error) {
+func (pn *pkgNode) createValidatorRunner(ctx context.Context, hctx *hydrationContext, function *kptfilev1.Function) (*fnruntime.FunctionRunner, error) {
 	displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
 	opts := hctx.runnerOptions
 	opts.SetPkgPathAnnotation = true
 	opts.DisplayResourceCount = displayResourceCount
-	return fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
+	return fnruntime.NewRunner(ctx, hctx.fileSystem, function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 }
 
 func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {

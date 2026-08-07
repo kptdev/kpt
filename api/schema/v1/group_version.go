@@ -220,8 +220,8 @@ func ParseGroupVersion(gv string) (GroupVersion, error) {
 	case 0:
 		return GroupVersion{"", gv}, nil
 	case 1:
-		i := strings.Index(gv, "/")
-		return GroupVersion{gv[:i], gv[i+1:]}, nil
+		before, after, _ := strings.Cut(gv, "/")
+		return GroupVersion{before, after}, nil
 	default:
 		return GroupVersion{}, fmt.Errorf("unexpected GroupVersion string: %v", gv)
 	}
