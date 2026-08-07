@@ -475,18 +475,22 @@ metadata:
 			renderer := &Renderer{
 				PkgPath:    rootPkgPath,
 				FileSystem: mockFileSystem,
-				Runtime:    &runtime{},
+				RunnerOptions: func() runneroptions.RunnerOptions {
+					opts := runneroptions.RunnerOptions{}
+					opts.InitDefaults(runneroptions.GHCRImagePrefix)
+					return opts
+				}(),
 			}
 
 			_, err = renderer.Execute(ctx)
 			assert.NoError(t, err)
 
 			output := outputBuffer.String()
-			assert.Contains(t, output, `Package: "root"`)
+			assert.Contains(t, output, `Package "root":`)
 			if tc.expectSubPkgName {
-				assert.Contains(t, output, `Package: "root/subpkg"`)
+				assert.Contains(t, output, `Package "root/subpkg":`)
 			} else {
-				assert.NotContains(t, output, `Package: "root/subpkg"`)
+				assert.NotContains(t, output, `Package "root/subpkg":`)
 			}
 		})
 	}
