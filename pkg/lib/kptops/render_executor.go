@@ -1102,6 +1102,7 @@ func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, 
 		Name:     fn.Name,
 		Image:    fn.Image,
 		ExecPath: fn.Exec,
+		When:     fn.CelCondition,
 	}
 	if resultCountBeforeExec < len(fnResults.Items) {
 		last := fnResults.Items[len(fnResults.Items)-1]
@@ -1130,6 +1131,7 @@ func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStep
 		Name:           fn.Name,
 		Image:          fn.Image,
 		ExecPath:       fn.Exec,
+		When:           fn.CelCondition,
 		ExitCode:       1,
 		ExecutionError: err.Error(),
 	}
