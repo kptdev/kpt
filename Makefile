@@ -16,6 +16,7 @@ SHELL := bash
 .SHELLFLAGS := -exc
 
 include ./make/info.mk
+include ./make/testing.mk
 
 all: fix vet fmt lint test build tidy
 
