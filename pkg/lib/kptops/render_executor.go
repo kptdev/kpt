@@ -1467,6 +1467,7 @@ func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, 
 		step.Stderr = last.Stderr
 		step.ExitCode = last.ExitCode
 		step.Results = last.Results
+		step.Skipped = last.Skipped
 		for _, ri := range step.Results {
 			if ri.Severity == framework.Error {
 				step.ErrorResults = append(step.ErrorResults, ri)
