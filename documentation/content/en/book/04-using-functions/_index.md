@@ -271,11 +271,12 @@ In [Chapter 2](../02-concepts/#functions), we saw the following conceptual repre
 
 ![img](/images/func.svg)
 
-The `functionConfig` field is an optional meta resource containing the arguments to a particular invocation of the function. There are two different ways to declare the
+The `functionConfig` field is an optional meta resource containing the arguments to a particular invocation of the function. There are three different ways to declare the
 `functionConfig`:
 
 - `configPath`
 - `configMap`
+- `configRef`
 
 #### `configPath`
 
@@ -323,6 +324,46 @@ pipeline:
       configMap:
         tier: mysql
 ```
+
+#### `configRef`
+
+The `configRef` field references an existing resource in the package by its API identity (`apiVersion`, `kind`, `name`, and optionally `namespace`), rather than by file path. 
+
+For example:
+
+```yaml
+# wordpress/mysql/Kptfile
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: mysql
+pipeline:
+  mutators:
+    - image: set-labels:latest
+      configRef:
+        apiVersion: v1
+        kind: ConfigMap
+        name: labels
+```
+
+```yaml
+# wordpress/mysql/labels.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: labels
+data:
+  tier: mysql
+```
+
+The `configRef` fields are as follows:
+
+- `kind` (required): the kind of the referenced resource.
+- `name` (required): the `metadata.name` of the referenced resource.
+- `apiVersion` (optional): the `apiVersion` of the referenced resource. When omitted, matches regardless of `apiVersion`.
+- `namespace` (optional): the `metadata.namespace` of the referenced resource. When omitted, matches regardless of namespace.
+
+The reference must match exactly one resource in the package. An error is raised if zero or multiple resources match.
 
 ### Specifying function `name`
 

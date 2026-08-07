@@ -53,6 +53,11 @@
           "type": "string",
           "x-go-name": "ConfigPath"
         },
+        "configRef": {
+          "$ref": "#/definitions/ResourceReference",
+          "description": "`ConfigRef` references an existing resource in the package as the function config.\nThe resource is identified by apiVersion, kind, and name. This is mutually exclusive\nwith `configPath` and `configMap`.",
+          "x-go-name": "ConfigRef"
+        },
         "exclude": {
           "description": "`Exclude` are used to specify resources on which the function should NOT be executed.\nIf not specified, all resources selected by `Selectors` are selected.",
           "type": "array",
@@ -356,6 +361,33 @@
         "conditionType": {
           "type": "string",
           "x-go-name": "ConditionType"
+        }
+      },
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+    },
+    "ResourceReference": {
+      "description": "ResourceReference identifies a resource within the package by its API identity.",
+      "type": "object",
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion of the referenced resource. Optional; when omitted, matches regardless of apiVersion.",
+          "type": "string",
+          "x-go-name": "APIVersion"
+        },
+        "kind": {
+          "description": "Kind of the referenced resource. Required.",
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "name": {
+          "description": "Name of the referenced resource. Required.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace of the referenced resource. Optional; when omitted, matches regardless of namespace.",
+          "type": "string",
+          "x-go-name": "Namespace"
         }
       },
       "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
