@@ -802,6 +802,13 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	for i, mutator := range mutators {
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 
+		// Exclude fn-config from this function's input items and refresh the
+		// runner's config reference (it may have been mutated by a preceding function).
+		fnConfigNode, err := pn.excludeAndRefreshFnConfig(mutator, &input, pl.Mutators[i].ConfigPath)
+		if err != nil {
+			return nil, err
+		}
+
 		selectors := pl.Mutators[i].Selectors
 		exclusions := pl.Mutators[i].Exclusions
 
@@ -811,10 +818,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			if err != nil {
 				return nil, err
 			}
-		}
-
-		if err := pn.refreshFnConfig(mutator, input, pl.Mutators[i].ConfigPath); err != nil {
-			return nil, err
 		}
 
 		// select the resources on which function should be applied
@@ -833,6 +836,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		}
 		err = mutation.Execute()
 		if err != nil {
+			if fnConfigNode != nil {
+				input = append(input, fnConfigNode)
+			}
 			clearAnnotationsOnMutFailure(input)
 			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
 			return input, err
@@ -850,6 +856,12 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			}
 		} else {
 			input = output.Nodes
+		}
+
+		// Add fn-config back (unmodified by the owning function) so it remains
+		// in the resource list for subsequent functions and is not pruned from disk.
+		if fnConfigNode != nil {
+			input = append(input, fnConfigNode)
 		}
 	}
 	return input, nil
@@ -872,13 +884,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 	for i := range pl.Validators {
 		function := pl.Validators[i]
 		resultCountBeforeExec := len(hctx.fnResults.Items)
-		// validators are run on a copy of mutated resources to ensure
-		// resources are not mutated.
-		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, function.Exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
-		if err != nil {
-			return err
-		}
-		var validator *fnruntime.FunctionRunner
+
 		displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
@@ -887,13 +893,23 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
+		validator, err := fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
 		}
 
-		if err := pn.refreshFnConfig(validator, input, function.ConfigPath); err != nil {
+		// Exclude fn-config from this validator's input and refresh the
+		// runner's config reference (it may have been mutated by a preceding mutator).
+		validatorInput := slices.Clone(input)
+		if _, err := pn.excludeAndRefreshFnConfig(validator, &validatorInput, function.ConfigPath); err != nil {
+			return err
+		}
+
+		selectedResources, err := fnruntime.SelectInput(
+			validatorInput, function.Selectors, function.Exclusions,
+			&fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		if err != nil {
 			return err
 		}
 
@@ -914,27 +930,34 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 	return
 }
 
-// refreshFnConfig updates the runner's functionConfig from the in-memory input
-// to pick up any mutations applied earlier in the pipeline.
-func (pn *pkgNode) refreshFnConfig(runner *fnruntime.FunctionRunner, input []*yaml.RNode, configPath string) error {
+// excludeAndRefreshFnConfig finds the fn-config resource in *input (matching
+// configPath in the current package), refreshes the runner's functionConfig
+// reference with it, and removes it from *input in place.
+// A function should only receive its config via resourceList.functionConfig,
+// not in resourceList.items.
+// Returns the excluded node (nil if configPath is empty or not found).
+func (pn *pkgNode) excludeAndRefreshFnConfig(runner *fnruntime.FunctionRunner, input *[]*yaml.RNode, configPath string) (*yaml.RNode, error) {
 	if configPath == "" {
-		return nil
+		return nil, nil
 	}
-	for _, r := range input {
+	for _, r := range *input {
 		pkgPath, err := pkg.GetPkgPathAnnotation(r)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		currPath, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if pkgPath == pn.pkg.UniquePath.String() && currPath == configPath {
 			runner.SetFnConfig(r)
-			break
+			*input = slices.DeleteFunc(*input, func(node *yaml.RNode) bool {
+				return node == r
+			})
+			return r, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // clearAnnotationsOnMutFailure removes annotations that are added during mutation when mutation fails.
