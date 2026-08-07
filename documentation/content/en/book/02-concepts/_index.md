@@ -186,6 +186,29 @@ kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/spark
 
 We will go into details of how to work with packages in [Chapter 3](../03-packages).
 
+### Local Configuration
+
+A package can contain resources that are used only during rendering and should not
+be applied to the cluster. These are called local configuration resources.
+Common examples include function configs (referenced via `configPath`) and helper
+resources used as input to pipeline functions.
+
+You mark a resource as local by adding the `config.kubernetes.io/local-config`
+annotation:
+
+```yaml
+metadata:
+  annotations:
+    config.kubernetes.io/local-config: "true"
+```
+
+When you deploy the package with `kpt live apply`, local configuration resources
+are automatically filtered out. They exist in the package solely to support the
+pipeline. See [Chapter 4](../04-using-functions/) for how function configs use
+this annotation, and the
+[`local-config` annotation reference](/reference/annotations/local-config/) for
+full details.
+
 ## Workflows
 
 In this section, we'll describe the typical workflows in kpt. We say "typical", because there is no single right way of
