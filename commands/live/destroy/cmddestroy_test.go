@@ -17,12 +17,14 @@ package destroy
 import (
 	"path/filepath"
 	"testing"
+	"time"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -30,55 +32,77 @@ import (
 )
 
 func TestCmd(t *testing.T) {
+	validInventory := &kptfilev1.Inventory{
+		Namespace:   "my-ns",
+		Name:        "my-name",
+		InventoryID: "my-inv-id",
+	}
+
+	// failOnDestroy is used for error cases where preRunE should reject the
+	// input before the destroy runner is reached.
+	failOnDestroy := func(t *testing.T, _ *Runner, _ inventory.Info) {
+		t.Fatal("destroy runner should not be called for error cases")
+	}
+
 	testCases := map[string]struct {
 		args                []string
 		namespace           string
 		inventory           *kptfilev1.Inventory
-		destroyCallbackFunc func(*testing.T, inventory.Info)
+		destroyCallbackFunc func(*testing.T, *Runner, inventory.Info)
 		expectedErrorMsg    string
 	}{
-		"invalid inventory policy": {
-			args: []string{
-				"--inventory-policy", "noSuchPolicy",
-			},
-			namespace: "testns",
-			destroyCallbackFunc: func(t *testing.T, _ inventory.Info) {
-				t.FailNow()
-			},
-			expectedErrorMsg: "inventory policy must be one of strict, adopt",
+		"destroy rejects invalid inventory policy": {
+			args:                []string{"--inventory-policy", "noSuchPolicy"},
+			namespace:           "testns",
+			destroyCallbackFunc: failOnDestroy,
+			expectedErrorMsg:    "inventory policy must be one of strict, adopt",
 		},
-		"invalid status policy": {
-			args: []string{
-				"--status-policy", "noSuchPolicy",
-			},
-			namespace: "testns",
-			destroyCallbackFunc: func(t *testing.T, _ inventory.Info) {
-				t.FailNow()
-			},
-			expectedErrorMsg: "status policy must be one of none, all",
+		"destroy rejects invalid status policy": {
+			args:                []string{"--status-policy", "noSuchPolicy"},
+			namespace:           "testns",
+			destroyCallbackFunc: failOnDestroy,
+			expectedErrorMsg:    "status policy must be one of none, all",
 		},
-		"invalid output format": {
-			args: []string{
-				"--output", "foo",
-			},
-			namespace: "testns",
-			destroyCallbackFunc: func(t *testing.T, _ inventory.Info) {
-				t.FailNow()
-			},
-			expectedErrorMsg: "unknown output type \"foo\"",
+		"destroy rejects invalid output format": {
+			args:                []string{"--output", "foo"},
+			namespace:           "testns",
+			destroyCallbackFunc: failOnDestroy,
+			expectedErrorMsg:    "unknown output type \"foo\"",
 		},
-		"fetches the correct inventory information from the Kptfile": {
+		"destroy rejects invalid delete-propagation-policy": {
+			args:                []string{"--delete-propagation-policy", "noSuchPolicy"},
+			namespace:           "testns",
+			destroyCallbackFunc: failOnDestroy,
+			expectedErrorMsg:    "delete propagation policy must be one of Background, Foreground, Orphan",
+		},
+		"destroy accepts Foreground delete-propagation-policy": {
+			args: []string{
+				"--delete-propagation-policy", "Foreground",
+			},
+			inventory: validInventory,
+			namespace: "testns",
+			destroyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.Info) {
+				assert.Equal(t, metav1.DeletePropagationForeground, r.deletePropPolicy)
+			},
+		},
+		"destroy parses delete-timeout duration": {
+			args: []string{
+				"--delete-timeout", "2m",
+			},
+			inventory: validInventory,
+			namespace: "testns",
+			destroyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.Info) {
+				assert.Equal(t, 2*time.Minute, r.deleteTimeout)
+			},
+		},
+		"destroy reads inventory from Kptfile": {
 			args: []string{
 				"--inventory-policy", "adopt",
 				"--output", "events",
 			},
-			inventory: &kptfilev1.Inventory{
-				Namespace:   "my-ns",
-				Name:        "my-name",
-				InventoryID: "my-inv-id",
-			},
+			inventory: validInventory,
 			namespace: "testns",
-			destroyCallbackFunc: func(t *testing.T, inv inventory.Info) {
+			destroyCallbackFunc: func(t *testing.T, _ *Runner, inv inventory.Info) {
 				assert.Equal(t, "my-ns", inv.Namespace())
 				assert.Equal(t, "my-name", inv.Name())
 				assert.Equal(t, "my-inv-id", inv.ID())
@@ -103,13 +127,14 @@ func TestCmd(t *testing.T) {
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.Command.SetArgs(tc.args)
-			runner.destroyRunner = func(_ *Runner, inv inventory.Info, _ common.DryRunStrategy) error {
-				tc.destroyCallbackFunc(t, inv)
+			// Stub out the destroy execution to isolate flag parsing and
+			// validation from actual cluster interaction.
+			runner.destroyRunner = func(r *Runner, inv inventory.Info, _ common.DryRunStrategy) error {
+				tc.destroyCallbackFunc(t, r, inv)
 				return nil
 			}
 			err := runner.Command.Execute()
 
-			// Check if there should be an error
 			if tc.expectedErrorMsg != "" {
 				if !assert.Error(t, err) {
 					t.FailNow()
