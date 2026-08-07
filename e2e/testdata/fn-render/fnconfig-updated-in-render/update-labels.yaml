@@ -8,6 +8,7 @@ metadata: # kpt-merge: /update-labels
     app.kubernetes.io/app: example
 replacements:
 - source:
+    apiVersion: v1
     kind: ConfigMap
     name: kptfile.kpt.dev
     fieldPath: data.name

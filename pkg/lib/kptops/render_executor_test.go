@@ -1124,7 +1124,7 @@ spec:
 			r := &Renderer{
 				PkgPath:    pkgPath,
 				FileSystem: mockFS,
-				Runtime:    &runtime{},
+				Runtime:    &testRuntime{},
 			}
 			r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
 			r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull

@@ -46,6 +46,8 @@ type Result struct {
 	ExitCode int `yaml:"exitCode"`
 	// Results is the list of results for the function
 	Results []ResultItem `yaml:"results,omitempty"`
+	// Skipped indicates if the function was skipped due to a condition
+	Skipped bool `yaml:"skipped,omitempty" json:"skipped,omitempty"`
 }
 
 const (

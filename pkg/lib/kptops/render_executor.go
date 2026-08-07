@@ -837,7 +837,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
 			return input, err
 		}
-		hctx.executedFunctionCnt++
+		if resultCountBeforeExec >= len(hctx.fnResults.Items) || !hctx.fnResults.Items[len(hctx.fnResults.Items)-1].Skipped {
+			hctx.executedFunctionCnt++
+		}
 		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
@@ -901,7 +903,9 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
-		hctx.executedFunctionCnt++
+		if resultCountBeforeExec >= len(hctx.fnResults.Items) || !hctx.fnResults.Items[len(hctx.fnResults.Items)-1].Skipped {
+			hctx.executedFunctionCnt++
+		}
 		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
 	}
 	return nil
@@ -1102,12 +1106,14 @@ func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, 
 		Name:     fn.Name,
 		Image:    fn.Image,
 		ExecPath: fn.Exec,
+		When:     fn.CelCondition,
 	}
 	if resultCountBeforeExec < len(fnResults.Items) {
 		last := fnResults.Items[len(fnResults.Items)-1]
 		step.Stderr = last.Stderr
 		step.ExitCode = last.ExitCode
 		step.Results = last.Results
+		step.Skipped = last.Skipped
 		for _, ri := range step.Results {
 			if ri.Severity == framework.Error {
 				step.ErrorResults = append(step.ErrorResults, ri)
@@ -1129,6 +1135,7 @@ func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStep
 		Name:           fn.Name,
 		Image:          fn.Image,
 		ExecPath:       fn.Exec,
+		When:           fn.CelCondition,
 		ExitCode:       1,
 		ExecutionError: err.Error(),
 	}
