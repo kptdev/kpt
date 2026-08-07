@@ -1023,6 +1023,7 @@ data:
 		assert.Equal(t, "ns-b", meta.Namespace)
 	})
 }
+
 func TestBaseNameAndTag(t *testing.T) {
 	const digest = "sha256:7d89a74f106241391f687fc2985c8e6de597bb21f0d0014def5edc730618d9cc"
 	testCases := map[string]struct {
