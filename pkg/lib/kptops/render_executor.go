@@ -912,7 +912,7 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 		return errAllowedExecNotSpecified
 	}
 
-	validator, err := pn.createValidatorRunner(ctx, hctx, function)
+	validator, err := pn.createValidatorRunner(ctx, hctx, &function)
 	if err != nil {
 		hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 		return err
@@ -952,12 +952,12 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 }
 
 // createValidatorRunner constructs a FunctionRunner for the given validator function.
-func (pn *pkgNode) createValidatorRunner(ctx context.Context, hctx *hydrationContext, function kptfilev1.Function) (*fnruntime.FunctionRunner, error) {
+func (pn *pkgNode) createValidatorRunner(ctx context.Context, hctx *hydrationContext, function *kptfilev1.Function) (*fnruntime.FunctionRunner, error) {
 	displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
 	opts := hctx.runnerOptions
 	opts.SetPkgPathAnnotation = true
 	opts.DisplayResourceCount = displayResourceCount
-	return fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
+	return fnruntime.NewRunner(ctx, hctx.fileSystem, function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 }
 
 func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
