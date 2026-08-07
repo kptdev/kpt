@@ -66,11 +66,61 @@ type RunnerOptions struct {
 	// ImagePrefix determines the prefix ResolveToImage will use when resolving a
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
+
+	LogOptions LogOptions
+
+	// FullDisplayName is the resolved display name of the package or subpackage.
+	// Meant for internal usage, like the render executor.
+	FullDisplayName string
+}
+
+type PackageIDType int8
+
+const (
+	// Use directory name to identify the package/subpackage
+	DirName PackageIDType = iota
+	// Use Kptfile metadata.name to identify the package/subpackage
+	KptfileMeta
+)
+
+type LogOptions struct {
+	PkgNameFormat string
+	PkgNameSep    string
+	PkgNameID     PackageIDType
+
+	// TruncateImageName determines whether the full image name or just the base
+	// name and the tag will be logged.
+	TruncateImageName bool
+}
+
+func (o *LogOptions) IsZero() bool {
+	return o.PkgNameFormat == "" && o.PkgNameSep == "" && o.PkgNameID == 0 && !o.TruncateImageName
+}
+
+func (o *LogOptions) FillDefaults() {
+	defaults := DefaultLogOptions()
+	if o.PkgNameFormat == "" {
+		o.PkgNameFormat = defaults.PkgNameFormat
+	}
+	if o.PkgNameSep == "" {
+		o.PkgNameSep = defaults.PkgNameSep
+	}
+}
+
+func DefaultLogOptions() LogOptions {
+	return LogOptions{
+		PkgNameFormat: "%s",
+		PkgNameSep:    "/",
+		PkgNameID:     DirName,
+
+		TruncateImageName: false,
+	}
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
 	opts.ImagePrefix = defaultImagePrefix
+	opts.LogOptions = DefaultLogOptions()
 }
 
 // ResolveToImage converts the KRM function short path to the full image url.
@@ -114,20 +164,31 @@ type SingleLineFormatter struct {
 	Lines     []string // Lines to be joined
 	UseQuote  bool     // Whether to quote each line
 	Separator string   // Separator between lines (e.g., comma, space)
+
+	Indent     int // How many spaces to indent the whole text
+	LineIndent int // How many (extra) spaces to indent each line
 }
 
 func (sf *SingleLineFormatter) String() string {
-	strInterpolator := "%s"
+	mainIndent := strings.Repeat(" ", sf.Indent)
+
+	formatSb := strings.Builder{}
+
+	formatSb.WriteString(mainIndent)
+	formatSb.WriteString(strings.Repeat(" ", sf.LineIndent))
+
 	if sf.UseQuote {
-		strInterpolator = "%q"
+		formatSb.WriteString("%q")
+	} else {
+		formatSb.WriteString("%s")
 	}
 
 	var formattedLines []string
 	for _, line := range sf.Lines {
 		line = strings.ReplaceAll(line, "\n", " ")
 		line = strings.TrimSpace(line)
-		formattedLines = append(formattedLines, fmt.Sprintf(strInterpolator, line))
+		formattedLines = append(formattedLines, fmt.Sprintf(formatSb.String(), line))
 	}
 
-	return fmt.Sprintf("%s: %s", sf.Title, strings.Join(formattedLines, sf.Separator))
+	return fmt.Sprintf("%s%s:\n%s", mainIndent, sf.Title, strings.Join(formattedLines, sf.Separator))
 }

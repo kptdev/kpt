@@ -19,13 +19,17 @@ stdErrStripLines:
 stdErr: |
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
-  [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+    [Results]:
+      [info]: namespace [default] updated to "staging", 1 value(s) changed
+      [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 1 resource(s)
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" in 0s
-  [Results]: [info] metadata.annotations: set annotations: {"foo":"bar"}
+    [Results]:
+      [info] metadata.annotations: set annotations: {"foo":"bar"}
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
-  [Results]: [info]: set 3 labels in total
+    [Results]:
+      [info]: set 3 labels in total
 
 stdOut: |
   apiVersion: apps/v1

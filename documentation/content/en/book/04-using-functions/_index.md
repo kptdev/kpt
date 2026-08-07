@@ -376,21 +376,30 @@ pipeline:
     - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
-When you invoke the render command, the `mysql` package is rendered first, and the `set-annotations` function is invoked only on the resources with the name `wordpress-mysql`. The `set-label` function is then invoked on all the resources in the package hierarchy of the `wordpress` package.
+When you invoke the render command, the `mysql` package is rendered first, and the `set-annotations` function is invoked only on the resources with the name `wordpress-mysql`.
+The `set-label` function is then invoked on all the resources in the package hierarchy of the `wordpress` package.
 
 ```shell
 $ kpt fn render wordpress
-Package "wordpress/mysql": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+Package "wordpress/mysql":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "wordpress/mysql"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 311ms
+  [Results]:
+    [info]: set 7 labels in total
 
-Package "wordpress": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 3 resource(s)
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
+Package "wordpress":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 2 resource(s) on package "wordpress"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" in 223ms
+  [Results]:
+    [info] metadata.annotations: set annotations: {"tier":"mysql"}
+    [info] metadata.annotations: set annotations: {"tier":"mysql"}
+    [info] spec.template.metadata.annotations: set annotations: {"tier":"mysql"}
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "wordpress"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 204ms
+  [Results]:
+    [info]: set 14 labels in total
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest" on package "wordpress"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest" in 431ms
 
 Successfully executed 4 function(s) in 2 package(s).
 ```
@@ -431,20 +440,28 @@ pipeline:
 Render the package as follows:
 
 ```shell
-kpt fn render wordpress
-Package "wordpress/mysql": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+$ kpt fn render wordpress
+Package "wordpress/mysql":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "wordpress/mysql"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 310ms
+  [Results]:
+    [info]: set 7 labels in total
 
-Package "wordpress": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 3 resource(s)
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest" on 2 resource(s)
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
+Package "wordpress":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 2 resource(s) on package "wordpress"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" in 184ms
+  [Results]:
+    [info] metadata.annotations: set annotations: {"tier":"mysql"}
+    [info] metadata.annotations: set annotations: {"tier":"mysql"}
+    [info] spec.template.metadata.annotations: set annotations: {"tier":"mysql"}
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "wordpress"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 193ms
+  [Results]:
+    [info]: set 14 labels in total
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest" on 2 resource(s) on package "wordpress"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest" in 187ms
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest" on package "wordpress"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest" in 358ms
 
 Successfully executed 5 function(s) in 2 package(s).
 ```

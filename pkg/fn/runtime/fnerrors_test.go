@@ -31,7 +31,8 @@ func TestExecErrorString(t *testing.T) {
 		{
 			name:        "no truncate - empty stderr",
 			fnExecError: ExecError{},
-			expected: `[Stderr]:   Exit Code: 0
+			expected: `[Stderr]:
+  Exit Code: 0
 `,
 		},
 		{
@@ -41,7 +42,8 @@ func TestExecErrorString(t *testing.T) {
 error message2`,
 				ExitCode: 1,
 			},
-			expected: `[Stderr]: error message1, error message2  Exit Code: 1
+			expected: `[Stderr]:
+error message1, error message2  Exit Code: 1
 `,
 		},
 		{
@@ -54,7 +56,8 @@ error message
 error message`,
 				ExitCode: 1,
 			},
-			expected: `[Stderr]: error message, error message, error message, error message, error message  Exit Code: 1
+			expected: `[Stderr]:
+error message, error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 		{
@@ -67,7 +70,8 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `[Stderr]: error message, error message, error message, error message  Exit Code: 1
+			expected: `[Stderr]:
+error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 		{
@@ -81,7 +85,8 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `[Stderr]: error message, error message, error message, error message, error message  Exit Code: 1
+			expected: `[Stderr]:
+error message, error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 		{
@@ -98,7 +103,8 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `[Stderr]: error message, error message, error message, error message, error message, error message, error message, error message  Exit Code: 1
+			expected: `[Stderr]:
+error message, error message, error message, error message, error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 	}

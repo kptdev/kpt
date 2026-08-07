@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -225,28 +226,39 @@ type FunctionRunner struct {
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
-	if !fr.disableCLIOutput {
-		if fr.opts.AllowWasm {
-			if fr.opts.DisplayResourceCount {
-				pr.Printf("[RUNNING] WASM %q on %d resource(s)", fr.name, len(input))
-			} else {
-				pr.Printf("[RUNNING] WASM %q", fr.name)
-			}
+	// prOpts := printer.NewOpt().DisplayName(fr.opts.FullDisplayName).Path(fr.pkgPath)
+	fnName := fr.name
+	if fr.opts.LogOptions.TruncateImageName {
+		baseName, tag := baseNameAndTag(fr.name)
+		if tag != "" {
+			fnName = fmt.Sprintf("%s (%s)", baseName, tag)
 		} else {
-			if fr.opts.DisplayResourceCount {
-				pr.Printf("[RUNNING] %q on %d resource(s)", fr.name, len(input))
-			} else {
-				pr.Printf("[RUNNING] %q", fr.name)
-			}
+			fnName = baseName
 		}
-		pr.Printf("\n")
+	}
+	if !fr.disableCLIOutput {
+		sb := strings.Builder{}
+		sb.WriteString("[RUNNING] ")
+		if fr.opts.AllowWasm {
+			sb.WriteString("WASM ")
+		}
+		sb.WriteString(strconv.Quote(fnName))
+		if fr.opts.DisplayResourceCount {
+			sb.WriteString(" on " + strconv.Itoa(len(input)) + " resource(s)")
+		}
+		if fr.opts.FullDisplayName != "" {
+			sb.WriteString(" on package " + strconv.Quote(fr.opts.FullDisplayName))
+		} else if fr.pkgPath != "" {
+			sb.WriteString(" on package at path " + strconv.Quote(fr.pkgPath.String()))
+		}
+		sb.WriteString("\n")
+		pr.Printf("%s", sb.String()) // TODO: use OptPrintf
 	}
 	t0 := time.Now()
 	output, err = fr.do(input)
 	if err != nil {
-		printOpt := printer.NewOpt()
-		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printOpt)
+		pr.Printf("[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
+		printFnResult(fr.ctx, fr.fnResult)
 		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
@@ -254,11 +266,34 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
-		pr.Printf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
+		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
+		printFnResult(fr.ctx, fr.fnResult)
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
+}
+
+func baseNameAndTag(name string) (string, string) {
+	tag := ""
+
+	// remove digest if present
+	if at := strings.Index(name, "@"); at > -1 {
+		name = name[:at]
+	}
+
+	lastSlash := strings.LastIndex(name, "/")
+
+	if lastSlash > -1 {
+		name = name[lastSlash+1:]
+	}
+
+	firstColon := strings.Index(name, ":")
+
+	if firstColon > -1 {
+		name, tag = name[:firstColon], name[firstColon+1:]
+	}
+
+	return name, tag
 }
 
 // SetFnConfig updates the functionConfig for the FunctionRunner instance.
@@ -431,7 +466,7 @@ func populateResourceRef(item *yaml.RNode, resultItem *fnresultv1.ResultItem) er
 }
 
 // printFnResult prints given function result in a user-friendly format on kpt CLI.
-func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, opt *printer.Options) {
+func printFnResult(ctx context.Context, fnResult *fnresultv1.Result) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(fnResult.Results) > 0 {
 		// function returned structured results
@@ -443,9 +478,12 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, opt *printe
 			Title:     "[Results]",
 			Lines:     lines,
 			UseQuote:  false,
-			Separator: ", ",
+			Separator: "\n",
+
+			Indent:     2,
+			LineIndent: 2,
 		}
-		pr.OptPrintf(opt, "%s\n", ri.String())
+		pr.Printf("%s\n", ri.String())
 	}
 }
 
@@ -454,7 +492,7 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, opt *printe
 func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
 	printFnStderr(ctx, fnErr.Stderr)
-	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
+	pr.Printf("  Exit code: %d\n", fnErr.ExitCode)
 }
 
 // printFnStderr prints given stdErr in a user friendly format on kpt CLI.
@@ -465,9 +503,12 @@ func printFnStderr(ctx context.Context, stdErr string) {
 			Title:     "Stderr",
 			Lines:     strings.Split(stdErr, "\n"),
 			UseQuote:  false,
-			Separator: ", ",
+			Separator: "\n",
+
+			Indent:     2,
+			LineIndent: 2,
 		}
-		pr.Printf(" %s", errLine.String())
+		pr.Printf("%s\n", errLine.String())
 	}
 }
 

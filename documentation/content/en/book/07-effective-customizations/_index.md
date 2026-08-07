@@ -267,7 +267,7 @@ spec:
           - Deployment
 ```
 
-2. `deployment-root-securitycontext.yaml.yaml`
+2. `deployment-root-securitycontext.yaml`
 
 ```yaml
 apiVersion: apps/v1
@@ -305,19 +305,19 @@ pipeline:
 Now, run `kpt fn render` on the kpt package:
 
 ```bash
-kpt fn render
-Package "Gatekeeper": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest"
-[FAIL] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" in 200ms
-  Results:
+$ kpt fn render
+Package "Gatekeeper":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" on package "Gatekeeper"
+[FAIL] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" in 314ms
+  [Results]:
     [error] apps/v1/Deployment/nginx-deploy: Containers must not run as root violatedConstraint: disallowroot
   Stderr:
-    "[error] apps/v1/Deployment/nginx-deploy : Containers must not run as root"
-    "violatedConstraint: disallowroot"
+    [error] apps/v1/Deployment/nginx-deploy: Containers must not run as root
+    violatedConstraint: disallowroot
   Exit code: 1
 ```
 
-The mutation pipeline fais because the Rego policy has been violated.
+The mutation pipeline fails because the Rego policy has been violated.
 
 ## Generation
 

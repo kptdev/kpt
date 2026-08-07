@@ -113,7 +113,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  false,
 				Separator: ", ",
 			},
-			expected: `Summary: line1, line2, line3`,
+			expected: "Summary:\nline1, line2, line3",
 		},
 		"single line with quotes and space separator": {
 			sf: &runneroptions.SingleLineFormatter{
@@ -122,7 +122,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  true,
 				Separator: " ",
 			},
-			expected: `Summary: "line1" "line2" "line3"`,
+			expected: "Summary:\n\"line1\" \"line2\" \"line3\"",
 		},
 		"single line with newline suppression": {
 			sf: &runneroptions.SingleLineFormatter{
@@ -131,7 +131,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  false,
 				Separator: ", ",
 			},
-			expected: `Summary: line1, line2 extra, line3`,
+			expected: "Summary:\nline1, line2 extra, line3",
 		},
 		"empty lines": {
 			sf: &runneroptions.SingleLineFormatter{
@@ -140,7 +140,7 @@ func TestSingleLineFormatter(t *testing.T) {
 				UseQuote:  false,
 				Separator: ", ",
 			},
-			expected: `Empty: `,
+			expected: "Empty:\n",
 		},
 	}
 
@@ -596,7 +596,7 @@ func TestPrintFnStderr(t *testing.T) {
 4
 5`,
 			truncateOutput: true,
-			expected:       ` Stderr: 0, 1, 2, 3, 4, 5`,
+			expected:       "  Stderr:\n    0\n    1\n    2\n    3\n    4\n    5\n",
 		},
 		"non-truncated output": {
 			input: `0
@@ -606,7 +606,7 @@ func TestPrintFnStderr(t *testing.T) {
 4
 5`,
 			truncateOutput: false,
-			expected:       ` Stderr: 0, 1, 2, 3, 4, 5`,
+			expected:       "  Stderr:\n    0\n    1\n    2\n    3\n    4\n    5\n",
 		},
 	}
 	cleanupFunc := func() func() {
@@ -844,6 +844,60 @@ items:
 			err = parseStructuredResult(rnode, actual)
 			require.NoError(t, err)
 			assert.Equal(t, expected, actual)
+		})
+	}
+}
+
+func TestBaseNameAndTag(t *testing.T) {
+	const digest = "sha256:7d89a74f106241391f687fc2985c8e6de597bb21f0d0014def5edc730618d9cc"
+	testCases := map[string]struct {
+		input        string
+		expectedName string
+		expectedTag  string
+	}{
+		"just basename": {
+			input:        "apply-setters",
+			expectedName: "apply-setters",
+		},
+		"basename and tag": {
+			input:        "apply-setters:v0.2.3",
+			expectedName: "apply-setters",
+			expectedTag:  "v0.2.3",
+		},
+		"with registry, no tag": {
+			input:        runneroptions.GHCRImagePrefix + "/apply-setters",
+			expectedName: "apply-setters",
+		},
+		"with registry, with tag": {
+			input:        runneroptions.GHCRImagePrefix + "/apply-setters:v0.2.3",
+			expectedName: "apply-setters",
+			expectedTag:  "v0.2.3",
+		},
+		"with digest, no tag": {
+			input:        "apply-setters@" + digest,
+			expectedName: "apply-setters",
+		},
+		"with digest, with tag": {
+			input:        "apply-setters:v0.2.3@" + digest,
+			expectedName: "apply-setters",
+			expectedTag:  "v0.2.3",
+		},
+		"fully qualified": {
+			input:        runneroptions.GHCRImagePrefix + "/apply-setters:v0.2.3@" + digest,
+			expectedName: "apply-setters",
+			expectedTag:  "v0.2.3",
+		},
+		"executable path": {
+			input:        "/usr/bin/apply-setters",
+			expectedName: "apply-setters",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			baseName, tag := baseNameAndTag(tc.input)
+			assert.Equal(t, tc.expectedName, baseName)
+			assert.Equal(t, tc.expectedTag, tag)
 		})
 	}
 }
