@@ -707,15 +707,6 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	hctx.runnerOptions.FullDisplayName = resolveFullDisplayName(pn.pkg, hctx.runnerOptions.LogOptions)
 
 	pr := printer.FromContextOrDie(ctx)
-	// TODO: the DisplayPath is a relative file path. It cannot represent the
-	//       package structure. We should have function to get the relative package
-	//       path here.
-	// ^^^^^ did they mean something like pn.pkg.UniquePath.RelativePath()?
-	prOpts := printer.NewOpt().
-		Path(pn.pkg.UniquePath).
-		DisplayPath(pn.pkg.DisplayPath).
-		DisplayName(hctx.runnerOptions.FullDisplayName)
-	pr.OptPrintf(prOpts, "\n")
 
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
@@ -728,6 +719,16 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 		}
 		return input, nil
 	}
+
+	// TODO: the DisplayPath is a relative file path. It cannot represent the
+	//       package structure. We should have function to get the relative package
+	//       path here.
+	// ^^^^^ did they mean something like pn.pkg.UniquePath.RelativePath()?
+	prOpts := printer.NewOpt().
+		Path(pn.pkg.UniquePath).
+		DisplayPath(pn.pkg.DisplayPath).
+		DisplayName(hctx.runnerOptions.FullDisplayName)
+	pr.OptPrintf(prOpts, "\n")
 
 	// perform runtime validation for pipeline
 	if err := pn.pkg.ValidatePipeline(); err != nil {
