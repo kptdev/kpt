@@ -837,7 +837,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
 			return input, err
 		}
-		hctx.executedFunctionCnt++
+		if resultCountBeforeExec >= len(hctx.fnResults.Items) || !hctx.fnResults.Items[len(hctx.fnResults.Items)-1].Skipped {
+			hctx.executedFunctionCnt++
+		}
 		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
@@ -901,7 +903,9 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
-		hctx.executedFunctionCnt++
+		if resultCountBeforeExec >= len(hctx.fnResults.Items) || !hctx.fnResults.Items[len(hctx.fnResults.Items)-1].Skipped {
+			hctx.executedFunctionCnt++
+		}
 		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
 	}
 	return nil
