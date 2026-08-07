@@ -1260,7 +1260,9 @@ func trackInputFiles(hctx *hydrationContext, relPath string, resources []*yaml.R
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
-		hctx.executedFunctionCnt++
+		if resultCountBeforeExec >= len(hctx.fnResults.Items) || !hctx.fnResults.Items[len(hctx.fnResults.Items)-1].Skipped {
+			hctx.executedFunctionCnt++
+		}
 		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
 	}
 	return nil
