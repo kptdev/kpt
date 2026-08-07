@@ -61,8 +61,9 @@ The kpt toolchain includes the following components:
 
 ## Versioning
 
-kpt follows semantic versioning. The CLI and API module are released independently; see
-[VERSIONING.md](VERSIONING.md) for compatibility guarantees and release tagging.
+kpt follows the [kpt project versioning guidelines](https://github.com/kptdev/governance/blob/main/VERSIONING.md).
+The CLI and API module are released independently; see [release/README.md](release/README.md) for release surfaces and tagging 
+details.
 
 ## Roadmap
 
