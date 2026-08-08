@@ -16,6 +16,8 @@ may be applied using one of several strategies.
 Since this will update the local package, all changes must be committed to git
 before running `update`.
 
+> **Want to understand 3-way merge in detail?** See the [3-Way Merge Guide](/guides/3-way-merge/) for comprehensive documentation on how kpt merges packages, merge strategies, conflict resolution, and best practices.
+
 ### Synopsis
 
 <!--mdtogo:Long-->
