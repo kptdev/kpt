@@ -2,7 +2,7 @@ module github.com/kptdev/kpt
 
 go 1.26.5
 
-//replace github.com/kptdev/kpt/api => ./api
+replace github.com/kptdev/kpt/api => ./api
 
 require (
 	github.com/Masterminds/semver/v3 v3.5.0

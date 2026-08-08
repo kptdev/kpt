@@ -66,6 +66,28 @@ func (p *Pipeline) validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
 }
 
 func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkgPath UniquePath) error {
+	if err := f.validateExecutor(fnType, idx); err != nil {
+		return err
+	}
+	if err := f.validateConfigSources(fnType, idx); err != nil {
+		return err
+	}
+	if f.ConfigRef != nil {
+		if err := f.ConfigRef.validate(fnType, idx); err != nil {
+			return err
+		}
+	}
+	if f.ConfigPath != "" {
+		if err := f.validateConfigPath(fsys, fnType, idx, pkgPath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// validateExecutor checks that exactly one of Image or Exec is specified and that
+// the image reference is syntactically valid.
+func (f *Function) validateExecutor(fnType string, idx int) error {
 	if f.Image == "" && f.Exec == "" {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
@@ -79,8 +101,7 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 		}
 	}
 	if f.Image != "" {
-		err := ValidateFunctionImageURL(f.Image)
-		if err != nil {
+		if err := ValidateFunctionImageURL(f.Image); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].image", fnType, idx),
 				Value:  f.Image,
@@ -89,28 +110,44 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 		}
 	}
 	// TODO(droot): validate the exec
+	return nil
+}
 
-	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
+// validateConfigSources ensures at most one of configMap, configPath, or configRef is set.
+func (f *Function) validateConfigSources(fnType string, idx int) error {
+	configSources := 0
+	if len(f.ConfigMap) != 0 {
+		configSources++
+	}
+	if f.ConfigPath != "" {
+		configSources++
+	}
+	if f.ConfigRef != nil {
+		configSources++
+	}
+	if configSources > 1 {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: "functionConfig must not specify both `configMap` and `configPath` at the same time",
+			Reason: "functionConfig must specify at most one of `configMap`, `configPath`, or `configRef`",
 		}
 	}
+	return nil
+}
 
-	if f.ConfigPath != "" {
-		if err := validateFnConfigPathSyntax(f.ConfigPath); err != nil {
-			return &ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
-				Value:  f.ConfigPath,
-				Reason: err.Error(),
-			}
+// validateConfigPath validates the configPath syntax and verifies the referenced file exists.
+func (f *Function) validateConfigPath(fsys filesys.FileSystem, fnType string, idx int, pkgPath UniquePath) error {
+	if err := validateFnConfigPathSyntax(f.ConfigPath); err != nil {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
+			Value:  f.ConfigPath,
+			Reason: err.Error(),
 		}
-		if _, err := GetValidatedFnConfigFromPath(fsys, pkgPath, f.ConfigPath); err != nil {
-			return &ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
-				Value:  f.ConfigPath,
-				Reason: err.Error(),
-			}
+	}
+	if _, err := GetValidatedFnConfigFromPath(fsys, pkgPath, f.ConfigPath); err != nil {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
+			Value:  f.ConfigPath,
+			Reason: err.Error(),
 		}
 	}
 	return nil
@@ -150,6 +187,23 @@ func validateFnConfigPathSyntax(p string) error {
 		// Allowing outside path opens up an attack vector that allows
 		// reading any YAML file on package consumer's machine.
 		return fmt.Errorf("path must not be outside the package")
+	}
+	return nil
+}
+
+// validate checks that the ResourceReference has the required fields set.
+func (r *ResourceReference) validate(fnType string, idx int) error {
+	if r.Kind == "" {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef.kind", fnType, idx),
+			Reason: "configRef must specify `kind`",
+		}
+	}
+	if r.Name == "" {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef.name", fnType, idx),
+			Reason: "configRef must specify `name`",
+		}
 	}
 	return nil
 }

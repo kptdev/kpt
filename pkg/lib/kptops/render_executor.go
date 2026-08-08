@@ -802,6 +802,19 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	for i, mutator := range mutators {
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 
+		if pl.Mutators[i].ConfigRef != nil {
+			// Resolve configRef from the current input resources. Like configPath,
+			// the referenced resource may have been mutated by earlier pipeline steps,
+			// so we resolve it fresh before each execution.
+			// Note: the resource remains in the input list (same as configPath behaviour)
+			// so that mutations to it are preserved across pipeline steps.
+			resolved, err := fnruntime.ResolveConfigRef(pl.Mutators[i].ConfigRef, pn.pkg.UniquePath, input)
+			if err != nil {
+				return nil, err
+			}
+			mutator.SetFnConfig(resolved)
+		}
+
 		selectors := pl.Mutators[i].Selectors
 		exclusions := pl.Mutators[i].Exclusions
 
@@ -870,41 +883,64 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 	}
 
 	for i := range pl.Validators {
-		function := pl.Validators[i]
-		resultCountBeforeExec := len(hctx.fnResults.Items)
-		// validators are run on a copy of mutated resources to ensure
-		// resources are not mutated.
-		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, function.Exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
-		if err != nil {
+		if err := pn.runSingleValidator(ctx, hctx, input, pl.Validators[i]); err != nil {
 			return err
 		}
-		var validator *fnruntime.FunctionRunner
-		displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
-		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
-			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
-			return errAllowedExecNotSpecified
-		}
-		opts := hctx.runnerOptions
-		opts.SetPkgPathAnnotation = true
-		opts.DisplayResourceCount = displayResourceCount
-		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
+	}
+	return nil
+}
+
+// runSingleValidator executes a single validator function against the input resources.
+func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode, function kptfilev1.Function) error {
+	resultCountBeforeExec := len(hctx.fnResults.Items)
+
+	// validators are run on a copy of mutated resources to ensure
+	// resources are not mutated.
+	selectedResources, err := fnruntime.SelectInput(input, function.Selectors, function.Exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+	if err != nil {
+		return err
+	}
+
+	if function.Exec != "" && !hctx.runnerOptions.AllowExec {
+		hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
+		return errAllowedExecNotSpecified
+	}
+
+	validator, err := pn.createValidatorRunner(ctx, hctx, &function)
+	if err != nil {
+		hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
+		return err
+	}
+
+	if err := pn.refreshFnConfig(validator, input, function.ConfigPath); err != nil {
+		return err
+	}
+
+	if function.ConfigRef != nil {
+		resolved, err := fnruntime.ResolveConfigRef(function.ConfigRef, pn.pkg.UniquePath, input)
 		if err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
 		}
-
-		if err := pn.refreshFnConfig(validator, input, function.ConfigPath); err != nil {
-			return err
-		}
-
-		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
-			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
-			return err
-		}
-		hctx.executedFunctionCnt++
-		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
+		validator.SetFnConfig(resolved)
 	}
+
+	if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
+		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
+		return err
+	}
+	hctx.executedFunctionCnt++
+	hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
 	return nil
+}
+
+// createValidatorRunner constructs a FunctionRunner for the given validator function.
+func (pn *pkgNode) createValidatorRunner(ctx context.Context, hctx *hydrationContext, function *kptfilev1.Function) (*fnruntime.FunctionRunner, error) {
+	displayResourceCount := len(function.Selectors) > 0 || len(function.Exclusions) > 0
+	opts := hctx.runnerOptions
+	opts.SetPkgPathAnnotation = true
+	opts.DisplayResourceCount = displayResourceCount
+	return fnruntime.NewRunner(ctx, hctx.fileSystem, function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 }
 
 func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {

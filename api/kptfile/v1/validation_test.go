@@ -526,3 +526,170 @@ metadata:
 		})
 	}
 }
+
+func TestConfigRefValidation(t *testing.T) {
+	type input struct {
+		name    string
+		kptfile KptFile
+		valid   bool
+	}
+
+	cases := []input{
+		{
+			name: "configRef: valid with kind and name",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "set-namespace",
+							ConfigRef: &ResourceReference{
+								Kind: "ConfigMap",
+								Name: "my-config",
+							},
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "configRef: valid with all fields",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "set-namespace",
+							ConfigRef: &ResourceReference{
+								APIVersion: "v1",
+								Kind:       "ConfigMap",
+								Name:       "my-config",
+								Namespace:  "default",
+							},
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "configRef: missing kind",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "set-namespace",
+							ConfigRef: &ResourceReference{
+								Name: "my-config",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "configRef: missing name",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "set-namespace",
+							ConfigRef: &ResourceReference{
+								Kind: "ConfigMap",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "configRef: mutual exclusivity with configMap",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "set-namespace",
+							ConfigRef: &ResourceReference{
+								Kind: "ConfigMap",
+								Name: "my-config",
+							},
+							ConfigMap: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "configRef: mutual exclusivity with configPath",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "set-namespace",
+							ConfigRef: &ResourceReference{
+								Kind: "ConfigMap",
+								Name: "my-config",
+							},
+							ConfigPath: "./config.yaml",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "configRef: mutual exclusivity all three",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "set-namespace",
+							ConfigRef: &ResourceReference{
+								Kind: "ConfigMap",
+								Name: "my-config",
+							},
+							ConfigPath: "./config.yaml",
+							ConfigMap: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "configRef: valid in validators",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Validators: []Function{
+						{
+							Image: "gatekeeper",
+							ConfigRef: &ResourceReference{
+								Kind: "ConfigMap",
+								Name: "policy-config",
+							},
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := c.kptfile.Validate(filesys.FileSystemOrOnDisk{}, "")
+			if c.valid && err != nil {
+				t.Fatalf("kptfile should be valid, %s", err)
+			}
+			if !c.valid && err == nil {
+				t.Fatal("kptfile should not be valid")
+			}
+		})
+	}
+}

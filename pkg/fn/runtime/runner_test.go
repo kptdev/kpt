@@ -848,6 +848,182 @@ items:
 	}
 }
 
+func TestResolveConfigRef(t *testing.T) {
+	// Helper to create a resource RNode from YAML.
+	makeResource := func(t *testing.T, y string) *yaml.RNode {
+		t.Helper()
+		node, err := yaml.Parse(y)
+		require.NoError(t, err)
+		return node
+	}
+
+	resources := []*yaml.RNode{
+		makeResource(t, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+data:
+  namespace: production
+`),
+		makeResource(t, `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  namespace: default
+spec:
+  replicas: 3
+`),
+		makeResource(t, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: other-config
+  namespace: staging
+data:
+  key: value
+`),
+	}
+
+	tests := []struct {
+		name       string
+		ref        *kptfilev1.ResourceReference
+		expectName string
+		expectErr  string
+	}{
+		{
+			name: "match by kind and name",
+			ref: &kptfilev1.ResourceReference{
+				Kind: "ConfigMap",
+				Name: "my-config",
+			},
+			expectName: "my-config",
+		},
+		{
+			name: "match by apiVersion, kind, and name",
+			ref: &kptfilev1.ResourceReference{
+				APIVersion: "apps/v1",
+				Kind:       "Deployment",
+				Name:       "my-app",
+			},
+			expectName: "my-app",
+		},
+		{
+			name: "match with namespace filter",
+			ref: &kptfilev1.ResourceReference{
+				Kind:      "ConfigMap",
+				Name:      "other-config",
+				Namespace: "staging",
+			},
+			expectName: "other-config",
+		},
+		{
+			name: "no match - wrong name",
+			ref: &kptfilev1.ResourceReference{
+				Kind: "ConfigMap",
+				Name: "nonexistent",
+			},
+			expectErr: `configRef: resource ConfigMap "nonexistent" not found in package`,
+		},
+		{
+			name: "no match - wrong kind",
+			ref: &kptfilev1.ResourceReference{
+				Kind: "Secret",
+				Name: "my-config",
+			},
+			expectErr: `configRef: resource Secret "my-config" not found in package`,
+		},
+		{
+			name: "no match - apiVersion mismatch",
+			ref: &kptfilev1.ResourceReference{
+				APIVersion: "v2",
+				Kind:       "ConfigMap",
+				Name:       "my-config",
+			},
+			expectErr: `configRef: resource v2/ConfigMap "my-config" not found in package`,
+		},
+		{
+			name: "no match - namespace mismatch",
+			ref: &kptfilev1.ResourceReference{
+				Kind:      "ConfigMap",
+				Name:      "other-config",
+				Namespace: "production",
+			},
+			expectErr: `configRef: resource ConfigMap "other-config" in namespace "production" not found in package`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := ResolveConfigRef(tc.ref, "", resources)
+			if tc.expectErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectErr)
+				return
+			}
+			require.NoError(t, err)
+			meta, err := result.GetMeta()
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectName, meta.Name)
+		})
+	}
+}
+
+func TestResolveConfigRef_MultipleMatches(t *testing.T) {
+	makeResource := func(t *testing.T, y string) *yaml.RNode {
+		t.Helper()
+		node, err := yaml.Parse(y)
+		require.NoError(t, err)
+		return node
+	}
+
+	// Two ConfigMaps with the same name but different namespaces
+	resources := []*yaml.RNode{
+		makeResource(t, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+  namespace: ns-a
+data:
+  key: a
+`),
+		makeResource(t, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+  namespace: ns-b
+data:
+  key: b
+`),
+	}
+
+	t.Run("ambiguous match without namespace", func(t *testing.T) {
+		ref := &kptfilev1.ResourceReference{
+			Kind: "ConfigMap",
+			Name: "my-config",
+		}
+		_, err := ResolveConfigRef(ref, "", resources)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "matched 2 resources")
+	})
+
+	t.Run("disambiguate with namespace", func(t *testing.T) {
+		ref := &kptfilev1.ResourceReference{
+			Kind:      "ConfigMap",
+			Name:      "my-config",
+			Namespace: "ns-b",
+		}
+		result, err := ResolveConfigRef(ref, "", resources)
+		require.NoError(t, err)
+		meta, err := result.GetMeta()
+		require.NoError(t, err)
+		assert.Equal(t, "ns-b", meta.Namespace)
+	})
+}
+
 func TestBaseNameAndTag(t *testing.T) {
 	const digest = "sha256:7d89a74f106241391f687fc2985c8e6de597bb21f0d0014def5edc730618d9cc"
 	testCases := map[string]struct {
