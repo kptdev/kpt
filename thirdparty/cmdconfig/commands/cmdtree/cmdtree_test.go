@@ -325,7 +325,7 @@ openAPI:
 ├── [f1.yaml]  Abstraction foo
 ├── [f1.yaml]  Deployment foo
 ├── [f1.yaml]  Service foo
-└── Package "subpkg"
+└── Package "subpkg" (dependent)
     ├── [Kptfile]  Kptfile subpkg
     └── [f2.yaml]  Deployment bar
 `, filepath.Base(d)), b.String()) {
@@ -405,10 +405,191 @@ metadata:
 	if !assert.Equal(t, `Package "Mainpkg"
 ├── [Kptfile]  Kptfile Mainpkg
 ├── [f1.yaml]  Deployment foo
-└── Package "Subpkg"
+└── Package "Subpkg" (dependent)
     ├── [Kptfile]  Kptfile Subpkg
     └── [f2.yaml]  Deployment bar
 `, b.String()) {
+		return
+	}
+}
+
+func TestTreeCommand_independentAndDependent(t *testing.T) {
+	d, err := os.MkdirTemp("", "tree-test")
+	defer os.RemoveAll(d)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = os.MkdirAll(filepath.Join(d, "subpkg"), 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = os.WriteFile(filepath.Join(d, "subpkg", "f2.yaml"), []byte(`kind: Deployment
+metadata:
+  name: bar
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Root package is independent (has upstream)
+	err = os.WriteFile(filepath.Join(d, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: mainpkg
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo
+    directory: /
+    ref: main
+  updateStrategy: resource-merge
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	// Subpackage is dependent (no upstream)
+	err = os.WriteFile(filepath.Join(d, "subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: subpkg
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, fmt.Sprintf(`Package %q (independent)
+├── [Kptfile]  Kptfile mainpkg
+├── [f1.yaml]  Deployment foo
+└── Package "subpkg" (dependent)
+    ├── [Kptfile]  Kptfile subpkg
+    └── [f2.yaml]  Deployment bar
+`, filepath.Base(d)), b.String()) {
+		return
+	}
+}
+
+func TestTreeCommand_nestedSubpackages(t *testing.T) {
+	d, err := os.MkdirTemp("", "tree-test")
+	defer os.RemoveAll(d)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = os.MkdirAll(filepath.Join(d, "subpkg-a", "subpkg-b"), 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`kind: Deployment
+metadata:
+  name: root-deploy
+spec:
+  replicas: 1
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = os.WriteFile(filepath.Join(d, "subpkg-a", "f2.yaml"), []byte(`kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: test
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = os.WriteFile(filepath.Join(d, "subpkg-a", "subpkg-b", "f3.yaml"), []byte(`kind: ConfigMap
+metadata:
+  name: config
+data:
+  key: value
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Root package is independent
+	err = os.WriteFile(filepath.Join(d, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo
+    directory: /
+    ref: main
+  updateStrategy: resource-merge
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	// subpkg-a is also independent (different upstream)
+	err = os.WriteFile(filepath.Join(d, "subpkg-a", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: subpkg-a
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/other-repo
+    directory: /networking
+    ref: v2.0
+  updateStrategy: resource-merge
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	// subpkg-b is dependent (no upstream)
+	err = os.WriteFile(filepath.Join(d, "subpkg-a", "subpkg-b", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: subpkg-b
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, fmt.Sprintf(`Package %q (independent)
+├── [Kptfile]  Kptfile root
+├── [f1.yaml]  Deployment root-deploy
+└── Package "subpkg-a" (independent)
+    ├── [Kptfile]  Kptfile subpkg-a
+    ├── [f2.yaml]  Service my-service
+    └── Package "subpkg-b" (dependent)
+        ├── [Kptfile]  Kptfile subpkg-b
+        └── [f3.yaml]  ConfigMap config
+`, filepath.Base(d)), b.String()) {
 		return
 	}
 }

@@ -245,6 +245,19 @@ Args:
 var TreeExamples = `
   # Show resources in the current directory.
   $ kpt pkg tree
+
+  # Example output showing independent and dependent packages:
+  $ kpt pkg tree wordpress/
+  Package "wordpress" (independent)
+  ├── [Kptfile]  Kptfile wordpress
+  ├── [service.yaml]  Service wordpress
+  ├── deployment
+  │   ├── [deployment.yaml]  Deployment wordpress
+  │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
+  └── Package "mysql" (dependent)
+      ├── [Kptfile]  Kptfile mysql
+      ├── [deployment.yaml]  Deployment wordpress-mysql
+      └── [service.yaml]  Service wordpress-mysql
 `
 
 var UpdateShort = `Apply upstream package updates.`
