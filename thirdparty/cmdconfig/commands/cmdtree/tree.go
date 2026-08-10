@@ -16,6 +16,7 @@
 package cmdtree
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -37,6 +38,13 @@ const (
 	TreeStructurePackage TreeStructure = "directory"
 	// %q holds the package name
 	PkgNameFormat = "Package %q"
+	// PkgNameWithDepFormat formats a package name with its dependency type,
+	PkgNameWithDepFormat = PkgNameFormat + " (%s)"
+
+	// PkgTypeIndependent indicates a package with its own upstream source.
+	PkgTypeIndependent = "independent"
+	// PkgTypeDependent indicates a package without upstream (inherits from parent).
+	PkgTypeDependent = "dependent"
 )
 
 var GraphStructures = []string{string(TreeStructurePackage)}
@@ -171,11 +179,19 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		}
 		p.Root = d
 	}
-	_, err := os.Stat(filepath.Join(p.Root, kptfilev1.KptFileName))
+	kptfilePath := filepath.Join(p.Root, kptfilev1.KptFileName)
+	_, err := os.Stat(kptfilePath)
 	if !os.IsNotExist(err) {
-		// if Kptfile exists in the root directory, it is a kpt package
-		// print only package name and not entire path
-		tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
+		// if Kptfile exists in the root directory, it is a kpt package.
+		// Only annotate with type if it is independent (has upstream).
+		// A root package without upstream is not "dependent" — it simply
+		// has no upstream source (e.g. created with kpt pkg init).
+		pkgType := packageType(p.Root)
+		if pkgType == PkgTypeIndependent {
+			tree.SetValue(fmt.Sprintf(PkgNameWithDepFormat, filepath.Base(p.Root), pkgType))
+		} else {
+			tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
+		}
 	} else {
 		// else it is just a directory, so print only directory name
 		tree.SetValue(filepath.Base(p.Root))
@@ -187,16 +203,42 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 }
 
 // branchName takes the root directory and relative path to the directory
-// and returns the branch name
+// and returns the branch name. For packages (directories with a Kptfile),
+// it also indicates whether the package is independent or dependent.
+// An independent package has an upstream section in its Kptfile; a dependent
+// package does not.
 func branchName(root, dirRelPath string) string {
 	name := filepath.Base(dirRelPath)
-	_, err := os.Stat(filepath.Join(root, dirRelPath, kptfilev1.KptFileName))
-	if !os.IsNotExist(err) {
-		// add Package prefix indicating that it is a separate package as it has
-		// Kptfile
-		return fmt.Sprintf(PkgNameFormat, name)
+	pkgDir := filepath.Join(root, dirRelPath)
+	_, err := os.Stat(filepath.Join(pkgDir, kptfilev1.KptFileName))
+	if os.IsNotExist(err) {
+		return name
 	}
-	return name
+	// It is a package (has Kptfile). Determine if independent or dependent.
+	pkgType := packageType(pkgDir)
+	if pkgType != "" {
+		return fmt.Sprintf(PkgNameWithDepFormat, name, pkgType)
+	}
+	return fmt.Sprintf(PkgNameFormat, name)
+}
+
+// packageType reads the Kptfile in the given directory and returns "independent"
+// if it has an upstream section, "dependent" otherwise. If the file cannot
+// be read or parsed, it returns an empty string.
+func packageType(dir string) string {
+	data, err := os.ReadFile(filepath.Join(dir, kptfilev1.KptFileName))
+	if err != nil {
+		return ""
+	}
+	var kf kptfilev1.KptFile
+	d := yaml.NewDecoder(bytes.NewReader(data))
+	if err := d.Decode(&kf); err != nil {
+		return ""
+	}
+	if kf.Upstream != nil {
+		return PkgTypeIndependent
+	}
+	return PkgTypeDependent
 }
 
 // Write writes the ascii tree to p.Writer

@@ -138,17 +138,17 @@ kpt also provides the `tree` command which is handy for quickly viewing the pack
 
 ```shell
 kpt pkg tree wordpress/
-Package "wordpress"
+Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql"
+└── Package "mysql" (dependent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [service.yaml]  Service wordpress-mysql
 ```
 
 See the [tree command reference](../../reference/cli/pkg/tree/) for usage.
@@ -352,17 +352,17 @@ Let us revisit the `wordpress` package and see how it was composed in the first 
 
 ```shell
 kpt pkg tree wordpress/
-Package "wordpress"
+Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql"
+└── Package "mysql" (dependent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [service.yaml]  Service wordpress-mysql
 ```
 
 First, delete the `mysql` subpackage. Deleting a subpackage is done by deleting the subdirectory, as follows:
