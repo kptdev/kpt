@@ -23,7 +23,7 @@ Flags:
 `
 var CreateExamples = `
   # get a specific package in the default namespace
-  $ kpt alpha sync create my-app --package=deployment-8f9a0c7bf29eb2cbac9476319cd1ad2e897be4f9 --namespace=default
+  kpt alpha sync create my-app --package=deployment-8f9a0c7bf29eb2cbac9476319cd1ad2e897be4f9 --namespace=default
 `
 
 var DeleteShort = `Remove a sync resource from the cluster.`
@@ -46,7 +46,7 @@ Flags:
 var DeleteExamples = `
   # remove the my-app sync resource from the cluster. Wait up to 5 minutes for
   # resources to be deleted.
-  $ kpt alpha sync delete my-app --timeout=5m
+  kpt alpha sync delete my-app --timeout=5m
 `
 
 var GetShort = `Get sync resources from the cluster.`

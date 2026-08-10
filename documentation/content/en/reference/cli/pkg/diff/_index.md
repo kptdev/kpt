@@ -110,7 +110,7 @@ KPT_CACHE_DIR:
 
 ```shell
 # Show changes in current package relative to upstream source package.
-$ kpt pkg diff
+kpt pkg diff
 ```
 
 <!--mdtogo-->

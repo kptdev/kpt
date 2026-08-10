@@ -49,7 +49,7 @@ door to other automation.
 
 It is an emerging trend to provide GUIs over GitOps, but their ability to automate changes to configurations in git so
 far has been quite limited and narrow, such as to change template parameter values or configure the GitOps
-reconciliation process itself, because the representations are generaly so hostile to mechanical manipulation. The
+reconciliation process itself, because the representations are generally so hostile to mechanical manipulation. The
 combination of these limitations creates friction in managing infrastructure across multiple teams and applications.
 Cross-functional collaboration across platform and application teams can quickly become a bottleneck especially as the
 needs of individual teams differ from one another, requiring frequent template changes that potentially affect all uses

@@ -80,13 +80,13 @@ git submodule update --init --recursive
    - Correct:
 
    ```shell
-   $ kpt fn eval my-package --image ghcr.io/kptdev/krm-functions-catalog/search-replace
+   kpt fn eval my-package --image ghcr.io/kptdev/krm-functions-catalog/search-replace
    ```
 
    - Incorrect:
 
    ```shell
-   $ kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace my-package
+   kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace my-package
    ```
 
 10. The name of the tool should always appear as small caps (even at start of
@@ -102,6 +102,30 @@ git submodule update --init --recursive
    - Incorrect: ConfigMap
 
 12. Do not add any TBDs to the documentation. If something is missing, create an [issue](https://github.com/kptdev/kpt/issues) for it.
+
+13. Do not prefix shell commands with `$` in code blocks that contain only commands.
+   Use `$` only when a block shows both the command and its output, to distinguish
+   the command from the output:
+
+   - Correct (command only):
+
+   ```shell
+   kpt fn render my-package
+   ```
+
+   - Correct (command + output):
+
+   ```shell
+   $ kpt fn render my-package
+   Package "my-package":
+   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+   ```
+
+   - Incorrect (command only with $):
+
+   ```shell
+   $ kpt fn render my-package
+   ```
 
 
 ## License

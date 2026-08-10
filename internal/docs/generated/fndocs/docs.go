@@ -399,7 +399,7 @@ var SinkLong = `
 var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
-  $ kpt fn source DIR |
+  kpt fn source DIR |
     kpt fn eval - --image ghcr.io/example.com/my-fn |
     kpt fn sink NEW_DIR
 `

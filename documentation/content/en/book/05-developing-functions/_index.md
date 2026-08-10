@@ -272,7 +272,7 @@ metadata: # kpt-merge: /nginx-deployment
 
 Let's amend the example to set the "config.kubernetes.io/managed-by" annotation to a value we provide.
 
-Change the implementaiton of the `Run` function above as follows. Change the line:
+Change the implementation of the `Run` function above as follows. Change the line:
 
 ```shell
 kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
@@ -340,7 +340,7 @@ set the KRM function launch configuration for debugging:
 ```
 
 You launch your KRM function in VSCode with the "Launch KRM function" configuration. Paste the ResourceList yaml (output of the `kpt fn source testdata`
-plus your function configuraiton) into the VSCode terminal and type "ctrl-D" (EOF) so that the KRM function can read the ResourceList from its
+plus your function configuration) into the VSCode terminal and type "ctrl-D" (EOF) so that the KRM function can read the ResourceList from its
 standard input. You can now debug the KRM function in the VSCode debugger.
 
 ![img](/images/debug-fn-in-vscode.png)

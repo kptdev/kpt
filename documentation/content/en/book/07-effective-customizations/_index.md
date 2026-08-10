@@ -27,7 +27,7 @@ that talks about using functions as well as the [updating a package](../03-packa
 ### Scenario
 
 I have a single value replacement in my package. I don’t want to force package consumers 
-to look through all the yaml files to find the occurrances the value I want them to set. It 
+to look through all the yaml files to find the occurrences the value I want them to set. It 
 seems easier to just create a parameter for this value and have the user use the `Kptfile`
 for setting the value.
 
