@@ -160,6 +160,22 @@ In addition, you can use a kpt function, such as `search-replace`, to run a quer
 kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 ```
 
+## Excluding files with `.krmignore`
+
+A package may contain files that should not be processed by kpt, such as test fixtures or local development overrides. 
+You can exclude them by creating a `.krmignore` file in the package directory. It uses the same pattern format as
+`.gitignore` (except recursive `**` patterns are not supported).
+
+For example, to exclude a `testdata/` directory and all `.bak` files:
+
+```
+testdata/
+*.bak
+```
+
+Files matching these patterns are excluded from `kpt fn render`, `kpt fn source`, `kpt fn eval`, and `kpt live apply`. 
+Each subpackage can have its own `.krmignore` that applies only within that subpackage.
+
 ## Editing a package
 
 kpt does not maintain any state on your local machine outside the directory from where you fetched the package. Making changes to the package is achieved by manipulating the local filesystem. At the lowest level, _editing_ a package is simply a process that does one of the following:
