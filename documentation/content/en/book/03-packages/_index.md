@@ -163,7 +163,7 @@ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 ## Excluding files with `.krmignore`
 
 A package may contain files that should not be processed by kpt, such as test fixtures or local development overrides. 
-You can exclude them by creating a `.krmignore` file in the package directory.It uses the same pattern format as
+You can exclude them by creating a `.krmignore` file in the package directory. It uses the same pattern format as
 `.gitignore` (except recursive `**` patterns are not supported).
 
 For example, to exclude a `testdata/` directory and all `.bak` files:
