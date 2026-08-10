@@ -716,7 +716,7 @@ kubectl get resourcegroups.kpt.dev 2>&1 | tee $OUTPUT_DIR/status
 assertContains "error: the server doesn't have a resource type \"resourcegroups\""
 # Next, add the ResourceGroup CRD
 echo "kpt live install-resource-group"
-${BIN_DIR}/kpt live install-resource-group 2> /dev/null | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live install-resource-group 2>&1 | tee $OUTPUT_DIR/status
 assertContains "installing inventory ResourceGroup CRD...success"
 echo "kubectl get resourcegroups.kpt.dev"
 kubectl get resourcegroups.kpt.dev 2>&1 | tee $OUTPUT_DIR/status
@@ -730,7 +730,7 @@ kubectl get resourcegroups.kpt.dev --no-headers 2>&1 | tee $OUTPUT_DIR/status
 assertContains "example-inventory"
 # Finally, add the ResourceGroup CRD again, and check it says it already exists.
 echo "kpt live install-resource-group"
-${BIN_DIR}/kpt live install-resource-group 2> /dev/null | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live install-resource-group 2>&1 | tee $OUTPUT_DIR/status
 assertContains "...success"
 printResult
 
