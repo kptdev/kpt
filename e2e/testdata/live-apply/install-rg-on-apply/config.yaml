@@ -18,11 +18,10 @@ kptArgs:
   - "live"
   - "apply"
   - "--reconcile-timeout=1m"
-stdOut: |
-  deployment.apps/nginx-deployment created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
 stdErr: |
   installing inventory ResourceGroup CRD.
+  deployment.apps/nginx-deployment created
+  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
 inventory:
   - group: apps
     kind: Deployment
