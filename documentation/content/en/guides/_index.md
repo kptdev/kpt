@@ -14,3 +14,4 @@ menu:
 - [Variant Constructor Pattern](guides/variant-constructor-pattern.md)
 - [Value Propagation Pattern](guides/value-propagation.md)
 - [Tenant Onboarding](guides/tenant-onboarding.md)
+- [Understanding 3-Way Merge in kpt](guides/3-way-merge.md)
