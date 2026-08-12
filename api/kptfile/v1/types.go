@@ -338,9 +338,9 @@ type Function struct {
 	Exec string `yaml:"exec,omitempty" json:"exec,omitempty"`
 
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
-	// containing a KRM resource used as the function config. This resource is
-	// excluded when resolving 'sources', and as a result cannot be operated on
-	// by the pipeline.
+	// containing a KRM resource used as the function config. The function will
+	// not see this resource in its input items — it is passed as configuration
+	// only. Other functions in the pipeline can still see and modify the file.
 	ConfigPath string `yaml:"configPath,omitempty" json:"configPath,omitempty"`
 
 	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.

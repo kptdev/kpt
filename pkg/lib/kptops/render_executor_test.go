@@ -1140,3 +1140,416 @@ spec:
 		})
 	}
 }
+
+// fnConfigTestResult holds the output of a fn-config exclusion test execution.
+type fnConfigTestResult struct {
+	mock    *mockFnRuntime
+	mockFS  filesys.FileSystem
+	pkgPath string
+	err     error
+}
+
+// setupSinglePkgFnConfigTest creates a single package with the given Kptfile content,
+// a fn-config ConfigMap named "fn-config", and a Deployment named "my-deployment".
+func setupSinglePkgFnConfigTest(t *testing.T, kptfileContent string, mock *mockFnRuntime) fnConfigTestResult {
+	t.Helper()
+	mockFS := filesys.MakeFsInMemory()
+	pkgPath := "/test-pkg"
+	err := mockFS.Mkdir(pkgPath)
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(pkgPath, "Kptfile"), []byte(kptfileContent))
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(pkgPath, "fn-config.yaml"), []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fn-config
+data:
+  key: value
+`))
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(pkgPath, "deployment.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 1
+`))
+	assert.NoError(t, err)
+
+	var outputBuffer bytes.Buffer
+	ctx := printer.WithContext(context.Background(), printer.New(&outputBuffer, &outputBuffer))
+
+	renderer := &Renderer{
+		PkgPath:    pkgPath,
+		Runtime:    mock,
+		FileSystem: mockFS,
+	}
+
+	_, execErr := renderer.Execute(ctx)
+	return fnConfigTestResult{mock: mock, mockFS: mockFS, pkgPath: pkgPath, err: execErr}
+}
+
+// setupNestedPkgFnConfigTest creates a root package with a subpackage "sub".
+// Both have a mutator with configPath pointing to their own config file.
+// Root has root-config.yaml + root-deploy.yaml; sub has sub-config.yaml + sub-deploy.yaml.
+func setupNestedPkgFnConfigTest(t *testing.T, rootKptfile string, mock *mockFnRuntime) fnConfigTestResult {
+	t.Helper()
+	mockFS := filesys.MakeFsInMemory()
+	rootPath := "/nested-pkg"
+	subPath := filepath.Join(rootPath, "sub")
+	err := mockFS.MkdirAll(subPath)
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(rootKptfile))
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(rootPath, "root-config.yaml"), []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: root-config
+data:
+  key: root-value
+`))
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(rootPath, "root-deploy.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: root-deploy
+spec:
+  replicas: 1
+`))
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(subPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sub-pkg
+pipeline:
+  mutators:
+    - image: mock-sub-fn:latest
+      configPath: sub-config.yaml
+`))
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(subPath, "sub-config.yaml"), []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sub-config
+data:
+  key: sub-value
+`))
+	assert.NoError(t, err)
+
+	err = mockFS.WriteFile(filepath.Join(subPath, "sub-deploy.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sub-deploy
+spec:
+  replicas: 2
+`))
+	assert.NoError(t, err)
+
+	var outputBuffer bytes.Buffer
+	ctx := printer.WithContext(context.Background(), printer.New(&outputBuffer, &outputBuffer))
+
+	renderer := &Renderer{
+		PkgPath:    rootPath,
+		Runtime:    mock,
+		FileSystem: mockFS,
+	}
+
+	_, execErr := renderer.Execute(ctx)
+	return fnConfigTestResult{mock: mock, mockFS: mockFS, pkgPath: rootPath, err: execErr}
+}
+
+func TestRunMutators_ExcludesFnConfigFromOwnFunction(t *testing.T) {
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  mutators:
+    - image: mock-fn-1:latest
+    - image: mock-fn-2:latest
+      configPath: fn-config.yaml
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	assert.Equal(t, 2, len(result.mock.capturedItems), "expected 2 function invocations")
+
+	// First function (mock-fn-1) should see all resources including fn-config
+	assert.Contains(t, result.mock.capturedItems[0], "fn-config",
+		"first function should see fn-config in its items")
+	assert.Contains(t, result.mock.capturedItems[0], "my-deployment",
+		"first function should see deployment in its items")
+
+	// Second function (mock-fn-2) should NOT see fn-config in items (it's its own config)
+	assert.NotContains(t, result.mock.capturedItems[1], "fn-config",
+		"second function should NOT see its own fn-config in items")
+	assert.Contains(t, result.mock.capturedItems[1], "my-deployment",
+		"second function should still see deployment in its items")
+}
+
+func TestRunMutators_FnConfigPreservedOnDisk(t *testing.T) {
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  mutators:
+    - image: mock-fn:latest
+      configPath: fn-config.yaml
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	exists := result.mockFS.Exists(filepath.Join(result.pkgPath, "fn-config.yaml"))
+	assert.True(t, exists, "fn-config.yaml should still exist on disk after render")
+}
+
+func TestRunValidators_ExcludesFnConfigFromOwnFunction(t *testing.T) {
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  validators:
+    - image: mock-validator:latest
+      configPath: fn-config.yaml
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	assert.Equal(t, 1, len(result.mock.capturedItems), "expected 1 validator invocation")
+
+	assert.NotContains(t, result.mock.capturedItems[0], "fn-config",
+		"validator should NOT see its own fn-config in items")
+	assert.Contains(t, result.mock.capturedItems[0], "my-deployment",
+		"validator should see deployment in its items")
+}
+
+func TestRunMutators_NestedPkgFnConfigExclusion_DFS(t *testing.T) {
+	result := setupNestedPkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-pkg
+pipeline:
+  mutators:
+    - image: mock-root-fn:latest
+      configPath: root-config.yaml
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	// DFS: subpackage runs first, then root
+	assert.Equal(t, 2, len(result.mock.capturedItems), "expected 2 function invocations (sub then root)")
+
+	// First invocation (sub's function): should NOT see sub-config
+	assert.NotContains(t, result.mock.capturedItems[0], "sub-config",
+		"sub function should NOT see its own fn-config")
+	assert.Contains(t, result.mock.capturedItems[0], "sub-deploy",
+		"sub function should see sub-deploy")
+
+	// Second invocation (root's function): should NOT see root-config (its own),
+	// but SHOULD see sub-config (regular resource from root's perspective)
+	assert.NotContains(t, result.mock.capturedItems[1], "root-config",
+		"root function should NOT see its own fn-config")
+	assert.Contains(t, result.mock.capturedItems[1], "sub-config",
+		"root function SHOULD see sub's fn-config as a regular resource")
+	assert.Contains(t, result.mock.capturedItems[1], "root-deploy",
+		"root function should see root-deploy")
+	assert.Contains(t, result.mock.capturedItems[1], "sub-deploy",
+		"root function should see sub-deploy (transitive)")
+}
+
+func TestRunMutators_NestedPkgFnConfigExclusion_BFS(t *testing.T) {
+	result := setupNestedPkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-pkg
+  annotations:
+    kpt.dev/bfs-rendering: "true"
+pipeline:
+  mutators:
+    - image: mock-root-fn:latest
+      configPath: root-config.yaml
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	// BFS: root runs first, then subpackage
+	assert.Equal(t, 2, len(result.mock.capturedItems), "expected 2 function invocations (root then sub)")
+
+	// First invocation (root's function): should NOT see root-config (its own)
+	assert.NotContains(t, result.mock.capturedItems[0], "root-config",
+		"root function should NOT see its own fn-config")
+	assert.Contains(t, result.mock.capturedItems[0], "root-deploy",
+		"root function should see root-deploy")
+	assert.Contains(t, result.mock.capturedItems[0], "sub-config",
+		"root function SHOULD see sub's fn-config as a regular resource")
+	assert.Contains(t, result.mock.capturedItems[0], "sub-deploy",
+		"root function should see sub-deploy (descendant)")
+
+	// Second invocation (sub's function): should NOT see sub-config
+	assert.NotContains(t, result.mock.capturedItems[1], "sub-config",
+		"sub function should NOT see its own fn-config")
+	assert.Contains(t, result.mock.capturedItems[1], "sub-deploy",
+		"sub function should see sub-deploy")
+}
+
+func TestRunMutators_FnConfigRestoredOnError(t *testing.T) {
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  mutators:
+    - image: mock-fn:latest
+      configPath: fn-config.yaml
+`, &mockFnRuntime{shouldFail: true, failOnInvocation: 0})
+
+	assert.Error(t, result.err, "expected render to fail")
+	exists := result.mockFS.Exists(filepath.Join(result.pkgPath, "fn-config.yaml"))
+	assert.True(t, exists, "fn-config.yaml should still exist on disk after failed render")
+}
+
+// mutatingMockFnRuntime is a test FunctionRuntime where the first invocation
+// adds a data key to any ConfigMap named "fn-config" in items. This lets us
+// verify that subsequent functions receive the refreshed (mutated) config via
+// excludeAndRefreshFnConfig.
+func TestRunMutators_RefreshFnConfigFromPrecedingMutator(t *testing.T) {
+	// This test verifies that when mutator-1 (no configPath) modifies a resource
+	// that is used as mutator-2's functionConfig (via configPath), mutator-2 sees
+	// the updated in-memory version via excludeAndRefreshFnConfig.
+	//
+	// Setup: mutator-1 has no configPath so it sees fn-config in items and mutates it.
+	//        mutator-2 uses fn-config.yaml as configPath, so it's excluded from items
+	//        but passed via functionConfig (refreshed from the mutated input).
+
+	mock := &mutatingMockFnRuntime{}
+	mockFS := filesys.MakeFsInMemory()
+	pkgPath := "/test-pkg"
+	assert.NoError(t, mockFS.Mkdir(pkgPath))
+
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  mutators:
+    - image: mock-mutator-1:latest
+    - image: mock-mutator-2:latest
+      configPath: fn-config.yaml
+`)))
+
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "fn-config.yaml"), []byte(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fn-config
+data:
+  key: original-value
+`)))
+
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(pkgPath, "deployment.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+spec:
+  replicas: 1
+`)))
+
+	var outputBuffer bytes.Buffer
+	ctx := printer.WithContext(context.Background(), printer.New(&outputBuffer, &outputBuffer))
+
+	renderer := &Renderer{
+		PkgPath:    pkgPath,
+		Runtime:    mock,
+		FileSystem: mockFS,
+	}
+
+	_, err := renderer.Execute(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(mock.capturedFnConfigData), "expected 2 mutator invocations")
+
+	// First mutator has no configPath, so functionConfig is nil
+	assert.Nil(t, mock.capturedFnConfigData[0],
+		"first mutator should have no functionConfig (no configPath)")
+
+	// First mutator sees fn-config in items and mutates it
+	assert.Contains(t, mock.capturedItems[0], "fn-config",
+		"first mutator should see fn-config in items")
+
+	// Second mutator should receive the refreshed fn-config as functionConfig
+	// with the mutation applied by the first mutator
+	assert.Equal(t, "first-fn", mock.capturedFnConfigData[1]["mutated-by"],
+		"second mutator should receive the fn-config mutated by the first mutator")
+	assert.Equal(t, "original-value", mock.capturedFnConfigData[1]["key"],
+		"second mutator should still see original data alongside mutation")
+
+	// Second mutator should NOT see fn-config in items (it's its own config)
+	assert.NotContains(t, mock.capturedItems[1], "fn-config",
+		"second mutator should NOT see its own fn-config in items")
+}
+
+func TestRunMutators_NoConfigPathSeesAllResources(t *testing.T) {
+	// When a function has no configPath, it should see all resources including
+	// other functions' fn-configs. excludeAndRefreshFnConfig is a no-op.
+
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  mutators:
+    - image: mock-fn:latest
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	assert.Equal(t, 1, len(result.mock.capturedItems), "expected 1 function invocation")
+
+	// Function should see all resources including fn-config
+	assert.Contains(t, result.mock.capturedItems[0], "fn-config",
+		"function with no configPath should see fn-config in its items")
+	assert.Contains(t, result.mock.capturedItems[0], "my-deployment",
+		"function with no configPath should see deployment in its items")
+}
+
+func TestRunValidators_NoConfigPathSeesAllResources(t *testing.T) {
+	// Same as above but for validators.
+
+	result := setupSinglePkgFnConfigTest(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+pipeline:
+  validators:
+    - image: mock-validator:latest
+`, &mockFnRuntime{})
+
+	assert.NoError(t, result.err)
+	assert.Equal(t, 1, len(result.mock.capturedItems), "expected 1 validator invocation")
+
+	// Validator should see all resources including fn-config
+	assert.Contains(t, result.mock.capturedItems[0], "fn-config",
+		"validator with no configPath should see fn-config in its items")
+	assert.Contains(t, result.mock.capturedItems[0], "my-deployment",
+		"validator with no configPath should see deployment in its items")
+}

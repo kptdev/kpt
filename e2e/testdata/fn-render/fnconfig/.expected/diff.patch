@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index cd1b1e5..a14e2ce 100644
+index cd1b1e5..fa0fdfa 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
@@ -44,7 +44,7 @@ index cd1b1e5..a14e2ce 100644
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
 +        exitCode: 0
 +        results:
-+          - message: set 8 labels in total
++          - message: set 7 labels in total
 +            severity: info
 diff --git a/db/Kptfile b/db/Kptfile
 index a0e6f2d..5e0e30a 100644
@@ -79,16 +79,14 @@ index dabe43c..25f77c1 100644
 +      app: backend
 +      tier: db
 diff --git a/labelconfig.yaml b/labelconfig.yaml
-index 22d2de2..8712cbf 100644
+index 22d2de2..3c63796 100644
 --- a/labelconfig.yaml
 +++ b/labelconfig.yaml
-@@ -15,5 +15,8 @@ apiVersion: v1
+@@ -15,5 +15,6 @@ apiVersion: v1
  kind: ConfigMap
  metadata:
    name: label-config
 +  namespace: staging
-+  labels:
-+    tier: db
  data:
    tier: db
 diff --git a/resources.yaml b/resources.yaml
