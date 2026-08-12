@@ -80,19 +80,19 @@ func (gr GroupResource) String() string {
 }
 
 func ParseGroupKind(gk string) GroupKind {
-	i := strings.Index(gk, ".")
-	if i == -1 {
+	before, after, ok := strings.Cut(gk, ".")
+	if !ok {
 		return GroupKind{Kind: gk}
 	}
 
-	return GroupKind{Group: gk[i+1:], Kind: gk[:i]}
+	return GroupKind{Group: after, Kind: before}
 }
 
 // ParseGroupResource turns "resource.group" string into a GroupResource struct.  Empty strings are allowed
 // for each field.
 func ParseGroupResource(gr string) GroupResource {
-	if i := strings.Index(gr, "."); i >= 0 {
-		return GroupResource{Group: gr[i+1:], Resource: gr[:i]}
+	if before, after, ok := strings.Cut(gr, "."); ok {
+		return GroupResource{Group: after, Resource: before}
 	}
 	return GroupResource{Resource: gr}
 }
@@ -220,8 +220,8 @@ func ParseGroupVersion(gv string) (GroupVersion, error) {
 	case 0:
 		return GroupVersion{"", gv}, nil
 	case 1:
-		i := strings.Index(gv, "/")
-		return GroupVersion{gv[:i], gv[i+1:]}, nil
+		before, after, _ := strings.Cut(gv, "/")
+		return GroupVersion{before, after}, nil
 	default:
 		return GroupVersion{}, fmt.Errorf("unexpected GroupVersion string: %v", gv)
 	}

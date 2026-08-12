@@ -428,39 +428,56 @@ func (p *Pkg) ValidatePipeline() error {
 		return nil
 	}
 
-	// read all resources including function pipeline.
-	resources, err := p.LocalResources()
+	resourcesByPath, resources, err := p.buildResourcePathSet()
 	if err != nil {
 		return err
 	}
 
-	resourcesByPath := sets.String{}
+	var errs []error
+	errs = append(errs, validatePipelineFunctions("mutators", pl.Mutators, resourcesByPath, resources)...)
+	errs = append(errs, validatePipelineFunctions("validators", pl.Validators, resourcesByPath, resources)...)
+	return stderrors.Join(errs...)
+}
 
-	// TODO: should we use go.uber.org/multierr instead?
+// buildResourcePathSet reads all local resources and returns a set of their file paths
+// along with the resources themselves.
+func (p *Pkg) buildResourcePathSet() (sets.String, []*yaml.RNode, error) {
+	resources, err := p.LocalResources()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resourcesByPath := sets.String{}
 	var errs []error
 	for _, r := range resources {
 		rPath, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("resource %q missing path annotation err: %w", r.GetName(), err))
+			continue
 		}
 		resourcesByPath.Insert(filepath.Clean(rPath))
 	}
-
 	if len(errs) > 0 {
-		return stderrors.Join(errs...)
+		return nil, nil, stderrors.Join(errs...)
 	}
+	return resourcesByPath, resources, nil
+}
 
-	for i, fn := range pl.Mutators {
+// validatePipelineFunctions validates configPath and configRef for a slice of pipeline functions.
+func validatePipelineFunctions(fnType string, fns []kptfilev1.Function, resourcesByPath sets.String, resources []*yaml.RNode) []error {
+	var errs []error
+	stepType := strings.TrimSuffix(fnType, "s") // "mutators" -> "mutator"
+	for i, fn := range fns {
 		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
-			errs = append(errs, makeStepValidationErr("mutator", i, fn.Name, fn.Image, fn.ConfigPath))
+			errs = append(errs, makeStepValidationErr(stepType, i, fn.Name, fn.Image, fn.ConfigPath))
+		}
+		if fn.ConfigRef != nil {
+			if err := validateConfigRefExists(fnType, i, fn, resources); err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
-	for i, fn := range pl.Validators {
-		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
-			errs = append(errs, makeStepValidationErr("validator", i, fn.Name, fn.Image, fn.ConfigPath))
-		}
-	}
-	return stderrors.Join(errs...)
+	return errs
 }
 
 func makeStepValidationErr(stepType string, i int, fnName, fnImage, configPath string) *kptfilev1.ValidateError {
@@ -469,6 +486,47 @@ func makeStepValidationErr(stepType string, i int, fnName, fnImage, configPath s
 		Value: configPath,
 		Reason: fmt.Sprintf("functionConfig resource for %s %q is missing from path %q, this also occurs if %q is part of a subpackage",
 			stepType, PipelineStepNameOrImage(fnName, fnImage), configPath, configPath),
+	}
+}
+
+// validateConfigRefExists checks that the resource referenced by configRef
+// resolves to exactly one resource among the given resources.
+func validateConfigRefExists(fnType string, i int, fn kptfilev1.Function, resources []*yaml.RNode) error {
+	ref := fn.ConfigRef
+	matchCount := 0
+	for _, r := range resources {
+		meta, err := r.GetMeta()
+		if err != nil {
+			continue
+		}
+		if ref.Matches(meta) {
+			matchCount++
+		}
+	}
+
+	refDesc := ref.Kind + " " + fmt.Sprintf("%q", ref.Name)
+	if ref.APIVersion != "" {
+		refDesc = ref.APIVersion + "/" + refDesc
+	}
+	if ref.Namespace != "" {
+		refDesc += " in namespace " + fmt.Sprintf("%q", ref.Namespace)
+	}
+
+	switch {
+	case matchCount == 0:
+		return &kptfilev1.ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef", fnType, i),
+			Value:  refDesc,
+			Reason: fmt.Sprintf("referenced resource %s not found in package for function %q", refDesc, PipelineStepNameOrImage(fn.Name, fn.Image)),
+		}
+	case matchCount > 1:
+		return &kptfilev1.ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].configRef", fnType, i),
+			Value:  refDesc,
+			Reason: fmt.Sprintf("referenced resource %s matched %d resources, must match exactly one; use namespace to disambiguate", refDesc, matchCount),
+		}
+	default:
+		return nil
 	}
 }
 

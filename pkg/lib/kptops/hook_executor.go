@@ -83,6 +83,9 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 		var err error
 		var runner kio.Filter
 		fn := fns[i]
+		if fn.ConfigRef != nil {
+			return nil, fmt.Errorf("configRef is not supported in lifecycle hooks (function %q)", fn.Image)
+		}
 		if fn.Exec != "" && !e.RunnerOptions.AllowExec {
 			return nil, ErrAllowedExecNotSpecified
 		}
