@@ -1077,5 +1077,3 @@ data:
 		assert.Equal(t, "ns-b", meta.Namespace)
 	})
 }
-
-
