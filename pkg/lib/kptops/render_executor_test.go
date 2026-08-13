@@ -261,44 +261,88 @@ func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, 
 	assert.NoError(t, err)
 
 	childPkgPath := "/root/subpkg/child"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(childPkgPath)
 	assert.NoError(t, err)
 
 	siblingPkgPath := "/root/sibling"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(siblingPkgPath)
 	assert.NoError(t, err)
 
-	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), fmt.Appendf(nil, `
-apiVersion: kpt.dev/v1
+	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), fmt.Appendf(nil, `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: root-package
   annotations:
-    kpt.dev/bfs-rendering: %t
+    kpt.dev/bfs-rendering: "%t"
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: root
 `, renderBfs))
 	assert.NoError(t, err)
 
-	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`
-apiVersion: kpt.dev/v1
+	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: root-cm
+`))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: sub-package
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: sub
 `))
 	assert.NoError(t, err)
 
-	err = mockFileSystem.WriteFile(filepath.Join(siblingPkgPath, "Kptfile"), []byte(`
-apiVersion: kpt.dev/v1
+	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sub-cm
+`))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(siblingPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: sibling-package
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: sibling
 `))
 	assert.NoError(t, err)
 
-	err = mockFileSystem.WriteFile(filepath.Join(childPkgPath, "Kptfile"), []byte(`
-apiVersion: kpt.dev/v1
+	err = mockFileSystem.WriteFile(filepath.Join(siblingPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sibling-cm
+`))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(childPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: child-package
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: child
+`))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(childPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: child-cm
 `))
 	assert.NoError(t, err)
 
@@ -345,10 +389,109 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 			fnResults, err := renderer.Execute(ctx)
 			assert.NoError(t, err)
 			assert.NotNil(t, fnResults)
-			assert.Equal(t, 0, len(fnResults.Items))
+			assert.Equal(t, 4, len(fnResults.Items))
 
 			output := outputBuffer.String()
 			assertOrder(t, output, tc.orderedOutput...)
+		})
+	}
+}
+func TestRunPipeline_SubpkgNameDisplay(t *testing.T) {
+	tests := []struct {
+		name             string
+		subPkgKptfile    string
+		expectSubPkgName bool
+	}{
+		{
+			name: "does not print subpkg name when pipeline is empty",
+			subPkgKptfile: `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sub-package
+`,
+			expectSubPkgName: false,
+		},
+		{
+			name: "prints subpkg name when pipeline is not empty",
+			subPkgKptfile: `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sub-package
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        tier: backend
+`,
+			expectSubPkgName: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var outputBuffer bytes.Buffer
+			ctx := context.Background()
+			ctx = printer.WithContext(ctx, printer.New(&outputBuffer, &outputBuffer))
+
+			mockFileSystem := filesys.MakeFsInMemory()
+
+			rootPkgPath := rootString
+			err := mockFileSystem.Mkdir(rootPkgPath)
+			assert.NoError(t, err)
+
+			subPkgPath := subPkgString
+			err = mockFileSystem.Mkdir(subPkgPath)
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: myapp
+`))
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: root-cm
+`))
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(tc.subPkgKptfile))
+			assert.NoError(t, err)
+
+			err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sub-cm
+`))
+			assert.NoError(t, err)
+
+			renderer := &Renderer{
+				PkgPath:    rootPkgPath,
+				FileSystem: mockFileSystem,
+				RunnerOptions: func() runneroptions.RunnerOptions {
+					opts := runneroptions.RunnerOptions{}
+					opts.InitDefaults(runneroptions.GHCRImagePrefix)
+					return opts
+				}(),
+			}
+
+			_, err = renderer.Execute(ctx)
+			assert.NoError(t, err)
+
+			output := outputBuffer.String()
+			assert.Contains(t, output, `Package "root":`)
+			if tc.expectSubPkgName {
+				assert.Contains(t, output, `Package "root/subpkg":`)
+			} else {
+				assert.NotContains(t, output, `Package "root/subpkg":`)
+			}
 		})
 	}
 }
