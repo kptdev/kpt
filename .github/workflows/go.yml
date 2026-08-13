@@ -113,6 +113,7 @@ jobs:
 
   save-pr-number:
     name: Save PR Number
+    needs: [build-test, build-macos]
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
