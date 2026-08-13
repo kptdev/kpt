@@ -169,7 +169,7 @@ $ kpt fn render <my-pkg-instance>
 ## See it in action
 
 If you want to see `variant constructor pattern` in action for a real use-case,
-check out the [`namespace provisioning using kpt CLI guide`](/guides/namespace-provisioning-cli.md).
+check out the [`namespace provisioning using kpt CLI guide`]({{% relref "/guides/namespace-provisioning-cli.md" %}}).
 
 ## Summary
 

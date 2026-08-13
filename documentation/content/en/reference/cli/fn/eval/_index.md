@@ -155,7 +155,7 @@ fn-args:
   labels.
 
 --mount:
-  List of storage options to enable reading from the local filesytem. By default,
+  List of storage options to enable reading from the local filesystem. By default,
   container functions can not access the local filesystem. It accepts the same options
   as specified on the [Docker Volumes] for `docker run`. All volumes are mounted
   readonly by default. Specify `rw=true` to mount volumes in read-write mode.

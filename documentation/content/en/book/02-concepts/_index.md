@@ -55,13 +55,13 @@ This enables machine manipulation of configuration for Kubernetes and any infras
 
 The kpt toolchain includes the following components:
 
-- [**kpt CLI**](../../reference/cli/): The kpt CLI supports package and function operations, and also   deployment, via
+- [**kpt CLI**]({{% relref "/reference/cli" %}}): The kpt CLI supports package and function operations, and also   deployment, via
   either direct apply or GitOps. By keeping an inventory of deployed resources, kpt enables resource pruning, aggregated
   status and observability, and an improved preview experience.
 
 - [**Function SDK**](https://github.com/kptdev/krm-functions-sdk): Any general-purpose or domain-specific language can be used to create functions to transform
  and/or validate the YAML KRM input/output format, but we provide SDKs to simplify the function authoring process, in 
-  [Go](../05-developing-functions/#developing-in-Go). 
+  [Go]({{% relref "/book/05-developing-functions#developing-in-Go" %}}). 
 
 - [**Function catalog**](https://catalog.kpt.dev): A catalog of off-the-shelf, tested functions. kpt makes
   configuration easy to create and transform, via reusable functions. Because they are expected to be used for in-place
@@ -184,7 +184,7 @@ For example, `spark` is just a vanilla directory of KRM:
 kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/spark
 ```
 
-We will go into details of how to work with packages in [Chapter 3](../03-packages).
+We will go into details of how to work with packages in [Chapter 3]({{% relref "/book/03-packages" %}}).
 
 ## Workflows
 
@@ -297,7 +297,7 @@ executed, kpt can provide the following guarantees:
   out-of-band access to the host filesystem and networking.
 
 We will discuss the KRM Functions Specification Standard in detail in
-[Chapter 5](../05-developing-functions).
+[Chapter 5]({{% relref "/book/05-developing-functions" %}}).
 At a high level, a function execution looks like this:
 
 ![img](/images/func.svg)
@@ -327,7 +327,7 @@ fundamentally different approaches:
   imperative invocation can be more privileged and low-level than an declarative
   invocation. For example, it can have access to the host system.
 
-We will discuss how to run functions in [Chapter 4](../04-using-functions) and how to develop functions
-in [Chapter 5](../05-developing-functions).
+We will discuss how to run functions in [Chapter 4]({{% relref "/book/04-using-functions" %}}) and how to develop functions
+in [Chapter 5]({{% relref "/book/05-developing-functions" %}}).
 
 

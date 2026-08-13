@@ -19,7 +19,7 @@ Resources must be in one of the following input formats:
    object of kind ResourceList.
 
 `sink` is useful for chaining functions using Unix pipe. For more details, refer
-to [Chaining functions](/book/04-using-functions/#chaining-functions-using-the-unix-pipe).
+to [Chaining functions]({{% relref "/book/04-using-functions#chaining-functions-using-the-unix-pipe" %}}).
 
 ### Synopsis
 
