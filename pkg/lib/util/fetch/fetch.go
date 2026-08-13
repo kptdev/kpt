@@ -42,8 +42,8 @@ type Command struct {
 	// fetched. The package directory referenced must contain a valid Kptfile.
 	Pkg *pkg.Pkg
 
-	// Commit stores a git commit sha. If this is set when invoking the command,
-	// the package will be fetched based on this commit sha rather than based on
+	// Commit stores a git commit SHA. If this is set when invoking the command,
+	// the package will be fetched based on this commit SHA rather than based on
 	// the ref provided in the Kptfile. This allows for fetching specific
 	// commits even if the Kptfile references a branch.
 	Commit string
@@ -186,7 +186,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	}
 
 	var commit string
-	// If a commit sha is provided in the repoSpec, we use it directly instead
+	// If a commit SHA is provided in the repoSpec, we use it directly instead
 	// of resolving the ref. This allows fetching a specific commit even if the
 	// ref (e.g. a branch) has since moved forward.
 	if c.repoSpec.Commit != "" {

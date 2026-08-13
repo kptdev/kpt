@@ -407,19 +407,23 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 		// full fetched content.
 		if originUnfetched {
 			// We want to fetch the package here, but we need to use the
-			// commit sha from the package in local to make sure we get the correct
+			// commit SHA from the package in local to make sure we get the correct
 			// ref from origin. So we read the Kptfile in local and use the
-			// commit sha from there.
+			// commit SHA from there.
 			localKf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 			if err != nil {
 				return errors.E(op, kptfilev1.UniquePath(localPath), err)
+			}
+			if localKf.UpstreamLock == nil || localKf.UpstreamLock.Git == nil {
+				return errors.E(op, kptfilev1.UniquePath(localPath),
+					fmt.Errorf("local package missing upstreamLock.git, cannot determine origin commit"))
 			}
 			localOriginSha := localKf.UpstreamLock.Git.Commit
 			p, err := pkg.New(filesys.FileSystemOrOnDisk{}, originPath)
 			if err != nil {
 				return errors.E(op, kptfilev1.UniquePath(localPath), err)
 			}
-			// Fetch the package, but provide the correct commit sha rather
+			// Fetch the package, but provide the correct commit SHA rather
 			// than just fetching based on the ref in the Kptfile. If the ref
 			// points to a branch, we don't want to end up getting a different
 			// ref than was used by local.
