@@ -17,6 +17,8 @@ package parse
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -261,6 +263,91 @@ func Test_GitParseArgs(t *testing.T) {
 			actual, err := GitParseArgs(ctx, []string{test.ghURL, test.expected.Destination}, true)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expected, actual)
+		})
+	}
+}
+
+func Test_getDest(t *testing.T) {
+	repo := "https://github.com/kptdev/kpt"
+	subdir := "package-examples/nginx"
+
+	tests := map[string]struct {
+		dest         func(t *testing.T) string
+		explicitDest bool
+		want         func(dest string) string
+		errS         string
+	}{
+		"explicit destination that does not exist yet": {
+			dest: func(t *testing.T) string {
+				return filepath.Join(t.TempDir(), "newDirName")
+			},
+			explicitDest: true,
+			want:         func(dest string) string { return dest },
+		},
+		"explicit destination that already contains a package": {
+			dest: func(t *testing.T) string {
+				dir := t.TempDir()
+				require.NoError(t, os.WriteFile(filepath.Join(dir, "Kptfile"), []byte("apiVersion: kpt.dev/v1"), 0o600))
+				return dir
+			},
+			explicitDest: true,
+			errS:         "already exists and contains a package",
+		},
+		"explicit destination that exists without a package defaults to a subdirectory": {
+			dest: func(t *testing.T) string {
+				return t.TempDir()
+			},
+			explicitDest: true,
+			want:         func(dest string) string { return filepath.Join(dest, "nginx") },
+		},
+		"explicit current directory": {
+			dest:         func(t *testing.T) string { return "." },
+			explicitDest: true,
+			want:         func(string) string { return "." },
+		},
+		"defaulted destination inside an existing directory": {
+			dest: func(t *testing.T) string {
+				return t.TempDir()
+			},
+			explicitDest: false,
+			want:         func(dest string) string { return filepath.Join(dest, "nginx") },
+		},
+		"defaulted destination whose subdirectory already exists": {
+			dest: func(t *testing.T) string {
+				dir := t.TempDir()
+				require.NoError(t, os.Mkdir(filepath.Join(dir, "nginx"), 0o700))
+				return dir
+			},
+			explicitDest: false,
+			errS:         "already exists",
+		},
+		"destination parent does not exist": {
+			dest: func(t *testing.T) string {
+				return filepath.Join(t.TempDir(), "missing-parent", "dest")
+			},
+			explicitDest: true,
+			errS:         "does not exist",
+		},
+		"destination is a file": {
+			dest: func(t *testing.T) string {
+				f := filepath.Join(t.TempDir(), "file")
+				require.NoError(t, os.WriteFile(f, []byte("x"), 0o600))
+				return f
+			},
+			explicitDest: true,
+			errS:         "must be a directory",
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			dest := test.dest(t)
+			actual, err := getDest(dest, repo, subdir, test.explicitDest)
+			if test.errS != "" {
+				require.ErrorContains(t, err, test.errS)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, test.want(dest), actual)
 		})
 	}
 }

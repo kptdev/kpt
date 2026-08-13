@@ -276,6 +276,17 @@ func getDest(v, repo, subdir string, explicitDest bool) (string, error) {
 		return v, nil
 	}
 
+	// The user explicitly named a destination that already holds a fetched
+	// package: error out instead of silently nesting another copy inside it,
+	// so a repeated `kpt pkg get REPO_URI DEST` fails the same way the
+	// defaulted destination does below. An existing directory without a
+	// Kptfile keeps working as a container to fetch the package into.
+	if explicitDest {
+		if _, err := os.Stat(filepath.Join(v, kptfilev1.KptFileName)); err == nil {
+			return "", errors.Errorf("destination directory %q already exists and contains a package", v)
+		}
+	}
+
 	// default the location to a new subdirectory matching the pkg URI base
 	repo = strings.TrimSuffix(repo, "/")
 	repo = strings.TrimSuffix(repo, ".git")
