@@ -72,6 +72,10 @@ jobs:
         working-directory: documentation
         run: go mod verify
 
+      - name: Verify spelling
+        working-directory: documentation
+        run: make verify
+
   docs-gate:
     name: docs
     needs: [changes, docs-verify-module]

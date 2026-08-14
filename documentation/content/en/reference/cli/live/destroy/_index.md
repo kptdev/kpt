@@ -94,7 +94,7 @@ PKG_PATH | -:
 
 ```shell
 # remove all resources in the current package from the cluster.
-$ kpt live destroy
+kpt live destroy
 ```
 
 <!--mdtogo-->

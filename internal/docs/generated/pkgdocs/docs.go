@@ -120,7 +120,7 @@ Environment Variables:
 var DiffExamples = `
 
   # Show changes in current package relative to upstream source package.
-  $ kpt pkg diff
+  kpt pkg diff
 `
 
 var GetShort = `Fetch a package from a git repo.`

@@ -12,6 +12,10 @@ serve:
 		--templateMetricsHints \
 		--gc
 
+.PHONY: verify
+verify:
+	go run github.com/golangci/misspell/cmd/misspell@v0.8.0 -error content/
+
 production-build:
 	git submodule update --init --recursive
 	git fetch --tags

@@ -80,6 +80,6 @@ PKG_PATH | -:
 
 ```shell
 # create a plan for the package in the current directory and output in KRM format.
-$ kpt alpha live plan --output=krm
+kpt alpha live plan --output=krm
 ```
 <!--mdtogo-->

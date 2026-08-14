@@ -163,15 +163,15 @@ package by tagging the version as shown below:
 
 ```shell
 # Assuming you are in the pkg catalog repo where tenant package exists
-$ cd $PKG_CATALOG_DIR
+cd $PKG_CATALOG_DIR
 
 # Please remove the inventory information from the Kptfile before publishing
 
 # create new tag
-$ git tag tenant/v0.1 main
+git tag tenant/v0.1 main
 
 # push the tag to the upstream
-$ git push origin tenant/v0.1
+git push origin tenant/v0.1
 
 ```
 
@@ -186,16 +186,16 @@ they can request for new tenants by simply issuing a PR against the platform rep
 
 # assuming you have a fork of the platform repo residing locally at pointed by
 # by PLATFORM_DIR env variable locally. 
-$ cd $PLATFORM_DIR
+cd $PLATFORM_DIR
 
 # create a new branch to onboard new tenant
-$ git checkout -b onboarding-tenant-a
+git checkout -b onboarding-tenant-a
 
-$ cd tenants
+cd tenants
 
 # create an instance `tenant-a` of the upstream tenant package using `kpt pkg get`
 # Ensure PKG_CATALOG_REPO env variable points to the pkg catalog repo.
-$ kpt pkg get $PKG_CATALOG_REPO/tenant@v0.1 tenant-a
+kpt pkg get $PKG_CATALOG_REPO/tenant@v0.1 tenant-a
 
 # tenant customizations:
 # change the namespace to tenant-a in the tenant-a/Kptfile
@@ -205,12 +205,12 @@ $ kpt pkg get $PKG_CATALOG_REPO/tenant@v0.1 tenant-a
 
 # render the package to ensure all customizations are applied
 # and validations are run.
-$ kpt fn render tenant-a
+kpt fn render tenant-a
 
 # if all invariants passed, then we are all set.
 
-$ git commit -am "added tenant-a"
-$ git push origin onboarding-tenant-a
+git commit -am "added tenant-a"
+git push origin onboarding-tenant-a
 
 # make a pull request for platform team to merge
 # Create a PR with the changes above. 
@@ -228,19 +228,19 @@ Let’s go through the steps needed to update the tenant package.
 
 # assuming you have a fork of the platform repo residing locally at pointed by
 # by PLATFORM_DIR env variable locally. 
-$ cd $PLATFORM_DIR
+cd $PLATFORM_DIR
 
 # create a new branch to update tenant
-$ git checkout -b update-tenant-a
+git checkout -b update-tenant-a
 
-$ kpt pkg update tenant-a@tenants/v0.2
+kpt pkg update tenant-a@tenants/v0.2
 
-$ kpt fn render tenant-a
+kpt fn render tenant-a
 
 # if all invariants passed, then we are all set.
 
-$ git commit -am "updated tenant-a to newer version"
-$ git push origin update-tenant-a
+git commit -am "updated tenant-a to newer version"
+git push origin update-tenant-a
 
 # make a pull request for platform team to merge
 ```

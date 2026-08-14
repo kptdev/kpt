@@ -70,7 +70,7 @@ runners.
 ## Rendering in CI
 
 Rendering is the most important CI step in a kpt workflow. The `kpt fn render` command executes the package pipeline
-declared in the `Kptfile`, running mutators and validators in a predictable order. The output is the fully hydrated
+declared in the `Kptfile`, running mutators and validators in a predictable order. The output is the fully rendered
 configuration that CI can use for downstream steps.
 
 ### Prerequisites

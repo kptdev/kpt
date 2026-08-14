@@ -37,7 +37,7 @@ LOCAL_PATH:
 
 ```shell
 # pull image ghcr.io/my-org/my-fn:v1.0.0 and decompress it to ./my-fn.wasm
-$ kpt alpha wasm pull ghcr.io/my-org/my-fn:v1.0.0 ./my-fn.wasm
+kpt alpha wasm pull ghcr.io/my-org/my-fn:v1.0.0 ./my-fn.wasm
 ```
 
 

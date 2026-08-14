@@ -38,23 +38,23 @@ via the GitHub GUI.
 # (optional) skip if you've authenticated. 
 # Authenticate gh to create a repository.
 
-$ gh auth login
+gh auth login
 
 # Create the "blueprint" and "deployment" repos if you don't have them yet
 
-$ gh repo create blueprint
-$ gh repo create deployment
+gh repo create blueprint
+gh repo create deployment
 
 
 # clone and enter the blueprint repo
-$ USER=<YOUR GITHUB USERNAME>
-$ BLUEPRINT_REPO=git@github.com:${USER}/blueprint.git
-$ DEPLOYMENT_REPO=git@github.com:${USER}/deployment.git
+USER=<YOUR GITHUB USERNAME>
+BLUEPRINT_REPO=git@github.com:${USER}/blueprint.git
+DEPLOYMENT_REPO=git@github.com:${USER}/deployment.git
 
-$ git clone ${BLUEPRINT_REPO}
-$ git clone ${DEPLOYMENT_REPO}
+git clone ${BLUEPRINT_REPO}
+git clone ${DEPLOYMENT_REPO}
 
-$ cd blueprint
+cd blueprint
 
 ```
 
@@ -77,7 +77,7 @@ Run the following bash snippet to create our little k8s manifest generator calle
 kube-gen.sh.
 
 ```shell
-$ cat << 'EOF' > kube-gen.sh
+cat << 'EOF' > kube-gen.sh
 
 #!/usr/bin/env bash
 #kube-gen.sh resource-type args
@@ -97,10 +97,10 @@ Follow the steps below to make sure that script can be invoked from the command 
 
 ```shell
 # make the script executable
-$ chmod a+x kube-gen.sh
+chmod a+x kube-gen.sh
 
 # let's make it available in our $PATH
-$ sudo mv kube-gen.sh /usr/local/bin
+sudo mv kube-gen.sh /usr/local/bin
 
 # test the script out
 $ kube-gen.sh --help
@@ -140,10 +140,10 @@ provisioning a namespace.
 
 ```shell
 # ensure that we are working in the basens directory
-$ cd basens
+cd basens
 
 # create namespace
-$ kube-gen.sh namespace example > namespace.yaml
+kube-gen.sh namespace example > namespace.yaml
 
 # you should see namespace resource
 $ kpt pkg tree
@@ -213,7 +213,7 @@ Successfully executed 1 function(s) in 1 package(s).
 
 Note: if you are curious about how KRM functions are implemented. Take a look
 at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/main/functions/go/set-namespace/transformer/namespace.go)
-to get a feel for the implementation. You can also check out [Chapter 5: Developing Functions](https://kpt.dev/book/05-developing-functions/)
+to get a feel for the implementation. You can also check out [Chapter 5: Developing Functions](/book/05-developing-functions/)
 of the kpt book.
 
 ### Permissions
@@ -229,7 +229,7 @@ managing this tenant.
 
 ```shell
 # create rolebinding and try out the simple value propagation scenario
-$ kube-gen.sh rolebinding app-admin --clusterrole=app-admin --group=example.admin@bigco.com > rolebinding.yaml
+kube-gen.sh rolebinding app-admin --clusterrole=app-admin --group=example.admin@bigco.com > rolebinding.yaml
 
 $ cat rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -258,7 +258,7 @@ Here is an snippet that does that:
 # get the value of package name from configmap in `package-context.yaml`
 # and use it to update the name of the entry in subjects section of app-admin
 # role binding with a Group kind. Save the config to update-rolebinding.yaml.
-$ cat > update-rolebinding.yaml << EOF
+cat > update-rolebinding.yaml << EOF
 
 apiVersion: fn.kpt.dev/v1alpha1
 kind: ApplyReplacements
@@ -292,7 +292,7 @@ $ kpt fn eval -i apply-replacements:latest --fn-config update-rolebinding.yaml -
 Added "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" as mutator in the Kptfile.
 
 # ensure our package is being rendered correctly
-$ kpt fn render
+kpt fn render
 ```
 
 ### Quota
@@ -300,8 +300,8 @@ $ kpt fn render
 Let’s add quota limits for this tenant.
 
 ```shell
-$ kube-gen.sh quota default --hard=cpu=40,memory=40G > resourcequota.yaml
-$ kpt fn render
+kube-gen.sh quota default --hard=cpu=40,memory=40G > resourcequota.yaml
+kpt fn render
 
 $ cat resourcequota.yaml
 apiVersion: v1
@@ -336,10 +336,10 @@ Now that we have a basic namespace package in place, let's publish it so that
 other users can consume it.
 
 ```shell
-$ cd .. && git add basens && git commit -am "initial pkg"
-$ git push origin main
+cd .. && git add basens && git commit -am "initial pkg"
+git push origin main
 
-$ git tag basens/v0 && git push origin basens/v0
+git tag basens/v0 && git push origin basens/v0
 ```
 
 So, now the package should be available in the `blueprint` repo. Consumers
@@ -356,7 +356,7 @@ You need to do this step in the deployment repo.
 
 ```shell
 # Redirect yourself to $DEPLOYMENT_REPO, which is created in "Prerequisites – Repositories
-$ cd ../deployment
+cd ../deployment
 
 $ kpt pkg get ${BLUEPRINT_REPO}/basens/@v0 backend --for-deployment
 Package "backend":
@@ -411,11 +411,11 @@ the deployment repo.
 ```shell
 # assuming you are in deployment repo
 
-$ git add backend && git commit -am "initial pkg for deployment"
-$ git push origin main
+git add backend && git commit -am "initial pkg for deployment"
+git push origin main
 
 # tag the package
-$ git tag backend/v0 main && git push origin backend/v0
+git tag backend/v0 main && git push origin backend/v0
 
 ```
 

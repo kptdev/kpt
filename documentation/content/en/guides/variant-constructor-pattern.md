@@ -160,9 +160,9 @@ So for a package consumer, creating a deployable instance involves the following
 
 ```shell
 # pick name of the deployable instance say `my-pkg-instance`
-$ kpt pkg get <path-to-abstract-pkg> <my-pkg-instance> --for-deployement
+kpt pkg get <path-to-abstract-pkg> <my-pkg-instance> --for-deployement
 
-$ kpt fn render <my-pkg-instance>
+kpt fn render <my-pkg-instance>
 
 ```
 

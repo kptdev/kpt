@@ -50,7 +50,7 @@ PKG_PATH:
   Go through the steps of migration, but don't make any changes.
 
 --force:
-  Forces the inventory values in the ResourceGroup manfiest to be updated,
+  Forces the inventory values in the ResourceGroup manifest to be updated,
   even if they are already set. Defaults to false.
 
 --name:

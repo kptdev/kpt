@@ -179,7 +179,7 @@ Flags:
 `
 var DestroyExamples = `
   # remove all resources in the current package from the cluster.
-  $ kpt live destroy
+  kpt live destroy
 `
 
 var InitShort = `Initialize a package with the information needed for inventory tracking.`
@@ -234,7 +234,7 @@ var InstallResourceGroupLong = `
 `
 var InstallResourceGroupExamples = `
   # install ResourceGroup CRD into the current cluster.
-  $ kpt live install-resource-group
+  kpt live install-resource-group
 `
 
 var MigrateShort = `Migrate a package and the inventory object to use the ResourceGroup CRD.`
@@ -254,7 +254,7 @@ Flags:
     Go through the steps of migration, but don't make any changes.
   
   --force:
-    Forces the inventory values in the ResourceGroup manfiest to be updated,
+    Forces the inventory values in the ResourceGroup manifest to be updated,
     even if they are already set. Defaults to false.
   
   --name:
