@@ -16,6 +16,9 @@
 // Version: v1
 // swagger:meta
 // +kubebuilder:object:generate=true
+// +kubebuilder:ac:generate=true
+// +kubebuilder:ac:output:package=../../generated/applyconfigurations
+// +groupName=kpt.dev
 package v1
 
 import (
@@ -26,8 +29,6 @@ import (
 	schema "github.com/kptdev/kpt/api/schema/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
-
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 const (
 	KptFileName = "Kptfile"
@@ -68,6 +69,7 @@ var TypeMeta = yaml.ResourceMeta{
 
 // KptFile contains information about a package managed with kpt.
 // swagger:model kptfile
+// +kubebuilder:ac:generate=true
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline" json:",inline"`
 
