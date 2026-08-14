@@ -30,6 +30,7 @@ import (
 	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -179,7 +180,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 	}
 
 	// Reference Kptfile for package version 'dataset1'
-	pkgDs1Kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset1, "mysql"))
+	pkgDs1Kptfile, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset1, "mysql"))
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -201,9 +202,9 @@ func TestCmd_subpkgVersions(t *testing.T) {
 				Ref:       "dataset1",
 				Directory: "/mysql",
 			},
-			UpdateStrategy: kptfilev1.ResourceMerge,  // Defaulted
+			UpdateStrategy: kptfilev1.ResourceMerge, // Defaulted
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
@@ -236,7 +237,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 	}
 
 	// Reference Kptfile for package version 'dataset2'
-	pkgDs2Kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset2, "mysql"))
+	pkgDs2Kptfile, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset2, "mysql"))
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -261,7 +262,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 			},
 			UpdateStrategy: kptfilev1.FastForward,
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
