@@ -64,7 +64,7 @@ These resource representations were intended to form the core of a declarative d
 to support pre-deployment validation, preview, and approval and post-deployment auditing, versioning, and undo. 
 
 kpt supports management of
-[Configuration as Data]({{< relref "/book/02-concepts/#configuration-as-data-key-principles" >}}).
+[Configuration as Data]({{% relref "/book/02-concepts/#configuration-as-data-key-principles" %}}).
 The core ideas are simple:
 
 * uses a uniform, serializable data model to represent configuration
@@ -82,7 +82,7 @@ need to make all changes through a monolithic generator implementation.
 
 kpt also extends its capabilities in areas that are
 [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope)
-in other approches, notably packaging and a client-side CLI.
+in other approaches, notably packaging and a client-side CLI.
 
 kpt enables WYSIWYG management of configuration similar to how the live state can be modified with traditional
 imperative tools, thus eliminating this dichotomy:

@@ -3,7 +3,7 @@ title: "Chapter 5: Developing Functions"
 linkTitle: "Chapter 5: Developing Functions"
 
 description: |
-    [Chapter 2](../02-concepts/#functions) provided a high-level conceptual explanation of functions. We discussed how
+    [Chapter 2]({{% relref "/book/02-concepts#functions" %}}) provided a high-level conceptual explanation of functions. We discussed how
     this architecture enables us to develop functions in different languages, frameworks and runtimes. In this chapter,
     we are going to look at different approaches to developing functions.
 
@@ -43,7 +43,7 @@ Although using executable configuration saves some time initially, it can become
 an anti-pattern if it grows in complexity. We recommend limiting their use if:
 
 - There is a small amount of logic (< 20 lines)
-- You do not forsee this logic growing in complexity in the future
+- You do not foresee this logic growing in complexity in the future
 
 Otherwise, you are better off developing functions in a general-purpose language
 where you can take advantage of proper abstractions and language features,
@@ -78,7 +78,7 @@ level-driven reconciliation model of the Kubernetes system.
 ### Hermetic and Unprivileged
 
 If possible, try to formulate your function to be hermetic. We discussed this in
-detail in [chapter 4](../04-using-functions#privileged-execution).
+detail in [chapter 4]({{% relref "/book/04-using-functions#privileged-execution" %}}).
 
 ## Functions Specification
 
@@ -97,7 +97,7 @@ When kpt reads resources from disk, each resource in the `ResourceList` carries 
 `internal.config.kubernetes.io/path` annotation indicating its file path relative to
 the package directory. When a function creates new resources, it should set this
 annotation to a path relative to the same package directory. See the
-[annotations reference](/reference/annotations/#path-annotation-details)
+[annotations reference]({{% relref "/reference/annotations#path-annotation-details" %}})
 for full details.
 
 As an example, you can see the `ResourceList` containing resources in the
@@ -125,7 +125,7 @@ for writing functions that manipulate KRM. Go provides:
 
 ### Prerequisites
 
-- [Install kpt](installation/kpt-cli/)
+- [Install kpt]({{% relref "/installation/kpt-cli" %}})
 
 - [Install Docker](https://docs.docker.com/get-docker/)
 
@@ -138,7 +138,7 @@ In this quickstart, we will write a function called "set-annotation" that adds a
 
 #### Set up your project
 
-We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/main/go/get-started) package int he KRM Funxtions SDK,
+We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/main/go/get-started) package in the KRM Functions SDK,
 which contains a `main.go` file with some scaffolding code.
 
 Initialize your project.

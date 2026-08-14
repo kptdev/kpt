@@ -8,7 +8,7 @@ description: |
     parameters has some
     [pitfalls](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/declarative-application-management.md#parameterization-pitfalls).
     We recommend alternatives which do not hide the contents of packages behind facades. Some of these alternatives are only possible
-    because kpt has made an investment into bulk editing with [KRM functions](../04-using-functions/) and upstream merging.
+    because kpt has made an investment into bulk editing with [KRM functions]({{% relref "/book/04-using-functions" %}}) and upstream merging.
 toc: true
 menu:
   main:
@@ -18,9 +18,9 @@ menu:
 
 ## Prerequisites
 
-Before reading this chapter you should familiarize yourself with [chapter 4](../04-using-functions/)
-that talks about using functions as well as the [updating a package](../03-packages/#updating-a-package) section of 
-[chapter 3](../03-packages/).
+Before reading this chapter you should familiarize yourself with [chapter 4]({{% relref "/book/04-using-functions" %}})
+that talks about using functions as well as the [updating a package]({{% relref "/book/03-packages#updating-a-package" %}}) section of 
+[chapter 3]({{% relref "/book/03-packages" %}}).
 
 ## Single Value Replacement
 
@@ -85,8 +85,8 @@ pipeline:
 ### Solutions:
 
 1. kpt allows the user to edit a particular value directly in the configuration data and will handle upstream merge.
-   When [editing the yaml](../03-packages/#editing-a-package) directly, users are not confined to the parameters
-   that the package author has provided. [kpt pkg update](../03-packages/#updating-a-package) merges the local edits
+   When [editing the yaml]({{% relref "/book/03-packages#editing-a-package" %}}) directly, users are not confined to the parameters
+   that the package author has provided. [kpt pkg update]({{% relref "/book/03-packages#updating-a-package" %}}) merges the local edits
    made by consumer with the changes in the upstream package made by publisher. In the example above, `storageClass` can be set
    directly by the user.
 1. Attributes like resource names which are often updated by consumers to add prefixes or suffixes

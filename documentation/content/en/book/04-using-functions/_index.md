@@ -2,7 +2,7 @@
 title: "Chapter 4: Using functions"
 linkTitle: "Chapter 4: Using functions"
 description: |
-    [Chapter 2](../02-concepts/#functions) provided a high-level conceptual explanation of the functions. We also saw examples of how to use `fn eval` and `fn render` to
+    [Chapter 2]({{% relref "/book/02-concepts#functions" %}}) provided a high-level conceptual explanation of the functions. We also saw examples of how to use `fn eval` and `fn render` to
     execute the functions. In this chapter, we will take a closer look at how to execute the functions using these two
     two approaches.
 
@@ -84,7 +84,7 @@ Package "wordpress":
 Successfully executed 3 function(s) in 2 package(s).
 ```
 
-See the [render command reference](../../reference/cli/fn/render/) for usage.
+See the [render command reference]({{% relref "/reference/cli/fn/render" %}}) for usage.
 
 When you invoke the `render` command, kpt performs the following steps:
 
@@ -267,7 +267,7 @@ Using the `exec` field is not recommended, for the following two reasons:
 
 ### Specifying `functionConfig`
 
-In [Chapter 2](../02-concepts/#functions), we saw the following conceptual representation of a function invocation:
+In [Chapter 2]({{% relref "/book/02-concepts#functions" %}}), we saw the following conceptual representation of a function invocation:
 
 ![img](/images/func.svg)
 
@@ -608,7 +608,7 @@ Alternatively, for convenience, you can use the short-hand form of the above com
 kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
 ```
 
-See the [eval command reference](../../reference/cli/fn/eval/) for usage.
+See the [eval command reference]({{% relref "/reference/cli/fn/eval" %}}) for usage.
 
 This changes the resources in the `wordpress` package and the `mysql` subpackage.
 
@@ -769,8 +769,8 @@ kpt fn source wordpress \
   | kpt fn sink my-wordpress
 ```
 
-See the command reference for usage of the [source](../..//reference/cli/fn/source/) command and the
-[sink](../../reference/cli/fn/sink/) command.
+See the command reference for usage of the [source]({{% relref "/reference/cli/fn/source" %}}) command and the
+[sink]({{% relref "/reference/cli/fn/sink" %}}) command.
 
 The above pipeline can be described as follows:
 

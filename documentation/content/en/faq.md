@@ -50,7 +50,7 @@ _kpt_
 - Enables workflows that combine programmatic changes ([functions]) with manual
   edits.
 - Aims to support mutating and validating admission control on derived packages.
-- Also supports packages, package orchestration (see [Nephio documentation](https://porch.kpt.dev/)), resource actuation, and GitOps.
+- Also supports packages, package orchestration (see [Porch documentation](https://porch.kpt.dev/)), resource actuation, and GitOps.
 
 ### Do kpt and kustomize work together?
 
@@ -118,7 +118,7 @@ don't have to alias it. It is pronounced "kept".
 
 ### I still have questions. How do I contact you?
 
-[Please reach out!]( _index.md#communication )
+[Please reach out!]( {{% relref "/#communication" %}} )
 
 [the kubernetes resource model]:
   https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md

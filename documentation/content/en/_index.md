@@ -25,13 +25,13 @@ kpt is a package-centric toolchain that enables a WYSIWYG configuration authorin
 {{% blocks/section type="row" color="white"%}}
 
 {{% blocks/feature icon="fas  fa-download " title="Install" %}}
-Get started by [installing]({{< relref "installation/kpt-cli.md" >}}) kpt.
+Get started by [installing]({{% relref "installation/kpt-cli.md" %}}) kpt.
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fas fa-graduation-cap" title="Learn" %}}
-Read [The kpt Book]({{< relref "book" >}}).
+Read [The kpt Book]({{% relref "book" %}}).
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fas fa-info-circle" title="Ask" %}}
-If your question is not a [FAQ]({{< relref "faq" >}}), please [reach out]( #communication )!
+If your question is not a [FAQ]({{% relref "faq" %}}), please [reach out]( #communication )!
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fas fa-briefcase " title="Contribute" %}}
 kpt is an open source project and anyone can [contribute](https://github.com/kptdev/kpt/blob/main/CONTRIBUTING.md)
@@ -44,18 +44,18 @@ kpt is an open source project and anyone can [contribute](https://github.com/kpt
 
 # For users
 
-To get familiar with kpt, the best way to start is with the first 4 chapters of the kpt [Book]({{< relref "book" >}}).
-Furthermore it is useful to check the [references]({{< relref "reference" >}}) and the catalog of [selected krm functions](https://catalog.kpt.dev).
+To get familiar with kpt, the best way to start is with the first 4 chapters of the kpt [Book]({{% relref "book" %}}).
+Furthermore it is useful to check the [references]({{% relref "reference" %}}) and the catalog of [selected krm functions](https://catalog.kpt.dev).
 
 Use our [public Dosu space](https://github.dosu.com/kptdev/kpt) to ask anything about kpt.
 
 # For admins
 
-Start with the [installation]({{< relref "installation" >}}) and with the kpt [Book]({{< relref "book" >}}).
+Start with the [installation]({{% relref "installation" %}}) and with the kpt [Book]({{% relref "book" %}}).
 
 # For developers
 
-To develp krm functions, the best to start with [Chapter 5]({{< relref "book/05-developing-functions" >}}) of the kpt Book.
+To develop krm functions, the best to start with [Chapter 5]({{% relref "book/05-developing-functions" %}}) of the kpt Book.
 
 # For contributors
 
@@ -78,7 +78,7 @@ We are happy to get Pull Requests. Send them!
 
 {{% blocks/feature icon="fa-brands fa-slack " title="Slack" %}}
 
-Join us in the [#kpt](https://kubernetes.slack.com/archives/C0155NSPJSZ) channel in the [Kubernetes Slack](https://communityinviter.com/apps/kubernetes/community)!
+Join us in the [#kpt](https://kubernetes.slack.com/archives/C0155NSPJSZ) channel in the [Kubernetes Slack](https://inviter.co/kubernetes)!
 
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fa-solid fa-comments" title="Discussions" %}}

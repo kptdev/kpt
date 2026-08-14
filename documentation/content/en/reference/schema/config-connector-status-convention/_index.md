@@ -10,7 +10,7 @@ menu:
 
 `kpt` includes custom rules for [Config Connector](https://cloud.google.com/config-connector/docs/overview) resources to
 make them easier to work with. This document describes how kpt uses fields and conditions on Config Connector
-resources to compute [reconcile status](../../../book/06-deploying-packages/#reconcile-status).
+resources to compute [reconcile status]({{% relref "/book/06-deploying-packages#reconcile-status" %}}).
 
 [Config Connector](https://cloud.google.com/config-connector/docs/how-to/monitoring-your-resources) resources expose the
 `observedGeneration` field in the status object, and `kpt` will always report a resource as being `InProgress` if the

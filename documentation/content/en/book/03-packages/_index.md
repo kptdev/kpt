@@ -2,7 +2,7 @@
 title: "Chapter 3: Packages"
 linkTitle: "Chapter 3: Packages"
 description: |
-    [Chapter 2](../02-concepts#packages) provided a high-level conceptual explanation of a package and the package
+    [Chapter 2]({{% relref "/book/02-concepts#packages" %}}) provided a high-level conceptual explanation of a package and the package
     lifecycle. This chapter covers working with packages in detail: how to get, explore, edit, update, and publish
     packages.
 toc: true
@@ -25,7 +25,7 @@ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-
 
 A package in a Git repository can be fetched by specifying a branch, tag, or commit SHA. In the above example, the tag `v1.0.0-beta.61` is specified.
 
-See the [get command reference](../../reference/cli/pkg/get/) for usage.
+See the [get command reference]({{% relref "/reference/cli/pkg/get" %}}) for usage.
 
 The `Kptfile` contains the metadata about the origin of the forked package. Have a look at the content of the `Kptfile` on
 your local filesystem:
@@ -151,7 +151,7 @@ Package "wordpress" (independent)
     └── [service.yaml]  Service wordpress-mysql
 ```
 
-See the [tree command reference](../../reference/cli/pkg/tree/) for usage.
+See the [tree command reference]({{% relref "/reference/cli/pkg/tree" %}}) for usage.
 
 In addition, you can use a kpt function, such as `search-replace`, to run a query on the package. For example, to search for resources that have a field with the
 `spec.selector.tier` path, use the following kpt function:
@@ -220,7 +220,7 @@ For example, setting a label on all the resources in the `wordpress` package can
 kpt fn eval wordpress -i set-labels:latest -- env=dev
 ```
 
-[Chapter 4](../04-using-functions/) discusses in detail the different ways of running the functions.
+[Chapter 4]({{% relref "/book/04-using-functions" %}}) discusses in detail the different ways of running the functions.
 
 ## Rendering a package
 
@@ -230,7 +230,7 @@ Regardless of how you have edited the package, you need to _render_ it. Use the 
 kpt fn render wordpress
 ```
 
-See the [render command reference](../../reference/cli/fn/render/) for command usage.
+See the [render command reference]({{% relref "/reference/cli/fn/render" %}}) for command usage.
 
 `render` is a critical step in the package lifecycle. At a high level, it performs the following steps:
 
@@ -242,7 +242,7 @@ See the [render command reference](../../reference/cli/fn/render/) for command u
 Note that status conditions are only written for in-place renders (this is the default behavior). When using out-of-place output modes, such as `kpt fn render -o stdout` or `kpt fn render -o <dir>`,
 no status condition is indicated because the package is not being updated on disk.
 
-[Chapter 4](../04-using-functions/) discusses in detail the different ways of running the functions.
+[Chapter 4]({{% relref "/book/04-using-functions" %}}) discusses in detail the different ways of running the functions.
 
 ## Updating a package
 
@@ -299,7 +299,7 @@ The `update` command updates the local `wordpress` package and the dependent `my
 
 Several different strategies are available for handling the merge. By default, the `resource-merge` strategy is used. This performs a structural comparison of the resource using the OpenAPI schema.
 
-See the [update command reference](../../reference/cli/pkg/update/) for usage.
+See the [update command reference]({{% relref "/reference/cli/pkg/update" %}}) for usage.
 
 ### Committing the updated resources
 
@@ -318,7 +318,7 @@ kpt pkg init awesomeapp
 
 This command automatically creates the `awesomeapp` directory, if it does not already exist, eliminating the need to manually create the directory beforehand.
 
-See the [init command reference](../../reference/cli/pkg/init/) for usage.
+See the [init command reference]({{% relref "/reference/cli/pkg/init" %}}) for usage.
 
 The `info` section of the `Kptfile` contains some optional package metadata that you may want to set. These fields are not consumed by any functionality in kpt:
 
