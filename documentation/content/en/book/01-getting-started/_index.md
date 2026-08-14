@@ -175,7 +175,9 @@ Apply the resources to the cluster:
 kpt live apply --reconcile-timeout=15m
 ```
 
-This waits for the resources to be reconciled on the cluster by monitoring their status.
+The `--reconcile-timeout=15m` flag sets a maximum wait time for all resources to reach a healthy
+state. Without it, the command waits indefinitely until all resources reconcile. Setting a timeout is recommended 
+to avoid hanging in CI pipelines or interactive use.
 
 ### Updating the package
 
