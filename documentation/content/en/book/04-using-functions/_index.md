@@ -253,8 +253,9 @@ pipeline:
     - exec: "sed -e 's/foo/bar/'"
 ```
 
-Note:
+{{% alert title="Note" color="primary" %}}
 You must render the package by allowing the executables. To do this, specify the `--allow-exec` command line flag, as shown below:
+{{% /alert %}}
 
 ```shell
 kpt fn render [PKG_DIR] --allow-exec
@@ -509,9 +510,10 @@ Package "wordpress":
 Successfully executed 5 function(s) in 2 package(s).
 ```
 
-Note:
+{{% alert title="Note" color="primary" %}}
 The `ensure-name-substring` function is applied only to the 
 resources matching the selection criteria.
+{{% /alert %}}
 
 If you have resources with particular labels or annotations that you want to use to select your resources, then you can use them. Here, for example, is a function that is only applied to the resources matching the label `foo: bar`:
 
@@ -672,8 +674,9 @@ Many functions take a `functionConfig` of the kind `ConfigMap`, since they only 
 kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
 ```
 
-Note:
+{{% alert title="Note" color="primary" %}}
 The arguments must come after the separator `--`.
+{{% /alert %}}
 
 ### Specifying `selectors`
 
@@ -747,8 +750,9 @@ The `kubeconform` function can, for example, consume a JSON schema file, as foll
 kpt fn eval -i kubeconform:latest --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
 ```
 
-Note:
+{{% alert title="Note" color="primary" %}}
 The `--as-current-user` flag may be required to run the function as your uid, instead of the default `nobody`, to access the host filesystem.
+{{% /alert %}}
 
 All the volumes are mounted as _readonly_ by default. To mount volumes in _read-write_ mode, specify `rw=true`, as follows:
 

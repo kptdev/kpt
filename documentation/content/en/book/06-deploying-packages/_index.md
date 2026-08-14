@@ -121,9 +121,9 @@ resources in `wordpress` package are in the `default` namespace, so it chooses
 and namespace of the `ResourceGroup` resource. Refer to the
 [init command reference]({{% relref "/reference/cli/live/init" %}}) for usage.
 
-{{< warning type=warning >}}
+{{% alert title="Warning" color="warning" %}}
 Once a package is applied to the cluster, do not change the `ResourceGroup` CR. Doing so corrupts the association between the package and the inventory in the cluster, possibly leading to unpredictable and destructive operations.
-{{< /warning >}}
+{{% /alert %}}
 
 ## Applying a Package
 
@@ -135,9 +135,9 @@ Let's create that first:
 ```shell
 kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
 ```
-{{< warning type=info >}}
+{{% alert title="Note" color="primary" %}}
 You can also declare the `Secret` resource, but make sure it is not committed to Git as part of the package.
-{{< /warning >}}
+{{% /alert %}}
 
 Then deploy the package and wait for the resources to be reconciled:
 
@@ -179,10 +179,10 @@ running `kpt live apply`:
 kpt live install-resource-group
 ```
 
-{{< warning type=info >}}
+{{% alert title="Note" color="primary" %}}
 Installing this CRD requires sufficient ClusterRole permission, so you may
 need to ask your cluster admin to install it for you.
-{{< /warning >}}
+{{% /alert %}}
 
 ### Server-side vs Client-side apply
 

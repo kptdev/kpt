@@ -103,7 +103,9 @@ Replaces your entire local package with upstream, discarding all local changes.
 
 **When to use**: Only when you intentionally want to discard all customizations
 
-**Warning**: This strategy will **lose all your local modifications**. Use with caution.
+{{% alert title="Warning" color="warning" %}}
+This strategy will **lose all your local modifications**. Use with caution.
+{{% /alert %}}
 
 For complete strategy details and examples, see the [update command reference]({{% relref "/reference/cli/pkg/update" %}}).
 

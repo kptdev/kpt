@@ -256,8 +256,10 @@ git diff
    function definitions will be declared in `pipeline` section of Kptfile.
    Reference to function config is added via [configPath] option.
 
-Note: This function modifies only the local package files and doesn’t make any
+{{% alert title="Note" color="primary" %}}
+This function modifies only the local package files and doesn’t make any
 changes to the resources in the live cluster.
+{{% /alert %}}
 
 #### Manual portion of migration
 

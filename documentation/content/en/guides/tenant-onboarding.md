@@ -1,9 +1,9 @@
 # Tenant onboarding
 
-{{< warning type=warning >}}
+{{% alert title="Warning" color="warning" %}}
 This guide is a work in progress and may not fully reflect the
 current state of kpt. It is due for a rewrite.
-{{< /warning >}}
+{{% /alert %}}
 
 We have seen that in large organizations using kubernetes, there is a platform
 team (or infrastructure team) that is responsible for managing the kubernetes
@@ -14,8 +14,10 @@ learn - how you can use kpt to address the tenant use-case. Though this guide
 focuses on the tenant use-case, the pattern for package workflow discussed here
 can be applied to other use cases as well.
 
-**Note:** This guide is inspired by the [kube-common-setup](https://github.com/nghnam/kube-common-setup)
+{{% alert title="Note" color="primary" %}}
+This guide is inspired by the [kube-common-setup](https://github.com/nghnam/kube-common-setup)
 helm chart.
+{{% /alert %}}
 
 ## Terminology
 
