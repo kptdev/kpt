@@ -256,6 +256,55 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 	return nil
 }
 
+// ReplaceKptfile replaces the Kptfile at localPath with content from the
+// package at updatedPath. Unlike UpdateKptfile, it does not perform a 3-way
+// merge — it takes all content fields directly from the updated Kptfile.
+// This is appropriate for update strategies that discard local changes
+// (fast-forward, force-delete-replace).
+// The package name and namespace from local are preserved. The inventory
+// field is preserved if the updated Kptfile does not define one (since
+// inventory is typically set locally by kpt live init).
+func ReplaceKptfile(localPath, updatedPath string) error {
+	const op errors.Op = "kptfileutil.ReplaceKptfile"
+	localKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
+		}
+		localKf = &kptfilev1.KptFile{}
+	}
+
+	updatedKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, kptfilev1.UniquePath(localPath), err)
+		}
+		updatedKf = &kptfilev1.KptFile{}
+	}
+
+	// Take content fields directly from upstream.
+	localKf.Annotations = updatedKf.Annotations
+	localKf.Labels = updatedKf.Labels
+	localKf.Info = updatedKf.Info
+	localKf.Pipeline = updatedKf.Pipeline
+	localKf.Status = updatedKf.Status
+
+	// Preserve local inventory if upstream doesn't define one, since
+	// inventory is typically set locally by kpt live init.
+	if updatedKf.Inventory != nil {
+		localKf.Inventory = updatedKf.Inventory
+	}
+
+	// Always update upstream tracking fields.
+	updateUpstreamAndUpstreamLock(localKf, updatedKf)
+
+	err = WriteFile(localPath, localKf)
+	if err != nil {
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
+	}
+	return nil
+}
+
 // UpdateUpstreamLockFromGit updates the upstreamLock of the package specified
 // by path by using the values from spec. It will also populate the commit
 // field in upstreamLock using the latest commit of the git repo given

@@ -97,8 +97,20 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string, addMe
 	if !assert.NoError(t, err) {
 		return false
 	}
-	diff = diff.Difference(KptfileSet)
+	diff = removeKptfiles(diff)
 	return assert.Empty(t, diff.List())
+}
+
+// removeKptfiles removes all Kptfile paths (at any depth) from the diff set,
+// since Kptfile content is validated separately by AssertKptfile.
+func removeKptfiles(s sets.String) sets.String {
+	result := sets.String{}
+	for _, item := range s.List() {
+		if filepath.Base(item) != kptfilev1.KptFileName {
+			result.Insert(item)
+		}
+	}
+	return result
 }
 
 // KptfileAwarePkgEqual compares two packages (including any subpackages)
