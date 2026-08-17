@@ -1,0 +1,48 @@
+# Copyright 2026 The kpt Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# lychee configuration for external link validation.
+# See https://lychee.cli.rs for full documentation.`
+#
+# Run: make check-links-external
+# With GitHub token (recommended): GITHUB_TOKEN=<token> make check-links-external
+
+# Only check http/https links.
+scheme = ["https", "http"]
+
+# Resolve root-relative links against the Hugo output directory.
+root_dir = "public"
+
+require_https = true
+timeout = 30
+max_retries = 3
+max_concurrency = 64
+accept_timeouts = true
+user_agent = "Mozilla/5.0 (compatible; kpt-link-checker; +https://kpt.dev)"
+
+# Exclude URLs from checking (regex patterns).
+exclude = [
+  # Slack requires authentication; always returns 403 to bots.
+  "^https://kubernetes\\.slack\\.com",
+  "^https://slack\\.k8s\\.io",
+  # GitHub org project boards require a browser session.
+  "^https://github\\.com/orgs/.*/projects/",
+  # Netlify intermittently blocks CI runners.
+  "^https://www\\.netlify\\.com",
+]
+
+# Per-host rate limiting to avoid triggering abuse detection.
+[hosts."github.com"]
+concurrency = 1
+request_interval = "3s"

@@ -326,7 +326,7 @@ The mutation pipeline fails because the Rego policy has been violated.
 When using template languages I am able to provide conditional statements based 
 on parameter values.  This allows me to ask the user for a little bit of 
 information and generate a lot of boilerplate configuration.  Some template 
-languages like [Jinja](https://palletsprojects.com/p/jinja/) are very robust and feature rich.
+languages like [Jinja](https://palletsprojects.com/projects/jinja/) are very robust and feature rich.
 
 ### Problems:
 

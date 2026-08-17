@@ -739,7 +739,7 @@ kpt fn eval wordpress -i kubeconform:latest --network -- schema_location="https:
 
 #### Mounting directories
 
-By default, the functions cannot access the host file system. You can use the `--mount` flag to mount the host volumes. kpt accepts the same options to `--mount`, as specified on the [Docker Volumes](https://docs.docker.com/storage/volumes/) page.
+By default, the functions cannot access the host file system. You can use the `--mount` flag to mount the host volumes. kpt accepts the same options to `--mount`, as specified on the [Docker Volumes](https://docs.docker.com/engine/storage/volumes/) page.
 
 The `kubeconform` function can, for example, consume a JSON schema file, as follows:
 

@@ -16,6 +16,11 @@ serve:
 verify:
 	go run github.com/golangci/misspell/cmd/misspell@v0.8.0 -error content/
 
+.PHONY: check-links-external
+check-links-external: production-build
+	@command -v lychee >/dev/null 2>&1 || { echo "Error: lychee not found. Install it from https://github.com/lycheeverse/lychee#installation"; exit 1; }
+	lychee 'public/**/*.html'
+
 production-build:
 	git submodule update --init --recursive
 	git fetch --tags

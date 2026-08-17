@@ -30,7 +30,7 @@ configured.
 
 #### Docker
 
-Follow the [instructions](https://docs.docker.com/get-docker) to install and configure Docker.
+Follow the [instructions](https://docs.docker.com/get-started/get-docker/) to install and configure Docker.
 
 #### Podman
 

@@ -355,7 +355,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 
 [v0.39 commands]: https://kptdev.github.io/kpt/reference/
 [v1.0 commands]: /reference/cli/
-[v1 kptfile]: https://github.com/kptdev/kpt/blob/main/pkg/api/kptfile/v1/types.go
+[v1 kptfile]: https://github.com/kptdev/kpt/blob/main/api/kptfile/v1/types.go
 [starlark function]: https://catalog.kpt.dev/starlark/v0.2/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
 [setter inheritance]: https://kptdev.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
@@ -363,10 +363,10 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [required setters]: https://kptdev.github.io/kpt/guides/producer/setters/#required-setters
 [auto-setters]: https://kptdev.github.io/kpt/concepts/setters/#auto-setters
 [migrating inventory objects]: https://kptdev.github.io/kpt/reference/live/alpha/
-[live migration]: https://kptdev.github.io/kpt/reference/cli/live/alpha/
+[live migration]: https://kptdev.github.io/kpt/reference/live/alpha/
 [configpath]: /book/04-using-functions/01-declarative-function-execution?id=configpath
-[example kpt package]: https://github.com/kptdev/krm-functions-catalog/tree/master/testdata/fix
-[simple example]: https://github.com/kptdev/krm-functions-catalog/tree/master/functions/go/fix#examples
+[example kpt package]: https://github.com/kptdev/krm-functions-catalog/tree/main/archived/functions/go/fix/testdata/fix
+[simple example]: https://github.com/kptdev/krm-functions-catalog/tree/main/archived/functions/go/fix#examples
 [function config]: /book/04-using-functions/01-declarative-function-execution?id=configpath
 [starlark runtime]: https://kptdev.github.io/kpt/guides/producer/functions/starlark/
 [update guide]: /book/03-packages/05-updating-a-package
@@ -377,6 +377,6 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [installation instructions]: /installation/
 [install]: /installation/
 [kpt-functions-catalog]: https://catalog.kpt.dev/
-[v1alpha1 kptfile]: https://github.com/kptdev/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
+[v1alpha1 kptfile]: https://github.com/kptdev/kpt/blob/v0/pkg/kptfile/pkgfile.go#L39
 [git clone]: https://git-scm.com/docs/git-clone
 [publish your package]: /book/03-packages/08-publishing-a-package

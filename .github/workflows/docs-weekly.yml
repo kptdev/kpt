@@ -1,0 +1,72 @@
+# Copyright 2026 The kpt Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Weekly documentation verification: spelling and external link checking.
+
+name: Docs Weekly
+on:
+  schedule:
+    - cron: '0 3 * * 1'  # Every Monday at 03:00 UTC
+  workflow_dispatch:      # Allow manual triggering
+
+jobs:
+  docs-verify:
+    name: docs-verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: documentation/go.mod
+          cache: false
+
+      - name: Get Hugo version
+        id: hugo-version
+        run: echo "version=$(grep -m1 'HUGO_VERSION' documentation/netlify.toml | cut -d'"' -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: ${{ steps.hugo-version.outputs.version }}
+          extended: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: documentation/package.json
+
+      - name: Install Node dependencies
+        working-directory: documentation
+        run: npm install
+
+      - name: Verify spelling
+        working-directory: documentation
+        run: make verify
+
+      - name: Build site
+        working-directory: documentation
+        run: make production-build
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: '-vv --config documentation/lychee.toml --root-dir documentation/public documentation/public/**/*.html'
+          lycheeVersion: v0.24.2
+          fail: true
