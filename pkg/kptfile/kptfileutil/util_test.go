@@ -1438,11 +1438,11 @@ upstream:
     ref: v1
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configMap:
         namespace: example-ns
       name: set namespace
-    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
       configMap:
         color: orange
       name: set color label
@@ -1460,15 +1460,15 @@ upstream:
     ref: v2
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configMap:
         namespace: example-ns
       name: set namespace
-    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
       configMap:
         fruit: apple
       name: set fruit label
-    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
       configMap:
         color: orange
       name: set color label
@@ -1486,15 +1486,15 @@ upstream:
     ref: v2
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configMap:
         namespace: example-ns
       name: set namespace
-    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
       configMap:
         fruit: apple
       name: set fruit label
-    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
       configMap:
         color: orange
       name: set color label
