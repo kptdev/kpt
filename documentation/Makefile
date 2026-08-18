@@ -19,7 +19,7 @@ verify:
 .PHONY: check-links-external
 check-links-external: production-build
 	@command -v lychee >/dev/null 2>&1 || { echo "Error: lychee not found. Install it from https://github.com/lycheeverse/lychee#installation"; exit 1; }
-	lychee 'public/**/*.html'
+	lychee -vv --config lychee.toml --root-dir public --extensions html public
 
 production-build:
 	git submodule update --init --recursive

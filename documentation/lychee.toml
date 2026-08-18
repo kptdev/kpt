@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # lychee configuration for external link validation.
-# See https://lychee.cli.rs for full documentation.`
+# See https://lychee.cli.rs for full documentation.
 #
 # Run: make check-links-external
 # With GitHub token (recommended): GITHUB_TOKEN=<token> make check-links-external
@@ -40,6 +40,9 @@ exclude = [
   "^https://github\\.com/orgs/.*/projects/",
   # Netlify intermittently blocks CI runners.
   "^https://www\\.netlify\\.com",
+  # Docsy theme "Edit this page" and "Create issue" links always redirect to login.
+  "^https://github\\.com/kptdev/kpt/edit/",
+  "^https://github\\.com/kptdev/kpt/issues/new",
 ]
 
 # Per-host rate limiting to avoid triggering abuse detection.
