@@ -1159,7 +1159,13 @@ func pruneResources(fsys filesys.FileSystem, hctx *hydrationContext) error {
 
 // captureStepResult builds a PipelineStepResult from the fnresult.Result items
 // appended since resultCountBeforeExec.
-func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, resultCountBeforeExec int, execErr error, runner ...*fnruntime.FunctionRunner) kptfilev1.PipelineStepResult {
+func captureStepResult(
+	fn kptfilev1.Function,
+	fnResults *fnresultv1.ResultList,
+	resultCountBeforeExec int,
+	execErr error,
+	runner ...*fnruntime.FunctionRunner,
+) kptfilev1.PipelineStepResult {
 	step := kptfilev1.PipelineStepResult{
 		Name:     fn.Name,
 		Image:    fn.Image,
@@ -1206,15 +1212,6 @@ func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStep
 		step.ExitCode = execErrTyped.ExitCode
 	}
 	return step
-}
-
-func (pn *pkgNode) runFn(ctx context.Context, hctx *hydrationContext, f *kptfilev1.Function, input []*yaml.RNode) ([]*yaml.RNode, error) {
-	fnRunner, err := fnruntime.NewRunner(ctx, hctx.fileSystem, f, pn.pkg.UniquePath, hctx.fnResults, hctx.runnerOptions, hctx.runtime)
-	if err != nil {
-		return nil, err
-	}
-
-	return fnRunner.Filter(input)
 }
 
 
