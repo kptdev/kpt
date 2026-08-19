@@ -1187,7 +1187,7 @@ func captureStepResult(
 		}
 	}
 	if execErr != nil {
-		if !errors.Is(execErr, errAlreadyHandled) && execErr.Error() != "already handled error" {
+		if execErr.Error() != "already handled error" && !errors.Is(execErr, fnruntime.ErrAlreadyHandled) {
 			step.ExecutionError = execErr.Error()
 		}
 		var execErrTyped *fnruntime.ExecError
@@ -1209,7 +1209,7 @@ func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStep
 		ExecutionError: err.Error(),
 		ExitCode:       1,
 	}
-	if errors.Is(err, errAlreadyHandled) || err.Error() == "already handled error" {
+	if err.Error() == "already handled error" || errors.Is(err, fnruntime.ErrAlreadyHandled) {
 		step.ExecutionError = ""
 	}
 	var execErrTyped *fnruntime.ExecError
