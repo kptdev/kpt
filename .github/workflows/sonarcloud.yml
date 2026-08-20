@@ -87,6 +87,15 @@ jobs:
           echo "head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> "$GITHUB_OUTPUT"
           echo "base_ref=$(echo "$PR_DATA" | jq -r '.base.ref')" >> "$GITHUB_OUTPUT"
 
+      - name: Debug - Show PR metadata
+        if: github.event.workflow_run.event == 'pull_request'
+        run: |
+          echo "=== DEBUG: PR Metadata ==="
+          echo "PR Number: ${{ steps.pr_meta.outputs.number }}"
+          echo "Head Ref: ${{ steps.pr_meta.outputs.head_ref }}"
+          echo "Base Ref: ${{ steps.pr_meta.outputs.base_ref }}"
+          echo "=== END DEBUG ==="
+
       - name: Checkout PR head
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -132,8 +141,21 @@ jobs:
         run: |
           sed -i 's|github.com/kptdev/kpt|.|g' coverage.out
 
+      - name: Debug - Check condition variables before SonarQube scan
+        run: |
+          echo "=== DEBUG: Before SonarQube Scan Step ==="
+          echo "Event type: ${{ github.event.workflow_run.event }}"
+          echo "PR_NUMBER.txt exists: $(test -f PR_NUMBER.txt && echo 'YES' || echo 'NO')"
+          echo "PR_NUMBER.txt contents:"
+          cat PR_NUMBER.txt 2>/dev/null || echo "FILE NOT FOUND"
+          echo "hashFiles result: $(ls -la PR_NUMBER.txt 2>&1 || echo 'ls failed')"
+          echo "Current directory: $(pwd)"
+          echo "Files in workspace:"
+          ls -la ./ | grep -E "coverage|PR_NUMBER|sonar" || echo "No matching files"
+          echo "=== END DEBUG ==="
+
       - name: SonarQube Scan on PR
-        if: github.event.workflow_run.event == 'pull_request' && hashFiles('PR_NUMBER.txt') != ''
+        if: github.event.workflow_run.event == 'pull_request'
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
