@@ -855,11 +855,13 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				input = append(input, fnConfigNode)
 			}
 			clearAnnotationsOnMutFailure(input)
-			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
+			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err, mutator))
 			return input, err
 		}
-		hctx.executedFunctionCnt++
-		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
+		if !mutator.WasSkipped() {
+			hctx.executedFunctionCnt++
+		}
+		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil, mutator))
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
 			// merge the output resources with input resources
@@ -879,6 +881,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			input = append(input, fnConfigNode)
 		}
 	}
+
 	return input, nil
 }
 
@@ -890,10 +893,6 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return err
-	}
-
-	if len(pl.Validators) == 0 {
-		return nil
 	}
 
 	for i := range pl.Validators {
@@ -944,11 +943,13 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 	}
 
 	if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
-		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
+		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err, validator))
 		return err
 	}
-	hctx.executedFunctionCnt++
-	hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
+	if !validator.WasSkipped() {
+		hctx.executedFunctionCnt++
+	}
+	hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil, validator))
 	return nil
 }
 
@@ -1158,11 +1159,21 @@ func pruneResources(fsys filesys.FileSystem, hctx *hydrationContext) error {
 
 // captureStepResult builds a PipelineStepResult from the fnresult.Result items
 // appended since resultCountBeforeExec.
-func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, resultCountBeforeExec int, execErr error) kptfilev1.PipelineStepResult {
+func captureStepResult(
+	fn kptfilev1.Function,
+	fnResults *fnresultv1.ResultList,
+	resultCountBeforeExec int,
+	execErr error,
+	runner ...*fnruntime.FunctionRunner,
+) kptfilev1.PipelineStepResult {
 	step := kptfilev1.PipelineStepResult{
 		Name:     fn.Name,
 		Image:    fn.Image,
 		ExecPath: fn.Exec,
+		When:     fn.CelCondition,
+	}
+	if len(runner) > 0 && runner[0] != nil && runner[0].WasSkipped() {
+		step.Skipped = true
 	}
 	if resultCountBeforeExec < len(fnResults.Items) {
 		last := fnResults.Items[len(fnResults.Items)-1]
@@ -1174,23 +1185,36 @@ func captureStepResult(fn kptfilev1.Function, fnResults *fnresultv1.ResultList, 
 				step.ErrorResults = append(step.ErrorResults, ri)
 			}
 		}
-	} else if execErr != nil {
-		step.ExitCode = 1
-		step.ExecutionError = execErr.Error()
+	}
+	if execErr != nil {
+		if !strings.Contains(execErr.Error(), "already handled error") {
+			step.ExecutionError = execErr.Error()
+		}
+		var execErrTyped *fnruntime.ExecError
+		if errors.As(execErr, &execErrTyped) {
+			step.ExitCode = execErrTyped.ExitCode
+		} else if step.ExitCode == 0 {
+			step.ExitCode = 1
+		}
 	}
 	return step
 }
 
-// preExecFailureStep creates a PipelineStepResult for errors that occur before
-// the function is executed (e.g. image pull failure, missing exec permission).
-// ExitCode is set to 1 to indicate failure; the executionError field provides
-// the specific reason the function could not be started.
 func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStepResult {
-	return kptfilev1.PipelineStepResult{
+	step := kptfilev1.PipelineStepResult{
 		Name:           fn.Name,
 		Image:          fn.Image,
 		ExecPath:       fn.Exec,
-		ExitCode:       1,
+		When:           fn.CelCondition,
 		ExecutionError: err.Error(),
+		ExitCode:       1,
 	}
+	if strings.Contains(err.Error(), "already handled error") {
+		step.ExecutionError = ""
+	}
+	var execErrTyped *fnruntime.ExecError
+	if errors.As(err, &execErrTyped) {
+		step.ExitCode = execErrTyped.ExitCode
+	}
+	return step
 }

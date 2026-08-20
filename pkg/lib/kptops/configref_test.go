@@ -56,7 +56,6 @@ func setupConfigRefTest(t *testing.T, kptfile, fnConfig string) configRefTestSet
 	r := Renderer{
 		PkgPath:    "/pkg",
 		FileSystem: fs,
-		Runtime:    &runtime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
