@@ -1680,3 +1680,141 @@ upstreamLock:
 		})
 	}
 }
+
+func TestReplaceKptfile_errorPaths(t *testing.T) {
+	writeInvalidKptfile := func(tt *testing.T) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(`
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: bad
+`), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	writeValidKptfile := func(tt *testing.T) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: valid
+`), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	t.Run("error reading local Kptfile", func(t *testing.T) {
+		localDir := writeInvalidKptfile(t)
+		updatedDir := writeValidKptfile(t)
+
+		err := ReplaceKptfile(localDir, updatedDir)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.ReplaceKptfile")
+	})
+
+	t.Run("error reading updated Kptfile", func(t *testing.T) {
+		localDir := writeValidKptfile(t)
+		updatedDir := writeInvalidKptfile(t)
+
+		err := ReplaceKptfile(localDir, updatedDir)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.ReplaceKptfile")
+	})
+
+	t.Run("error writing Kptfile", func(t *testing.T) {
+		localDir := writeValidKptfile(t)
+		updatedDir := writeValidKptfile(t)
+
+		err := os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0444)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		err = os.Chmod(localDir, 0555)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		defer func() {
+			_ = os.Chmod(localDir, 0755)
+			_ = os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0644)
+		}()
+
+		err = ReplaceKptfile(localDir, updatedDir)
+		assert.Error(t, err)
+	})
+}
+
+func TestUpdateKptfileWithoutOrigin_errorPaths(t *testing.T) {
+	writeInvalidKptfile := func(tt *testing.T) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(`
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: bad
+`), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	writeValidKptfile := func(tt *testing.T) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: valid
+`), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	t.Run("error reading local Kptfile", func(t *testing.T) {
+		localDir := writeInvalidKptfile(t)
+		updatedDir := writeValidKptfile(t)
+
+		err := UpdateKptfileWithoutOrigin(localDir, updatedDir, true)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.UpdateKptfileWithoutOrigin")
+	})
+
+	t.Run("error reading updated Kptfile", func(t *testing.T) {
+		localDir := writeValidKptfile(t)
+		updatedDir := writeInvalidKptfile(t)
+
+		err := UpdateKptfileWithoutOrigin(localDir, updatedDir, true)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.UpdateKptfileWithoutOrigin")
+	})
+
+	t.Run("error writing Kptfile", func(t *testing.T) {
+		localDir := writeValidKptfile(t)
+		updatedDir := writeValidKptfile(t)
+
+		err := os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0444)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		err = os.Chmod(localDir, 0555)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		defer func() {
+			_ = os.Chmod(localDir, 0755)
+			_ = os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0644)
+		}()
+
+		err = UpdateKptfileWithoutOrigin(localDir, updatedDir, false)
+		assert.Error(t, err)
+	})
+}
