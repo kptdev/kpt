@@ -43,7 +43,7 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 	testCases := []struct {
 		name      string
 		fn        *kptfile.Function
-		condition string
+		celCond   string
 		expectRun bool
 	}{
 		{
@@ -51,7 +51,7 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 			fn: &kptfile.Function{
 				Image: runneroptions.FuncGenPkgContext,
 			},
-			condition: "resources.exists(r, r.kind == 'ConfigMap')",
+			celCond:   "resources.exists(r, r.kind == 'ConfigMap')",
 			expectRun: true,
 		},
 		{
@@ -59,7 +59,7 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 			fn: &kptfile.Function{
 				Image: runneroptions.FuncGenPkgContext,
 			},
-			condition: "resources.exists(r, r.kind == 'Deployment')",
+			celCond:   "resources.exists(r, r.kind == 'Deployment')",
 			expectRun: false,
 		},
 		{
@@ -67,7 +67,7 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 			fn: &kptfile.Function{
 				Exec: "my-exec",
 			},
-			condition: "resources.size() > 0",
+			celCond:   "resources.size() > 0",
 			expectRun: true,
 		},
 		{
@@ -75,14 +75,14 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 			fn: &kptfile.Function{
 				Exec: "my-exec",
 			},
-			condition: "resources.size() == 0",
+			celCond:   "resources.size() == 0",
 			expectRun: false,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.fn.CelCondition = tc.condition
+			tc.fn.CelCondition = tc.celCond
 			results := fnresult.NewResultList()
 
 			// Mock runner options

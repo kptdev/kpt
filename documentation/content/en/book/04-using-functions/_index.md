@@ -434,7 +434,7 @@ If the condition is not met:
 $ kpt fn render wordpress
 Package "wordpress":
 
-[SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" (condition not met)
+[SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" (celCondition not met)
 
 Successfully executed 0 function(s) in 1 package(s).
 ```
