@@ -1,0 +1,103 @@
+# Copyright 2026 The kpt Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Documentation verification workflow.
+#
+# Do not use workflow-level paths-ignore for required checks.
+# GitHub leaves skipped required workflows Pending forever.
+# Instead, we always run the workflow and skip individual jobs conditionally.
+
+name: Docs
+on:
+  pull_request:
+  push:
+    branches:
+    - '!dependabot/*'
+
+jobs:
+  # Detect which path groups changed to conditionally skip expensive jobs.
+  changes:
+    name: detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            docs:
+              - 'documentation/**'
+              - '**.md'
+              - '.github/workflows/docs.yml'
+
+  docs-verify-module:
+    name: docs-verify-module
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: documentation/go.mod
+          cache: false
+
+      - name: Verify go.sum is not empty
+        working-directory: documentation
+        run: |
+          if [ ! -s go.sum ]; then
+            echo "::error::documentation/go.sum is empty. This file must contain checksums for module dependencies."
+            echo "This is a Hugo module — do NOT use 'go mod tidy' as it strips Hugo-only entries."
+            echo "Restore go.sum from the main branch or run 'hugo mod tidy' instead."
+            exit 1
+          fi
+
+      - name: Verify module integrity
+        working-directory: documentation
+        run: go mod verify
+
+      - name: Verify spelling
+        working-directory: documentation
+        run: make verify
+
+  docs-gate:
+    name: docs
+    needs: [changes, docs-verify-module]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          # If no docs changes, this check is not applicable, pass.
+          if [ "${{ needs.changes.result }}" != "success" ]; then
+            echo "changes job did not succeed"
+            exit 1
+          fi
+          if [ "${{ needs.changes.outputs.docs }}" = "false" ]; then
+            echo "No docs changes, skipping documentation checks"
+            exit 0
+          fi
+          
+          # If required job did not succeed, fail this check.
+          if [ "${{ needs.docs-verify-module.result }}" != "success" ]; then
+            echo "Documentation verification failed or did not complete"
+            exit 1
+          fi
+          
+          echo "Documentation verification passed"

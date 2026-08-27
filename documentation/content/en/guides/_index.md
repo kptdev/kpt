@@ -9,8 +9,9 @@ menu:
 
 # Reference
 
-- [The Rationale Behind kpt](guides/rationale.md)
-- [Namespace Provisioning CLI](guides/namespace-provisioning-cli.md)
-- [Variant Constructor Pattern](guides/variant-constructor-pattern.md)
-- [Value Propagation Pattern](guides/value-propagation.md)
-- [Tenant Onboarding](guides/tenant-onboarding.md)
+- [The Rationale Behind kpt]({{% relref "/guides/rationale" %}})
+- [Namespace Provisioning CLI]({{% relref "/guides/namespace-provisioning-cli" %}})
+- [Variant Constructor Pattern]({{% relref "/guides/variant-constructor-pattern" %}})
+- [Value Propagation Pattern]({{% relref "/guides/value-propagation" %}})
+- [Tenant Onboarding]({{% relref "/guides/tenant-onboarding" %}})
+- [Understanding 3-Way Merge in kpt]({{% relref "/guides/3-way-merge" %}})

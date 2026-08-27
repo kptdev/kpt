@@ -23,18 +23,17 @@ import (
 	"os"
 	"path/filepath"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	initialization "github.com/kptdev/kpt/commands/live/init"
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/live"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -58,8 +57,8 @@ type Runner struct {
 	name            string
 	rgFile          string
 	force           bool
-	rgInvClientFunc func(util.Factory) (inventory.Client, error)
-	cmInvClientFunc func(util.Factory) (inventory.Client, error)
+	rgInvClientFunc func(context.Context, util.Factory) (inventory.Client, error)
+	cmInvClientFunc func(context.Context, util.Factory) (inventory.Client, error)
 	cmLoader        manifestreader.ManifestLoader
 	cmNotMigrated   bool // flag to determine if migration from ConfigMap has occurred
 }
@@ -251,7 +250,7 @@ func (mr *Runner) migrateObjs(rgInvClient inventory.Client,
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(mr.ctx, path)
+		path, err = argsutil.ResolveSymlink(mr.ctx, path)
 		if err != nil {
 			return err
 		}
@@ -322,21 +321,6 @@ func (mr *Runner) dryRunStrategy() common.DryRunStrategy {
 	return common.DryRunNone
 }
 
-// findResourceGroupInv returns the ResourceGroup inventory object from the
-// passed slice of objects, or nil and and error if there is a problem.
-func findResourceGroupInv(objs []*unstructured.Unstructured) (*unstructured.Unstructured, error) {
-	for _, obj := range objs {
-		isInv, err := live.IsResourceGroupInventory(obj)
-		if err != nil {
-			return nil, err
-		}
-		if isInv {
-			return obj, nil
-		}
-	}
-	return nil, fmt.Errorf("resource group inventory object not found")
-}
-
 // validateParams validates input parameters and returns error if any
 func validateParams(reader io.Reader, args []string) error {
 	if reader == nil && len(args) == 0 {
@@ -348,11 +332,11 @@ func validateParams(reader io.Reader, args []string) error {
 	return nil
 }
 
-func rgInvClient(factory util.Factory) (inventory.Client, error) {
-	return inventory.NewClient(factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll, live.ResourceGroupGVK)
+func rgInvClient(ctx context.Context, factory util.Factory) (inventory.Client, error) {
+	return inventory.NewClient(factory, live.WrapInventoryObjWithContext(ctx), live.InvToUnstructuredFunc, inventory.StatusPolicyAll, live.ResourceGroupGVK)
 }
 
-func cmInvClient(factory util.Factory) (inventory.Client, error) {
+func cmInvClient(_ context.Context, factory util.Factory) (inventory.Client, error) {
 	return inventory.NewClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap, inventory.StatusPolicyAll, live.ResourceGroupGVK)
 }
 
@@ -385,9 +369,9 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 		_, rgFileErr := os.Stat(filepath.Join(dir, mr.rgFile))
 		switch {
 		case rgFileErr == nil:
-			return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
+			return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
 		case err != nil && !goerrors.Is(err, os.ErrNotExist):
-			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+			return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 		}
 
 		err = (&initialization.ConfigureInventoryInfo{
@@ -412,11 +396,11 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 func (mr *Runner) migrateCMToRG(stdinBytes []byte, args []string) error {
 	// Create the inventory clients for reading inventories based on RG and
 	// ConfigMap.
-	rgInvClient, err := mr.rgInvClientFunc(mr.factory)
+	rgInvClient, err := mr.rgInvClientFunc(mr.ctx, mr.factory)
 	if err != nil {
 		return err
 	}
-	cmInvClient, err := mr.cmInvClientFunc(mr.factory)
+	cmInvClient, err := mr.cmInvClientFunc(mr.ctx, mr.factory)
 	if err != nil {
 		return err
 	}

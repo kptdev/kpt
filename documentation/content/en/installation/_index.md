@@ -6,4 +6,4 @@ description: Installation of kpt
 
 Please follow the links below to install `kpt` components:
 
-- [kpt CLI](/installation/kpt-cli)
+- [kpt CLI]({{% relref "/installation/kpt-cli" %}})

@@ -19,15 +19,15 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/pathutil"
-	"github.com/kptdev/kpt/internal/util/strings"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
+	schema "github.com/kptdev/kpt/api/schema/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
+	"github.com/kptdev/kpt/pkg/lib/util/strings"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -206,7 +206,7 @@ type InventoryFilter struct {
 }
 
 func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if GroupVersionKindForObject(object) != kptfilev1.KptFileGVK() {
+	if GroupVersionKindForObject(object).String() != kptfilev1.KptFileGVK().String() {
 		return object, nil
 	}
 
@@ -241,7 +241,7 @@ func GroupVersionKindForObject(object *yaml.RNode) schema.GroupVersionKind {
 }
 
 func (r *RGFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if GroupVersionKindForObject(object) != rgfilev1alpha1.ResourceGroupGVK() {
+	if GroupVersionKindForObject(object).String() != rgfilev1alpha1.ResourceGroupGVK().String() {
 		return object, nil
 	}
 
@@ -319,6 +319,16 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 		}
 	}
 	return nil
+}
+
+// NamespaceInObjects return true if any object in objs is a Namespace with the given name
+func NamespaceInObjects(objs []*unstructured.Unstructured, namespace string) bool {
+	for _, obj := range objs {
+		if obj.GetKind() == "Namespace" && obj.GetName() == namespace {
+			return true
+		}
+	}
+	return false
 }
 
 func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {

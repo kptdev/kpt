@@ -86,13 +86,6 @@ Use one of the kpt docker images.
 
 Running kpt via Docker does not install kpt on your machine. Each `docker run ...` invocation starts a temporary container, runs the command inside that container, prints output, and then exits.
 
-| Feature   | `kpt` | `kpt-gcloud` |
-| --------- | :---: | :----------: |
-| kpt       |   ✓   |      ✓       |
-| git       |   ✓   |      ✓       |
-| diffutils |   ✓   |      ✓       |
-| gcloud    |       |      ✓       |
-
 ### `kpt`
 
 ```shell
@@ -116,25 +109,7 @@ This pattern ensures kpt reads and writes files under `/workdir`, which maps to 
 
 ### `kpt-gcloud`
 
-An image which includes kpt based upon the Google [cloud-sdk] alpine image.
-
-```shell
-docker run ghcr.io/kptdev/kpt-gcloud:{{< kpt_version >}} version
-```
-
-Optionally, you can define a shell alias so Docker-based usage feels like a local CLI:
-
-```shell
-alias kpt='docker run --rm -v "$PWD":/workdir -w /workdir ghcr.io/kptdev/kpt:{{< kpt_version >}}'
-```
-
-On Windows PowerShell, you can define a function with a similar effect:
-
-```shell
-function kpt { docker run --rm -v "${PWD}.Path:/workdir" -w /workdir ghcr.io/kptdev/kpt:{{< kpt_version >}} $args }
-```
-
-After setting the alias, `kpt version` runs kpt in a container, and file changes persist in your current directory.
+The `kpt-gcloud` images are deprecated. 
 
 ## Source
 

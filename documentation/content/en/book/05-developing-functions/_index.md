@@ -3,7 +3,7 @@ title: "Chapter 5: Developing Functions"
 linkTitle: "Chapter 5: Developing Functions"
 
 description: |
-    [Chapter 2](../02-concepts/#functions) provided a high-level conceptual explanation of functions. We discussed how
+    [Chapter 2]({{% relref "/book/02-concepts#functions" %}}) provided a high-level conceptual explanation of functions. We discussed how
     this architecture enables us to develop functions in different languages, frameworks and runtimes. In this chapter,
     we are going to look at different approaches to developing functions.
 
@@ -15,7 +15,7 @@ menu:
 ---
 
  > Before you start developing your custom function, check out the
-[Functions Catalog](https://catalog.kpt.dev/function-catalog ":target=_self") in case there is
+[Functions Catalog](https://catalog.kpt.dev ":target=_self") in case there is
 an existing function that meets your needs. This is an ever-growing catalog of
 functions that we consider to be generally useful to many users. If your use
 case fits that description, please
@@ -43,7 +43,7 @@ Although using executable configuration saves some time initially, it can become
 an anti-pattern if it grows in complexity. We recommend limiting their use if:
 
 - There is a small amount of logic (< 20 lines)
-- You do not forsee this logic growing in complexity in the future
+- You do not foresee this logic growing in complexity in the future
 
 Otherwise, you are better off developing functions in a general-purpose language
 where you can take advantage of proper abstractions and language features,
@@ -78,7 +78,7 @@ level-driven reconciliation model of the Kubernetes system.
 ### Hermetic and Unprivileged
 
 If possible, try to formulate your function to be hermetic. We discussed this in
-detail in [chapter 4](../04-using-functions#privileged-execution).
+detail in [chapter 4]({{% relref "/book/04-using-functions#privileged-execution" %}}).
 
 ## Functions Specification
 
@@ -92,6 +92,13 @@ and donated to the CNCF as part of the Kubernetes SIG-CLI.
 Understanding this specification enables you to have a deeper understanding of
 how things work under the hood. It also enables to create your own toolchain for
 function development if you so desire.
+
+When kpt reads resources from disk, each resource in the `ResourceList` carries an
+`internal.config.kubernetes.io/path` annotation indicating its file path relative to
+the package directory. When a function creates new resources, it should set this
+annotation to a path relative to the same package directory. See the
+[annotations reference]({{% relref "/reference/annotations#path-annotation-details" %}})
+for full details.
 
 As an example, you can see the `ResourceList` containing resources in the
 `wordpress` package:
@@ -118,7 +125,7 @@ for writing functions that manipulate KRM. Go provides:
 
 ### Prerequisites
 
-- [Install kpt](installation/kpt-cli/)
+- [Install kpt]({{% relref "/installation/kpt-cli" %}})
 
 - [Install Docker](https://docs.docker.com/get-docker/)
 
@@ -131,7 +138,7 @@ In this quickstart, we will write a function called "set-annotation" that adds a
 
 #### Set up your project
 
-We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/master/go/get-started) package int he KRM Funxtions SDK,
+We start from the [get-started](https://github.com/kptdev/krm-functions-sdk/tree/main/go/get-started) package in the KRM Functions SDK,
 which contains a `main.go` file with some scaffolding code.
 
 Initialize your project.
@@ -141,7 +148,7 @@ Initialize your project.
 export FUNCTION_NAME=set-annotation
 
 # Get the "get-started" package.
-kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/go/get-started@master ${FUNCTION_NAME}
+kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/go/get-started@main ${FUNCTION_NAME}
 
 cd ${FUNCTION_NAME}
 
@@ -155,7 +162,7 @@ go mod tidy
 Take a look at the `main.go` (as below) and complete the `Run` function.
 
 ```go
-// Copyright 2022-2025 The kpt Authors
+// Copyright 2022, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -173,10 +180,17 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"os"
 
 	"github.com/kptdev/krm-functions-sdk/go/fn"
 )
+
+//go:embed README.md
+var readme []byte
+
+//go:embed metadata.yaml
+var metadata []byte
 
 var _ fn.Runner = &YourFunction{}
 
@@ -198,7 +212,7 @@ func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items
 
 func main() {
 	runner := fn.WithContext(context.Background(), &YourFunction{})
-	if err := fn.AsMain(runner); err != nil {
+	if err := fn.AsMain(runner, fn.WithDocs(readme, metadata)); err != nil {
 		os.Exit(1)
 	}
 }
@@ -234,9 +248,9 @@ Learn more about the `KubeObject` from the [go documentation](https://pkg.go.dev
 The "get-started" package contains a `./testdata` directory. You can use this to test out your functions. 
 
 ```shell
-# Edit the `testdata/test1/resources.yaml` with your KRM resources. 
+# Edit the `testdata/noop-passthrough/resources.yaml` with your KRM resources. 
 # resources.yaml already has a `Deployment` and `Service` as test data. 
-vim testdata/test1/resources.yaml
+vim testdata/noop-passthrough/resources.yaml
 
 # Convert the KRM resources and FunctionConfig resource to `ResourceList`, and 
 # then pipe the ResourceList as StdIn to your function
@@ -258,7 +272,7 @@ metadata: # kpt-merge: /nginx-deployment
 
 Let's amend the example to set the "config.kubernetes.io/managed-by" annotation to a value we provide.
 
-Change the implementaiton of the `Run` function above as follows. Change the line:
+Change the implementation of the `Run` function above as follows. Change the line:
 
 ```shell
 kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
@@ -290,7 +304,7 @@ EOF
 
 Run the KRM function
 ```shell
-{kpt fn source testdata; cat fn-config.yaml} | go run main.go
+{ kpt fn source testdata; cat fn-config.yaml; } | go run main.go
 ```
 
 Look for the "config.kubernetes.io/managed-by" annotation in the standard output:
@@ -326,7 +340,7 @@ set the KRM function launch configuration for debugging:
 ```
 
 You launch your KRM function in VSCode with the "Launch KRM function" configuration. Paste the ResourceList yaml (output of the `kpt fn source testdata`
-plus your function configuraiton) into the VSCode terminal and type "ctrl-D" (EOF) so that the KRM function can read the ResourceList from its
+plus your function configuration) into the VSCode terminal and type "ctrl-D" (EOF) so that the KRM function can read the ResourceList from its
 standard input. You can now debug the KRM function in the VSCode debugger.
 
 ![img](/images/debug-fn-in-vscode.png)
@@ -338,7 +352,7 @@ Build the image
 
 The "get-started" package provides the `Dockerfile` that you can download using:
 ```shell
-wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/master/go/kfn/commands/embed/Dockerfile
+wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/main/go/kfn/commands/embed/Dockerfile
 ```
 
 ```shell
@@ -349,10 +363,11 @@ docker build . -t ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 
 To verify the image using the same `./testdata` resources
 ```shell
-kpt fn eval ./testdata/test1/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
+kpt fn eval ./testdata/noop-passthrough/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
 ### Next Steps
 
 - See other [go documentation examples](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn/examples) to use KubeObject.
-- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/master/CONTRIBUTING.md)
+- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/main/CONTRIBUTING.md)
+- For the `metadata.yaml` schema reference (required fields, allowed tags), see the [metadata schema documentation](https://catalog.kpt.dev/metadata-schema/)

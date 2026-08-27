@@ -46,7 +46,7 @@ kpt `v1.0`.
 To start with, all the commands in kpt `v1.0` will follow the consistent pattern
 
 ```
-$ kpt <group> <command> <positional_args> [PKG_PATH | DIR | - STDIN] [flags]
+kpt <group> <command> <positional_args> [PKG_PATH | DIR | - STDIN] [flags]
 ```
 
 Almost all the existing commands/features in kpt `v0.39` are also offered in kpt
@@ -208,17 +208,17 @@ of published package on your local disk. If you do not already have it, you can 
 the latest version of remote package on to your local disk.
 
 ```shell
-$ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
+DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
 # replace it with your package repo uri
-$ git clone https://github.com/kptdev/krm-functions-catalog.git
+git clone https://github.com/kptdev/krm-functions-catalog.git
 ```
 
 ```shell
 # cd to the package directory which you want to migrate
-$ cd kpt-functions-catalog/testdata/fix/nginx-v1alpha1
+cd kpt-functions-catalog/testdata/fix/nginx-v1alpha1
 ```
 
 ```shell
@@ -231,12 +231,12 @@ Invoke `ghcr.io/kptdev/krm-functions-catalog/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/fix:latest --include-meta-resources --truncate-output=false
+kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/fix:latest --include-meta-resources --truncate-output=false
 ```
 
 ```shell
 # observe the changes done by the fix function
-$ git diff
+git diff
 ```
 
 ##### Changes made by the function
@@ -300,7 +300,7 @@ and migrate the local customizations(if any) already performed to their existing
   from your existing package directory.
 
 ```shell
-$ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
+DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
@@ -311,7 +311,7 @@ $ kpt version
 
 ```shell
 # fetch the package with upgraded version
-$ kpt pkg get https://github.com/kptdev/krm-functions-catalog.git/testdata/fix/nginx-v1@master
+kpt pkg get https://github.com/kptdev/krm-functions-catalog.git/testdata/fix/nginx-v1@master
 ```
 
 - You might have performed some customizations to your existing package such as,
@@ -322,7 +322,7 @@ $ kpt pkg get https://github.com/kptdev/krm-functions-catalog.git/testdata/fix/n
 - Render the package resources with customizations
 
 ```shell
-$ kpt fn render nginx-v1/
+kpt fn render nginx-v1/
 ```
 
 - The step is only applicable if you're using `kpt live` functionality.
@@ -354,7 +354,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
    kpt `v1.0`.
 
 [v0.39 commands]: https://kptdev.github.io/kpt/reference/
-[v1.0 commands]: https://kpt.dev/reference/cli/
+[v1.0 commands]: /reference/cli/
 [v1 kptfile]: https://github.com/kptdev/kpt/blob/main/pkg/api/kptfile/v1/types.go
 [starlark function]: https://catalog.kpt.dev/starlark/v0.2/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
@@ -364,19 +364,19 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [auto-setters]: https://kptdev.github.io/kpt/concepts/setters/#auto-setters
 [migrating inventory objects]: https://kptdev.github.io/kpt/reference/live/alpha/
 [live migration]: https://kptdev.github.io/kpt/reference/cli/live/alpha/
-[configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
+[configpath]: /book/04-using-functions/01-declarative-function-execution?id=configpath
 [example kpt package]: https://github.com/kptdev/krm-functions-catalog/tree/master/testdata/fix
 [simple example]: https://github.com/kptdev/krm-functions-catalog/tree/master/functions/go/fix#examples
-[function config]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
+[function config]: /book/04-using-functions/01-declarative-function-execution?id=configpath
 [starlark runtime]: https://kptdev.github.io/kpt/guides/producer/functions/starlark/
-[update guide]: https://kpt.dev/book/03-packages/05-updating-a-package
-[render guide]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
-[eval guide]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution
-[function results]: https://kpt.dev/book/04-using-functions/03-function-results
-[the kpt book]: https://kpt.dev/book/
-[installation instructions]: https://kpt.dev/installation/
-[install]: https://kpt.dev/installation/
+[update guide]: /book/03-packages/05-updating-a-package
+[render guide]: /book/04-using-functions/01-declarative-function-execution
+[eval guide]: /book/04-using-functions/02-imperative-function-execution
+[function results]: /book/04-using-functions/03-function-results
+[the kpt book]: /book/
+[installation instructions]: /installation/
+[install]: /installation/
 [kpt-functions-catalog]: https://catalog.kpt.dev/
 [v1alpha1 kptfile]: https://github.com/kptdev/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
 [git clone]: https://git-scm.com/docs/git-clone
-[publish your package]: https://kpt.dev/book/03-packages/08-publishing-a-package
+[publish your package]: /book/03-packages/08-publishing-a-package

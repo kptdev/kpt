@@ -24,12 +24,12 @@ import (
 	"testing"
 	"text/template"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/commands/pkg/get"
 	"github.com/kptdev/kpt/commands/pkg/update"
-	"github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -62,7 +62,7 @@ func TestCmd_execute(t *testing.T) {
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
 		return
 	}
-	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	gitRunner, err := internalgitutil.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -351,7 +351,12 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
-	assert.NoError(t, err)
+	if err != nil {
+		if runtime.GOOS == "windows" {
+			t.Skipf("skipping symlink update test on Windows: %v", err)
+		}
+		t.Fatalf("failed to create symlink: %v", err)
+	}
 
 	// verify the branch ref is set to the correct value
 	r := update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -363,7 +368,8 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir"), r.Update.Pkg.UniquePath.String())
+	expected := filepath.Join(cwd, "path", "to", "pkg", "dir")
+	assert.Equal(t, strings.ToLower(expected), strings.ToLower(r.Update.Pkg.UniquePath.String()))
 }
 
 // TestCmd_fail verifies that that command returns an error when it fails rather than exiting the process
@@ -485,7 +491,7 @@ func TestCmd_output(t *testing.T) {
 				).
 				WithResource(pkgbuilder.SecretResource),
 			expectedOutput: `
-Package: "{{ .PKG_NAME }}"
+Package "{{ .PKG_NAME }}":
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -559,7 +565,7 @@ Updated 1 package(s).
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 			expectedOutput: `
-Package: "{{ .PKG_NAME }}"
+Package "{{ .PKG_NAME }}":
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -567,7 +573,7 @@ Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
 Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
 Updating package "subpkg" with strategy "fast-forward".
 
-Package: "{{ .PKG_NAME }}/subpkg"
+Package "{{ .PKG_NAME }}/subpkg":
 Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "foo").RepoDirectory }}@master
@@ -667,7 +673,7 @@ Updated 2 package(s).
 						WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
 				),
 			expectedOutput: `
-Package: "{{ .PKG_NAME }}"
+Package "{{ .PKG_NAME }}":
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -676,7 +682,7 @@ Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
 Deleting package "subpkg2" from local since it is removed in upstream.
 Package "subpkg1" deleted from upstream, but keeping local since it has changes.
 
-Package: "{{ .PKG_NAME }}/subpkg1"
+Package "{{ .PKG_NAME }}/subpkg1":
 Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "foo").RepoDirectory }}@master
@@ -735,7 +741,7 @@ Updated 2 package(s).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			expectedOutput: `
-Package: "{{ .PKG_NAME }}"
+Package "{{ .PKG_NAME }}":
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -743,7 +749,7 @@ Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
 Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
 Adding package "subpkg" from upstream.
 
-Package: "{{ .PKG_NAME }}/subpkg"
+Package "{{ .PKG_NAME }}/subpkg":
 Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@v1
 <git_output>
 Updating package "subpkg" with strategy "force-delete-replace".

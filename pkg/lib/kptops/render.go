@@ -20,10 +20,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/render"
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/fn"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
@@ -40,8 +39,13 @@ type renderer struct {
 
 var _ fn.Renderer = &renderer{}
 
-func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresult.ResultList, error) {
-	rr := render.Renderer{
+func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresultv1.ResultList, error) {
+	// TODO: deal with this
+	// if opts.DisplayName != "" && r.runnerOptions.RootDisplayName == "" { //nolint:staticcheck // SA1019
+	//	 r.runnerOptions.RootDisplayName = opts.DisplayName //nolint:staticcheck // SA1019
+	// }
+
+	rr := Renderer{
 		PkgPath:       opts.PkgPath,
 		Runtime:       opts.Runtime,
 		FileSystem:    pkg,
@@ -55,7 +59,7 @@ type packagePrinter struct{}
 var _ printer.Printer = &packagePrinter{}
 
 const (
-	packagePrefixFormat = "Package: %q"
+	packagePrefixFormat = "Package %q:"
 	logDepth            = 2
 )
 
@@ -77,9 +81,12 @@ func (p *packagePrinter) OptPrintf(opt *printer.Options, format string, args ...
 		return
 	}
 	var prefix string
-	if !opt.PkgDisplayPath.Empty() {
+	switch {
+	case opt.PkgDisplayName != "":
+		prefix = fmt.Sprintf(packagePrefixFormat, opt.PkgDisplayName)
+	case !opt.PkgDisplayPath.Empty():
 		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgDisplayPath))
-	} else if !opt.PkgPath.Empty() {
+	case !opt.PkgPath.Empty():
 		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgPath))
 	}
 	p.printfDepth(logDepth, prefix+format, args...)

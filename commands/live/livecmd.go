@@ -47,7 +47,7 @@ func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 	}
 
 	f := util.NewFactory(liveCmd, version)
-	invFactory := live.NewClusterClientFactory()
+	invFactory := live.NewClusterClientFactoryWithContext(ctx)
 	loader := status.NewRGInventoryLoader(ctx, f)
 
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.

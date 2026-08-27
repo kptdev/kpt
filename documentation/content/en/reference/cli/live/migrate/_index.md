@@ -50,7 +50,7 @@ PKG_PATH:
   Go through the steps of migration, but don't make any changes.
 
 --force:
-  Forces the inventory values in the ResourceGroup manfiest to be updated,
+  Forces the inventory values in the ResourceGroup manifest to be updated,
   even if they are already set. Defaults to false.
 
 --name:
@@ -62,6 +62,10 @@ PKG_PATH:
   The namespace for the ResourceGroup resource that contains the inventory
   for the package. If not provided, it defaults to the same namespace as the
   existing inventory object.
+
+--rg-file:
+  The file path to the ResourceGroup object. Defaults to
+  'resourcegroup.yaml'.
 ```
 
 <!--mdtogo-->

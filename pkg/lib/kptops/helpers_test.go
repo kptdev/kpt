@@ -1,0 +1,137 @@
+// Copyright 2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// helpers_test.go provides a lightweight, in-process FunctionRuntime for use
+// in unit tests only. The function implementations here are simplified
+// versions that avoid the need for a container runtime (Docker/Podman).
+
+package kptops
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"maps"
+
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/fn"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+// testFunctions maps image references to in-process function implementations.
+// Test Kptfiles must use these exact image strings for the runtime to resolve them.
+var testFunctions = map[string]framework.ResourceListProcessorFunc{
+	"ghcr.io/kptdev/krm-functions-catalog/set-labels:latest":    setLabels,
+	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest": setNamespace,
+	"ghcr.io/test/check-fnconfig-labels:latest":                 checkFnConfigLabels,
+}
+
+// testRuntime is a test-only FunctionRuntime that resolves functions from testFunctions.
+type testRuntime struct{}
+
+var _ FunctionRuntime = &testRuntime{}
+
+func (e *testRuntime) GetRunner(_ context.Context, funct *kptfilev1.Function) (fn.FunctionRunner, error) {
+	processor, ok := testFunctions[funct.Image]
+	if !ok {
+		return nil, &fn.NotFoundError{Function: *funct}
+	}
+	return &runner{processor: processor}, nil
+}
+
+func (e *testRuntime) Close() error { return nil }
+
+type runner struct {
+	processor framework.ResourceListProcessorFunc
+}
+
+var _ fn.FunctionRunner = &runner{}
+
+func (fr *runner) Run(r io.Reader, w io.Writer) error {
+	rw := &kio.ByteReadWriter{
+		Reader:                r,
+		Writer:                w,
+		KeepReaderAnnotations: true,
+	}
+	return framework.Execute(fr.processor, rw)
+}
+
+// setLabels is a simplified test-only implementation of the set-labels KRM function.
+func setLabels(rl *framework.ResourceList) error {
+	if rl.FunctionConfig == nil {
+		return nil
+	}
+	if !validGVK(rl.FunctionConfig, "v1", "ConfigMap") {
+		return errors.New("invalid set-labels function config; expected v1/ConfigMap")
+	}
+	labels := rl.FunctionConfig.GetDataMap()
+	for _, n := range rl.Items {
+		l := n.GetLabels()
+		maps.Copy(l, labels)
+		if err := n.SetLabels(l); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// setNamespace is a simplified test-only implementation of the set-namespace KRM function.
+func setNamespace(rl *framework.ResourceList) error {
+	if rl.FunctionConfig == nil {
+		return nil
+	}
+	if !validGVK(rl.FunctionConfig, "v1", "ConfigMap") {
+		return fmt.Errorf("invalid set-namespace function config type: %s/%s; expected v1/ConfigMap",
+			rl.FunctionConfig.GetApiVersion(), rl.FunctionConfig.GetKind())
+	}
+	data := rl.FunctionConfig.GetDataMap()
+	if data == nil {
+		return nil
+	}
+	namespace, ok := data["namespace"]
+	if !ok {
+		return nil
+	}
+	for _, n := range rl.Items {
+		if err := n.SetNamespace(namespace); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validGVK(rn *kyaml.RNode, apiVersion, kind string) bool {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return false
+	}
+	return meta.APIVersion == apiVersion && meta.Kind == kind
+}
+
+// checkFnConfigLabels is a test-only validator that verifies its functionConfig
+// has a specific label. This is used to test that validators receive updated
+// functionConfig from in-memory input after mutators have modified it.
+func checkFnConfigLabels(rl *framework.ResourceList) error {
+	if rl.FunctionConfig == nil {
+		return errors.New("functionConfig is nil")
+	}
+	labels := rl.FunctionConfig.GetLabels()
+	if _, ok := labels["env"]; !ok {
+		return fmt.Errorf("functionConfig is stale - missing 'env' label that mutator should have added; labels: %v", labels)
+	}
+	return nil
+}

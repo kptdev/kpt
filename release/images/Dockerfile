@@ -1,4 +1,4 @@
-# Copyright 2019 The kpt Authors
+# Copyright 2019,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.18
+FROM alpine:3
+ARG TARGETPLATFORM
 RUN apk update && apk upgrade && \
     apk add --no-cache git less mandoc diffutils bash openssh docker-cli && \
     rm -rf /var/lib/apt/lists/* && \
     rm /var/cache/apk/*
-# This is set up for the Dockerfile to be used by goreleaser: https://goreleaser.com/customization/docker/
-COPY kpt /usr/local/bin/kpt
+# This is set up for the Dockerfile to be used by goreleaser: https://goreleaser.com/customization/package/dockers_v2/
+COPY ${TARGETPLATFORM}/kpt /usr/local/bin/kpt
 ENTRYPOINT ["kpt"]

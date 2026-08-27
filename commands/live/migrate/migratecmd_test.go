@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,15 @@
 package migrate
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/pkg"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -39,23 +40,6 @@ import (
 var testNamespace = "test-inventory-namespace"
 var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
-
-var rgInvObj = &unstructured.Unstructured{
-	Object: map[string]any{
-		"apiVersion": "kpt.dev/v1alpha1",
-		"kind":       "ResourceGroup",
-		"metadata": map[string]any{
-			"name":      inventoryObjName,
-			"namespace": testNamespace,
-			"labels": map[string]any{
-				common.InventoryLabel: testInventoryLabel,
-			},
-		},
-		"spec": map[string]any{
-			"resources": []any{},
-		},
-	},
-}
 
 var cmInvStr = `
 kind: ConfigMap
@@ -169,7 +153,7 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
 			migrateRunner.rgFile = tc.rgFilename
-			migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+			migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
 				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			err = migrateRunner.migrateKptfileToRG([]string{dir})
@@ -207,12 +191,12 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 				t.Fatalf("unable to read ResourceGroup file")
 				return
 			}
-			assert.Equal(t, inventoryNamespace, rg.ObjectMeta.Namespace)
-			if len(rg.ObjectMeta.Name) == 0 {
+			assert.Equal(t, inventoryNamespace, rg.Namespace)
+			if len(rg.Name) == 0 {
 				t.Errorf("inventory name not set in Kptfile")
 			}
-			if rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
-				t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+			if rg.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
+				t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.Labels[rgfilev1alpha1.RGInventoryIDLabel])
 			}
 		})
 	}
@@ -247,7 +231,7 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
-			migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+			migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
 				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})
@@ -264,51 +248,6 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			}
 			if tc.expected.GetNamespace() != actual.Namespace() {
 				t.Errorf("expected ConfigMap (%#v), got (%#v)", tc.expected, actual)
-			}
-		})
-	}
-}
-
-func TestKptMigrate_findResourceGroupInv(t *testing.T) {
-	testCases := map[string]struct {
-		objs     []*unstructured.Unstructured
-		expected *unstructured.Unstructured
-		isError  bool
-	}{
-		"Empty objs returns an error": {
-			objs:     []*unstructured.Unstructured{},
-			expected: nil,
-			isError:  true,
-		},
-		"Objs without inventory obj returns an error": {
-			objs:     []*unstructured.Unstructured{pod1},
-			expected: nil,
-			isError:  true,
-		},
-		"Objs without ConfigMap inventory obj returns an error": {
-			objs:     []*unstructured.Unstructured{cmInvObj, pod1},
-			expected: nil,
-			isError:  true,
-		},
-		"Objs without ResourceGroup inventory obj returns ResourceGroup": {
-			objs:     []*unstructured.Unstructured{rgInvObj, pod1},
-			expected: rgInvObj,
-			isError:  false,
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			actual, err := findResourceGroupInv(tc.objs)
-			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
-				return
-			}
-			assert.NoError(t, err)
-			if tc.expected != actual {
-				t.Errorf("expected ResourceGroup (%#v), got (%#v)", tc.expected, actual)
 			}
 		})
 	}

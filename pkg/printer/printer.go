@@ -21,12 +21,16 @@ import (
 	"io"
 	"os"
 
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 )
 
 // TruncateOutput defines should output be truncated
 var TruncateOutput bool
+
+const (
+	packagePrefixFormat = "Package %q:"
+)
 
 // Printer defines capabilities to display content in kpt CLI.
 // The main intention, at the moment, is to abstract away printing
@@ -42,9 +46,12 @@ type Printer interface {
 // Options are optional options for printer
 type Options struct {
 	// PkgPath is the unique path to the package
-	PkgPath types.UniquePath
+	PkgPath kptfilev1.UniquePath
 	// PkgDisplayPath is the display path for the package
-	PkgDisplayPath types.DisplayPath
+	PkgDisplayPath kptfilev1.DisplayPath
+	// PkgDisplayName is the display name of the package.
+	// It takes precedence over PkgPath and PkgDisplayPath in most logging scenarios.
+	PkgDisplayName string
 }
 
 // NewOpt returns a pointer to new options
@@ -52,15 +59,21 @@ func NewOpt() *Options {
 	return &Options{}
 }
 
-// Pkg sets the package unique path in options
-func (opt *Options) Pkg(p types.UniquePath) *Options {
+// Path sets the package unique path in options
+func (opt *Options) Path(p kptfilev1.UniquePath) *Options {
 	opt.PkgPath = p
 	return opt
 }
 
-// PkgDisplayPath sets the package display path in options
-func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
+// DisplayPath sets the package display path in options
+func (opt *Options) DisplayPath(p kptfilev1.DisplayPath) *Options {
 	opt.PkgDisplayPath = p
+	return opt
+}
+
+// DisplayName sets the package display name in options
+func (opt *Options) DisplayName(name string) *Options {
+	opt.PkgDisplayName = name
 	return opt
 }
 
@@ -110,7 +123,7 @@ func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
 		fmt.Fprint(pr.errStream, "\n")
 	}
-	fmt.Fprintf(pr.errStream, "Package: %q\n", p.DisplayPath)
+	fmt.Fprintf(pr.errStream, "Package %q:\n", p.DisplayPath)
 }
 
 // Printf is the wrapper over fmt.Printf that displays the output.
@@ -128,15 +141,18 @@ func (pr *printer) OptPrintf(opt *Options, format string, args ...any) {
 		return
 	}
 	o := pr.errStream
-	if !opt.PkgDisplayPath.Empty() {
-		format = fmt.Sprintf("Package: %q", string(opt.PkgDisplayPath)) + format
-	} else if !opt.PkgPath.Empty() {
+	switch {
+	case opt.PkgDisplayName != "":
+		format = fmt.Sprintf(packagePrefixFormat, opt.PkgDisplayName) + format
+	case !opt.PkgDisplayPath.Empty():
+		format = fmt.Sprintf(packagePrefixFormat, string(opt.PkgDisplayPath)) + format
+	case !opt.PkgPath.Empty():
 		// try to print relative path of the pkg if we can else use abs path
 		relPath, err := opt.PkgPath.RelativePath()
 		if err != nil {
 			relPath = string(opt.PkgPath)
 		}
-		format = fmt.Sprintf("Package: %q", relPath) + format
+		format = fmt.Sprintf(packagePrefixFormat, relPath) + format
 	}
 	fmt.Fprintf(o, format, args...)
 }

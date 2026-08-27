@@ -17,16 +17,24 @@ package runneroptions
 
 import (
 	"fmt"
+	"net/url"
+	"os"
 	"strings"
 )
 
 const (
 	FuncGenPkgContext = "builtins/gen-pkg-context"
-	GHCRImagePrefix   = "ghcr.io/kptdev/krm-functions-catalog/"
+	GHCRImagePrefix   = "ghcr.io/kptdev/krm-functions-catalog"
+	PrefixEnvVar      = "KPT_IMAGE_PREFIX"
 )
 
-// ImageResolveFunc is the type for a function that can resolve a partial image to a (more) fully-qualified name
-type ImageResolveFunc func(image string) string
+// DefaultImagePrefix returns the image prefix from the KPT_IMAGE_PREFIX env var, or GHCRImagePrefix if unset.
+func DefaultImagePrefix() string {
+	if p := os.Getenv(PrefixEnvVar); p != "" {
+		return p
+	}
+	return GHCRImagePrefix
+}
 
 type RunnerOptions struct {
 	// ImagePullPolicy controls the image pulling behavior before running the container.
@@ -55,31 +63,125 @@ type RunnerOptions struct {
 	// enabled explicitly.
 	AllowWasm bool
 
-	// ResolveToImage will resolve a partial image to a fully-qualified one
-	ResolveToImage ImageResolveFunc
+	// ImagePrefix determines the prefix ResolveToImage will use when resolving a
+	// partial image reference to a fully qualified image reference
+	ImagePrefix string
+
+	LogOptions LogOptions
+
+	// FullDisplayName is the resolved display name of the package or subpackage.
+	// Meant for internal usage, like the render executor.
+	FullDisplayName string
+
+	// CELEnvironment is the shared CEL environment used to evaluate function conditions.
+	// It is initialized by InitCELEnvironment and reused across all function runners.
+	// It may be nil until InitCELEnvironment has been called successfully.
+	CELEnvironment *CELEnvironment
+
+	// CelCheckFrequency is the number of CEL evaluation steps before an interruption is checked.
+	CelCheckFrequency uint
+
+	// CelCostLimit is the maximum cost of a CEL evaluation.
+	CelCostLimit uint64
+}
+
+type PackageIDType int8
+
+const (
+	// Use directory name to identify the package/subpackage
+	DirName PackageIDType = iota
+	// Use Kptfile metadata.name to identify the package/subpackage
+	KptfileMeta
+)
+
+type LogOptions struct {
+	PkgNameFormat string
+	PkgNameSep    string
+	PkgNameID     PackageIDType
+
+	// TruncateImageName determines whether the full image name or just the base
+	// name and the tag will be logged.
+	TruncateImageName bool
+}
+
+func (o *LogOptions) IsZero() bool {
+	return o.PkgNameFormat == "" && o.PkgNameSep == "" && o.PkgNameID == 0 && !o.TruncateImageName
+}
+
+func (o *LogOptions) FillDefaults() {
+	defaults := DefaultLogOptions()
+	if o.PkgNameFormat == "" {
+		o.PkgNameFormat = defaults.PkgNameFormat
+	}
+	if o.PkgNameSep == "" {
+		o.PkgNameSep = defaults.PkgNameSep
+	}
+}
+
+func DefaultLogOptions() LogOptions {
+	return LogOptions{
+		PkgNameFormat: "%s",
+		PkgNameSep:    "/",
+		PkgNameID:     DirName,
+
+		TruncateImageName: false,
+	}
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
-	opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
+	opts.ImagePrefix = defaultImagePrefix
+	opts.LogOptions = DefaultLogOptions()
+	opts.CelCheckFrequency = 100
+	opts.CelCostLimit = 1000000
 }
 
-// ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.
+// InitCELEnvironment initializes the CEL environment for condition evaluation.
+// This should be called separately after InitDefaults to allow proper error handling.
+// Returns an error if CEL environment creation fails.
+func (opts *RunnerOptions) InitCELEnvironment() error {
+	celEnv, err := NewCELEnvironment()
+	if err != nil {
+		return fmt.Errorf("failed to initialise CEL environment: %w", err)
+	}
+	opts.CELEnvironment = celEnv
+	return nil
+}
+
+// ResolveToImage converts the KRM function short path to the full image url.
 // If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
 // A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
-func ResolveToImageForCLIFunc(prefix string) ImageResolveFunc {
-	prefix = strings.TrimRight(prefix, "/")
+func (opts *RunnerOptions) ResolveToImage(image string) string {
+	prefix := strings.TrimRight(opts.ImagePrefix, "/")
 	if prefix == "" {
-		return func(image string) string {
-			return image
-		}
-	}
-	return func(image string) string {
-		if !strings.Contains(image, "/") {
-			return fmt.Sprintf("%s/%s", prefix, image)
-		}
 		return image
 	}
+	if !strings.Contains(image, "/") {
+		return fmt.Sprintf("%s/%s", prefix, image)
+	}
+	return image
+}
+
+// ValidatePrefix checks that ImagePrefix is a valid registry path.
+func (opts *RunnerOptions) ValidatePrefix() error {
+	if opts.ImagePrefix == "" {
+		return nil
+	}
+	prefix := strings.TrimRight(opts.ImagePrefix, "/")
+	// Reject prefixes that include a URL scheme
+	if strings.Contains(prefix, "://") {
+		return fmt.Errorf("invalid image prefix %q: must not include a scheme (e.g. https://)", opts.ImagePrefix)
+	}
+	// Reject fragments and query strings
+	if strings.ContainsAny(prefix, "?#") {
+		return fmt.Errorf("invalid image prefix %q: must not contain '?' or '#'", opts.ImagePrefix)
+	}
+	// Prepend a scheme so url.Parse can validate the host/path structure
+	u, err := url.Parse("https://" + prefix)
+	if err != nil || u.Host == "" {
+		return fmt.Errorf("invalid image prefix %q: must be a valid registry path", opts.ImagePrefix)
+	}
+	return nil
 }
 
 type SingleLineFormatter struct {
@@ -87,20 +189,31 @@ type SingleLineFormatter struct {
 	Lines     []string // Lines to be joined
 	UseQuote  bool     // Whether to quote each line
 	Separator string   // Separator between lines (e.g., comma, space)
+
+	Indent     int // How many spaces to indent the whole text
+	LineIndent int // How many (extra) spaces to indent each line
 }
 
 func (sf *SingleLineFormatter) String() string {
-	strInterpolator := "%s"
+	mainIndent := strings.Repeat(" ", sf.Indent)
+
+	formatSb := strings.Builder{}
+
+	formatSb.WriteString(mainIndent)
+	formatSb.WriteString(strings.Repeat(" ", sf.LineIndent))
+
 	if sf.UseQuote {
-		strInterpolator = "%q"
+		formatSb.WriteString("%q")
+	} else {
+		formatSb.WriteString("%s")
 	}
 
 	var formattedLines []string
 	for _, line := range sf.Lines {
 		line = strings.ReplaceAll(line, "\n", " ")
 		line = strings.TrimSpace(line)
-		formattedLines = append(formattedLines, fmt.Sprintf(strInterpolator, line))
+		formattedLines = append(formattedLines, fmt.Sprintf(formatSb.String(), line))
 	}
 
-	return fmt.Sprintf("%s: %s", sf.Title, strings.Join(formattedLines, sf.Separator))
+	return fmt.Sprintf("%s%s:\n%s", mainIndent, sf.Title, strings.Join(formattedLines, sf.Separator))
 }

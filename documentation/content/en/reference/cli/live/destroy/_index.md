@@ -65,6 +65,25 @@ PKG_PATH | -:
   for all resources. Default is `false`.
 
   Does not apply for the `table` output format.
+
+--status-policy:
+  Determines which status information should be saved in the inventory
+  (if compatible). The available options are:
+
+    * all: Save status for all resources in the inventory.
+    * none: Do not save any status information in the inventory.
+
+  The default value is `all`.
+
+--delete-propagation-policy:
+  The propagation policy that should be used when deleting resources. The
+  default value here is 'Background'. The other options are 'Foreground' and 'Orphan'.
+
+--delete-timeout:
+  The threshold for how long to wait for all resources to be deleted before
+  giving up. If this flag is not set, kpt live destroy will wait until
+  interrupted. In most cases, it would also make sense to set the
+  --delete-propagation-policy to Foreground when this flag is set.
 ```
 
 <!--mdtogo-->
@@ -75,7 +94,7 @@ PKG_PATH | -:
 
 ```shell
 # remove all resources in the current package from the cluster.
-$ kpt live destroy
+kpt live destroy
 ```
 
 <!--mdtogo-->

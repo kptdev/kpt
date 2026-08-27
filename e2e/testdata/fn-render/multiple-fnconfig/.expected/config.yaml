@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: 'functionConfig must not specify both `configMap` and `configPath` at the same time'
+stdErr: "Kptfile is invalid:\nField: `pipeline.mutators[0]`\nReason: functionConfig must specify at most one of `configMap`, `configPath`, or `configRef`"

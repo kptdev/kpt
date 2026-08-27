@@ -8,7 +8,7 @@ info:
   description: DFS - Parent mutator fails
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         test: "parent-mutator-fail"
     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest

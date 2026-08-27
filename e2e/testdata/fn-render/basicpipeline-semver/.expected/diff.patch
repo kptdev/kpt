@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 2336da4..ca2bcea 100644
+index 2336da4..cc5a267 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,13 +2,34 @@ apiVersion: kpt.dev/v1
@@ -34,7 +34,7 @@ index 2336da4..ca2bcea 100644
 +            severity: info
 +          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
 +            severity: info
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.4
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.5
 +        exitCode: 0
 +        results:
 +          - message: set 4 labels in total

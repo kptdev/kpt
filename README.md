@@ -9,7 +9,7 @@
 kpt is a package-centric toolchain that enables a WYSIWYG configuration authoring, automation, and delivery experience,
 which simplifies managing Kubernetes platforms and KRM-driven infrastructure (e.g.,
 [Config Connector](https://github.com/GoogleCloudPlatform/k8s-config-connector), [Crossplane](https://crossplane.io)) at
-scale by manipulating declarative [Configuration as Data](docs/design-docs/06-config-as-data.md).
+scale by manipulating declarative Configuration as Data.
 
 *Configuration as Data* is an approach to management of configuration which:
 
@@ -43,6 +43,10 @@ kpt installation instructions can be found on [kpt.dev/installation/kpt-cli](htt
 
 The kpt toolchain includes the following components:
 
+- [**kpt API**](./api) (`github.com/kptdev/kpt/api`): A separately versioned Go module with type definitions and
+  utilities for kpt schemas, including `Kptfile`, `ResourceGroup`, and function result types. Use it when building
+  tools that read or write kpt package metadata without depending on the full CLI.
+
 - **kpt CLI**: The [kpt CLI](https://kpt.dev/reference/cli/) supports package and function operations, and also
   deployment, via either direct apply or GitOps. By keeping an inventory of deployed resources, kpt enables resource
   pruning, aggregated status and observability, and an improved preview experience.
@@ -51,13 +55,19 @@ The kpt toolchain includes the following components:
   be used to create functions to transform and/or validate the YAML KRM input/output format, but we provide SDKs to
   simplify the function authoring process in [Go](https://kpt.dev/book/05-developing-functions/#developing-in-Go).
 
-- [**Function catalog**](https://github.com/kptdev/krm-functions-catalog): A [catalog](https://catalog.kpt.dev/function-catalog) of
+- [**Function catalog**](https://github.com/kptdev/krm-functions-catalog): A [catalog](https://catalog.kpt.dev) of
   off-the-shelf, tested functions. kpt makes configuration easy to create and transform, via reusable functions. Because
   they are expected to be used for in-place transformation, the functions need to be idempotent.
 
+## Versioning
+
+kpt follows the [kpt project versioning guidelines](https://github.com/kptdev/governance/blob/main/VERSIONING.md).
+The CLI and API module are released independently; see [release/README.md](release/README.md) for release surfaces and tagging 
+details.
+
 ## Roadmap
 
-You can read about the big upcoming features in the [roadmap doc](/docs/ROADMAP.md).
+You can follow the kpt roadmap in the related [GitHub Project](https://github.com/orgs/kptdev/projects/2/views/2).
 
 ## Contributing
 

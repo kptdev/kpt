@@ -20,16 +20,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/get"
-	"github.com/kptdev/kpt/internal/util/pathutil"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/get"
 	"github.com/kptdev/kpt/pkg/lib/util/parse"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -84,7 +83,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	} else if filepath.Clean(args[1]) != "." {
 		_, err := os.Lstat(args[1])
 		if err == nil || os.IsExist(err) {
-			resolvedPath, err := argutil.ResolveSymlink(r.ctx, args[1])
+			resolvedPath, err := argsutil.ResolveSymlink(r.ctx, args[1])
 			if err != nil {
 				return errors.E(op, err)
 			}
@@ -104,7 +103,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 
 	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absDestPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(t.Destination), err)
+		return errors.E(op, kptfilev1.UniquePath(t.Destination), err)
 	}
 	r.Get.Destination = string(p.UniquePath)
 
@@ -120,7 +119,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = "cmdget.runE"
 	if err := r.Get.Run(r.ctx); err != nil {
-		return errors.E(op, types.UniquePath(r.Get.Destination), err)
+		return errors.E(op, kptfilev1.UniquePath(r.Get.Destination), err)
 	}
 
 	return nil

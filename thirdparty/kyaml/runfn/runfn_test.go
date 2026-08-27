@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2019, 2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package runfn
@@ -10,11 +10,11 @@ import (
 	"runtime"
 	"testing"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
-
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -141,7 +141,7 @@ func TestCmd_Execute(t *testing.T) {
 		functionFilterProvider: getFilterProvider(t),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
@@ -170,7 +170,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, os.WriteFile(
-		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, kptfilev1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
@@ -180,13 +180,13 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
 	b, err := os.ReadFile(
-		filepath.Join(dir, v1.KptFileName))
+		filepath.Join(dir, kptfilev1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -205,7 +205,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, os.WriteFile(
-		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, kptfilev1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
@@ -213,13 +213,13 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
 	b, err := os.ReadFile(
-		filepath.Join(dir, v1.KptFileName))
+		filepath.Join(dir, kptfilev1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -299,7 +299,7 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 		Path:         dir,
 		Function:     fn,
 		FnConfig:     fnConfig,
-		fnResults:    fnresult.NewResultList(),
+		fnResults:    fnresultv1.NewResultList(),
 	}
 	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
 	// initialize the defaults
@@ -340,7 +340,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 		functionFilterProvider: getFilterProvider(t),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	// initialize the defaults
 	assert.NoError(t, instance.init())
@@ -397,7 +397,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		functionFilterProvider: getFilterProvider(t),
 		Function:               fn,
 		FnConfig:               fnConfig,
-		fnResults:              fnresult.NewResultList(),
+		fnResults:              fnresultv1.NewResultList(),
 	}
 	// initialize the defaults
 	assert.NoError(t, instance.init())
@@ -468,6 +468,120 @@ func getMetaResourceFilterProvider() func(runtimeutil.FunctionSpec, *yaml.RNode,
 		return filters.Modifier{
 			Filters: []yaml.YFilter{{Filter: yaml.SetAnnotation("foo", "baz")}},
 		}, nil
+	}
+}
+
+// TestCmd_Execute_fnConfigExclusion verifies that when --fn-config points to a file
+// inside the package directory, that resource is excluded from the function input items
+// and the file is preserved unmodified on disk.
+func TestCmd_Execute_fnConfigExclusion(t *testing.T) {
+	fnConfigContent := `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-fn-config
+data:
+  name: foo
+`
+	tests := []struct {
+		name              string
+		fnConfigInPackage bool
+		useRelativePath   bool
+		wantResourceCount int
+	}{
+		{
+			name:              "fn-config inside package is excluded",
+			fnConfigInPackage: true,
+			wantResourceCount: 3,
+		},
+		{
+			name:              "fn-config inside package with relative path is excluded",
+			fnConfigInPackage: true,
+			useRelativePath:   true,
+			wantResourceCount: 3,
+		},
+		{
+			name:              "fn-config outside package does not exclude any items",
+			fnConfigInPackage: false,
+			wantResourceCount: 3,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := setupTest(t)
+			defer os.RemoveAll(dir)
+
+			var fnConfigPath string
+			if tc.fnConfigInPackage {
+				fnConfigPath = filepath.Join(dir, "fn-config.yaml")
+				require.NoError(t, os.WriteFile(fnConfigPath, []byte(fnConfigContent), 0600))
+				if tc.useRelativePath {
+					rel, err := filepath.Rel(filepath.Dir(dir), fnConfigPath)
+					require.NoError(t, err)
+					fnConfigPath = rel
+				}
+			} else {
+				tmpF, err := os.CreateTemp("", "fn-config*.yaml")
+				require.NoError(t, err)
+				defer os.Remove(tmpF.Name())
+				require.NoError(t, os.WriteFile(tmpF.Name(), []byte(fnConfigContent), 0600))
+				fnConfigPath = tmpF.Name()
+			}
+
+			fnConfig, err := yaml.Parse(fnConfigContent)
+			require.NoError(t, err)
+
+			var receivedNames []string
+			instance := RunFns{
+				Ctx:          fake.CtxWithDefaultPrinter(),
+				FnConfigPath: fnConfigPath,
+				Path:         dir,
+				Function: &runtimeutil.FunctionSpec{
+					Container: runtimeutil.ContainerSpec{Image: "ghcr.io/example.com/image:version"},
+				},
+				FnConfig:  fnConfig,
+				fnResults: fnresultv1.NewResultList(),
+			}
+			instance.functionFilterProvider = func(
+				f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc,
+			) (kio.Filter, error) {
+				return kio.FilterFunc(func(nodes []*yaml.RNode) ([]*yaml.RNode, error) {
+					for _, n := range nodes {
+						meta, _ := n.GetMeta()
+						receivedNames = append(receivedNames, meta.Name)
+						// Mutate all received items so the "file unchanged"
+						// assertion would catch a regression if fn-config were
+						// accidentally included in items.
+						if err := n.PipeE(yaml.SetAnnotation("mutated", "true")); err != nil {
+							return nil, err
+						}
+					}
+					return nodes, nil
+				}), nil
+			}
+
+			require.NoError(t, instance.init())
+			require.NoError(t, instance.Execute())
+
+			assert.Equal(t, tc.wantResourceCount, len(receivedNames))
+			if tc.fnConfigInPackage {
+				assert.NotContains(t, receivedNames, "my-fn-config")
+			}
+			assert.Contains(t, receivedNames, "app")
+
+			if tc.fnConfigInPackage {
+				absPath := fnConfigPath
+				if !filepath.IsAbs(absPath) {
+					absPath, _ = filepath.Abs(filepath.Join(filepath.Dir(dir), fnConfigPath))
+				}
+				_, statErr := os.Stat(absPath)
+				require.NoError(t, statErr, "fn-config file should still exist on disk")
+				content, readErr := os.ReadFile(absPath)
+				require.NoError(t, readErr)
+				assert.Equal(t, fnConfigContent, string(content),
+					"fn-config file content should be unchanged")
+			}
+		})
 	}
 }
 

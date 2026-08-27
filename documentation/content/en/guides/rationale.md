@@ -49,7 +49,7 @@ door to other automation.
 
 It is an emerging trend to provide GUIs over GitOps, but their ability to automate changes to configurations in git so
 far has been quite limited and narrow, such as to change template parameter values or configure the GitOps
-reconciliation process itself, because the representations are generaly so hostile to mechanical manipulation. The
+reconciliation process itself, because the representations are generally so hostile to mechanical manipulation. The
 combination of these limitations creates friction in managing infrastructure across multiple teams and applications.
 Cross-functional collaboration across platform and application teams can quickly become a bottleneck especially as the
 needs of individual teams differ from one another, requiring frequent template changes that potentially affect all uses
@@ -64,7 +64,7 @@ These resource representations were intended to form the core of a declarative d
 to support pre-deployment validation, preview, and approval and post-deployment auditing, versioning, and undo. 
 
 kpt supports management of
-[Configuration as Data](https://github.com/kptdev/kpt/blob/main/docs/design-docs/06-config-as-data.md).
+[Configuration as Data]({{% relref "/book/02-concepts/#configuration-as-data-key-principles" %}}).
 The core ideas are simple:
 
 * uses a uniform, serializable data model to represent configuration
@@ -82,11 +82,11 @@ need to make all changes through a monolithic generator implementation.
 
 kpt also extends its capabilities in areas that are
 [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope)
-in other approches, notably packaging and a client-side CLI.
+in other approaches, notably packaging and a client-side CLI.
 
 kpt enables WYSIWYG management of configuration similar to how the live state can be modified with traditional
 imperative tools, thus eliminating this dichotomy:
-<img src="https://raw.githubusercontent.com/kptdev/kpt/main/docs/design-docs/CaD%20Overview.svg">
+<img src="/images/cad-overview.svg">
 
 Configuration as Data is a novel approach that doesn’t sacrifice usability or the potential for higher-level automation
 in order to enable reproducibility. Instead, it supports an interoperable, WYSIWYG, automatable configuration authoring

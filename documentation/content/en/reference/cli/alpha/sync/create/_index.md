@@ -44,7 +44,7 @@ DEPLOYMENT_NAME:
 
 ```shell
 # get a specific package in the default namespace
-$ kpt alpha sync create my-app --package=deployment-8f9a0c7bf29eb2cbac9476319cd1ad2e897be4f9 --namespace=default
+kpt alpha sync create my-app --package=deployment-8f9a0c7bf29eb2cbac9476319cd1ad2e897be4f9 --namespace=default
 ```
 
 <!--mdtogo-->

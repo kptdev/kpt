@@ -23,11 +23,11 @@ import (
 	"os"
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
-	"github.com/kptdev/kpt/internal/util/render"
+	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -36,8 +36,8 @@ import (
 // NewRunner returns a command runner
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
-	r.InitDefaults()
 
+	// Image prefix resolution priority: --image-prefix flag, then $KPT_IMAGE_PREFIX, then the built-in GHCR prefix.
 	c := &cobra.Command{
 		Use:     "render [PKG_PATH] [flags]",
 		Short:   docs.RenderShort,
@@ -46,6 +46,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	r.InitDefaults()
+	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
@@ -85,6 +88,12 @@ type Runner struct {
 
 func (r *Runner) InitDefaults() {
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	// Initialize CEL environment for condition evaluation
+	// Fail early if initialization does not succeed because we might
+	// need CEL to evaluate conditions
+	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize CEL environment: %v\n", err)
+	}
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
@@ -100,7 +109,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		r.pkgPath = args[0]
 	}
 	var err error
-	r.pkgPath, err = argutil.ResolveSymlink(r.ctx, r.pkgPath)
+	r.pkgPath, err = argsutil.ResolveSymlink(r.ctx, r.pkgPath)
 	if err != nil {
 		return err
 	}
@@ -119,6 +128,9 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	var output io.Writer
 	outContent := bytes.Buffer{}
 	if r.dest != "" {
@@ -130,7 +142,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	executor := render.Renderer{
+	executor := kptops.Renderer{
 		PkgPath:        absPkgPath,
 		ResultsDirPath: r.resultsDirPath,
 		Output:         output,

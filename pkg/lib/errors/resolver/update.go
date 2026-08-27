@@ -17,8 +17,8 @@ package resolver
 import (
 	"fmt"
 
-	"github.com/kptdev/kpt/internal/util/update"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/update"
 )
 
 //nolint:gochecknoinits

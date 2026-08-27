@@ -10,4 +10,4 @@ menu:
 
 
 See the
-[definition here](https://github.com/kptdev/kpt/blob/next/pkg/api/fnresult/v1/types.go#L50)
+[definition here](https://github.com/kptdev/kpt/blob/main/api/fnresult/v1/types.go#L51)

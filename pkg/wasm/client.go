@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ func (r *Client) PushWasm(ctx context.Context, wasmFile string, imageName string
 	}
 
 	// Push the image to remote
-	if err = remote.Write(tag.Repository.Digest(hash.String()), img, options...); err != nil {
+	if err = remote.Write(tag.Digest(hash.String()), img, options...); err != nil {
 		return fmt.Errorf("failed to push image %s: %w", tag, err)
 	}
 	fmt.Printf("digest of the image: %v\n", hash.String())
@@ -256,8 +256,7 @@ func isManifestNotFoundErr(err error) bool {
 	if err == nil {
 		return false
 	}
-	var terr *transport.Error
-	isTransportError := errors.As(err, &terr)
+	terr, isTransportError := errors.AsType[*transport.Error](err)
 	if !isTransportError {
 		return false
 	}

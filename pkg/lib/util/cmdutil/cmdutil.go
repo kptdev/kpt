@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -86,7 +86,7 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 	if outDir != "" {
 		err := os.MkdirAll(outDir, 0755)
 		if err != nil {
-			return fmt.Errorf("failed to create output directory %q: %q", outDir, err.Error())
+			return fmt.Errorf("failed to create output directory %q: %w", outDir, err)
 		}
 		outputs = []kio.Writer{&kio.LocalPackageWriter{PackagePath: outDir}}
 	} else {
@@ -112,21 +112,6 @@ func CheckDirectoryNotPresent(outDir string) error {
 		return err
 	}
 	return nil
-}
-
-func GetKeywordsFromFlag(cmd *cobra.Command) []string {
-	flagVal := cmd.Flag("keywords").Value.String()
-	flagVal = strings.TrimPrefix(flagVal, "[")
-	flagVal = strings.TrimSuffix(flagVal, "]")
-	splitted := strings.Split(flagVal, ",")
-	var trimmed []string
-	for _, val := range splitted {
-		if strings.TrimSpace(val) == "" {
-			continue
-		}
-		trimmed = append(trimmed, strings.TrimSpace(val))
-	}
-	return trimmed
 }
 
 // InstallResourceGroupCRD will install the ResourceGroup CRD into the cluster.

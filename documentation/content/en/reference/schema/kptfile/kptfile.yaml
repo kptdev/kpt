@@ -28,11 +28,18 @@ definitions:
             configPath:
                 description: |-
                     `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
-                    containing a KRM resource used as the function config. This resource is
-                    excluded when resolving 'sources', and as a result cannot be operated on
-                    by the pipeline.
+                    containing a KRM resource used as the function config. The function will
+                    not see this resource in its input items — it is passed as configuration
+                    only. Other functions in the pipeline can still see and modify the file.
                 type: string
                 x-go-name: ConfigPath
+            configRef:
+                $ref: '#/definitions/ResourceReference'
+                description: |-
+                    `ConfigRef` references an existing resource in the package as the function config.
+                    The resource is identified by apiVersion, kind, and name. This is mutually exclusive
+                    with `configPath` and `configMap`.
+                x-go-name: ConfigRef
             exclude:
                 description: |-
                     `Exclude` are used to specify resources on which the function should NOT be executed.
@@ -71,6 +78,16 @@ definitions:
                     this is primarily used for merging function declaration with upstream counterparts
                 type: string
                 x-go-name: Name
+            when:
+                description: |-
+                    `CelCondition` is an optional CEL expression that determines whether this
+                    function should be executed. The expression is evaluated against the list
+                    of KRM resources passed to this function step (after `Selectors` and
+                    `Exclude` have been applied) and should return a boolean value.
+                    If omitted or evaluates to true, the function executes normally.
+                    If evaluates to false, the function is skipped.
+                type: string
+                x-go-name: CelCondition
             selectors:
                 description: |-
                     `Selectors` are used to specify resources on which the function should be executed
@@ -312,6 +329,27 @@ definitions:
             conditionType:
                 type: string
                 x-go-name: ConditionType
+        type: object
+        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+    ResourceReference:
+        description: ResourceReference identifies a resource within the package by its API identity.
+        properties:
+            apiVersion:
+                description: APIVersion of the referenced resource. Optional; when omitted, matches regardless of apiVersion.
+                type: string
+                x-go-name: APIVersion
+            kind:
+                description: Kind of the referenced resource. Required.
+                type: string
+                x-go-name: Kind
+            name:
+                description: Name of the referenced resource. Required.
+                type: string
+                x-go-name: Name
+            namespace:
+                description: Namespace of the referenced resource. Optional; when omitted, matches regardless of namespace.
+                type: string
+                x-go-name: Namespace
         type: object
         x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
     ResourceMeta:

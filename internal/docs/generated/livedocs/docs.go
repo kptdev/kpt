@@ -89,6 +89,15 @@ Flags:
     for all resources. Default is ` + "`" + `false` + "`" + `.
   
     Does not apply for the ` + "`" + `table` + "`" + ` output format.
+  
+  --status-policy:
+    Determines which status information should be saved in the inventory
+    (if compatible). The available options are:
+  
+      * all: Save status for all resources in the inventory.
+      * none: Do not save any status information in the inventory.
+  
+    The default value is ` + "`" + `all` + "`" + `.
 `
 var ApplyExamples = `
   # apply resources in the current directory
@@ -148,10 +157,29 @@ Flags:
     for all resources. Default is ` + "`" + `false` + "`" + `.
   
     Does not apply for the ` + "`" + `table` + "`" + ` output format.
+  
+  --status-policy:
+    Determines which status information should be saved in the inventory
+    (if compatible). The available options are:
+  
+      * all: Save status for all resources in the inventory.
+      * none: Do not save any status information in the inventory.
+  
+    The default value is ` + "`" + `all` + "`" + `.
+  
+  --delete-propagation-policy:
+    The propagation policy that should be used when deleting resources. The
+    default value here is 'Background'. The other options are 'Foreground' and 'Orphan'.
+  
+  --delete-timeout:
+    The threshold for how long to wait for all resources to be deleted before
+    giving up. If this flag is not set, kpt live destroy will wait until
+    interrupted. In most cases, it would also make sense to set the
+    --delete-propagation-policy to Foreground when this flag is set.
 `
 var DestroyExamples = `
   # remove all resources in the current package from the cluster.
-  $ kpt live destroy
+  kpt live destroy
 `
 
 var InitShort = `Initialize a package with the information needed for inventory tracking.`
@@ -185,6 +213,9 @@ Flags:
     in the package belong in the same namespace. If they do, that namespace will
     be used. If they do not, the namespace in the user's context will be chosen.
   
+  --quiet:
+    If true, do not print output message for initialization. Defaults to false.
+  
   --rg-file:
     The name used for the file created for the ResourceGroup CR. Defaults to
     'resourcegroup.yaml'.
@@ -203,7 +234,7 @@ var InstallResourceGroupLong = `
 `
 var InstallResourceGroupExamples = `
   # install ResourceGroup CRD into the current cluster.
-  $ kpt live install-resource-group
+  kpt live install-resource-group
 `
 
 var MigrateShort = `Migrate a package and the inventory object to use the ResourceGroup CRD.`
@@ -223,7 +254,7 @@ Flags:
     Go through the steps of migration, but don't make any changes.
   
   --force:
-    Forces the inventory values in the ResourceGroup manfiest to be updated,
+    Forces the inventory values in the ResourceGroup manifest to be updated,
     even if they are already set. Defaults to false.
   
   --name:
@@ -235,6 +266,10 @@ Flags:
     The namespace for the ResourceGroup resource that contains the inventory
     for the package. If not provided, it defaults to the same namespace as the
     existing inventory object.
+  
+  --rg-file:
+    The file path to the ResourceGroup object. Defaults to
+    'resourcegroup.yaml'.
 `
 var MigrateExamples = `
   # Migrate the package in the current directory.

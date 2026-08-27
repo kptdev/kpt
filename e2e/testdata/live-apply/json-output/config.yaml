@@ -17,7 +17,7 @@ kptArgs:
   - "live"
   - "apply"
   - "--output=json"
-  - "--reconcile-timeout=2m"
+  - "--reconcile-timeout=5m"
 stdOut: |
   {"action":"Inventory","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
   {"action":"Inventory","status":"Finished","timestamp":"<TIMESTAMP>","type":"group"}

@@ -18,8 +18,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kptdev/kpt/internal/util/pathutil"
-	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
+	schema "github.com/kptdev/kpt/api/schema/v1"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -67,7 +68,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		// Skip if current file is a ResourceGroup resource. We do not want to apply/delete any ResourceGroup CRs when we
 		// run any `kpt live` commands on a package. Instead, we have specific logic in place for handling ResourceGroups in
 		// the live cluster.
-		if u.GroupVersionKind() == rgfilev1alpha1.ResourceGroupGVK() {
+		if schema.GroupVersionKind(u.GroupVersionKind()) == rgfilev1alpha1.ResourceGroupGVK() {
 			continue
 		}
 		objs = append(objs, u)
@@ -91,8 +92,6 @@ func removeAnnotations(n *yaml.RNode, annotations ...kioutil.AnnotationKey) erro
 
 // kyamlNodeToUnstructured take a resource represented as a kyaml RNode and
 // turns it into an Unstructured object.
-//
-//nolint:interfacer
 func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) {
 	if err := validateMetadataStringMaps(n); err != nil {
 		return nil, err

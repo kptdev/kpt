@@ -24,7 +24,7 @@
   {{ $editURL := printf "%s/edit/%s/%s" $gh_repo $gh_branch $gh_repo_path }}
   {{ $issuesURL := printf "%s/issues/new?title=%s" $gh_repo (htmlEscape $.Title) }}
 
-  <div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+  <div class="td-page-meta ms-2 pb-1 pt-2 mb-0">
     <a href="{{ $editURL }}" target="_blank">
       <i class="fa fa-edit fa-fw"></i> {{ T "post_edit_this" }}
     </a>

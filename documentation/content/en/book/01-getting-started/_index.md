@@ -13,7 +13,7 @@ menu:
 
 ### kpt
 
-Install the [kpt CLI](installation/kpt-cli), using the following command:
+Install the [kpt CLI]({{% relref "/installation/kpt-cli" %}}), using the following command:
 
 ```shell
 kpt version
@@ -39,11 +39,11 @@ Follow the [instructions](https://podman.io/getting-started/installation) to ins
 If you want to set up a rootless container runtime, then [this](https://rootlesscontaine.rs/) may be a useful resource for you.
 
 Environment variables can be used to control which container runtime to use. More details can be found in the reference
-documents for [`kpt fn render`](../../reference/cli/fn/render/) and [`kpt fn eval`](../../reference/cli/fn/eval/).
+documents for [`kpt fn render`]({{% relref "/reference/cli/fn/render" %}}) and [`kpt fn eval`]({{% relref "/reference/cli/fn/eval" %}}).
 
 ### Kubernetes cluster
 
-To deploy the examples, you need a Kubernetes cluster and a configured kubectl context.
+To deploy the examples, you need a Kubernetes cluster and a configured kubeconfig context.
 
 For testing purposes, the [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) tool is useful for running an ephemeral Kubernetes
 cluster on your local host.
@@ -75,7 +75,7 @@ Next, use the following command to view the content of the package:
 
 ```shell
 kpt pkg tree
-Package "nginx"
+Package "nginx" (independent)
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
 └── [svc.yaml]  Service my-nginx-svc
@@ -105,7 +105,7 @@ vim deployment.yaml
 
 #### Automating one-time edits with functions
 
-The [`kpt fn`](../../reference/cli/fn/) set of commands enables you to execute programs called _kpt functions_. These programs are
+The [`kpt fn`]({{% relref "/reference/cli/fn" %}}) set of commands enables you to execute programs called _kpt functions_. These programs are
 packaged as containers and take YAML files as input, mutate or validate them, and then output YAML.
 
 For example, you can use a function (`ghcr.io/kptdev/krm-functions-catalog/search-replace:latest`) to search for and replace all the occurrences of the `app` key, in the `spec` section of the YAML document (`spec.**.app`), and set the value to `my-nginx`. 
@@ -175,7 +175,9 @@ Apply the resources to the cluster:
 kpt live apply --reconcile-timeout=15m
 ```
 
-This waits for the resources to be reconciled on the cluster by monitoring their status.
+The `--reconcile-timeout=15m` flag sets a maximum wait time for all resources to reach a healthy
+state. Without it, the command waits indefinitely until all resources reconcile. Setting a timeout is recommended 
+to avoid hanging in CI pipelines or interactive use.
 
 ### Updating the package
 

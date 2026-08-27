@@ -66,11 +66,11 @@ number of pods have been created and become available.
 
 For core kubernetes types, reconcile status is computed using hardcoded rules.
 For CRDs, the status computation is based on the recommended
-[convention for status fields](../../reference/schema/crd-status-convention/)
+[convention for status fields]({{% relref "/reference/schema/crd-status-convention" %}})
 that must be followed by custom resource publishers. If CRDs follow
 these conventions, `kpt live apply` will correctly compute the reconciliation status.
 `kpt` alsohas special rules for computing status for
-[Config Connector resources](../../reference/schema/config-connector-status-convention/).
+[Config Connector resources]({{% relref "/reference/schema/config-connector-status-convention" %}}).
 
 Multiple resources are usually applied together and we want to know
 when all of these resources have been successfully reconciled. `kpt live apply` computes
@@ -119,10 +119,10 @@ uses heuristics to automatically choose the namespace. In this example, all the
 resources in `wordpress` package are in the `default` namespace, so it chooses
 `default` for the namespace. Alternatively, you can manually configure the name
 and namespace of the `ResourceGroup` resource. Refer to the
-[init command reference](../../reference/cli/live/init/) for usage.
+[init command reference]({{% relref "/reference/cli/live/init" %}}) for usage.
 
 {{< warning type=warning >}}
-Once a package is applied to the cluster, do not change the `ResourceGroup` CR. Doing so corrupts the association between the package and the inventory in the cluster, possibly leading to unpredictible and destructive operations.
+Once a package is applied to the cluster, do not change the `ResourceGroup` CR. Doing so corrupts the association between the package and the inventory in the cluster, possibly leading to unpredictable and destructive operations.
 {{< /warning >}}
 
 ## Applying a Package
@@ -166,7 +166,7 @@ deployment.apps/wordpress reconciled
 6 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
-Refer to the [apply command reference](../../reference/cli/live/apply/) for usage.
+Refer to the [apply command reference]({{% relref "/reference/cli/live/apply" %}}) for usage.
 
 ### `ResourceGroup` CRD
 
@@ -229,7 +229,7 @@ persistentvolumeclaim/mysql-pv-claim is Current: PVC is Bound
 persistentvolumeclaim/wp-pv-claim is Current: PVC is Bound
 ```
 
-Refer to the [status command reference](../../reference/cli/live/status/) for usage.
+Refer to the [status command reference]({{% relref "/reference/cli/live/status" %}}) for usage.
 
 ### Delete the package
 
@@ -260,7 +260,7 @@ persistentvolumeclaim/wp-pv-claim reconciled
 6 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
-Refer to the [destroy command reference](../../reference/cli/live/destroy/) for usage.
+Refer to the [destroy command reference]({{% relref "/reference/cli/live/destroy" %}}) for usage.
 
 ## Handling Dependencies
 
@@ -349,4 +349,4 @@ service/wordpress-mysql reconciled
 4 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
-See [depends-on](../../reference/annotations/depends-on/) for more information.
+See [depends-on]({{% relref "/reference/annotations/depends-on" %}}) for more information.

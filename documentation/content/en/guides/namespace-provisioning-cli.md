@@ -38,23 +38,23 @@ via the GitHub GUI.
 # (optional) skip if you've authenticated. 
 # Authenticate gh to create a repository.
 
-$ gh auth login
+gh auth login
 
 # Create the "blueprint" and "deployment" repos if you don't have them yet
 
-$ gh repo create blueprint
-$ gh repo create deployment
+gh repo create blueprint
+gh repo create deployment
 
 
 # clone and enter the blueprint repo
-$ USER=<YOUR GITHUB USERNAME>
-$ BLUEPRINT_REPO=git@github.com:${USER}/blueprint.git
-$ DEPLOYMENT_REPO=git@github.com:${USER}/deployment.git
+USER=<YOUR GITHUB USERNAME>
+BLUEPRINT_REPO=git@github.com:${USER}/blueprint.git
+DEPLOYMENT_REPO=git@github.com:${USER}/deployment.git
 
-$ git clone ${BLUEPRINT_REPO}
-$ git clone ${DEPLOYMENT_REPO}
+git clone ${BLUEPRINT_REPO}
+git clone ${DEPLOYMENT_REPO}
 
-$ cd blueprint
+cd blueprint
 
 ```
 
@@ -77,7 +77,7 @@ Run the following bash snippet to create our little k8s manifest generator calle
 kube-gen.sh.
 
 ```shell
-$ cat << 'EOF' > kube-gen.sh
+cat << 'EOF' > kube-gen.sh
 
 #!/usr/bin/env bash
 #kube-gen.sh resource-type args
@@ -97,10 +97,10 @@ Follow the steps below to make sure that script can be invoked from the command 
 
 ```shell
 # make the script executable
-$ chmod a+x kube-gen.sh
+chmod a+x kube-gen.sh
 
 # let's make it available in our $PATH
-$ sudo mv kube-gen.sh /usr/local/bin
+sudo mv kube-gen.sh /usr/local/bin
 
 # test the script out
 $ kube-gen.sh --help
@@ -140,10 +140,10 @@ provisioning a namespace.
 
 ```shell
 # ensure that we are working in the basens directory
-$ cd basens
+cd basens
 
 # create namespace
-$ kube-gen.sh namespace example > namespace.yaml
+kube-gen.sh namespace example > namespace.yaml
 
 # you should see namespace resource
 $ kpt pkg tree
@@ -155,21 +155,21 @@ Package "basens"
 
 Before we add more resources to the package, let's configure our package to
 ensure that the namespace for new resources in the package is set correctly.
-kpt offers a set of common functions as part of the [Functions Catalog](https://catalog.kpt.dev/function-catalog/)
-and it has a [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/) function
+kpt offers a set of common functions as part of the [Functions Catalog](https://catalog.kpt.dev/)
+and it has a [set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/) function
 that can be used to ensure all resources in a package use the same namespace.
 
 ```shell
 # You should be under the "./blueprint/basens" directory.
 # Make sure you have kpt autocomplete enabled.
-# How it works: 
+# How it works:
 # Reset your brain, assume you do not know how to use `kpt fn eval`, the goal
 # is to find and add a "namespace" function.
 # Press the keyboard key `tab` or `tab tab` after each flag `--type`,
-# `--keywords`, `--image`, `--fn-config` to see available choices, click `tab`
-# to autocomplete your choice or to see further options. 
+# `--image`, `--fn-config` to see available choices, click `tab`
+# to autocomplete your choice or to see further options.
 
-$ kpt fn eval --type mutator --keywords namespace --image set-namespace:latest --fn-config package-context.yaml
+$ kpt fn eval --type mutator --image set-namespace:latest --fn-config package-context.yaml
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
@@ -202,17 +202,18 @@ pipeline:
 
 # render the package to ensure we have a working package.
 $ kpt fn render
-Package "tenant": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+Package "tenant":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "tenant"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
+
 Successfully executed 1 function(s) in 1 package(s).
 ```
 
 Note: if you are curious about how KRM functions are implemented. Take a look
-at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/master/functions/go/set-namespace/transformer/namespace.go)
-to get a feel for the implementation. You can also check out [Chapter 5: Developing Functions](https://kpt.dev/book/05-developing-functions/)
+at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/main/functions/go/set-namespace/transformer/namespace.go)
+to get a feel for the implementation. You can also check out [Chapter 5: Developing Functions](/book/05-developing-functions/)
 of the kpt book.
 
 ### Permissions
@@ -228,7 +229,7 @@ managing this tenant.
 
 ```shell
 # create rolebinding and try out the simple value propagation scenario
-$ kube-gen.sh rolebinding app-admin --clusterrole=app-admin --group=example.admin@bigco.com > rolebinding.yaml
+kube-gen.sh rolebinding app-admin --clusterrole=app-admin --group=example.admin@bigco.com > rolebinding.yaml
 
 $ cat rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -249,7 +250,7 @@ subjects:
 To enable automatic customization of this role binding for an instance of a
 namespace package, we can bind the value of package instance name to the group
 name in the above role binding resource. We will use the
-[apply-replacements function](https://catalog.kpt.dev/function-catalog/apply-replacements/v0.1/)
+[apply-replacements function](https://catalog.kpt.dev/apply-replacements/v0.1/)
 from kpt-function-catalog for binding the values.
 Here is an snippet that does that:
 
@@ -257,7 +258,7 @@ Here is an snippet that does that:
 # get the value of package name from configmap in `package-context.yaml`
 # and use it to update the name of the entry in subjects section of app-admin
 # role binding with a Group kind. Save the config to update-rolebinding.yaml.
-$ cat > update-rolebinding.yaml << EOF
+cat > update-rolebinding.yaml << EOF
 
 apiVersion: fn.kpt.dev/v1alpha1
 kind: ApplyReplacements
@@ -291,7 +292,7 @@ $ kpt fn eval -i apply-replacements:latest --fn-config update-rolebinding.yaml -
 Added "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" as mutator in the Kptfile.
 
 # ensure our package is being rendered correctly
-$ kpt fn render
+kpt fn render
 ```
 
 ### Quota
@@ -299,8 +300,8 @@ $ kpt fn render
 Let’s add quota limits for this tenant.
 
 ```shell
-$ kube-gen.sh quota default --hard=cpu=40,memory=40G > resourcequota.yaml
-$ kpt fn render
+kube-gen.sh quota default --hard=cpu=40,memory=40G > resourcequota.yaml
+kpt fn render
 
 $ cat resourcequota.yaml
 apiVersion: v1
@@ -335,10 +336,10 @@ Now that we have a basic namespace package in place, let's publish it so that
 other users can consume it.
 
 ```shell
-$ cd .. && git add basens && git commit -am "initial pkg"
-$ git push origin main
+cd .. && git add basens && git commit -am "initial pkg"
+git push origin main
 
-$ git tag basens/v0 && git push origin basens/v0
+git tag basens/v0 && git push origin basens/v0
 ```
 
 So, now the package should be available in the `blueprint` repo. Consumers
@@ -355,7 +356,7 @@ You need to do this step in the deployment repo.
 
 ```shell
 # Redirect yourself to $DEPLOYMENT_REPO, which is created in "Prerequisites – Repositories
-$ cd ../deployment
+cd ../deployment
 
 $ kpt pkg get ${BLUEPRINT_REPO}/basens/@v0 backend --for-deployment
 Package "backend":
@@ -380,11 +381,11 @@ Render the `backend` package so that the package is customized for the `backend`
 
 $ kpt fn render backend
 Package "backend":
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "backend"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 900ms
   Results:
     [info]: namespace "example" updated to "backend", 3 values changed
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" on package "backend"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
 
 Successfully executed 2 function(s) in 1 package(s).
@@ -393,7 +394,7 @@ Successfully executed 2 function(s) in 1 package(s).
 
 # examine the output of backend package
 $ kpt pkg tree backend
-Package "backend"
+Package "backend" (independent)
 ├── [Kptfile]  Kptfile backend
 ├── [namespace.yaml]  Namespace backend
 ├── [package-context.yaml]  ConfigMap kptfile.kpt.dev
@@ -410,11 +411,11 @@ the deployment repo.
 ```shell
 # assuming you are in deployment repo
 
-$ git add backend && git commit -am "initial pkg for deployment"
-$ git push origin main
+git add backend && git commit -am "initial pkg for deployment"
+git push origin main
 
 # tag the package
-$ git tag backend/v0 main && git push origin backend/v0
+git tag backend/v0 main && git push origin backend/v0
 
 ```
 

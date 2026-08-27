@@ -2,7 +2,7 @@
 
 ### What is the roadmap for kpt?
 
-Please visit the [roadmap document] and the [kpt milestones].
+Please visit the [roadmap GitHub Project](https://github.com/orgs/kptdev/projects/2) and the [kpt milestones].
 
 ### How is kpt different from other solutions?
 
@@ -10,7 +10,7 @@ Think of configuration as an API or data in a database. kpt can operate on confi
 in storage, git or OCI.
 
 Rather than expressing configuration AS code or templates that generate configuration,
-kpt represents [Configuration as Data]. In particular, it represents configuration
+kpt represents Configuration as Data. In particular, it represents configuration
 as YAML or JSON objects adhering to [The Kubernetes Resource Model], the same as the
 live state in Kubernetes, which enables novel remedies to configuration drift.
 
@@ -50,7 +50,7 @@ _kpt_
 - Enables workflows that combine programmatic changes ([functions]) with manual
   edits.
 - Aims to support mutating and validating admission control on derived packages.
-- Also supports packages, [package orchestration], resource actuation, and GitOps.
+- Also supports packages, package orchestration (see [Porch documentation](https://porch.kpt.dev/)), resource actuation, and GitOps.
 
 ### Do kpt and kustomize work together?
 
@@ -101,7 +101,7 @@ For a more complete explanation, see the [rationale].
 
 Yes. kpt supports plugging in solutions which generate or manipulate
 configuration, e.g. from DSLs and templates. This may be performed using the
-[Functions Catalog](https://catalog.kpt.dev/function-catalog). The generated output may be modified directly, and merged
+[Functions Catalog](https://catalog.kpt.dev). The generated output may be modified directly, and merged
 when regenerated.
 
 ### I want to write high-level abstractions like CRDs, but on the client-side. Can I do this with kpt?
@@ -118,23 +118,17 @@ don't have to alias it. It is pronounced "kept".
 
 ### I still have questions. How do I contact you?
 
-[Please reach out!]( _index.md#communication )
+[Please reach out!]( {{% relref "/#communication" %}} )
 
-[Configuration as Data]:
-  https://github.com/kptdev/kpt/blob/main/docs/design-docs/06-config-as-data.md
-[package orchestration]:
-  https://github.com/kptdev/kpt/blob/main/docs/design-docs/07-package-orchestration.md
 [the kubernetes resource model]:
   https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md
 [declarative application management in kubernetes]:
   https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/declarative-application-management.md
-[rationale]: https://kpt.dev/guides/rationale
+[rationale]: /guides/rationale
 [functions]: /reference/cli/fn/eval/
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
-[roadmap document]:
-  https://github.com/kptdev/kpt/blob/main/docs/ROADMAP.md
 [kpt milestones]: https://github.com/kptdev/kpt/milestones
 [kustomize solution]:
   https://github.com/kptdev/kpt/tree/main/package-examples/kustomize

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: m7
+  namespace: default
+data:
+  deletedInOrigin:
+    nullKey: something
+    unsetKey: something
+    tildeKey: something
+    emptyStringKey1: "something"
+    emptyStringKey2: 'something'
+  deletedInDest:
+    emptyStringKey1: "something"
+    emptyStringKey2: 'something'
+    missKey: something
+  addedInUpdated:
+    unchange: origin
+    addedKey: something

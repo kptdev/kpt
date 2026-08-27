@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2019, 2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package runfn
@@ -10,22 +10,22 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"slices"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/types"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
-	"github.com/kptdev/kpt/internal/fnruntime"
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/printerutil"
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
-	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 )
 
 // RunFns runs the set of configuration functions in a local directory against
@@ -39,7 +39,7 @@ type RunFns struct {
 	Path string
 
 	// uniquePath is the absolute version of Path
-	uniquePath types.UniquePath
+	uniquePath kptfilev1.UniquePath
 
 	// FnConfigPath specifies a config file which contains the configs used in
 	// function input. It can be absolute or relative to kpt working directory.
@@ -64,7 +64,7 @@ type RunFns struct {
 	// ResultsDir is where to write each functions results
 	ResultsDir string
 
-	fnResults *fnresult.ResultList
+	fnResults *fnresultv1.ResultList
 
 	// functionFilterProvider provides a filter to perform the function.
 	// this is a variable so it can be mocked in tests
@@ -94,9 +94,10 @@ type RunFns struct {
 	// OriginalExec is the original exec commands
 	OriginalExec string
 
-	Selector kptfile.Selector
+	Selector kptfilev1.Selector
 
-	Exclusion kptfile.Selector
+	Exclusion    kptfilev1.Selector
+	CelCondition string
 }
 
 // Execute runs the command
@@ -127,7 +128,7 @@ func (r RunFns) getNodesAndFilters() (
 			PackagePath:        string(r.uniquePath),
 			MatchFilesGlob:     pkg.MatchAllKRM,
 			PreserveSeqIndent:  true,
-			PackageFileName:    kptfile.KptFileName,
+			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
 		}
@@ -191,6 +192,23 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		return err
 	}
 
+	// Exclude the fn-config file from processing when it resides inside the
+	// package. The fn-config is already passed separately via
+	// resourceList.functionConfig and should not be processed as a regular
+	// input resource. The excluded node is written back unmodified so the
+	// file is preserved on disk.
+	var fnConfigNode *yaml.RNode
+	if r.FnConfigPath != "" {
+		inputResources = slices.DeleteFunc(inputResources, func(node *yaml.RNode) bool {
+			p, _, _ := kioutil.GetFileAnnotations(node)
+			if p != "" && filepath.Join(string(r.uniquePath), p) == r.FnConfigPath {
+				fnConfigNode = node
+				return true
+			}
+			return false
+		})
+	}
+
 	selectedInput := inputResources
 
 	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
@@ -202,8 +220,8 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		// select the resources on which function should be applied
 		selectedInput, err = fnruntime.SelectInput(
 			inputResources,
-			[]kptfile.Selector{r.Selector},
-			[]kptfile.Selector{r.Exclusion},
+			[]kptfilev1.Selector{r.Selector},
+			[]kptfilev1.Selector{r.Exclusion},
 			&fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
 		if err != nil {
 			return err
@@ -228,6 +246,11 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		}
 	}
 
+	// Add fn-config resource back (unmodified) so the writer preserves the file.
+	if fnConfigNode != nil {
+		outputResources = append(outputResources, fnConfigNode)
+	}
+
 	if err == nil {
 		writeErr := outputs[0].Write(outputResources)
 		if writeErr != nil {
@@ -249,7 +272,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 }
 
 func (r RunFns) printFnResultsStatus(resultsFile string) {
-	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
+	printer.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
@@ -285,10 +308,10 @@ func (r *RunFns) init() error {
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		r.uniquePath = types.UniquePath(absPath)
+		r.uniquePath = kptfilev1.UniquePath(absPath)
 	}
 
-	r.fnResults = fnresult.NewResultList()
+	r.fnResults = fnresultv1.NewResultList()
 
 	// functionFilterProvider set the filter provider
 	if r.functionFilterProvider == nil {
@@ -327,7 +350,7 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 // getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	return kptfile.GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, "", r.FnConfigPath)
+	return kptfilev1.GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, "", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters
@@ -347,7 +370,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		FunctionConfig: fnConfig,
 		DeferFailure:   spec.DeferFailure,
 	}
-	fnResult := &fnresult.Result{
+	fnResult := &fnresultv1.Result{
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(r.uniquePath),
@@ -413,5 +436,15 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		opts.DisplayResourceCount = true
 	}
 
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
+	runner, err := fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
+	if err != nil {
+		return nil, err
+	}
+	if r.CelCondition != "" {
+		if opts.CELEnvironment == nil {
+			return nil, fmt.Errorf("CelCondition specified for function %q but no CEL environment is configured in RunnerOptions", fnResult.Image)
+		}
+		runner.SetCelCondition(r.CelCondition, opts.CELEnvironment)
+	}
+	return runner, nil
 }

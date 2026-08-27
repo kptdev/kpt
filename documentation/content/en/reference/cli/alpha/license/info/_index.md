@@ -27,7 +27,7 @@ kpt alpha license info
 
 ```shell
 # display license information for OSS libraries.
-$ kpt alpha license info | less
+kpt alpha license info | less
 ```
 
 <!--mdtogo-->

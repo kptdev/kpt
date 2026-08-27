@@ -21,7 +21,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/util/argutil"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/live"
 	kptplanner "github.com/kptdev/kpt/pkg/live/planner"
 	"github.com/spf13/cobra"
@@ -91,7 +91,7 @@ func (r *Runner) PreRunE(_ *cobra.Command, _ []string) error {
 }
 
 func (r *Runner) validateOutputFormat() error {
-	if !(r.output == "text" || r.output == "krm") {
+	if r.output != "text" && r.output != "krm" {
 		return fmt.Errorf("unknown output format %q. Must be either 'text' or 'krm'", r.output)
 	}
 	return nil
@@ -112,7 +112,7 @@ func (r *Runner) RunE(c *cobra.Command, args []string) error {
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(r.ctx, path)
+		path, err = argsutil.ResolveSymlink(r.ctx, path)
 		if err != nil {
 			return err
 		}
@@ -133,7 +133,7 @@ func (r *Runner) RunE(c *cobra.Command, args []string) error {
 	}
 
 	// Create and execute the planner.
-	planner, err := kptplanner.NewClusterPlanner(r.factory)
+	planner, err := kptplanner.NewClusterPlannerWithContext(r.ctx, r.factory)
 	if err != nil {
 		return err
 	}

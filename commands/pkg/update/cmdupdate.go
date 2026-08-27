@@ -21,15 +21,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
-	"github.com/kptdev/kpt/internal/util/update"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/update"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -91,7 +90,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return errors.E(op, errors.InvalidParam, fmt.Errorf("at most 1 version permitted"))
 	}
 
-	resolvedPath, err := argutil.ResolveSymlink(r.ctx, parts[0])
+	resolvedPath, err := argsutil.ResolveSymlink(r.ctx, parts[0])
 	if err != nil {
 		return err
 	}
@@ -131,7 +130,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func resolveRelPath(path types.UniquePath) (string, error) {
+func resolveRelPath(path kptfilev1.UniquePath) (string, error) {
 	const op errors.Op = "cmdupdate.resolveRelPath"
 	cwd, err := os.Getwd()
 	if err != nil {

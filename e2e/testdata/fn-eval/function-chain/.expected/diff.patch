@@ -1,9 +1,9 @@
 diff --git a/out/resources.yaml b/out/resources.yaml
 new file mode 100644
-index 0000000..94ced72
+index 0000000..840637b
 --- /dev/null
 +++ b/out/resources.yaml
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,34 @@
 +# Copyright 2021 The kpt Authors
 +#
 +# Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,16 +29,11 @@ index 0000000..94ced72
 +  selector:
 +    matchLabels:
 +      foo: bar
-+  template:
-+    metadata:
-+      labels:
-+        foo: bar
 +---
 +apiVersion: custom.io/v1
 +kind: Custom
 +metadata:
 +  name: custom
-+  namespace: staging
 +  labels:
 +    foo: bar
 +spec:

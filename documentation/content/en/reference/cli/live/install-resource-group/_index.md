@@ -30,7 +30,7 @@ kpt live install-resource-group
 
 ```shell
 # install ResourceGroup CRD into the current cluster.
-$ kpt live install-resource-group
+kpt live install-resource-group
 ```
 
 <!--mdtogo-->

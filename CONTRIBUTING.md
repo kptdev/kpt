@@ -15,7 +15,7 @@ itself.
 
 All files should have the copyright notice.
 ```
-// Copyright 2025 The kpt Authors
+// Copyright 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,38 +32,78 @@ All files should have the copyright notice.
 
 If the file has never been modified: use the creation year only
 
-* Example: `Copyright 2025 The kpt Authors`
+* Example: `Copyright 2026 The kpt Authors`
 
 If the file has been modified: use a year range from creation to last modification
 
 * Example: `Copyright 2024-2026 The kpt Authors`
 
-## Contributing large features
-
-Larger features and all the features that affect the interface (CLI or API) of
-kpt components need to have a reviewed and merged design document. It is OK to
-start with a prototype in your private fork but if you intend for your feature
-to be shipped in kpt please create a design document with this
-[design template](/docs/design-docs/00-template.md).
-
-You should create a copy of the template and submit a PR for comments and 
-review by maintainers.  Once the PR is merged the design is considered approved.
-The actual code change PRs should link to the design documents, even though it
-is well understood that the design can drift during implementation.
-
 ## Code reviews
 
-All submissions, including submissions by project members, require review. We
-use GitHub pull requests for this purpose. Consult [GitHub Help] for more
-information on using pull requests.
+All submissions, including submissions by project members, require review. We use GitHub pull
+requests for this purpose. Consult [GitHub Help] for more information on using pull requests.
 
 Process for code reviews. Before requesting human review, a PR must:
 
 * All tests passing
 * All linting passing
-* Meeting project code quality requirements, including passing all configured static analysis / SonarCloud quality gates and not reducing automated test coverage for the affected components
-* The comments from the first run of automatically generated comments (AI generated comments, SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further re-runs of AI are optional)
-* If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the automated comment cannot be resolved or ask for help in resolving the comment
+* Meeting project code quality requirements, including passing all configured
+  static analysis / SonarCloud quality gates and not reducing automated test coverage for the
+  affected components
+* The comments from the first run of automatically generated comments (AI generated comments,
+  SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further
+  re-runs of AI are optional)
+* If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the
+  automated comment cannot be resolved or ask for help in resolving the comment
+* The PR description states whether AI was used to help create the PR; if so, it lists the AI tools
+  used and the areas where they were used
+
+All PRs should be approved by at least two code owners listed in the [CODEOWNERS](./CODEOWNERS) file, have all
+checks passing, and have all discussions resolved before merge.
+
+### Stale PRs
+
+If PR comments are not addressed for more than two weeks, the PR will be closed.
+The PR can be reopened at any time, and work can continue when there is willingness to resume after a break.
+
+## Declare any use of AI
+
+> In addition to the above, the use of AI in the creation of PRs is allowed, but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools.
+
+Update the PR description to state whether you used AI to help you create this PR; if so, list the AI tools you have used and in what areas.
+
+For example:
+```text
+I have used AI in the creation of this PR.
+
+I have used the following AI tools:
+- GitHub Copilot to analyse the code
+- Claude Code to generate the function someNewFunctionIAdded()
+- Amazon Q to generate unit tests
+```
+
+### Attribute AI in the Git commit messages
+
+Following the [guidance of the Linux kernel](https://docs.kernel.org/process/coding-assistants.html#attribution)
+we recommend the attribution of AI tools in the commit messages using the following format:
+
+```text
+Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]
+```
+
+Where:
+
+- `AGENT_NAME` is the name of the AI tool or framework
+- `MODEL_VERSION` is the specific model version used
+- `[TOOL1] [TOOL2]` are optional specialized analysis tools used (e.g., coccinelle, sparse, smatch, clang-tidy)
+
+Basic development tools (git, gcc, make, editors) should not be listed.
+
+Example:
+
+```text
+Assisted-by: Claude:claude-3-opus coccinelle sparse
+```
 
 ## Community Guidelines
 
@@ -111,6 +151,23 @@ Refer to the pointers below to learn more:
    make all
    ```
 
+#### API Go module
+
+The [`api/`](api/) directory is a separate Go module (`github.com/kptdev/kpt/api`). To build and test only that module:
+
+```shell
+make api
+```
+
+The same checks run with `make -C api all`.
+
+##### Version tags and releases (maintainers)
+
+For step-by-step maintainer instructions (CLI/library vs API, tag shapes, and CI), see [release/README.md](release/README.md).
+
+- **kpt CLI** (root module `github.com/kptdev/kpt`): release tags look like `v1.2.3`. Pushing them runs the [kpt Release](.github/workflows/release.yml) workflow (GoReleaser, images, provenance).
+- **kpt API**: publish nested-module **git** tags such as `api/v1.2.3`; consumers pin with `go get github.com/kptdev/kpt/api@v1.2.3` (see [Go modules: VCS version](https://go.dev/ref/mod#vcs-version)).
+
 ### Function Catalog
 
 Function catalog has its own repository. Refer to the
@@ -138,12 +195,11 @@ Docs are under [documentation/](documentation/). Refer to the [README.md](docume
 documentation contributions. 
 
 
-[error message style guide]: docs/style-guides/errors.md
-[documentation style guide]: docs/style-guides/docs.md
+[error message style guide]: architecture/style-guides/errors.md
+[documentation style guide]: documentation/README.md#style-guide-for-documentation
 [github help]: https://help.github.com/articles/about-pull-requests/
 [google's open source community guidelines]:
   https://opensource.google.com/conduct/
 [code of conduct]: CODE_OF_CONDUCT.md
 [docsify]: https://docsify.js.org/
-[site/]: site/
 [w3 link checker]: https://validator.w3.org/checklink/

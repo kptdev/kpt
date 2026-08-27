@@ -70,7 +70,7 @@ runners.
 ## Rendering in CI
 
 Rendering is the most important CI step in a kpt workflow. The `kpt fn render` command executes the package pipeline
-declared in the `Kptfile`, running mutators and validators in a predictable order. The output is the fully hydrated
+declared in the `Kptfile`, running mutators and validators in a predictable order. The output is the fully rendered
 configuration that CI can use for downstream steps.
 
 ### Prerequisites
@@ -105,7 +105,7 @@ It is important to distinguish `kpt fn render` from `kpt fn eval`:
 ## Applying configuration in CI (optional and gated)
 
 Applying configuration from CI should be treated as optional and tightly controlled to prevent accidental cluster
-changes. In most pipelines, [kpt live apply](/reference/cli/live/apply/) runs only when a deployment is explicitly
+changes. In most pipelines, [kpt live apply]({{% relref "/reference/cli/live/apply" %}}) runs only when a deployment is explicitly
 authorized.
 
 Run apply only under these conditions:

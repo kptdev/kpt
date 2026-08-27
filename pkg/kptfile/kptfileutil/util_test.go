@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -1386,7 +1386,7 @@ pipeline:
 			assert.NoError(t, err)
 			originKf, err := DecodeKptfile(strings.NewReader(tc.origin))
 			assert.NoError(t, err)
-			err = merge(localKf, updatedKf, originKf)
+			err = MergeKptfiles(localKf, updatedKf, originKf)
 			if tc.err == nil {
 				if !assert.NoError(t, err) {
 					t.FailNow()

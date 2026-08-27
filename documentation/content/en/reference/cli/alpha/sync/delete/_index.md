@@ -47,7 +47,7 @@ DEPLOYMENT_NAME:
 ```shell
 # remove the my-app sync resource from the cluster. Wait up to 5 minutes for
 # resources to be deleted.
-$ kpt alpha sync delete my-app --timeout=5m
+kpt alpha sync delete my-app --timeout=5m
 ```
 
 <!--mdtogo-->

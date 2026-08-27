@@ -1,0 +1,705 @@
+// Copyright 2021,2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package runtime
+
+import (
+	"context"
+	goerrors "errors"
+	"fmt"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/google/shlex"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/fn"
+	"github.com/kptdev/kpt/pkg/lib/builtins"
+	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/regclient/regclient"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+// NewRunner returns a FunctionRunner given a specification of a function
+// and it's config.
+func NewRunner(
+	ctx context.Context,
+	fsys filesys.FileSystem,
+	f *kptfilev1.Function,
+	pkgPath kptfilev1.UniquePath,
+	fnResults *fnresultv1.ResultList,
+	opts runneroptions.RunnerOptions,
+	runtime fn.FunctionRuntime,
+) (*FunctionRunner, error) {
+	config, err := newFnConfig(fsys, f, pkgPath)
+	if err != nil {
+		return nil, err
+	}
+	if f.Image != "" {
+		img := opts.ResolveToImage(f.Image)
+		f.Image = img
+
+		listers := []TagLister{
+			&RegClientLister{
+				client: regclient.New(
+					regclient.WithUserAgent(UserAgent),
+					regclient.WithDockerCreds(),
+				),
+			},
+		}
+
+		if containerRuntime, err := StringToContainerRuntime(os.Getenv(ContainerRuntimeEnv)); err == nil {
+			listers = append(
+				[]TagLister{
+					&LocalLister{
+						Binary: containerRuntime.GetBin(),
+					},
+				},
+				listers...,
+			)
+		}
+
+		if f.Tag != "" {
+			tagResolver := &TagResolver{
+				Listers: listers,
+			}
+			f.Image, err = tagResolver.ResolveFunctionImage(ctx, f.Image, f.Tag)
+			if err != nil {
+				return nil, err
+			}
+		} else if !hasTagOrDigest(f.Image) {
+			f.Image += ":latest"
+		}
+	}
+
+	fnResult := &fnresultv1.Result{
+		Image:    f.Image,
+		ExecPath: f.Exec,
+		// TODO(droot): This is required for making structured results subpackage aware.
+		// Enable this once test harness supports filepath based assertions.
+		// Pkg: string(pkgPath),
+	}
+
+	fltr := &runtimeutil.FunctionFilter{
+		FunctionConfig: config,
+		// by default, the inner most runtimeutil.FunctionFilter scopes resources to the
+		// directory specified by the functionConfig, kpt v1+ doesn't scope resources
+		// during function execution, so marking the scope to global.
+		// See https://github.com/kptdev/kpt/issues/3230 for more details.
+		GlobalScope: true,
+	}
+
+	if runtime != nil {
+		if runner, err := runtime.GetRunner(ctx, f); err != nil {
+			return nil, fmt.Errorf("function runtime failed to evaluate function %q: %w", f.Image, err)
+		} else if runner != nil {
+			fltr.Run = runner.Run
+		}
+	}
+	if fltr.Run == nil {
+		if f.Image == runneroptions.FuncGenPkgContext {
+			pkgCtxGenerator := &builtins.PackageContextGenerator{}
+			fltr.Run = pkgCtxGenerator.Run
+		} else {
+			switch {
+			case f.Image != "":
+				// If allowWasm is true, we will use wasm runtime for image field.
+				if opts.AllowWasm {
+					wFn, err := NewWasmFn(NewOciLoader(filepath.Join(os.TempDir(), "krm-fn-wasm"), f.Image))
+					if err != nil {
+						return nil, err
+					}
+					fltr.Run = wFn.Run
+				} else {
+					cfn := &ContainerFn{
+						Image:           f.Image,
+						ImagePullPolicy: opts.ImagePullPolicy,
+						Perm: ContainerFnPermission{
+							AllowNetwork: opts.AllowNetwork,
+							// mounts are disabled for render operations (currently)
+							// but it may change in the future.
+							// AllowMount: true,
+						},
+						Ctx:      ctx,
+						FnResult: fnResult,
+					}
+					fltr.Run = cfn.Run
+				}
+			case f.Exec != "":
+				// If AllowWasm is true, we will use wasm runtime for exec field.
+				if opts.AllowWasm {
+					wFn, err := NewWasmFn(&FsLoader{Filename: f.Exec})
+					if err != nil {
+						return nil, err
+					}
+					fltr.Run = wFn.Run
+				} else {
+					var execArgs []string
+					// assuming exec here
+					s, err := shlex.Split(f.Exec)
+					if err != nil {
+						return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+					}
+					execPath := f.Exec
+					if len(s) > 0 {
+						execPath = s[0]
+					}
+					if len(s) > 1 {
+						execArgs = s[1:]
+					}
+					eFn := &ExecFn{
+						Path:     execPath,
+						Args:     execArgs,
+						FnResult: fnResult,
+					}
+					fltr.Run = eFn.Run
+				}
+			default:
+				return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
+			}
+		}
+	}
+
+	fr, err := NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set condition; the shared CEL environment from opts is used at evaluation time.
+	if f.CelCondition != "" {
+		if opts.CELEnvironment == nil {
+			name := f.Image
+			if name == "" {
+				name = f.Exec
+			}
+			return nil, fmt.Errorf("CelCondition specified for function %q but no CEL environment is configured in RunnerOptions", name)
+		}
+		fr.celCondition = f.CelCondition
+		fr.celEnv = opts.CELEnvironment
+	}
+
+	return fr, nil
+}
+
+// NewFunctionRunner returns a FunctionRunner given a specification of a function
+// and it's config.
+func NewFunctionRunner(ctx context.Context,
+	fltr *runtimeutil.FunctionFilter,
+	pkgPath kptfilev1.UniquePath,
+	fnResult *fnresultv1.Result,
+	fnResults *fnresultv1.ResultList,
+	opts runneroptions.RunnerOptions) (*FunctionRunner, error) {
+	name := fnResult.Image
+	if name == "" {
+		name = fnResult.ExecPath
+	}
+	// by default, the inner most runtimeutil.FunctionFilter scopes resources to the
+	// directory specified by the functionConfig, kpt v1+ doesn't scope resources
+	// during function execution, so marking the scope to global.
+	// See https://github.com/kptdev/kpt/issues/3230 for more details.
+	fltr.GlobalScope = true
+	return &FunctionRunner{
+		ctx:       ctx,
+		name:      name,
+		pkgPath:   pkgPath,
+		filter:    fltr,
+		fnResult:  fnResult,
+		fnResults: fnResults,
+		opts:      opts,
+	}, nil
+}
+
+// FunctionRunner wraps FunctionFilter and implements kio.Filter interface.
+type FunctionRunner struct {
+	ctx              context.Context
+	name             string
+	pkgPath          kptfilev1.UniquePath
+	disableCLIOutput bool
+	filter           *runtimeutil.FunctionFilter
+	fnResult         *fnresultv1.Result
+	fnResults        *fnresultv1.ResultList
+	opts             runneroptions.RunnerOptions
+	celCondition     string                        // CEL condition expression
+	celEnv           *runneroptions.CELEnvironment // shared CEL environment for condition evaluation
+	skipped          bool                          // true if function execution was skipped due to condition
+}
+
+func (fr *FunctionRunner) SetCelCondition(celCondition string, celEnv *runneroptions.CELEnvironment) {
+	fr.celCondition = celCondition
+	fr.celEnv = celEnv
+}
+
+func (fr *FunctionRunner) WasSkipped() bool {
+	return fr.skipped
+}
+
+func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	fr.skipped = false
+	fr.fnResult.Skipped = false
+	pr := printer.FromContextOrDie(fr.ctx)
+
+	// Check condition before executing function
+	if fr.celEnv != nil && fr.celCondition != "" {
+		checkFreq := fr.opts.CelCheckFrequency
+		if checkFreq == 0 {
+			checkFreq = 100
+		}
+		costLim := fr.opts.CelCostLimit
+		if costLim == 0 {
+			costLim = 1000000
+		}
+		shouldExecute, err := fr.celEnv.EvaluateCondition(fr.ctx, fr.celCondition, input, checkFreq, costLim)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate condition for function %q: %w", fr.name, err)
+		}
+
+		if !shouldExecute {
+			if !fr.disableCLIOutput {
+				pr.Printf("[SKIPPED] %q (celCondition not met)\n", fr.name)
+			}
+			// Append a skipped result so consumers get one result per pipeline step
+			fr.fnResult.ExitCode = 0
+			fr.fnResult.Skipped = true
+			fr.fnResults.Items = append(fr.fnResults.Items, *fr.fnResult)
+			// Return input unchanged - function is skipped
+			fr.skipped = true
+			return input, nil
+		}
+	}
+
+	fnName := fr.name
+	if fr.opts.LogOptions.TruncateImageName {
+		baseName, tag := baseNameAndTag(fr.name)
+		if tag != "" {
+			fnName = fmt.Sprintf("%s (%s)", baseName, tag)
+		} else {
+			fnName = baseName
+		}
+	}
+
+	if !fr.disableCLIOutput {
+		sb := strings.Builder{}
+		sb.WriteString("[RUNNING] ")
+		if fr.opts.AllowWasm {
+			sb.WriteString("WASM ")
+		}
+		sb.WriteString(strconv.Quote(fnName))
+		if fr.opts.DisplayResourceCount {
+			sb.WriteString(" on " + strconv.Itoa(len(input)) + " resource(s)")
+		}
+		if fr.opts.FullDisplayName != "" {
+			sb.WriteString(" on package " + strconv.Quote(fr.opts.FullDisplayName))
+		} else if fr.pkgPath != "" {
+			sb.WriteString(" on package at path " + strconv.Quote(fr.pkgPath.String()))
+		}
+		sb.WriteString("\n")
+		pr.Printf("%s", sb.String()) // TODO: use OptPrintf
+	}
+	t0 := time.Now()
+	output, err = fr.do(input)
+	if err != nil {
+		pr.Printf("[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
+		printFnResult(fr.ctx, fr.fnResult)
+		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
+			printFnExecErr(fr.ctx, fnErr)
+			return nil, errors.ErrAlreadyHandled
+		}
+		return nil, err
+	}
+	if !fr.disableCLIOutput {
+		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
+		printFnResult(fr.ctx, fr.fnResult)
+		printFnStderr(fr.ctx, fr.fnResult.Stderr)
+	}
+	return output, err
+}
+
+func baseNameAndTag(name string) (string, string) {
+	tag := ""
+
+	// remove digest if present
+	if at := strings.Index(name, "@"); at > -1 {
+		name = name[:at]
+	}
+
+	lastSlash := strings.LastIndex(name, "/")
+
+	if lastSlash > -1 {
+		name = name[lastSlash+1:]
+	}
+
+	firstColon := strings.Index(name, ":")
+
+	if firstColon > -1 {
+		name, tag = name[:firstColon], name[firstColon+1:]
+	}
+
+	return name, tag
+}
+
+// SetFnConfig updates the functionConfig for the FunctionRunner instance.
+func (fr *FunctionRunner) SetFnConfig(conf *yaml.RNode) {
+	fr.filter.FunctionConfig = conf
+}
+
+// do executes the kpt function and returns the modified resources.
+// fnResult is updated with the function results returned by the kpt function.
+func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	if krmErr := kptfilev1.AreKRM(input); krmErr != nil {
+		return output, fmt.Errorf("input resource list must contain only KRM resources: %w", krmErr)
+	}
+
+	fnResult := fr.fnResult
+	output, err = fr.filter.Filter(input)
+
+	if fr.opts.SetPkgPathAnnotation {
+		if pkgPathErr := setPkgPathAnnotationIfNotExist(output, fr.pkgPath); pkgPathErr != nil {
+			return output, pkgPathErr
+		}
+	}
+	if pathErr := enforcePathInvariants(output); pathErr != nil {
+		return output, pathErr
+	}
+	if krmErr := kptfilev1.AreKRM(output); krmErr != nil {
+		return output, fmt.Errorf("output resource list must contain only KRM resources: %w", krmErr)
+	}
+
+	// parse the results irrespective of the success/failure of fn exec
+	resultErr := parseStructuredResult(fr.filter.Results, fnResult)
+	if resultErr != nil {
+		// Not sure if it's a good idea. This may mask the original
+		// function exec error. Revisit this if this turns out to be true.
+		return output, resultErr
+	}
+	if err != nil {
+		// set exitCode to non-zero by default in case of an error.
+		// It will be overridden with appropriate exitCode if the function runtime returns execError.
+		// builtinruntime and podEvaluator function runtime do not return execError so having
+		// a default is important.
+		fnResult.ExitCode = 1
+		fr.fnResults.ExitCode = 1
+		if execErr, ok := goerrors.AsType[*ExecError](err); ok {
+			fnResult.ExitCode = execErr.ExitCode
+			fnResult.Stderr = execErr.Stderr
+		}
+		// accumulate the results
+		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
+		return output, err
+	}
+	fnResult.ExitCode = 0
+	fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
+	return output, nil
+}
+
+func setPkgPathAnnotationIfNotExist(resources []*yaml.RNode, pkgPath kptfilev1.UniquePath) error {
+	for _, r := range resources {
+		currPkgPath, err := pkg.GetPkgPathAnnotation(r)
+		if err != nil {
+			return err
+		}
+		if currPkgPath == "" {
+			if err = pkg.SetPkgPathAnnotation(r, pkgPath); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func parseStructuredResult(yml *yaml.RNode, fnResult *fnresultv1.Result) error {
+	if yml.IsNilOrEmpty() {
+		return nil
+	}
+	// Note: TS SDK and Go SDK implements two different formats for the
+	// result. Go SDK wraps result items while TS SDK doesn't. So examine
+	// if items are wrapped or not to support both the formats for now.
+	// Refer to https://github.com/kptdev/kpt/pull/1923#discussion_r628604165
+	// for some more details.
+	if yml.YNode().Kind == yaml.MappingNode {
+		// check if legacy structured result wraps ResultItems
+		itemsNode, err := yml.Pipe(yaml.Lookup("items"))
+		if err != nil {
+			return err
+		}
+		if !itemsNode.IsNilOrEmpty() {
+			// if legacy structured result, uplift the items
+			yml = itemsNode
+		}
+	}
+	err := yaml.Unmarshal([]byte(yml.MustString()), &fnResult.Results)
+	if err != nil {
+		return err
+	}
+
+	return migrateLegacyResult(yml, fnResult)
+}
+
+// migrateLegacyResult populates name and namespace in fnResult.Result if a
+// function (e.g. using kyaml Go SDKs) gives results in a schema
+// that puts a resourceRef's name and namespace under a metadata field
+// TODO: fix upstream (https://github.com/kptdev/kpt/issues/2091)
+func migrateLegacyResult(yml *yaml.RNode, fnResult *fnresultv1.Result) error {
+	items, err := yml.Elements()
+	if err != nil {
+		return err
+	}
+
+	for i := range items {
+		if err = populateResourceRef(items[i], &fnResult.Results[i]); err != nil {
+			return err
+		}
+		if err = populateProposedValue(items[i], &fnResult.Results[i]); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func populateProposedValue(item *yaml.RNode, resultItem *fnresultv1.ResultItem) error {
+	sv, err := item.Pipe(yaml.Lookup("field", "suggestedValue"))
+	if err != nil {
+		return err
+	}
+	if sv == nil {
+		return nil
+	}
+	if resultItem.Field == nil {
+		resultItem.Field = &fnresultv1.Field{}
+	}
+
+	str, err := sv.String()
+	if err != nil {
+		return err
+	}
+
+	resultItem.Field.ProposedValue = strings.TrimSpace(str)
+
+	return nil
+}
+
+func populateResourceRef(item *yaml.RNode, resultItem *fnresultv1.ResultItem) error {
+	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
+	if err != nil {
+		return err
+	}
+	if r == nil {
+		return nil
+	}
+	nameNode, err := r.Pipe(yaml.Lookup("name"))
+	if err != nil {
+		return err
+	}
+	namespaceNode, err := r.Pipe(yaml.Lookup("namespace"))
+	if err != nil {
+		return err
+	}
+	if nameNode != nil {
+		resultItem.ResourceRef.Name = strings.TrimSpace(nameNode.MustString())
+	}
+	if namespaceNode != nil {
+		namespace := strings.TrimSpace(namespaceNode.MustString())
+		if namespace != "" && namespace != "''" {
+			resultItem.ResourceRef.Namespace = strings.TrimSpace(namespace)
+		}
+	}
+	return nil
+}
+
+// printFnResult prints given function result in a user-friendly format on kpt CLI.
+func printFnResult(ctx context.Context, fnResult *fnresultv1.Result) {
+	pr := printer.FromContextOrDie(ctx)
+	if len(fnResult.Results) > 0 {
+		// function returned structured results
+		var lines []string
+		for _, item := range fnResult.Results {
+			lines = append(lines, item.String())
+		}
+		ri := &runneroptions.SingleLineFormatter{
+			Title:     "[Results]",
+			Lines:     lines,
+			UseQuote:  false,
+			Separator: "\n",
+
+			Indent:     2,
+			LineIndent: 2,
+		}
+		pr.Printf("%s\n", ri.String())
+	}
+}
+
+// printFnExecErr prints given ExecError in a user friendly format
+// on kpt CLI.
+func printFnExecErr(ctx context.Context, fnErr *ExecError) {
+	pr := printer.FromContextOrDie(ctx)
+	printFnStderr(ctx, fnErr.Stderr)
+	pr.Printf("  Exit code: %d\n", fnErr.ExitCode)
+}
+
+// printFnStderr prints given stdErr in a user friendly format on kpt CLI.
+func printFnStderr(ctx context.Context, stdErr string) {
+	pr := printer.FromContextOrDie(ctx)
+	if len(stdErr) > 0 {
+		errLine := &runneroptions.SingleLineFormatter{
+			Title:     "Stderr",
+			Lines:     strings.Split(stdErr, "\n"),
+			UseQuote:  false,
+			Separator: "\n",
+
+			Indent:     2,
+			LineIndent: 2,
+		}
+		pr.Printf("%s\n", errLine.String())
+	}
+}
+
+// path (location) of a KRM resources is tracked in a special key in
+// metadata.annotation field. enforcePathInvariants throws an error if there is a path
+// to a file outside the package, or if the same index/path is on multiple resources
+func enforcePathInvariants(nodes []*yaml.RNode) error {
+	// map has structure pkgPath-->path -> index -> bool
+	// to keep track of paths and indexes found
+	pkgPaths := make(map[string]map[string]map[string]bool)
+	for _, node := range nodes {
+		pkgPath, err := pkg.GetPkgPathAnnotation(node)
+		if err != nil {
+			return err
+		}
+		if pkgPaths[pkgPath] == nil {
+			pkgPaths[pkgPath] = make(map[string]map[string]bool)
+		}
+		currPath, index, err := kioutil.GetFileAnnotations(node)
+		if err != nil {
+			return err
+		}
+		fp := path.Clean(currPath)
+		if strings.HasPrefix(fp, "../") {
+			return fmt.Errorf("function must not modify resources outside of package: resource has path %s", currPath)
+		}
+		if pkgPaths[pkgPath][fp] == nil {
+			pkgPaths[pkgPath][fp] = make(map[string]bool)
+		}
+		if _, ok := pkgPaths[pkgPath][fp][index]; ok {
+			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
+		}
+		pkgPaths[pkgPath][fp][index] = true
+	}
+	return nil
+}
+
+func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath kptfilev1.UniquePath) (*yaml.RNode, error) {
+	const op errors.Op = "fn.readConfig"
+	fn := errors.Fn(f.Image)
+
+	var node *yaml.RNode
+	switch {
+	case f.ConfigPath != "":
+		path := filepath.Join(string(pkgPath), f.ConfigPath)
+		file, err := fsys.Open(path)
+		if err != nil {
+			return nil, errors.E(op, fn,
+				fmt.Errorf("missing function config %q", f.ConfigPath))
+		}
+		defer file.Close()
+		b, err := io.ReadAll(file)
+		if err != nil {
+			return nil, errors.E(op, fn, err)
+		}
+		node, err = yaml.Parse(string(b))
+		if err != nil {
+			return nil, errors.E(op, fn, fmt.Errorf("invalid function config %q %w", f.ConfigPath, err))
+		}
+		// directly use the config from file
+		return node, nil
+	case len(f.ConfigMap) != 0:
+		configNode, err := NewConfigMap(f.ConfigMap)
+		if err != nil {
+			return nil, errors.E(op, fn, err)
+		}
+		return configNode, nil
+	}
+	// no need to return ConfigMap if no config given
+	return nil, nil
+}
+
+// ResolveConfigRef searches the resource list for a resource matching the given
+// ResourceReference. It returns the matching resource or an error if no match
+// or multiple matches are found.
+func ResolveConfigRef(ref *kptfilev1.ResourceReference, pkgPath kptfilev1.UniquePath, resources []*yaml.RNode) (*yaml.RNode, error) {
+	var matches []*yaml.RNode
+	for _, r := range resources {
+		meta, err := r.GetMeta()
+		if err != nil {
+			continue
+		}
+		// If pkgPath is set, only match resources belonging to this package.
+		if pkgPath != "" {
+			resPkgPath, _ := pkg.GetPkgPathAnnotation(r)
+			if resPkgPath != "" && resPkgPath != string(pkgPath) {
+				continue
+			}
+		}
+		if ref.Matches(meta) {
+			matches = append(matches, r)
+		}
+	}
+	switch len(matches) {
+	case 0:
+		return nil, fmt.Errorf("configRef: resource %s not found in package", formatResourceRef(ref))
+	case 1:
+		return matches[0], nil
+	default:
+		return nil, fmt.Errorf("configRef: resource %s matched %d resources, must match exactly one", formatResourceRef(ref), len(matches))
+	}
+}
+
+// formatResourceRef produces a human-readable representation of a resource
+// reference for error messages. It omits empty fields to avoid confusing
+// output like "/ConfigMap".
+func formatResourceRef(ref *kptfilev1.ResourceReference) string {
+	var s string
+	if ref.APIVersion != "" {
+		s = ref.APIVersion + "/" + ref.Kind
+	} else {
+		s = ref.Kind
+	}
+	s += " " + fmt.Sprintf("%q", ref.Name)
+	if ref.Namespace != "" {
+		s += " in namespace " + fmt.Sprintf("%q", ref.Namespace)
+	}
+	return s
+}
+
+// hasTagOrDigest reports whether the image reference contains an explicit tag or digest.
+func hasTagOrDigest(image string) bool {
+	if strings.Contains(image, "@") {
+		return true
+	}
+	lastSlash := strings.LastIndex(image, "/")
+	if lastSlash == -1 {
+		return strings.Contains(image, ":")
+	}
+	return strings.Contains(image[lastSlash:], ":")
+}

@@ -48,12 +48,19 @@ There are a number of key principles to be borne in mind, with regard to configu
 
 The kpt toolchain includes the following components:
 
-- [**kpt CLI**](../../reference/cli/): The kpt CLI supports package and function operations, as well as deployment, either through direct apply or through GitOps. By keeping an inventory of deployed resources, kpt enables resource pruning, aggregated status and observability, and an improved preview experience.
+- [**kpt CLI**]({{% relref "/reference/cli" %}}): The kpt CLI supports package and function
+  operations, as well as deployment, either through direct apply or through GitOps. By
+  keeping an inventory of deployed resources, kpt enables resource pruning, aggregated
+  status and observability, and an improved preview experience.
 
-- [**Function SDK**](https://github.com/kptdev/krm-functions-sdk): Any general-purpose or domain-specific language can be used to create functions to transform and/or validate the YAML KRM input/output format. However, we provide software development kits (SDKs) to simplify the function authoring process, in
-  [Go](../05-developing-functions/#developing-in-go).
+- [**Function SDK**](https://github.com/kptdev/krm-functions-sdk): Any general-purpose or
+  domain-specific language can be used to create functions to transform and/or validate the YAML
+  KRM input/output format. However, we provide software development kits (SDKs) to simplify the
+  function authoring process, in [Go]({{% relref "/book/05-developing-functions#developing-in-go" %}}). 
 
-- [**Function catalog**](https://catalog.kpt.dev/function-catalog): This is a catalog of off-the-shelf, tested functions. kpt makes configurations easy to create and transform, via reusable functions. Because the functions are expected to be used for in-place transformation, they need to be idempotent.
+- [**Function catalog**](https://catalog.kpt.dev): This is a catalog of off-the-shelf, tested functions.
+  kpt makes configurations easy to create and transform, via reusable functions. Because the functions
+  are expected to be used for in-place transformation, they need to be idempotent.
 
 ## Packages
 
@@ -123,17 +130,17 @@ You can view the package hierarchy, using the `tree` command:
 
 ```shell
 kpt pkg tree wordpress/
-Package "wordpress"
+Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
 ├── deployment
 │   ├── [deployment.yaml]  Deployment wordpress
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
-└── Package "mysql"
+└── Package "mysql" (dependent)
     ├── [Kptfile]  Kptfile mysql
     ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    └── [service.yaml]  Service wordpress-mysql
 ```
 
 This _package hierarchy_ contains two packages:
@@ -159,7 +166,11 @@ For example, `spark` is essentially a vanilla directory of KRM:
 kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/spark
 ```
 
+<<<<<<< HEAD
 Details of how to work with packages are set out in [Chapter 3](../03-packages).
+=======
+We will go into details of how to work with packages in [Chapter 3]({{% relref "/book/03-packages" %}}).
+>>>>>>> main
 
 ## Workflows
 
@@ -253,7 +264,12 @@ Just as the Kubernetes system orchestrates the server-side containers, the kpt C
 - The functions are hermetic. For correctness, security and speed, it is desirable to be able to run functions hermetically without any privileges, thereby preventing out-of-band access to the host filesystem and networking.
 
 We will discuss the KRM Functions Specification Standard in detail in
+<<<<<<< HEAD
 [Chapter 5](../05-developing-functions). At a high level, a function execution looks like this:
+=======
+[Chapter 5]({{% relref "/book/05-developing-functions" %}}).
+At a high level, a function execution looks like this:
+>>>>>>> main
 
 ![img](/images/func.svg)
 
@@ -273,6 +289,11 @@ There are two different CLI commands that execute the functions corresponding to
 - `kpt fn render`: This command executes the pipeline of functions declared in the package and its subpackages. This is a declarative way to run the functions.
 - `kpt fn eval`: This command executes a given function on the package. The image to run and the `functionConfig` are specified as a CLI argument. This is an imperative way to run functions. Since the function is provided explicitly by the user, an imperative invocation can be more privileged and low-level than a declarative invocation. For example, it can have access to the host system.
 
+<<<<<<< HEAD
 We will discuss how to run functions in [Chapter 4](../04-using-functions), and how to develop functions in [Chapter 5](../05-developing-functions).
+=======
+We will discuss how to run functions in [Chapter 4]({{% relref "/book/04-using-functions" %}}) and how to develop functions
+in [Chapter 5]({{% relref "/book/05-developing-functions" %}}).
+>>>>>>> main
 
 

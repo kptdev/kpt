@@ -1,12 +1,14 @@
 diff --git a/Kptfile b/Kptfile
-index 867a54b..6ccc3b8 100644
+index 05b0b75..c39c740 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,10 +1,10 @@
+@@ -1,10 +1,12 @@
  apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
 +  name: bfs-parent-and-subpkg-both-fail
++  labels:
++    pkg: root
    annotations:
      kpt.dev/bfs-rendering: "true"
      kpt.dev/save-on-render-failure: "true"
@@ -14,7 +16,7 @@ index 867a54b..6ccc3b8 100644
  info:
    description: BFS - Both parent and subpackage fail
  pipeline:
-@@ -15,3 +15,23 @@ pipeline:
+@@ -15,3 +17,29 @@ pipeline:
    validators:
      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
        configPath: starlark-fn-failure.yaml
@@ -28,13 +30,85 @@ index 867a54b..6ccc3b8 100644
 +        	pipeline.run: already handled error
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+        stderr: '[error] : failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail'
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
++        exitCode: 0
++        results:
++          - message: set 7 labels in total
++            severity: info
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        stderr: 'failed to evaluate function: error: function failure'
 +        exitCode: 1
 +        results:
-+          - message: 'failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail'
++          - message: 'fail: intentional failure for testing'
 +            severity: error
 +        errorResults:
-+          - message: 'failed to run function: may not add resource with an already registered id: fn.kpt.dev_v1alpha1_StarlarkRun|~X|always-fail'
++          - message: 'fail: intentional failure for testing'
 +            severity: error
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5: exit code 1'
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
+diff --git a/configmap.yaml b/configmap.yaml
+index 8594873..a591ceb 100644
+--- a/configmap.yaml
++++ b/configmap.yaml
+@@ -2,5 +2,7 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: root-config
++  labels:
++    pkg: root
+ data:
+   pkg: root
+diff --git a/starlark-fn-failure.yaml b/starlark-fn-failure.yaml
+index 55ceaae..4d0a95c 100644
+--- a/starlark-fn-failure.yaml
++++ b/starlark-fn-failure.yaml
+@@ -2,6 +2,8 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: always-fail
++  labels:
++    pkg: root
+ source: |
+   def fail_fn(items):
+     fail("intentional failure for testing")
+diff --git a/subpkg/Kptfile b/subpkg/Kptfile
+index 4c71101..09b6550 100644
+--- a/subpkg/Kptfile
++++ b/subpkg/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: subpkg
++  labels:
++    pkg: root
+ info:
+   description: Subpackage that also fails
+ pipeline:
+diff --git a/subpkg/service.yaml b/subpkg/service.yaml
+index 276bf9e..d6424da 100644
+--- a/subpkg/service.yaml
++++ b/subpkg/service.yaml
+@@ -2,6 +2,10 @@ apiVersion: v1
+ kind: Service
+ metadata:
+   name: sub-service
++  labels:
++    pkg: root
+ spec:
+   ports:
+   - port: 80
++  selector:
++    pkg: root
+diff --git a/subpkg/starlark-fn-failure.yaml b/subpkg/starlark-fn-failure.yaml
+index 55ceaae..4d0a95c 100644
+--- a/subpkg/starlark-fn-failure.yaml
++++ b/subpkg/starlark-fn-failure.yaml
+@@ -2,6 +2,8 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: always-fail
++  labels:
++    pkg: root
+ source: |
+   def fail_fn(items):
+     fail("intentional failure for testing")

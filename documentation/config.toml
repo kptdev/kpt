@@ -57,7 +57,7 @@ anchor = "smart"
 [languages]
 [languages.en]
 title = "kpt documentation"
-languageName ="English"
+label = "English"
 # Weight used for sorting.
 weight = 1
 contentDir = "content/en"
@@ -88,7 +88,7 @@ description = "kpt documentation"
 
 [params]
 
-kpt_version = "v1.0.0-beta.59"
+kpt_version = "v1.0.0-beta.62.1"
 
 code_of_conduct = "https://github.com/cncf/foundation/blob/main/code-of-conduct.md"
 
@@ -181,4 +181,10 @@ enable = false
 name = "Functions Catalog"
 url = "https://catalog.kpt.dev/"
 weight = 40
+target = "_self"
+
+[[menu.main]]
+name = "Porch"
+url = "https://porch.kpt.dev/docs/"
+weight = 50
 target = "_self"

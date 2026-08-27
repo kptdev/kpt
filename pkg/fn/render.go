@@ -17,15 +17,22 @@ package fn
 import (
 	"context"
 
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type RenderOptions struct {
 	PkgPath string
 	Runtime FunctionRuntime
+
+	// Deprecated: use RunnerOptions.PackageName instead
+	//
+	// DisplayName is a human-readable name used for logs and diagnostics.
+	// It is not intended to be a unique or stable identifier; if empty, no
+	// explicit display name was provided.
+	DisplayName string
 }
 
 type Renderer interface {
-	Render(ctx context.Context, pkg filesys.FileSystem, opts RenderOptions) (*fnresult.ResultList, error)
+	Render(ctx context.Context, pkg filesys.FileSystem, opts RenderOptions) (*fnresultv1.ResultList, error)
 }

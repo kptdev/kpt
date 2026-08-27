@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,15 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/strings"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
+	"github.com/kptdev/kpt/pkg/lib/util/strings"
 	"github.com/kptdev/kpt/pkg/live"
 	"github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/flagutils"
@@ -67,6 +69,12 @@ func NewRunner(
 	c.Flags().StringVar(&r.statusPolicyString, "status-policy", "all",
 		"It determines which status information should be saved in the inventory (if compatible). Available options "+
 			fmt.Sprintf("%q and %q.", "all", "none"))
+	c.Flags().StringVar(&r.deletePropagationPolicyString, "delete-propagation-policy",
+		"Background", "The propagation policy that should be used when deleting resources. "+
+			"The available options are 'Background', 'Foreground', and 'Orphan'.")
+	c.Flags().DurationVar(&r.deleteTimeout, "delete-timeout", time.Duration(0),
+		"Timeout threshold for waiting for all resources to be deleted. "+
+			"If not set, kpt will wait until interrupted.")
 	return r
 }
 
@@ -91,8 +99,12 @@ type Runner struct {
 	printStatusEvents     bool
 	statusPolicyString    string
 
-	inventoryPolicy inventory.Policy
-	statusPolicy    inventory.StatusPolicy
+	deletePropagationPolicyString string
+	deleteTimeout                 time.Duration
+
+	inventoryPolicy  inventory.Policy
+	statusPolicy     inventory.StatusPolicy
+	deletePropPolicy metav1.DeletionPropagation
 
 	// TODO(mortent): This is needed for now since we don't have a good way to
 	// stub out the Destroyer with an interface for testing purposes.
@@ -109,6 +121,11 @@ func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
 	r.statusPolicy, err = flagutils.ConvertStatusPolicy(r.statusPolicyString)
 	if err != nil {
 		return err
+	}
+
+	r.deletePropPolicy, err = flagutils.ConvertPropagationPolicy(r.deletePropagationPolicyString)
+	if err != nil {
+		return fmt.Errorf("delete propagation policy must be one of Background, Foreground, Orphan")
 	}
 
 	if found := printers.ValidatePrinterType(r.output); !found {
@@ -133,7 +150,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(r.ctx, path)
+		path, err = argsutil.ResolveSymlink(r.ctx, path)
 		if err != nil {
 			return err
 		}
@@ -168,7 +185,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrategy) error {
 	// Run the destroyer. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObjWithContext(r.ctx), live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
 	if err != nil {
 		return err
 	}
@@ -188,11 +205,13 @@ func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrat
 	}
 
 	options := apply.DestroyerOptions{
-		InventoryPolicy:  r.inventoryPolicy,
-		DryRunStrategy:   dryRunStrategy,
-		EmitStatusEvents: true,
+		InventoryPolicy:         r.inventoryPolicy,
+		DryRunStrategy:          dryRunStrategy,
+		DeletePropagationPolicy: r.deletePropPolicy,
+		DeleteTimeout:           r.deleteTimeout,
+		EmitStatusEvents:        true,
 	}
-	ch := destroyer.Run(context.Background(), inv, options)
+	ch := destroyer.Run(r.ctx, inv, options)
 
 	// Print the preview strategy unless the output format is json.
 	if dryRunStrategy.ClientOrServerDryRun() && r.output != printers.JSONPrinter {

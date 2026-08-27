@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/kptdev/kpt/internal/fnruntime"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 )
 
 // Runner runs an e2e test
@@ -503,6 +503,7 @@ func (r *Runner) compareResult(exitErr error, stdout string, inStderr string, tm
 func (r *Runner) compareOutput(stdout string, stderr string) error {
 	expectedStderr := r.testCase.Config.StdErr
 	conditionedStderr := removeArmPlatformWarning(stderr)
+	conditionedStderr = removeTmpDirPrefix(conditionedStderr)
 
 	if !strings.Contains(conditionedStderr, expectedStderr) {
 		r.t.Logf("stderr diff is %s", cmp.Diff(expectedStderr, conditionedStderr))
@@ -524,6 +525,12 @@ func (r *Runner) compareOutput(stdout string, stderr string) error {
 		return fmt.Errorf("wanted stdout %q, got %q", expectedStdout, stdout)
 	}
 	return nil
+}
+
+// removeTmpDirPrefix so that error messages can be compared properly
+func removeTmpDirPrefix(stderr string) string {
+	re := regexp.MustCompile(`/?\w+/kpt-pipeline-e2e-\d+/`)
+	return re.ReplaceAllString(stderr, "")
 }
 
 func (r *Runner) Skip() bool {
@@ -657,7 +664,7 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
 	hunkRE := regexp.MustCompile(`^@@ -\d+,\d+ \+\d+,\d+ @@`)
 	var out []string
-	for _, line := range strings.Split(diff, "\n") {
+	for line := range strings.SplitSeq(diff, "\n") {
 		if re.MatchString(line) {
 			continue
 		}

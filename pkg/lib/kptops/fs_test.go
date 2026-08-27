@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022, 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package kptops
 import (
 	"testing"
 
-	"github.com/kptdev/kpt/internal/util/render"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -63,10 +62,10 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: staging
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: backend`
 
@@ -101,12 +100,13 @@ spec:
 	if err := fs.WriteFile("/a/b/c/Kptfile", []byte(kptfile)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
 	}
-	r := render.Renderer{
+	r := Renderer{
 		PkgPath:    "/a/b/c",
 		FileSystem: fs,
-		Runtime:    &runtime{},
+		Runtime:    &testRuntime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	_ = r.RunnerOptions.InitCELEnvironment()
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -141,10 +141,10 @@ metadata:
   name: app-with-db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: staging
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: db`
 
@@ -160,10 +160,10 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: db
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: backend`
 
@@ -215,12 +215,13 @@ spec:
 		t.Errorf("Failed to write file: %v", err)
 	}
 
-	r := render.Renderer{
+	r := Renderer{
 		PkgPath:    "/app",
 		FileSystem: fs,
-		Runtime:    &runtime{},
+		Runtime:    &testRuntime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	_ = r.RunnerOptions.InitCELEnvironment()
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())

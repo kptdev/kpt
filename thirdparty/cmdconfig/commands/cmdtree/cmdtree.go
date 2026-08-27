@@ -1,15 +1,31 @@
 // Copyright 2019 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 The kpt Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmdtree
 
 import (
 	"context"
+	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
+	"strings"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
@@ -45,13 +61,16 @@ type TreeRunner struct {
 }
 
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
+	if err := r.Ctx.Err(); err != nil {
+		return err
+	}
 	var input kio.Reader
 	var root = "."
 	if len(args) == 0 {
 		args = append(args, root)
 	}
 	root = filepath.Clean(args[0])
-	resolvedPath, err := argutil.ResolveSymlink(r.Ctx, args[0])
+	resolvedPath, err := argsutil.ResolveSymlink(r.Ctx, args[0])
 	if err != nil {
 		return err
 	}
@@ -69,10 +88,56 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
 		Outputs: []kio.Writer{TreeWriter{
-			Root:   root,
-			Writer: printer.FromContextOrDie(r.Ctx).OutStream(),
+			Root:        root,
+			Writer:      printer.FromContextOrDie(r.Ctx).OutStream(),
+			NonKRMFiles: discoverNonKRMFiles(r.Ctx, resolvedPath),
 		}},
 	}.Execute())
+}
+
+// discoverNonKRMFiles walks the package tree and returns filenames
+// indexed by their containing directory path relative to root.
+// Symlinks are skipped. Files that are successfully rendered as KRM resources
+// will be deduplicated by the TreeWriter.
+func discoverNonKRMFiles(ctx context.Context, root string) map[string][]string {
+	result := map[string][]string{}
+	pr := printer.FromContextOrDie(ctx)
+
+	if err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Fprintf(pr.ErrStream(), "[WARN] %s: %v\n", path, err)
+			return nil
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if d.Type()&os.ModeSymlink != 0 {
+			return nil
+		}
+		name := d.Name()
+		if d.IsDir() {
+			if path != root && strings.HasPrefix(name, ".") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if strings.HasPrefix(name, ".") {
+			return nil
+		}
+		if name == kptfilev1.KptFileName {
+			return nil
+		}
+		rel, err := filepath.Rel(root, filepath.Dir(path))
+		if err != nil {
+			fmt.Fprintf(pr.ErrStream(), "[WARN] %s: %v\n", path, err)
+			return nil
+		}
+		result[rel] = append(result[rel], name)
+		return nil
+	}); err != nil && ctx.Err() == nil {
+		fmt.Fprintf(pr.ErrStream(), "[WARN] failed to walk %s: %v\n", root, err)
+	}
+	return result
 }
 
 func (r *TreeRunner) getMatchFilesGlob() []string {

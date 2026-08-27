@@ -20,17 +20,19 @@ import (
 	"os"
 	"time"
 
-	alphaprinterstable "github.com/kptdev/kpt/internal/alpha/printers/table"
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/strings"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/strings"
 	"github.com/kptdev/kpt/pkg/live"
+	alphaprinterstable "github.com/kptdev/kpt/pkg/printer/table"
 	"github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/flagutils"
 	"sigs.k8s.io/cli-utils/pkg/apply"
@@ -53,6 +55,13 @@ func NewRunner(
 		factory:     factory,
 		applyRunner: runApply,
 		alpha:       alpha,
+	}
+	r.namespaceChecker = func(namespace string) error {
+		clientset, err := factory.KubernetesClientSet()
+		if err != nil {
+			return err
+		}
+		return checkNamespaceExists(clientset, namespace)
 	}
 	c := &cobra.Command{
 		Use:     "apply [PKG_PATH | -]",
@@ -124,6 +133,7 @@ type Runner struct {
 
 	applyRunner func(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructured,
 		dryRunStrategy common.DryRunStrategy) error
+	namespaceChecker func(namespace string) error
 }
 
 func (r *Runner) preRunE(cmd *cobra.Command, _ []string) error {
@@ -174,7 +184,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(r.ctx, path)
+		path, err = argsutil.ResolveSymlink(r.ctx, path)
 		if err != nil {
 			return err
 		}
@@ -189,6 +199,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	objs, err = live.Flatten(objs)
 	if err != nil {
 		return err
+	}
+
+	if !live.NamespaceInObjects(objs, inv.Namespace) {
+		if err := r.namespaceChecker(inv.Namespace); err != nil {
+			return err
+		}
 	}
 
 	invInfo, err := live.ToInventoryInfo(inv)
@@ -228,7 +244,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return err
 			}
-		} else if !live.ResourceGroupCRDMatched(f) {
+		} else if !live.ResourceGroupCRDMatchedWithContext(r.ctx, f) {
 			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return &cmdutil.ResourceGroupCRDNotLatestError{
 					Err: err,
@@ -239,7 +255,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObjWithContext(r.ctx), live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
 	if err != nil {
 		return err
 	}
@@ -288,4 +304,15 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 		printer = printers.GetPrinter(r.output, r.ioStreams)
 	}
 	return printer.Print(ch, dryRunStrategy, r.printStatusEvents)
+}
+
+func checkNamespaceExists(clientset kubernetes.Interface, namespace string) error {
+	if namespace == "" {
+		namespace = "default"
+	}
+	_, err := clientset.CoreV1().Namespaces().Get(context.Background(), namespace, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return fmt.Errorf("inventory namespace %q does not exist", namespace)
+	}
+	return err
 }

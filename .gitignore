@@ -18,6 +18,8 @@ go.work.sum
 .idea/
 *.iml
 coverage.out
+coverage_unit.html
+func_coverage.out
 kpt/kpt
 *.exe
 *.gif
@@ -50,3 +52,4 @@ public/
 
 # Build directory
 .build/
+dist/

@@ -58,6 +58,11 @@ Args:
 
 Flags:
 
+  --allow-alpha-wasm:
+    Allow alpha wasm functions to be run. If true, you can specify a wasm image
+    with --image flag or a path to a wasm file (must have the .wasm file
+    extension) with --exec flag. Defaults to false.
+  
   --as-current-user:
     Use the ` + "`" + `uid` + "`" + ` and ` + "`" + `gid` + "`" + ` of the kpt process for container function execution.
     By default, container function is executed as ` + "`" + `nobody` + "`" + ` user. You may want to use
@@ -78,12 +83,23 @@ Flags:
   
   --fn-config:
     Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
+    The fn-config resource is used to configure the function but is not
+    treated as an input resource. The function will not modify the fn-config
+    file, even if it resides inside the package directory.
   
   --image, i:
     Container image of the function to execute e.g. ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` + "`" + `.
-    For convenience, if full image path is not specified, ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/` + "`" + ` is added as default prefix.
+    For convenience, if full image path is not specified, a default prefix is added.
+    The default prefix is ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/` + "`" + `, but can be customized via the
+    ` + "`" + `--image-prefix` + "`" + ` flag or ` + "`" + `KPT_IMAGE_PREFIX` + "`" + ` environment variable.
     e.g. instead of passing ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` + "`" + ` you can pass ` + "`" + `set-namespace:latest` + "`" + `.
     ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec` + "`" + ` flag with this flag.
+  
+  --image-prefix:
+    The container registry prefix to prepend to short image names when resolving functions.
+    This allows customization of the default registry instead of using the hardcoded default
+    (` + "`" + `ghcr.io/kptdev/krm-functions-catalog` + "`" + `). Can also be set via the KPT_IMAGE_PREFIX environment
+    variable. The command-line flag takes precedence over the environment variable.
   
   --image-pull-policy:
     If the image should be pulled before rendering the package(s). It can be set
@@ -102,7 +118,7 @@ Flags:
   --match-api-version:
     Select resources matching the given apiVersion.
   
-  --match-kind
+  --match-kind:
     Select resources matching the given kind.
   
   --match-name:
@@ -110,6 +126,38 @@ Flags:
     
   --match-namespace:
     Select resources matching the given namespace.
+  
+  --match-annotations:
+    Select resources matching the given annotations. The value should be in
+    ` + "`" + `key=value` + "`" + ` format. Can be specified multiple times to match multiple
+    annotations.
+  
+  --match-labels:
+    Select resources matching the given labels. The value should be in
+    ` + "`" + `key=value` + "`" + ` format. Can be specified multiple times to match multiple
+    labels.
+  
+  --exclude-api-version:
+    Exclude resources matching the given apiVersion.
+  
+  --exclude-kind:
+    Exclude resources matching the given kind.
+  
+  --exclude-name:
+    Exclude resources matching the given name.
+  
+  --exclude-namespace:
+    Exclude resources matching the given namespace.
+  
+  --exclude-annotations:
+    Exclude resources matching the given annotations. The value should be in
+    ` + "`" + `key=value` + "`" + ` format. Can be specified multiple times to match multiple
+    annotations.
+  
+  --exclude-labels:
+    Exclude resources matching the given labels. The value should be in
+    ` + "`" + `key=value` + "`" + ` format. Can be specified multiple times to match multiple
+    labels.
   
   --mount:
     List of storage options to enable reading from the local filesytem. By default,
@@ -155,6 +203,10 @@ Flags:
 
 Environment Variables:
 
+  KPT_IMAGE_PREFIX:
+    The default container registry prefix to use when resolving short image names.
+    This can be overridden by the --image-prefix flag.
+  
   KRM_FN_RUNTIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
@@ -244,6 +296,11 @@ Args:
 
 Flags:
 
+  --allow-alpha-wasm:
+    Allow wasm to be used during pipeline execution. When enabled, function
+    images that are wasm modules will be executed using the wasm runtime
+    instead of a container runtime. Defaults to false.
+  
   --allow-exec:
     Allow executable binaries to run as function. Note that executable binaries
     can perform privileged operations on your system, so ensure that binaries
@@ -251,6 +308,9 @@ Flags:
   
   --allow-network:
     Allow functions to access network during pipeline execution. Default: ` + "`" + `false` + "`" + `. Note that this is applicable to container based functions only.
+  
+  --image-prefix:
+    The container registry prefix to prepend to short image names when resolving functions. This allows customization of the default registry instead of using the hardcoded default (` + "`" + `ghcr.io/kptdev/krm-functions-catalog` + "`" + `). Can also be set via the KPT_IMAGE_PREFIX environment variable. The command-line flag takes precedence over the environment variable.
   
   --image-pull-policy:
     If the image should be pulled before rendering the package(s). It can be set
@@ -284,6 +344,9 @@ Kptfile Annotations:
 
 Environment Variables:
 
+  KPT_IMAGE_PREFIX:
+    The default container registry prefix to use when resolving short image names. This can be overridden by the --image-prefix flag.
+  
   KRM_FN_RUNTIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
@@ -336,7 +399,7 @@ var SinkLong = `
 var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
-  $ kpt fn source DIR |
+  kpt fn source DIR |
     kpt fn eval - --image ghcr.io/example.com/my-fn |
     kpt fn sink NEW_DIR
 `

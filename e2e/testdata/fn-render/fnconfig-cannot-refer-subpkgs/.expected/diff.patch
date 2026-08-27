@@ -1,10 +1,10 @@
 diff --git a/Kptfile b/Kptfile
-index 0bfdbb0..10e2d27 100644
+index f244e01..dad7306 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -6,3 +6,13 @@ pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
        configPath: db/labelconfig.yaml
 +status:
 +  conditions:
@@ -15,4 +15,4 @@ index 0bfdbb0..10e2d27 100644
 +        pkg.render: pkg .: Kptfile is invalid:
 +        Field: `pipeline.mutators[0].configPath`
 +        Value: "db/labelconfig.yaml"
-+        Reason: functionConfig must exist in the current package
++        Reason: functionConfig resource for mutator "set-labels" is missing from path "db/labelconfig.yaml", this also occurs if "db/labelconfig.yaml" is part of a subpackage

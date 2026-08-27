@@ -17,4 +17,4 @@ stdErr: |
   Kptfile is invalid:
   Field: `pipeline.mutators[1].configPath`
   Value: "labelconfig1.yaml"
-  Reason: functionConfig must exist in the current package
+  Reason: failed to open functionConfig from path "labelconfig1.yaml": open missing-fnconfig/labelconfig1.yaml: no such file or directory

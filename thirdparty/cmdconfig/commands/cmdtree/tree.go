@@ -1,9 +1,22 @@
 // Copyright 2019 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 The kpt Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmdtree
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -11,7 +24,7 @@ import (
 	"sort"
 	"strings"
 
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/xlab/treeprint"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -25,6 +38,13 @@ const (
 	TreeStructurePackage TreeStructure = "directory"
 	// %q holds the package name
 	PkgNameFormat = "Package %q"
+	// PkgNameWithDepFormat formats a package name with its dependency type,
+	PkgNameWithDepFormat = PkgNameFormat + " (%s)"
+
+	// PkgTypeIndependent indicates a package with its own upstream source.
+	PkgTypeIndependent = "independent"
+	// PkgTypeDependent indicates a package without upstream (inherits from parent).
+	PkgTypeDependent = "dependent"
 )
 
 var GraphStructures = []string{string(TreeStructurePackage)}
@@ -33,10 +53,11 @@ var GraphStructures = []string{string(TreeStructurePackage)}
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
 // used for printing rather than updating or editing.
 type TreeWriter struct {
-	Writer    io.Writer
-	Root      string
-	Fields    []TreeWriterField
-	Structure TreeStructure
+	Writer      io.Writer
+	Root        string
+	Fields      []TreeWriterField
+	Structure   TreeStructure
+	NonKRMFiles map[string][]string // root-relative dir → file basenames in that dir, or relative paths after roll-up from subdirs
 }
 
 // TreeWriterField configures a Resource field to be included in the tree
@@ -52,10 +73,45 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	// create the new tree
 	tree := treeprint.New()
 
+	// p.sort sorts nodes within each package (side-effect) and returns sorted keys.
+	allKeys := p.sort(indexByPackage)
+
+	// Merge NonKRMFiles keys that already exist in the KRM index (these dirs
+	// already have branches). For dirs not in the index, roll files up to the
+	// nearest ancestor dir that IS in the index, prefixing with the relative path.
+	nonKRM := map[string][]string{}
+	if len(p.NonKRMFiles) > 0 {
+		krmKeys := map[string]bool{}
+		for _, k := range allKeys {
+			krmKeys[k] = true
+		}
+		for dir, files := range p.NonKRMFiles {
+			if krmKeys[dir] {
+				nonKRM[dir] = append(nonKRM[dir], files...)
+				continue
+			}
+			// Find nearest ancestor that is a known key.
+			ancestor := dir
+			for !krmKeys[ancestor] && ancestor != "." {
+				ancestor = filepath.Dir(ancestor)
+			}
+			if !krmKeys[ancestor] {
+				ancestor = "."
+			}
+			// Prefix filenames with the relative path from ancestor to dir.
+			rel, err := filepath.Rel(ancestor, dir)
+			if err != nil {
+				continue
+			}
+			for _, f := range files {
+				nonKRM[ancestor] = append(nonKRM[ancestor], filepath.Join(rel, f))
+			}
+		}
+	}
+
 	// add each package to the tree
 	treeIndex := map[string]treeprint.Tree{}
-	keys := p.sort(indexByPackage)
-	for _, pkg := range keys {
+	for _, pkg := range allKeys {
 		// create a branch for this package -- search for the parent package and create
 		// the branch under it -- requires that the keys are sorted
 		branch := tree
@@ -84,6 +140,35 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 				return err
 			}
 		}
+
+		// print non-KRM files (skip files already rendered as KRM resources)
+		if len(nonKRM[pkg]) > 0 {
+			rendered := map[string]bool{}
+			for _, node := range indexByPackage[pkg] {
+				_ = kioutil.CopyLegacyAnnotations(node)
+				meta, _ := node.GetMeta()
+				if pathAnno := meta.Annotations[kioutil.PathAnnotation]; pathAnno != "" {
+					// pathAnno is relative to root; strip pkg prefix to get path relative to package
+					rel := pathAnno
+					if pkg != "." {
+						if r, err := filepath.Rel(pkg, pathAnno); err == nil {
+							rel = r
+						}
+					}
+					rendered[rel] = true
+				}
+			}
+			names := make([]string, 0, len(nonKRM[pkg]))
+			for _, name := range nonKRM[pkg] {
+				if !rendered[name] {
+					names = append(names, name)
+				}
+			}
+			sort.Strings(names)
+			for _, name := range names {
+				branch.AddNode(name)
+			}
+		}
 	}
 
 	if p.Root == "." {
@@ -94,11 +179,19 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		}
 		p.Root = d
 	}
-	_, err := os.Stat(filepath.Join(p.Root, kptfilev1.KptFileName))
+	kptfilePath := filepath.Join(p.Root, kptfilev1.KptFileName)
+	_, err := os.Stat(kptfilePath)
 	if !os.IsNotExist(err) {
-		// if Kptfile exists in the root directory, it is a kpt package
-		// print only package name and not entire path
-		tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
+		// if Kptfile exists in the root directory, it is a kpt package.
+		// Only annotate with type if it is independent (has upstream).
+		// A root package without upstream is not "dependent" — it simply
+		// has no upstream source (e.g. created with kpt pkg init).
+		pkgType := packageType(p.Root)
+		if pkgType == PkgTypeIndependent {
+			tree.SetValue(fmt.Sprintf(PkgNameWithDepFormat, filepath.Base(p.Root), pkgType))
+		} else {
+			tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
+		}
 	} else {
 		// else it is just a directory, so print only directory name
 		tree.SetValue(filepath.Base(p.Root))
@@ -110,16 +203,42 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 }
 
 // branchName takes the root directory and relative path to the directory
-// and returns the branch name
+// and returns the branch name. For packages (directories with a Kptfile),
+// it also indicates whether the package is independent or dependent.
+// An independent package has an upstream section in its Kptfile; a dependent
+// package does not.
 func branchName(root, dirRelPath string) string {
 	name := filepath.Base(dirRelPath)
-	_, err := os.Stat(filepath.Join(root, dirRelPath, kptfilev1.KptFileName))
-	if !os.IsNotExist(err) {
-		// add Package prefix indicating that it is a separate package as it has
-		// Kptfile
-		return fmt.Sprintf(PkgNameFormat, name)
+	pkgDir := filepath.Join(root, dirRelPath)
+	_, err := os.Stat(filepath.Join(pkgDir, kptfilev1.KptFileName))
+	if os.IsNotExist(err) {
+		return name
 	}
-	return name
+	// It is a package (has Kptfile). Determine if independent or dependent.
+	pkgType := packageType(pkgDir)
+	if pkgType != "" {
+		return fmt.Sprintf(PkgNameWithDepFormat, name, pkgType)
+	}
+	return fmt.Sprintf(PkgNameFormat, name)
+}
+
+// packageType reads the Kptfile in the given directory and returns "independent"
+// if it has an upstream section, "dependent" otherwise. If the file cannot
+// be read or parsed, it returns an empty string.
+func packageType(dir string) string {
+	data, err := os.ReadFile(filepath.Join(dir, kptfilev1.KptFileName))
+	if err != nil {
+		return ""
+	}
+	var kf kptfilev1.KptFile
+	d := yaml.NewDecoder(bytes.NewReader(data))
+	if err := d.Decode(&kf); err != nil {
+		return ""
+	}
+	if kf.Upstream != nil {
+		return PkgTypeIndependent
+	}
+	return PkgTypeDependent
 }
 
 // Write writes the ascii tree to p.Writer

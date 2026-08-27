@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 701e0a1..63952e8 100644
+index 701e0a1..b7a3e2d 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,3 +4,12 @@ metadata:
+@@ -4,3 +4,17 @@ metadata:
    name: root-pkg
  info:
    description: sample description
@@ -13,22 +13,15 @@ index 701e0a1..63952e8 100644
 +      reason: RenderSuccess
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        exitCode: 0
-diff --git a/pkg-a/Kptfile b/pkg-a/Kptfile
-index 088bc03..c42f368 100644
---- a/pkg-a/Kptfile
-+++ b/pkg-a/Kptfile
-@@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: pkg-a
-+  namespace: dev
- info:
-   description: sample description
- pipeline:
++        results:
++          - message: namespace [default] updated to "dev", 1 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
 diff --git a/pkg-a/pkg-a/resources.yaml b/pkg-a/pkg-a/resources.yaml
-index f2eec52..c4e4abb 100644
+index f2eec52..1934a8f 100644
 --- a/pkg-a/pkg-a/resources.yaml
 +++ b/pkg-a/pkg-a/resources.yaml
 @@ -15,6 +15,7 @@ apiVersion: apps/v1
@@ -39,10 +32,3 @@ index f2eec52..c4e4abb 100644
  spec:
    replicas: 3
  ---
-@@ -22,5 +23,6 @@ apiVersion: custom.io/v1
- kind: Custom
- metadata:
-   name: custom
-+  namespace: dev
- spec:
-   image: nginx:1.2.3

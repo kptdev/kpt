@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ###########################################################################
-# Copyright 2020 The kpt Authors
+# Copyright 2020, 2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,6 +62,8 @@ OPTIND=1
 
 # Kind/Kubernetes versions.
 
+KIND_1_36_VERSION=1.36.1@sha256:3489c7674813ba5d8b1a9977baea8a6e553784dab7b84759d1014dbd78f7ebd5
+KIND_1_35_VERSION=1.35.5@sha256:ce977ae6d65918d0b58a5f8b5e940429c2ce42fa3a5619ec2bbc60b949c0ac95
 KIND_1_34_VERSION=1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
 KIND_1_33_VERSION=1.33.4@sha256:25a6018e48dfcaee478f4a59af81157a437f15e6e140bf103f85a2e7cd0cbbf2
 KIND_1_32_VERSION=1.32.8@sha256:abd489f042d2b644e2d033f5c2d900bc707798d075e8186cb65e3f1367a9d5a1
@@ -79,9 +81,9 @@ KIND_1_21_VERSION=1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f979
 
 
 
-NOTE: You must use the @sha256 digest to guarantee an image built for this release, until such a time as we switch to a different tagging scheme. Even then we will highly encourage digest pinning for security and reproducibility reasons.
+# NOTE: You must use the @sha256 digest to guarantee an image built for this release, until such a time as we switch to a different tagging scheme. Even then we will highly encourage digest pinning for security and reproducibility reasons.
 
-DEFAULT_K8S_VERSION=${KIND_1_34_VERSION}
+DEFAULT_K8S_VERSION=${KIND_1_36_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
@@ -126,6 +128,10 @@ while getopts $options opt; do
 		1.33) K8S_VERSION=$KIND_1_33_VERSION
 		      ;;
 		1.34) K8S_VERSION=$KIND_1_34_VERSION
+		      ;;
+		1.35) K8S_VERSION=$KIND_1_35_VERSION
+		      ;;
+		1.36) K8S_VERSION=$KIND_1_36_VERSION
 		      ;;
         *) K8S_VERSION=$short_version
 		      ;;

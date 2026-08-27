@@ -8,7 +8,7 @@ description: |
     parameters has some
     [pitfalls](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/declarative-application-management.md#parameterization-pitfalls).
     We recommend alternatives which do not hide the contents of packages behind facades. Some of these alternatives are only possible
-    because kpt has made an investment into bulk editing with [KRM functions](../04-using-functions/) and upstream merging.
+    because kpt has made an investment into bulk editing with [KRM functions]({{% relref "/book/04-using-functions" %}}) and upstream merging.
 toc: true
 menu:
   main:
@@ -18,16 +18,16 @@ menu:
 
 ## Prerequisites
 
-Before reading this chapter you should familiarize yourself with [chapter 4](../04-using-functions/)
-that talks about using functions as well as the [updating a package](../03-packages/#updating-a-package) section of 
-[chapter 3](../03-packages/).
+Before reading this chapter you should familiarize yourself with [chapter 4]({{% relref "/book/04-using-functions" %}})
+that talks about using functions as well as the [updating a package]({{% relref "/book/03-packages#updating-a-package" %}}) section of 
+[chapter 3]({{% relref "/book/03-packages" %}}).
 
 ## Single Value Replacement
 
 ### Scenario
 
 I have a single value replacement in my package. I don’t want to force package consumers 
-to look through all the yaml files to find the occurrances the value I want them to set. It 
+to look through all the yaml files to find the occurrences the value I want them to set. It 
 seems easier to just create a parameter for this value and have the user use the `Kptfile`
 for setting the value.
 
@@ -85,20 +85,20 @@ pipeline:
 ### Solutions:
 
 1. kpt allows the user to edit a particular value directly in the configuration data and will handle upstream merge.
-   When [editing the yaml](../03-packages/#editing-a-package) directly, users are not confined to the parameters
-   that the package author has provided. [kpt pkg update](../03-packages/#updating-a-package) merges the local edits
+   When [editing the yaml]({{% relref "/book/03-packages#editing-a-package" %}}) directly, users are not confined to the parameters
+   that the package author has provided. [kpt pkg update]({{% relref "/book/03-packages#updating-a-package" %}}) merges the local edits
    made by consumer with the changes in the upstream package made by publisher. In the example above, `storageClass` can be set
    directly by the user.
 1. Attributes like resource names which are often updated by consumers to add prefixes or suffixes
    (e.g. *-dev, *-stage, *-prod, na1-*, eu1-*) are best handled by the
-   [ensure-name-substring](https://catalog.kpt.dev/function-catalog/ensure-name-substring/v0.2/) function that will handle dependency
+   [ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.2/) function that will handle dependency
    updates as well as capture all the resources in the package.
 1. Instead of setting a particular value on a resource, a bulk operation can be applied to all the resources that fit a
    particular interface.  This can be done by a custom function or by the
-   [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/),
-   [search-and-replace](https://catalog.kpt.dev/function-catalog/search-replace/v0.2/),
-   [set-labels](https://catalog.kpt.dev/function-catalog/set-labels/v0.2/) and
-   [set-annotations](https://catalog.kpt.dev/function-catalog/set-annotations/v0.1/) functions.
+   [set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/),
+   [search-and-replace](https://catalog.kpt.dev/search-replace/v0.2/),
+   [set-labels](https://catalog.kpt.dev/set-labels/v0.2/) and
+   [set-annotations](https://catalog.kpt.dev/set-annotations/v0.1/) functions.
 
 The new bucket configuration:
 
@@ -139,17 +139,17 @@ pipeline:
 ```
 
 The mark up in the resource configuration YAML showing where the namespace value should
-go is no longer needed.  The [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/) function is smart enough to 
+go is no longer needed.  The [set-namespace](https://catalog.kpt.dev/set-namespace/v0.4/) function is smart enough to 
 find all the appropriate resources that need the namespace.
 
 We have put in the starter name `bucket` and have an
-[ensure-name-substring](https://catalog.kpt.dev/function-catalog/ensure-name-substring/v0.2/) 
+[ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.2/) 
 that shows the package consumer that the project ID prefix is what we suggest.
 However if they have a different naming convention they can alter the name 
 prefix or suffix on all the resources in the package.
 
 Since we are trying to set the annotation to the project ID we can run the 
-[set-annotations](https://catalog.kpt.dev/function-catalog/set-annotations/v0.1/)
+[set-annotations](https://catalog.kpt.dev/set-annotations/v0.1/)
 function once and the annotation is set on all the resources in the package. 
 If we add additional resources or whole sub packages, we will get the consistent annotations across all resources 
 without having to find all the places where annotations should go.
@@ -216,7 +216,7 @@ the package author's rules are not clear and not easily validated.
 ### Solution:
 
 1. General ways to describe policy already exist.  kpt has a
-[gatekeeper](https://catalog.kpt.dev/function-catalog/gatekeeper/v0.2/)
+[gatekeeper](https://catalog.kpt.dev/gatekeeper/v0.2/)
 function that allows the author to describe intended limitations for a class 
 of resources or the entire package. This gives the consumer the freedom to customize 
 and get an error or a warning when the policy is violated. 
@@ -225,7 +225,7 @@ In the sample provided by the function, we see how to provide a policy that will
 clearly describe the intent using the [Rego policy language](https://www.openpolicyagent.org/docs/policy-language)
 of the [Open Policy Agent (OPA)](https://www.openpolicyagent.org/):
 
-The Kptfile uses the [gatekeeper](https://catalog.kpt.dev/function-catalog/gatekeeper/v0.2/) function to
+The Kptfile uses the [gatekeeper](https://catalog.kpt.dev/gatekeeper/v0.2/) function to
 ensure that resources comply with this policy every time `kpt fn render` is used.
 
 
@@ -267,7 +267,7 @@ spec:
           - Deployment
 ```
 
-2. `deployment-root-securitycontext.yaml.yaml`
+2. `deployment-root-securitycontext.yaml`
 
 ```yaml
 apiVersion: apps/v1
@@ -305,19 +305,19 @@ pipeline:
 Now, run `kpt fn render` on the kpt package:
 
 ```bash
-kpt fn render
-Package "Gatekeeper": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest"
-[FAIL] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" in 200ms
-  Results:
+$ kpt fn render
+Package "Gatekeeper":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" on package "Gatekeeper"
+[FAIL] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" in 314ms
+  [Results]:
     [error] apps/v1/Deployment/nginx-deploy: Containers must not run as root violatedConstraint: disallowroot
   Stderr:
-    "[error] apps/v1/Deployment/nginx-deploy : Containers must not run as root"
-    "violatedConstraint: disallowroot"
+    [error] apps/v1/Deployment/nginx-deploy: Containers must not run as root
+    violatedConstraint: disallowroot
   Exit code: 1
 ```
 
-The mutation pipeline fais because the Rego policy has been violated.
+The mutation pipeline fails because the Rego policy has been violated.
 
 ## Generation
 

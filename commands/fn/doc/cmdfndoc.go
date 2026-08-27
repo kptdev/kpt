@@ -23,7 +23,7 @@ import (
 	"os/exec"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/fnruntime"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -32,10 +32,11 @@ import (
 
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{
-		Ctx: ctx,
+		Ctx:           ctx,
+		RunnerOptions: runneroptions.RunnerOptions{},
 	}
 	c := &cobra.Command{
-		Use:     "doc --image=IMAGE",
+		Use:     "doc --image=IMAGE [--image-prefix=PREFIX]",
 		Args:    cobra.MaximumNArgs(0),
 		Short:   fndocs.DocShort,
 		Long:    fndocs.DocShort + "\n" + fndocs.DocLong,
@@ -44,6 +45,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
+	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -53,23 +56,26 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 }
 
 type Runner struct {
-	Image   string
-	Command *cobra.Command
-	Ctx     context.Context
+	Image         string
+	RunnerOptions runneroptions.RunnerOptions
+	Command       *cobra.Command
+	Ctx           context.Context
 }
 
 func (r *Runner) runE(_ *cobra.Command, _ []string) error {
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	resolveFunc := runneroptions.ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
-	image := resolveFunc(r.Image)
+
+	image := r.RunnerOptions.ResolveToImage(r.Image)
 	var out, errout bytes.Buffer
-	dockerRunArgs := []string{
+	runArgs := []string{
 		"run",
-		"--rm",    // delete the container afterward
-		"-i",      // interactive mode to accept stdin
-		"--stdin", // keep stdin open
+		"--rm", // delete the container afterward
+		"-i",   // interactive mode to accept stdin
 		image,
 		"--help",
 	}
@@ -84,7 +90,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cmd := exec.Command(runtime.GetBin(), dockerRunArgs...)
+	cmd := exec.Command(runtime.GetBin(), runArgs...)
 	cmd.Stdout = &out
 	cmd.Stderr = &errout
 
@@ -99,7 +105,7 @@ items: []
 	err = cmd.Run()
 	pr := printer.FromContextOrDie(r.Ctx)
 	if err != nil {
-		pr.Printf(errout.String())
+		pr.Printf("%s", &errout)
 		return fmt.Errorf("please ensure the container has an entrypoint and it supports --help flag: %w", err)
 	}
 	fmt.Fprintln(pr.OutStream(), out.String())

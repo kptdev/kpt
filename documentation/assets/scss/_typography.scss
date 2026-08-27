@@ -9,7 +9,7 @@ a {
 	}
 }
 
-h1 {
+h1:not(.h1) {
 	&.thin {
 		font-weight: 400;
 	}

@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -33,6 +34,50 @@ import (
 )
 
 var pgr []string
+
+// usageTemplate is a custom Cobra usage template that suppresses the
+// auto-generated local Flags section for commands whose Long description
+// already documents all flags (detected by the presence of "Flags:" in the
+// Long text). Commands without a "Flags:" section in their Long description
+// (e.g. group commands, commands with no flags) continue to show the default
+// Cobra flag table.
+//
+// This template is based on cobra.Command's defaultUsageTemplate from:
+// https://github.com/spf13/cobra/blob/main/command.go
+//
+// The only difference from the Cobra default is that the local Flags section
+// is conditionally rendered: it is suppressed when the Long description
+// already contains a "Flags:" section, avoiding duplicate flag documentation.
+const usageTemplate = `Usage:{{if .Runnable}}
+  {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
+
+Available Commands:{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
+
+{{.Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .AllChildCommandsHaveGroup}}
+
+Additional Commands:{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if not (contains .Long "Flags:")}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
 
 func GetMain(ctx context.Context) *cobra.Command {
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
@@ -57,6 +102,11 @@ func GetMain(ctx context.Context) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+
+	// Register a "contains" template function for use in the custom usage
+	// template below.
+	cobra.AddTemplateFunc("contains", strings.Contains)
+	cmd.SetUsageTemplate(usageTemplate)
 
 	cmd.PersistentFlags().BoolVar(&printer.TruncateOutput, "truncate-output", true,
 		"Enable the truncation for output")
@@ -104,6 +154,7 @@ func GetMain(ctx context.Context) *cobra.Command {
 
 	replace(cmd)
 
+	versionCmd.Flags().Bool("short", false, "Print only the concise version identifier")
 	cmd.AddCommand(versionCmd)
 	hideFlags(cmd)
 	return cmd
@@ -158,8 +209,35 @@ var version = "unknown"
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
-	Run: func(_ *cobra.Command, _ []string) {
-		fmt.Printf("%s\n", version)
+	Run: func(cmd *cobra.Command, _ []string) {
+		var hash, dirty string
+		if info, ok := debug.ReadBuildInfo(); ok {
+			for _, setting := range info.Settings {
+				switch setting.Key {
+				case "vcs.revision":
+					hash = setting.Value
+				case "vcs.modified":
+					if strings.ToLower(setting.Value) == "true" {
+						dirty = " (dirty)"
+					}
+				}
+			}
+		}
+
+		short, _ := cmd.Flags().GetBool("short")
+		if short {
+			if version == "unknown" && len(hash) >= 7 {
+				fmt.Printf("%s\n", hash[:7])
+			} else {
+				fmt.Printf("%s\n", version)
+			}
+			return
+		}
+		fmt.Printf("Version: %s\n", version)
+		if hash == "" {
+			hash = "unknown"
+		}
+		fmt.Printf("Git commit: %s%s\n", hash, dirty)
 	},
 }
 
@@ -183,8 +261,6 @@ func hideFlags(cmd *cobra.Command) {
 		"vmodule",
 
 		// Flags related to apiserver
-		"as",
-		"as-group",
 		"cache-dir",
 		"certificate-authority",
 		"client-certificate",

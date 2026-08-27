@@ -47,13 +47,29 @@ type ClusterPlanner struct {
 	resourceFetcher ResourceFetcher
 }
 
+// NewClusterPlanner builds a ClusterPlanner using context.Background()
+// for the underlying inventory-client cluster calls.
+//
+// This signature is preserved for backward compatibility with external
+// callers; it delegates to NewClusterPlannerWithContext. Prefer the
+// context-aware constructor when you have a caller context so Ctrl-C
+// and command-level timeouts can cancel inventory I/O.
 func NewClusterPlanner(f util.Factory) (*ClusterPlanner, error) {
+	return NewClusterPlannerWithContext(context.Background(), f)
+}
+
+// NewClusterPlannerWithContext is the context-aware variant of
+// NewClusterPlanner. ctx is plumbed into the inventory wrapper so
+// Apply / ApplyWithPrune on the underlying ResourceGroup honor caller
+// cancellation (Ctrl-C, deadlines). A nil ctx is normalized to
+// context.Background() by WrapInventoryObjWithContext.
+func NewClusterPlannerWithContext(ctx context.Context, f util.Factory) (*ClusterPlanner, error) {
 	fetcher, err := NewResourceFetcher(f)
 	if err != nil {
 		return nil, err
 	}
 
-	invClient, err := inventory.NewClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyNone, live.ResourceGroupGVK)
+	invClient, err := inventory.NewClient(f, live.WrapInventoryObjWithContext(ctx), live.InvToUnstructuredFunc, inventory.StatusPolicyNone, live.ResourceGroupGVK)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +260,7 @@ func (r *ClusterPlanner) fetchResources(ctx context.Context, e event.Event) ([]A
 	var actions []Action
 	for _, ag := range e.InitEvent.ActionGroups {
 		// We only care about the Apply, Prune and Delete actions.
-		if !(ag.Action == event.ApplyAction || ag.Action == event.PruneAction || ag.Action == event.DeleteAction) {
+		if ag.Action != event.ApplyAction && ag.Action != event.PruneAction && ag.Action != event.DeleteAction {
 			continue
 		}
 		for _, id := range ag.Identifiers {

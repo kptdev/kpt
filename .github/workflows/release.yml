@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,17 +28,20 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          path: go/src/github.com/kptdev/kpt
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          cache: true
+          go-version-file: go.mod
+      - name: Check for replace directives in go.mod
+        uses: ./.github/actions/check-go-mod-replace
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
       - name: Build, Test, Lint
-        working-directory: go/src/github.com/kptdev/kpt
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
@@ -60,19 +63,17 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          workdir: go/src/github.com/kptdev/kpt
-          args: release --skip=validate -f release/tag/goreleaser.yaml
+          args: release --skip=validate --verbose -f release/tag/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate SLSA subjects for provenance
         id: hash
-        working-directory: go/src/github.com/kptdev/kpt
         run: |
           set -euo pipefail
 
           checksum_file=$(cat dist/artifacts.json | jq -r '.[] | select (.type=="Checksum") | .path')
 
-          echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+          echo "hashes=$(cat $checksum_file | base64 -w0)" >> "$GITHUB_OUTPUT"
   
   provenance:
     needs: [build]

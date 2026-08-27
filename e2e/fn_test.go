@@ -1,5 +1,4 @@
 //go:build docker
-// +build docker
 
 // Copyright 2021,2026 The kpt Authors
 //
@@ -23,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/fnruntime"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/test/runner"
 )
 

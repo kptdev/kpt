@@ -1,31 +1,30 @@
 diff --git a/Kptfile b/Kptfile
-index ed88ddf..a1d57f0 100644
+index b705bdb..15a1b9e 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,16 +1,42 @@
+@@ -1,16 +1,67 @@
  apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
 +  name: save-on-render-failure
-+  namespace: staging
    annotations:
 +    app: myapp
      kpt.dev/save-on-render-failure: "true"
 -  name: save-on-render-failure
  pipeline:
    mutators:
--  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 -    configMap:
 -      namespace: staging
--  - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+-  - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
 -    configMap:
 -      app: myapp
 -  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 -    configPath: starlark-fn-failure.yaml
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +      configMap:
 +        namespace: staging
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
 +      configMap:
 +        app: myapp
 +    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
@@ -40,10 +39,36 @@ index ed88ddf..a1d57f0 100644
 +        	pipeline.run: already handled error
 +  renderStatus:
 +    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
++        results:
++          - message: namespace [default] updated to "staging", 1 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
 +        exitCode: 0
++        results:
++          - message: 'set annotations: {"app":"myapp"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: Kptfile
++          - message: 'set annotations: {"app":"myapp"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: resources.yaml
++          - message: 'set annotations: {"app":"myapp"}'
++            field:
++              path: spec.template.metadata.annotations
++            file:
++              path: resources.yaml
++          - message: 'set annotations: {"app":"myapp"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: starlark-fn-failure.yaml
 +      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 +        stderr: 'failed to evaluate function: error: function failure'
 +        exitCode: 1
@@ -72,16 +97,15 @@ index 0848ba0..7eece9b 100644
 +      annotations:
 +        app: myapp
 diff --git a/starlark-fn-failure.yaml b/starlark-fn-failure.yaml
-index 55ceaae..d2841c7 100644
+index 55ceaae..85d3786 100644
 --- a/starlark-fn-failure.yaml
 +++ b/starlark-fn-failure.yaml
-@@ -2,6 +2,9 @@ apiVersion: fn.kpt.dev/v1alpha1
+@@ -2,6 +2,8 @@ apiVersion: fn.kpt.dev/v1alpha1
  kind: StarlarkRun
  metadata:
    name: always-fail
 +  annotations:
 +    app: myapp
-+  namespace: staging
  source: |
    def fail_fn(items):
      fail("intentional failure for testing")

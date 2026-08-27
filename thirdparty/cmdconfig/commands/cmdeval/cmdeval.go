@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2019,2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package cmdeval
@@ -13,13 +13,13 @@ import (
 	"strings"
 
 	"github.com/google/shlex"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
-	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
@@ -46,14 +46,15 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		PreRunE: r.preRunE,
 	}
 	r.Command = c
+
+	r.Command.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
 	r.Command.Flags().StringVarP(&r.Dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
 	r.Command.Flags().StringVar(
 		&r.Tag, "tag", "", "semantic version constraint for the image tag or exact tag replacement")
-	r.Command.Flags().StringArrayVarP(
-		&r.Keywords, "keywords", "k", nil, "filter functions that match one or more keywords")
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
 		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
 	_ = r.Command.RegisterFlagCompletionFunc("type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -117,6 +118,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.excludeAnnotations, "exclude-annotations", []string{}, "exclude resources matching the given annotations")
 	r.Command.Flags().StringArrayVar(
 		&r.excludeLabels, "exclude-labels", []string{}, "exclude resources matching the given labels")
+	r.Command.Flags().StringVar(
+		&r.CelCondition, "condition", "", "conditional expression to determine if function should be run")
 
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)
@@ -138,7 +141,6 @@ type EvalFnRunner struct {
 	Image                string
 	Tag                  string
 	SaveFn               bool
-	Keywords             []string
 	FnType               string
 	Exec                 string
 	FnConfigPath         string
@@ -149,8 +151,8 @@ type EvalFnRunner struct {
 	AsCurrentUser        bool
 	IncludeMetaResources bool
 	Ctx                  context.Context
-	Selector             kptfile.Selector
-	Exclusion            kptfile.Selector
+	Selector             kptfilev1.Selector
+	Exclusion            kptfilev1.Selector
 	dataItems            []string
 
 	RunnerOptions runneroptions.RunnerOptions
@@ -161,11 +163,19 @@ type EvalFnRunner struct {
 	excludeLabels       []string
 	excludeAnnotations  []string
 
+	CelCondition string
+
 	runFns runfn.RunFns
 }
 
 func (r *EvalFnRunner) InitDefaults() {
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	// Initialize CEL environment for condition evaluation
+	// Fail early if initialization does not succeed because we might
+	// need CEL to evaluate conditions
+	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize CEL environment: %v\n", err)
+	}
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -185,8 +195,8 @@ func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
 
 // NewFunction creates a Kptfile.Function object which has the evaluated fn configurations.
 // This object can be written to Kptfile `pipeline.mutators`.
-func (r *EvalFnRunner) NewFunction() *kptfile.Function {
-	newFn := &kptfile.Function{}
+func (r *EvalFnRunner) NewFunction() *kptfilev1.Function {
+	newFn := &kptfilev1.Function{}
 	if r.Image != "" {
 		newFn.Image = r.Image
 		newFn.Tag = r.Tag
@@ -194,11 +204,12 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 		newFn.Exec = r.Exec
 	}
 	if !r.Selector.IsEmpty() {
-		newFn.Selectors = []kptfile.Selector{r.Selector}
+		newFn.Selectors = []kptfilev1.Selector{r.Selector}
 	}
 	if !r.Exclusion.IsEmpty() {
-		newFn.Exclusions = []kptfile.Selector{r.Exclusion}
+		newFn.Exclusions = []kptfilev1.Selector{r.Exclusion}
 	}
+	newFn.CelCondition = r.CelCondition
 	if r.FnConfigPath != "" {
 		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
 		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.runFns.Path)
@@ -221,8 +232,8 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 
 // Add the evaluated function to the kptfile.Function list, this Function can either be
 // `pipeline.mutators` or `pipeline.validators`
-func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) ([]kptfile.Function, string) {
-	var newFns []kptfile.Function
+func (r *EvalFnRunner) updateFnList(oldFNs []kptfilev1.Function) ([]kptfilev1.Function, string) {
+	var newFns []kptfilev1.Function
 	found := false
 	newFn := r.NewFunction()
 	var message string
@@ -261,7 +272,7 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	}
 
 	if kf.Pipeline == nil {
-		kf.Pipeline = &kptfile.Pipeline{}
+		kf.Pipeline = &kptfilev1.Pipeline{}
 	}
 	var usrMsg string
 	switch r.FnType {
@@ -283,30 +294,30 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
 	}
-	pr.Printf(usrMsg)
+	pr.Printf("%s", usrMsg)
 }
 
 // preserveCommentsAndFieldOrder syncs the mutated Kptfile with the original to preserve
 // comments and field order, and returns the result as a yaml Node
-func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfile.KptFile) (*yaml.Node, error) {
-	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.runFns.Path, kptfile.KptFileName))
+func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfilev1.KptFile) (*yaml.Node, error) {
+	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.runFns.Path, kptfilev1.KptFileName))
 	if err != nil {
-		return nil, fmt.Errorf("could not read Kptfile: %v", err)
+		return nil, fmt.Errorf("could not read Kptfile: %w", err)
 	}
 	mutatedKfAsBytes, err := yaml.Marshal(kf)
 	if err != nil {
-		return nil, fmt.Errorf("could not Marshal Kptfile into bytes: %v", err)
+		return nil, fmt.Errorf("could not Marshal Kptfile into bytes: %w", err)
 	}
 	mutatedKfAsRNode, err := yaml.Parse(string(mutatedKfAsBytes))
 	if err != nil {
-		return nil, fmt.Errorf("could not parse Kptfile: %v", err)
+		return nil, fmt.Errorf("could not parse Kptfile: %w", err)
 	}
 	// preserve comments and sync field order
 	if err := comments.CopyComments(kfAsRNode, mutatedKfAsRNode); err != nil {
-		return nil, fmt.Errorf("could not preserve Kptfile comments: %v", err)
+		return nil, fmt.Errorf("could not preserve Kptfile comments: %w", err)
 	}
 	if err := order.SyncOrder(kfAsRNode, mutatedKfAsRNode); err != nil {
-		return nil, fmt.Errorf("could not preserve Kptfile field order %v", err)
+		return nil, fmt.Errorf("could not preserve Kptfile field order: %w", err)
 	}
 	return mutatedKfAsRNode.YNode(), nil
 }
@@ -381,7 +392,7 @@ func (r *EvalFnRunner) getFunctionSpec() (*runtimeutil.FunctionSpec, []string, e
 	fn := &runtimeutil.FunctionSpec{}
 	var execArgs []string
 	if r.Image != "" {
-		if err := kptfile.ValidateFunctionImageURL(r.Image); err != nil {
+		if err := kptfilev1.ValidateFunctionImageURL(r.Image); err != nil {
 			return nil, nil, err
 		}
 		fn.Container.Image = r.Image
@@ -450,6 +461,10 @@ func (r *EvalFnRunner) validateOptionalFlags() error {
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// separate the optional flag validation to fix linter issue: cyclomatic complexity
+
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
 	if err := r.validateOptionalFlags(); err != nil {
 		return err
 	}
@@ -519,7 +534,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	if path != "" {
-		path, err = argutil.ResolveSymlink(r.Ctx, path)
+		path, err = argsutil.ResolveSymlink(r.Ctx, path)
 		if err != nil {
 			return err
 		}
@@ -553,6 +568,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		ContinueOnEmptyResult: true,
 		Selector:              r.Selector,
 		Exclusion:             r.Exclusion,
+		CelCondition:          r.CelCondition,
 		RunnerOptions:         r.RunnerOptions,
 	}
 

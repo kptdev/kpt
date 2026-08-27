@@ -8,7 +8,7 @@ info:
   description: DFS - Subpackage validator fails
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         test: "subpkg-fail"
         level: "root"
