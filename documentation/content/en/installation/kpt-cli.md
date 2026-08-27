@@ -13,20 +13,20 @@ Download pre-compiled binaries:
 
 Optionally verify the [SLSA3 signatures](https://slsa.dev/) generated using the OpenSSF's
 [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release
-process. To verify a release binary:
+process. To verify a release archive:
 
 1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
 2. Download the signature file `multiple.intoto.jsonl` from the [GitHub releases page](https://github.com/kptdev/kpt/releases).
 3. Run the verifier:
 
 ```shell
-slsa-verifier verify-artifact --provenance-path multiple.intoto.jsonl --source-uri github.com/kptdev/kpt --source-versioned-tag <the-tag> kpt_<os>_<arch>
+slsa-verifier verify-artifact --provenance-path multiple.intoto.jsonl --source-uri github.com/kptdev/kpt --source-versioned-tag <the-tag> kpt_<os>_<arch>-<version>.tar.gz
 ```
 
-On Linux and MacOS, make it executable:
+After downloading (and optionally verifying), extract the archive:
 
 ```shell
-chmod +x kpt
+tar -xzf kpt_<os>_<arch>-<version>.tar.gz
 ```
 
 On MacOS the first time, it may be necessary to open the program from the finder with _ctrl-click open_.
@@ -89,20 +89,20 @@ Running kpt via Docker does not install kpt on your machine. Each `docker run ..
 ### `kpt`
 
 ```shell
-docker run ghcr.io/kptdev/kpt:{{< kpt_version >}} version
+docker run ghcr.io/kptdev/kpt:v{{< kpt_version >}} version
 ```
 
 To use kpt with files on your host, mount your current directory into the container and set a working directory:
 
 ```shell
-docker run --rm -v "$PWD":/workdir -w /workdir ghcr.io/kptdev/kpt:{{< kpt_version >}} pkg tree
-docker run --rm -v "$PWD":/workdir -w /workdir ghcr.io/kptdev/kpt:{{< kpt_version >}} fn render
+docker run --rm -v "$PWD":/workdir -w /workdir ghcr.io/kptdev/kpt:v{{< kpt_version >}} pkg tree
+docker run --rm -v "$PWD":/workdir -w /workdir ghcr.io/kptdev/kpt:v{{< kpt_version >}} fn render
 ```
 
 On Windows PowerShell, use `${PWD}.Path` for the current directory:
 
 ```shell
-docker run --rm -v "${PWD}.Path:/workdir" -w /workdir ghcr.io/kptdev/kpt:{{< kpt_version >}} pkg tree
+docker run --rm -v "${PWD}.Path:/workdir" -w /workdir ghcr.io/kptdev/kpt:v{{< kpt_version >}} pkg tree
 ```
 
 This pattern ensures kpt reads and writes files under `/workdir`, which maps to your current directory on the host.
@@ -168,11 +168,11 @@ kpt version
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 
 [linux-amd64]:
-https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_linux_amd64
+https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_amd64-{{< kpt_version >}}.tar.gz
 [linux-arm64]:
-https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_linux_arm64
+https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_arm64-{{< kpt_version >}}.tar.gz
 [darwin-amd64]:
-https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_darwin_amd64
+https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
 [darwin-arm64]:
-https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_darwin_arm64
+https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
 [bash-completion]: https://github.com/scop/bash-completion#installation
