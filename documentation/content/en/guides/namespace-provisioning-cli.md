@@ -211,10 +211,12 @@ Package "tenant":
 Successfully executed 1 function(s) in 1 package(s).
 ```
 
-Note: if you are curious about how KRM functions are implemented. Take a look
+{{% alert title="Note" color="primary" %}}
+If you are curious about how KRM functions are implemented, take a look
 at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/main/functions/go/set-namespace/transformer/namespace.go)
 to get a feel for the implementation. You can also check out [Chapter 5: Developing Functions](/book/05-developing-functions/)
 of the kpt book.
+{{% /alert %}}
 
 ### Permissions
 
