@@ -305,9 +305,15 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: labels
+  annotations:
+    config.kubernetes.io/local-config: "true"
 data:
   tier: mysql
 ```
+
+Note the `local-config` annotation: it ensures this resource is not applied to
+the cluster when you run `kpt live apply`. See
+[Marking function configs as local](#marking-function-configs-as-local) below.
 
 #### `configMap`
 
@@ -367,6 +373,42 @@ The `configRef` fields are as follows:
 - `namespace` (optional): the `metadata.namespace` of the referenced resource. When omitted, matches regardless of namespace.
 
 The reference must match exactly one resource in the package. An error is raised if zero or multiple resources match.
+
+### Marking function configs as local
+
+When you use `configPath` to reference a function config file, that resource is
+automatically excluded from the pipeline input (it is not passed to functions as
+a regular resource). However, the resource still exists in the package and will
+be sent to the cluster when you run `kpt live apply`, unless you mark it as
+local configuration.
+
+To prevent a function config from being applied to the cluster, add the
+`config.kubernetes.io/local-config` annotation:
+
+```yaml
+# wordpress/mysql/labels.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: labels
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  tier: mysql
+```
+
+Resources with this annotation set to any value other than `"false"` are filtered
+out during `kpt live apply`. They remain in the package for use by the pipeline
+but are never sent to the cluster.
+
+This annotation is useful for:
+
+- Function configs referenced by `configPath`
+- Template or helper resources used only during rendering
+- Any resource that should exist in the package but not on the cluster
+
+For full details on the annotation schema and behavior, see the
+[`local-config` annotation reference]({{% relref "/reference/annotations/local-config" %}}).
 
 ### Specifying function `name`
 

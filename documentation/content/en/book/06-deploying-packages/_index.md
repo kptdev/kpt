@@ -129,6 +129,12 @@ Once a package is applied to the cluster, do not change the `ResourceGroup` CR. 
 
 Once you have initialized the package, you can deploy it using `kpt live apply`.
 
+Note that not all resources in the package are applied to the cluster. Resources
+annotated with `config.kubernetes.io/local-config: "true"` are automatically
+filtered out. These are typically function configs or helper resources used only
+during rendering. The `Kptfile` itself is also excluded. For more details, see
+the [`local-config` annotation reference]({{% relref "/reference/annotations/local-config" %}}).
+
 The `wordpress` package requires a `Secret` containing the mysql password.
 Let's create that first:
 
