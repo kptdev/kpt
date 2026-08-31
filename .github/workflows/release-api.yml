@@ -30,7 +30,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: api/go.mod
+          go-version-file: go.mod
           cache-dependency-path: api/go.sum
       - name: Check for replace directives in api/go.mod
         uses: ./.github/actions/check-go-mod-replace
