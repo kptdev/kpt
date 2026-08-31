@@ -693,3 +693,21 @@ func TestRemoveStaleItems_NestedDirsWithLocalFile(t *testing.T) {
 	_, err = os.Stat(filepath.Join(dst, "configs"))
 	assert.NoError(t, err, "parent dir should be preserved when child dir has content")
 }
+
+func TestRemoveStaleItems_ErrorOnFileRemovePermission(t *testing.T) {
+	org := t.TempDir()
+	src := t.TempDir()
+	dst := t.TempDir()
+
+	// Create a stale file (in org and dst, not in src).
+	assert.NoError(t, os.WriteFile(filepath.Join(org, "stale.yaml"), []byte("orig"), 0644))
+	assert.NoError(t, os.WriteFile(filepath.Join(dst, "stale.yaml"), []byte("orig"), 0644))
+
+	// Revoke write permission on dst so os.Remove fails.
+	assert.NoError(t, os.Chmod(dst, 0555))
+	t.Cleanup(func() { _ = os.Chmod(dst, 0755) })
+
+	err := RemoveStaleItems(org, src, dst, true, All)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "permission denied")
+}

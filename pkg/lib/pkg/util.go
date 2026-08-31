@@ -228,11 +228,6 @@ func RemoveStaleItems(org, src, dst string, _ bool, _ SubpackageMatcher) error {
 		// locally-added files survive the merge.
 		f, err := os.Open(dir)
 		if err != nil {
-			// Directory may have already been removed as part of a parent;
-			// treat that as success.
-			if os.IsNotExist(err) {
-				continue
-			}
 			return err
 		}
 		_, readErr := f.Readdirnames(1)
