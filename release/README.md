@@ -32,6 +32,20 @@ That `@v1.0.0` form is the **module version**; the corresponding **git tag** in 
 
 Tags must use the **`api/`** prefix so the version matches the module subdirectory (see [Go modules: VCS version](https://go.dev/ref/mod#vcs-version)).
 
+### Release notes
+
+GitHub's built-in "Generate release notes" includes PRs for the whole repository. For an API release, generate notes scoped to `api/` instead:
+
+```shell
+scripts/generate-folder-release-notes.sh --folder api --new-tag v1.2.3
+```
+
+That calls the GitHub Release Notes API, then keeps only bullets whose PRs also appear in `git log` for `api/` between the previous `api/v*` semver tag and `HEAD`.
+Pass `--previous-tag` to pick a different start (version or full tag, for example `v1.2.2` or `api/v1.2.2`).
+Use `-o FILE` to write the notes, and `--attribution` to prepend a note that they are folder-scoped.
+
+Prerequisites: `gh` (authenticated to this repository) and a clone with tags fetched (`git fetch --tags`).
+
 ### What runs in CI
 
 When you push a tag that matches **`api/v[0-9]+.[0-9]+.[0-9]+*`** (for example `api/v1.2.3`), [.github/workflows/release-api.yml](../.github/workflows/release-api.yml) runs: it uses the Go version from [`api/go.mod`](../api/go.mod) and runs **`make api`**.
