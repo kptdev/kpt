@@ -195,13 +195,16 @@ func (r *ClusterPlanner) dryRunForPlan(
 }
 
 func handleApplyEvent(e event.Event, a Action) Action {
-	if e.ApplyEvent.Error != nil {
+	if e.ApplyEvent.Status == event.ApplySkipped {
+		a.Type = Skip
+		if e.ApplyEvent.Error != nil {
+			a.Error = e.ApplyEvent.Error.Error()
+		}
+	} else if e.ApplyEvent.Error != nil {
 		a.Type = Error
 		a.Error = e.ApplyEvent.Error.Error()
 	} else {
 		switch e.ApplyEvent.Status {
-		case event.ApplySkipped:
-			a.Type = Skip
 		case event.ApplySuccessful:
 			a.Updated = e.ApplyEvent.Resource
 			if a.Original != nil {
@@ -223,34 +226,36 @@ func handleApplyEvent(e event.Event, a Action) Action {
 }
 
 func handlePruneEvent(e event.Event, a Action) Action {
-	if e.PruneEvent.Error != nil {
+	if e.PruneEvent.Status == event.PruneSkipped {
+		a.Type = Skip
+		if e.PruneEvent.Error != nil {
+			a.Error = e.PruneEvent.Error.Error()
+		}
+	} else if e.PruneEvent.Error != nil {
 		a.Type = Error
 		a.Error = e.PruneEvent.Error.Error()
 	} else {
 		switch e.PruneEvent.Status {
 		case event.PruneSuccessful:
 			a.Type = Delete
-		// Lifecycle directives can cause resources to remain in the
-		// live state even if they would normally be pruned.
-		// TODO: Handle reason for skipped resources that has recently
-		// been added to the actuation library.
-		case event.PruneSkipped:
-			a.Type = Skip
 		}
 	}
 	return a
 }
 
 func handleDeleteEvent(e event.Event, a Action) Action {
-	if e.DeleteEvent.Error != nil {
+	if e.DeleteEvent.Status == event.DeleteSkipped {
+		a.Type = Skip
+		if e.DeleteEvent.Error != nil {
+			a.Error = e.DeleteEvent.Error.Error()
+		}
+	} else if e.DeleteEvent.Error != nil {
 		a.Type = Error
 		a.Error = e.DeleteEvent.Error.Error()
 	} else {
 		switch e.DeleteEvent.Status {
 		case event.DeleteSuccessful:
 			a.Type = Delete
-		case event.DeleteSkipped:
-			a.Type = Skip
 		}
 	}
 	return a
