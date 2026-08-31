@@ -566,7 +566,7 @@ func TestRemoveStaleItems_RemovesFile(t *testing.T) {
 	assert.True(t, os.IsNotExist(err))
 }
 
-func TestRemoveStaleItems_ErrorOnRemove(t *testing.T) {
+func TestRemoveStaleItems_PreservesNonEmptyLocalDir(t *testing.T) {
 	org := t.TempDir()
 	src := t.TempDir()
 	dst := t.TempDir()
@@ -578,12 +578,118 @@ func TestRemoveStaleItems_ErrorOnRemove(t *testing.T) {
 	assert.NoError(t, os.WriteFile(filePathOrg, []byte("content"), 0644))
 	assert.NoError(t, os.WriteFile(filePathDst, []byte("content"), 0644))
 
-	// Replace file in dst with a non-empty directory to force os.Remove error
+	// Replace file in dst with a non-empty directory (simulates upstream deleting
+	// a path that locally became a directory with added files).
 	assert.NoError(t, os.Remove(filePathDst))
 	assert.NoError(t, os.Mkdir(filePathDst, 0755))
 	assert.NoError(t, os.WriteFile(filepath.Join(filePathDst, "dummy"), []byte("x"), 0644))
 
+	// RemoveStaleItems should succeed and preserve the non-empty directory.
 	err := RemoveStaleItems(org, src, dst, true, All)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "directory not empty")
+	assert.NoError(t, err)
+
+	// The directory and its locally-added file must still exist.
+	_, err = os.Stat(filePathDst)
+	assert.NoError(t, err, "non-empty stale directory should be preserved")
+	_, err = os.Stat(filepath.Join(filePathDst, "dummy"))
+	assert.NoError(t, err, "locally-added file inside stale directory should be preserved")
+}
+
+func TestRemoveStaleItems_PreservesLocalFilesInDeletedDir(t *testing.T) {
+	org := t.TempDir()
+	src := t.TempDir()
+	dst := t.TempDir()
+
+	// Simulate: origin has configs/base.yaml, upstream deletes entire configs/ dir,
+	// but local added configs/custom.yaml.
+	configsDirOrg := filepath.Join(org, "configs")
+	configsDirDst := filepath.Join(dst, "configs")
+
+	assert.NoError(t, os.Mkdir(configsDirOrg, 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(configsDirOrg, "base.yaml"), []byte("original"), 0644))
+
+	assert.NoError(t, os.Mkdir(configsDirDst, 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(configsDirDst, "base.yaml"), []byte("original"), 0644))
+	assert.NoError(t, os.WriteFile(filepath.Join(configsDirDst, "custom.yaml"), []byte("local-addition"), 0644))
+
+	// src (new upstream) has no configs/ directory at all.
+
+	err := RemoveStaleItems(org, src, dst, true, All)
+	assert.NoError(t, err)
+
+	// base.yaml was in origin and not in upstream — should be removed.
+	_, err = os.Stat(filepath.Join(configsDirDst, "base.yaml"))
+	assert.True(t, os.IsNotExist(err), "stale file base.yaml should be removed")
+
+	// custom.yaml was NOT in origin — should be preserved.
+	_, err = os.Stat(filepath.Join(configsDirDst, "custom.yaml"))
+	assert.NoError(t, err, "locally-added file custom.yaml should be preserved")
+
+	// configs/ directory should still exist because it contains custom.yaml.
+	info, err := os.Stat(configsDirDst)
+	assert.NoError(t, err, "directory with local files should be preserved")
+	assert.True(t, info.IsDir())
+}
+
+func TestRemoveStaleItems_RemovesEmptyDirAfterStaleFileCleanup(t *testing.T) {
+	org := t.TempDir()
+	src := t.TempDir()
+	dst := t.TempDir()
+
+	// Simulate: origin has configs/base.yaml, upstream deletes the directory,
+	// and local has no additions — directory should be removed entirely.
+	configsDirOrg := filepath.Join(org, "configs")
+	configsDirDst := filepath.Join(dst, "configs")
+
+	assert.NoError(t, os.Mkdir(configsDirOrg, 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(configsDirOrg, "base.yaml"), []byte("original"), 0644))
+
+	assert.NoError(t, os.Mkdir(configsDirDst, 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(configsDirDst, "base.yaml"), []byte("original"), 0644))
+
+	err := RemoveStaleItems(org, src, dst, true, All)
+	assert.NoError(t, err)
+
+	// Both the file and directory should be gone.
+	_, err = os.Stat(filepath.Join(configsDirDst, "base.yaml"))
+	assert.True(t, os.IsNotExist(err), "stale file should be removed")
+	_, err = os.Stat(configsDirDst)
+	assert.True(t, os.IsNotExist(err), "empty stale directory should be removed")
+}
+
+func TestRemoveStaleItems_NestedDirsWithLocalFile(t *testing.T) {
+	org := t.TempDir()
+	src := t.TempDir()
+	dst := t.TempDir()
+
+	// Origin has configs/nested/base.yaml and configs/top.yaml.
+	// Upstream (src) deletes everything.
+	// Local added configs/nested/custom.yaml.
+	assert.NoError(t, os.MkdirAll(filepath.Join(org, "configs", "nested"), 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(org, "configs", "top.yaml"), []byte("orig"), 0644))
+	assert.NoError(t, os.WriteFile(filepath.Join(org, "configs", "nested", "base.yaml"), []byte("orig"), 0644))
+
+	assert.NoError(t, os.MkdirAll(filepath.Join(dst, "configs", "nested"), 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(dst, "configs", "top.yaml"), []byte("orig"), 0644))
+	assert.NoError(t, os.WriteFile(filepath.Join(dst, "configs", "nested", "base.yaml"), []byte("orig"), 0644))
+	assert.NoError(t, os.WriteFile(filepath.Join(dst, "configs", "nested", "custom.yaml"), []byte("local"), 0644))
+
+	err := RemoveStaleItems(org, src, dst, true, All)
+	assert.NoError(t, err)
+
+	// Stale files should be removed.
+	_, err = os.Stat(filepath.Join(dst, "configs", "top.yaml"))
+	assert.True(t, os.IsNotExist(err), "stale file top.yaml should be removed")
+	_, err = os.Stat(filepath.Join(dst, "configs", "nested", "base.yaml"))
+	assert.True(t, os.IsNotExist(err), "stale file base.yaml should be removed")
+
+	// Locally-added file should be preserved.
+	_, err = os.Stat(filepath.Join(dst, "configs", "nested", "custom.yaml"))
+	assert.NoError(t, err, "locally-added file custom.yaml should be preserved")
+
+	// Both parent directories should be preserved because nested/ still has content.
+	_, err = os.Stat(filepath.Join(dst, "configs", "nested"))
+	assert.NoError(t, err, "nested dir with local files should be preserved")
+	_, err = os.Stat(filepath.Join(dst, "configs"))
+	assert.NoError(t, err, "parent dir should be preserved when child dir has content")
 }
