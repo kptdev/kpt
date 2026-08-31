@@ -1,0 +1,7 @@
+stdErr: |
+  Package "condition-mixed":
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/no-op:latest" on package "condition-mixed"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/no-op:latest" in 0s
+  [SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/no-op:latest" (celCondition not met)
+
+  Successfully executed 1 function(s) in 1 package(s).

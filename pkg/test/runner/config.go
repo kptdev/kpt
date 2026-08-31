@@ -48,6 +48,8 @@ type EvalTestCaseConfig struct {
 	FnConfig string `json:"fnConfig,omitempty" yaml:"fnConfig,omitempty"`
 	// fnConfigUniquePath is an absolute, OS-specific path to function config file.
 	fnConfigUniquePath kptfilev1.UniquePath
+	// When is a CEL expression that determines if the function should be run.
+	When string `json:"when,omitempty" yaml:"when,omitempty"`
 }
 
 // TestCaseConfig contains the config information for the test case

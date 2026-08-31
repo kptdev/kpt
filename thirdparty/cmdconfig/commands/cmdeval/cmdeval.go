@@ -119,7 +119,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringArrayVar(
 		&r.excludeLabels, "exclude-labels", []string{}, "exclude resources matching the given labels")
 	r.Command.Flags().StringVar(
-		&r.CelCondition, "condition", "", "conditional expression to determine if function should be run")
+		&r.CelCondition, "when", "", "CEL expression to determine if the function should be run")
 
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)

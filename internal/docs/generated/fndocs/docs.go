@@ -160,7 +160,7 @@ Flags:
     labels.
   
   --mount:
-    List of storage options to enable reading from the local filesytem. By default,
+    List of storage options to enable reading from the local filesystem. By default,
     container functions can not access the local filesystem. It accepts the same options
     as specified on the [Docker Volumes] for ` + "`" + `docker run` + "`" + `. All volumes are mounted
     readonly by default. Specify ` + "`" + `rw=true` + "`" + ` to mount volumes in read-write mode.
@@ -200,6 +200,13 @@ Flags:
   --save, s:
     Save the function image and fn-config to Kptfile. Require ` + "`" + ` + "` + "`" + `" + ` + "`" + `--image` + "`" + ` + "` + "`" + `" + ` + "`" + `.
     
+  --when:
+    A CEL expression that determines whether the function should be run.
+    The expression is evaluated against the input resources and must return a boolean.
+    If it returns true (or is not specified), the function executes normally.
+    If it returns false, the function is skipped.
+    Example: --when "resources.exists(r, r.kind == 'ConfigMap')"
+  
 
 Environment Variables:
 

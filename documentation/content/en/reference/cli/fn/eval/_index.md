@@ -195,6 +195,13 @@ fn-args:
 --save, s:
   Save the function image and fn-config to Kptfile. Require ` + "`" + `--image` + "`" + `.
   
+--when:
+  A CEL expression that determines whether the function should be run.
+  The expression is evaluated against the input resources and must return a boolean.
+  If it returns true (or is not specified), the function executes normally.
+  If it returns false, the function is skipped.
+  Example: --when "resources.exists(r, r.kind == 'ConfigMap')"
+
 ```
 
 #### Environment Variables

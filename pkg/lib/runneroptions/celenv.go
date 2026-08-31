@@ -31,8 +31,8 @@ type CELEnvironment struct {
 }
 
 // NewCELEnvironment creates a new CELEnvironment with the standard KRM variable bindings.
-// Includes cel-go built-in extensions and k8s-specific validators (IP, CIDR, Quantity, SemVer)
-// from k8s.io/apiserver/pkg/cel/library for full Kubernetes CEL compatibility.
+// Includes cel-go built-in extensions (strings, sets, lists, comprehensions) for
+// evaluating CEL expressions against KRM resources.
 func NewCELEnvironment() (*CELEnvironment, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("resources", cel.ListType(cel.DynType)),
@@ -54,12 +54,12 @@ func NewCELEnvironment() (*CELEnvironment, error) {
 // EvaluateCondition compiles and evaluates a CEL condition against a list of KRM resources.
 // Returns true if the condition is met, false otherwise.
 // An empty condition always returns true (function executes unconditionally).
-func (e *CELEnvironment) EvaluateCondition(ctx context.Context, condition string, resources []*yaml.RNode, checkFrequency uint, costLimit uint64) (bool, error) {
-	if condition == "" {
+func (e *CELEnvironment) EvaluateCondition(ctx context.Context, celCond string, resources []*yaml.RNode, checkFrequency uint, costLimit uint64) (bool, error) {
+	if celCond == "" {
 		return true, nil
 	}
 
-	ast, issues := e.env.Compile(condition)
+	ast, issues := e.env.Compile(celCond)
 	if issues != nil && issues.Err() != nil {
 		return false, fmt.Errorf("failed to compile CEL expression: %w", issues.Err())
 	}
@@ -109,13 +109,9 @@ func resourcesToList(resources []*yaml.RNode) ([]any, error) {
 }
 
 func resourceToMap(resource *yaml.RNode) (map[string]any, error) {
-	node := resource.YNode()
-	if node == nil {
-		return nil, fmt.Errorf("resource has nil yaml.Node")
-	}
-	var result map[string]any
-	if err := node.Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode resource: %w", err)
+	result, err := resource.Map()
+	if err != nil {
+		return nil, err
 	}
 	ensureMetadata(result)
 	return result, nil

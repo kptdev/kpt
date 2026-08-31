@@ -1,0 +1,10 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: condition-mixed
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
+      when: resources.exists(r, r.kind == 'ConfigMap')
+    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
+      when: resources.exists(r, r.kind == 'Secret')
