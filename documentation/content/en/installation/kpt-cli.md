@@ -6,28 +6,104 @@ Users can get kpt CLI in a variety of ways:
 
 Download pre-compiled binaries:
 
-- [Linux (amd64)][linux-amd64]
-- [Linux (arm64)][linux-arm64]
-- [MacOS (amd64)][darwin-amd64]
-- [MacOS (arm64)][darwin-arm64]
+{{< tabpane text=true >}}
+{{% tab header="Linux amd64" %}}
+```shell
+curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_amd64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="Linux arm64" %}}
+```shell
+curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_arm64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="macOS amd64" %}}
+```shell
+curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="macOS arm64" %}}
+```shell
+curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{< /tabpane >}}
 
 Optionally verify the [SLSA3 signatures](https://slsa.dev/) generated using the OpenSSF's
 [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release
 process. To verify a release archive:
 
 1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
-2. Download the signature file `multiple.intoto.jsonl` from the [GitHub releases page](https://github.com/kptdev/kpt/releases).
-3. Run the verifier:
+2. Download the signature file:
 
 ```shell
-slsa-verifier verify-artifact --provenance-path multiple.intoto.jsonl --source-uri github.com/kptdev/kpt --source-versioned-tag <the-tag> kpt_<os>_<arch>-<version>.tar.gz
+curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/multiple.intoto.jsonl
 ```
+3. Run the verifier:
+
+{{< tabpane text=true >}}
+{{% tab header="Linux amd64" %}}
+```shell
+slsa-verifier verify-artifact \
+  --provenance-path multiple.intoto.jsonl \
+  --source-uri github.com/kptdev/kpt \
+  --source-versioned-tag v{{< kpt_version >}} \
+  kpt_linux_amd64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="Linux arm64" %}}
+```shell
+slsa-verifier verify-artifact \
+  --provenance-path multiple.intoto.jsonl \
+  --source-uri github.com/kptdev/kpt \
+  --source-versioned-tag v{{< kpt_version >}} \
+  kpt_linux_arm64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="macOS amd64" %}}
+```shell
+slsa-verifier verify-artifact \
+  --provenance-path multiple.intoto.jsonl \
+  --source-uri github.com/kptdev/kpt \
+  --source-versioned-tag v{{< kpt_version >}} \
+  kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="macOS arm64" %}}
+```shell
+slsa-verifier verify-artifact \
+  --provenance-path multiple.intoto.jsonl \
+  --source-uri github.com/kptdev/kpt \
+  --source-versioned-tag v{{< kpt_version >}} \
+  kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{< /tabpane >}}
 
 After downloading (and optionally verifying), extract the archive:
 
+{{< tabpane text=true >}}
+{{% tab header="Linux amd64" %}}
 ```shell
-tar -xzf kpt_<os>_<arch>-<version>.tar.gz
+tar -xzf kpt_linux_amd64-{{< kpt_version >}}.tar.gz
 ```
+{{% /tab %}}
+{{% tab header="Linux arm64" %}}
+```shell
+tar -xzf kpt_linux_arm64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="macOS amd64" %}}
+```shell
+tar -xzf kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{% tab header="macOS arm64" %}}
+```shell
+tar -xzf kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
+```
+{{% /tab %}}
+{{< /tabpane >}}
 
 On MacOS the first time, it may be necessary to open the program from the finder with _ctrl-click open_.
 
@@ -166,13 +242,4 @@ kpt version
 
 [ghcr.io/kptdev/kpt]: https://github.com/kptdev/kpt/pkgs/container/kpt
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
-
-[linux-amd64]:
-https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_amd64-{{< kpt_version >}}.tar.gz
-[linux-arm64]:
-https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_arm64-{{< kpt_version >}}.tar.gz
-[darwin-amd64]:
-https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
-[darwin-arm64]:
-https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
 [bash-completion]: https://github.com/scop/bash-completion#installation
