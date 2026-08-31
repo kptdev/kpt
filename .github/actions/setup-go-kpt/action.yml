@@ -1,0 +1,81 @@
+# Copyright 2026 The kpt Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "Setup Go and kpt"
+description: "Sets up Go from go.mod and installs kpt version matching go.mod"
+
+inputs:
+  install-kpt:
+    description: "Whether to install kpt"
+    required: false
+    default: "true"
+  kpt-fallback-version:
+    description: "Fallback kpt version if extraction from go.mod fails"
+    required: false
+    default: "v1.0.0-beta.65"
+  go-version:
+    description: "Exact version for Go version setup, go-version-file is ignored if set"
+    required: false
+  go-version-file:
+    description: "Path to go.mod file for Go version setup"
+    required: false
+    default: "go.mod"
+  go-cache:
+    description: "Enable Go module caching"
+    required: false
+    default: "true"
+  cache-dependency-path:
+    description: "Relative path to go.sum file for Go module caching"
+    required: false
+    default: "go.sum"
+
+outputs:
+  kpt-version:
+    description: "The kpt version installed"
+    value: ${{ steps.kpt-version.outputs.version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: ${{ inputs.go-version }}
+        go-version-file: ${{ inputs.go-version-file }}
+        cache: ${{ inputs.go-cache == 'true' }}
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+    - name: Get kpt version from go.mod
+      if: inputs.install-kpt == 'true'
+      id: kpt-version
+      shell: bash
+      env:
+        GO_VERSION_FILE: ${{ inputs.go-version-file }}
+        KPT_FALLBACK: ${{ inputs.kpt-fallback-version }}
+      run: |
+        GO_MOD_DIR=$(dirname -- "$GO_VERSION_FILE")
+        KPT_VERSION=$(cd "$GO_MOD_DIR" && go list -m -f '{{.Version}}' github.com/kptdev/kpt 2>/dev/null)
+        if [ -z "$KPT_VERSION" ]; then
+          echo "Warning: Could not resolve kpt version from ${GO_VERSION_FILE}, using fallback."
+          KPT_VERSION="$KPT_FALLBACK"
+        fi
+        echo "version=${KPT_VERSION}" >> "$GITHUB_OUTPUT"
+
+    - name: Install kpt
+      if: inputs.install-kpt == 'true'
+      uses: jaxxstorm/action-install-gh-release@v2.1.0
+      with:
+        repo: kptdev/kpt
+        tag: ${{ steps.kpt-version.outputs.version }}
+        chmod: 0755
