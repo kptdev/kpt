@@ -1,1 +1,1 @@
-{{- getenv "HUGO_KPT_VERSION" | default .Site.Params.kpt_version -}}
+{{- (getenv "HUGO_KPT_VERSION" | default .Site.Params.kpt_version) | strings.TrimPrefix "v" -}}
