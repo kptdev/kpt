@@ -25,7 +25,7 @@ spec:
               type: object
               properties:
                 airConditioned:  # control field
-                  type: bool
+                  type: boolean
                   default: false
                 preferredTemperature:  # control field
                   type: integer

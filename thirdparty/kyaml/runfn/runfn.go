@@ -199,11 +199,21 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 	// file is preserved on disk.
 	var fnConfigNode *yaml.RNode
 	if r.FnConfigPath != "" {
+		absFnConfigPath := r.FnConfigPath
+		if !filepath.IsAbs(absFnConfigPath) {
+			absFnConfigPath, _ = filepath.Abs(absFnConfigPath)
+		}
 		inputResources = slices.DeleteFunc(inputResources, func(node *yaml.RNode) bool {
 			p, _, _ := kioutil.GetFileAnnotations(node)
-			if p != "" && filepath.Join(string(r.uniquePath), p) == r.FnConfigPath {
-				fnConfigNode = node
-				return true
+			if p != "" {
+				absP := filepath.Join(string(r.uniquePath), p)
+				if !filepath.IsAbs(absP) {
+					absP, _ = filepath.Abs(absP)
+				}
+				if absP == absFnConfigPath {
+					fnConfigNode = node
+					return true
+				}
 			}
 			return false
 		})

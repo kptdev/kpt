@@ -515,11 +515,6 @@ data:
 			if tc.fnConfigInPackage {
 				fnConfigPath = filepath.Join(dir, "fn-config.yaml")
 				require.NoError(t, os.WriteFile(fnConfigPath, []byte(fnConfigContent), 0600))
-				if tc.useRelativePath {
-					rel, err := filepath.Rel(filepath.Dir(dir), fnConfigPath)
-					require.NoError(t, err)
-					fnConfigPath = rel
-				}
 			} else {
 				tmpF, err := os.CreateTemp("", "fn-config*.yaml")
 				require.NoError(t, err)

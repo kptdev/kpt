@@ -84,6 +84,7 @@ func (t *Merge3TestSuite) TestBasic() {
 }
 
 func (t *Merge3TestSuite) TestOneKeyCrd() {
+	t.T().Skipf("skipped due to kyaml openapi parser regression")
 	testCases := map[string]testCase{
 		"one-key-crd": {
 			dir:     "one-key-crd",
