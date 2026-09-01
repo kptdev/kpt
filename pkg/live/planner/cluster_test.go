@@ -16,6 +16,7 @@ package planner
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -89,6 +90,258 @@ func TestClusterPlanner(t *testing.T) {
 						Group:     "apps",
 						Kind:      "Deployment",
 						Updated:   testutil.Unstructured(t, deploymentYAML),
+					},
+				},
+			},
+		},
+		"skipped resource with reason": {
+			resources: []*unstructured.Unstructured{
+				testutil.Unstructured(t, deploymentYAML),
+			},
+			clusterResources: []*unstructured.Unstructured{},
+			events: []event.Event{
+				{
+					Type: event.InitType,
+					InitEvent: event.InitEvent{
+						ActionGroups: event.ActionGroupList{
+							{
+								Action: event.ApplyAction,
+								Name:   "apply-1",
+								Identifiers: []object.ObjMetadata{
+									testutil.ToIdentifier(t, deploymentYAML),
+								},
+							},
+						},
+					},
+				},
+				{
+					Type: event.ApplyType,
+					ApplyEvent: event.ApplyEvent{
+						GroupName:  "apply-1",
+						Identifier: testutil.ToIdentifier(t, deploymentYAML),
+						Status:     event.ApplySkipped,
+						Error:      fmt.Errorf("some skip reason"),
+					},
+				},
+			},
+			expectedPlan: &Plan{
+				Actions: []Action{
+					{
+						Type:       Skip,
+						Name:       "foo",
+						Namespace:  "default",
+						Group:      "apps",
+						Kind:       "Deployment",
+						SkipReason: "some skip reason",
+					},
+				},
+			},
+		},
+		"skipped apply resource without reason": {
+			resources: []*unstructured.Unstructured{
+				testutil.Unstructured(t, deploymentYAML),
+			},
+			clusterResources: []*unstructured.Unstructured{},
+			events: []event.Event{
+				{
+					Type: event.InitType,
+					InitEvent: event.InitEvent{
+						ActionGroups: event.ActionGroupList{
+							{
+								Action: event.ApplyAction,
+								Name:   "apply-1",
+								Identifiers: []object.ObjMetadata{
+									testutil.ToIdentifier(t, deploymentYAML),
+								},
+							},
+						},
+					},
+				},
+				{
+					Type: event.ApplyType,
+					ApplyEvent: event.ApplyEvent{
+						GroupName:  "apply-1",
+						Identifier: testutil.ToIdentifier(t, deploymentYAML),
+						Status:     event.ApplySkipped,
+					},
+				},
+			},
+			expectedPlan: &Plan{
+				Actions: []Action{
+					{
+						Type:      Skip,
+						Name:      "foo",
+						Namespace: "default",
+						Group:     "apps",
+						Kind:      "Deployment",
+					},
+				},
+			},
+		},
+		"skipped prune resource with reason": {
+			resources: []*unstructured.Unstructured{
+				testutil.Unstructured(t, deploymentYAML),
+			},
+			clusterResources: []*unstructured.Unstructured{},
+			events: []event.Event{
+				{
+					Type: event.InitType,
+					InitEvent: event.InitEvent{
+						ActionGroups: event.ActionGroupList{
+							{
+								Action: event.PruneAction,
+								Name:   "prune-1",
+								Identifiers: []object.ObjMetadata{
+									testutil.ToIdentifier(t, deploymentYAML),
+								},
+							},
+						},
+					},
+				},
+				{
+					Type: event.PruneType,
+					PruneEvent: event.PruneEvent{
+						GroupName:  "prune-1",
+						Identifier: testutil.ToIdentifier(t, deploymentYAML),
+						Status:     event.PruneSkipped,
+						Error:      fmt.Errorf("some skip reason"),
+					},
+				},
+			},
+			expectedPlan: &Plan{
+				Actions: []Action{
+					{
+						Type:       Skip,
+						Name:       "foo",
+						Namespace:  "default",
+						Group:      "apps",
+						Kind:       "Deployment",
+						SkipReason: "some skip reason",
+					},
+				},
+			},
+		},
+		"skipped prune resource without reason": {
+			resources: []*unstructured.Unstructured{
+				testutil.Unstructured(t, deploymentYAML),
+			},
+			clusterResources: []*unstructured.Unstructured{},
+			events: []event.Event{
+				{
+					Type: event.InitType,
+					InitEvent: event.InitEvent{
+						ActionGroups: event.ActionGroupList{
+							{
+								Action: event.PruneAction,
+								Name:   "prune-1",
+								Identifiers: []object.ObjMetadata{
+									testutil.ToIdentifier(t, deploymentYAML),
+								},
+							},
+						},
+					},
+				},
+				{
+					Type: event.PruneType,
+					PruneEvent: event.PruneEvent{
+						GroupName:  "prune-1",
+						Identifier: testutil.ToIdentifier(t, deploymentYAML),
+						Status:     event.PruneSkipped,
+					},
+				},
+			},
+			expectedPlan: &Plan{
+				Actions: []Action{
+					{
+						Type:      Skip,
+						Name:      "foo",
+						Namespace: "default",
+						Group:     "apps",
+						Kind:      "Deployment",
+					},
+				},
+			},
+		},
+		"skipped delete resource with reason": {
+			resources: []*unstructured.Unstructured{
+				testutil.Unstructured(t, deploymentYAML),
+			},
+			clusterResources: []*unstructured.Unstructured{},
+			events: []event.Event{
+				{
+					Type: event.InitType,
+					InitEvent: event.InitEvent{
+						ActionGroups: event.ActionGroupList{
+							{
+								Action: event.DeleteAction,
+								Name:   "delete-1",
+								Identifiers: []object.ObjMetadata{
+									testutil.ToIdentifier(t, deploymentYAML),
+								},
+							},
+						},
+					},
+				},
+				{
+					Type: event.DeleteType,
+					DeleteEvent: event.DeleteEvent{
+						GroupName:  "delete-1",
+						Identifier: testutil.ToIdentifier(t, deploymentYAML),
+						Status:     event.DeleteSkipped,
+						Error:      fmt.Errorf("some skip reason"),
+					},
+				},
+			},
+			expectedPlan: &Plan{
+				Actions: []Action{
+					{
+						Type:       Skip,
+						Name:       "foo",
+						Namespace:  "default",
+						Group:      "apps",
+						Kind:       "Deployment",
+						SkipReason: "some skip reason",
+					},
+				},
+			},
+		},
+		"skipped delete resource without reason": {
+			resources: []*unstructured.Unstructured{
+				testutil.Unstructured(t, deploymentYAML),
+			},
+			clusterResources: []*unstructured.Unstructured{},
+			events: []event.Event{
+				{
+					Type: event.InitType,
+					InitEvent: event.InitEvent{
+						ActionGroups: event.ActionGroupList{
+							{
+								Action: event.DeleteAction,
+								Name:   "delete-1",
+								Identifiers: []object.ObjMetadata{
+									testutil.ToIdentifier(t, deploymentYAML),
+								},
+							},
+						},
+					},
+				},
+				{
+					Type: event.DeleteType,
+					DeleteEvent: event.DeleteEvent{
+						GroupName:  "delete-1",
+						Identifier: testutil.ToIdentifier(t, deploymentYAML),
+						Status:     event.DeleteSkipped,
+					},
+				},
+			},
+			expectedPlan: &Plan{
+				Actions: []Action{
+					{
+						Type:      Skip,
+						Name:      "foo",
+						Namespace: "default",
+						Group:     "apps",
+						Kind:      "Deployment",
 					},
 				},
 			},
