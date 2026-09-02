@@ -110,14 +110,15 @@ type Plan struct {
 }
 
 type Action struct {
-	Type      ActionType
-	Group     string
-	Kind      string
-	Name      string
-	Namespace string
-	Original  *unstructured.Unstructured
-	Updated   *unstructured.Unstructured
-	Error     string
+	Type       ActionType
+	Group      string
+	Kind       string
+	Name       string
+	Namespace  string
+	Original   *unstructured.Unstructured
+	Updated    *unstructured.Unstructured
+	Error      string
+	SkipReason string
 }
 
 type Options struct {
@@ -195,63 +196,65 @@ func (r *ClusterPlanner) dryRunForPlan(
 }
 
 func handleApplyEvent(e event.Event, a Action) Action {
+	if e.ApplyEvent.Status == event.ApplySkipped {
+		a.Type = Skip
+		if e.ApplyEvent.Error != nil {
+			a.SkipReason = e.ApplyEvent.Error.Error()
+		}
+		return a
+	}
 	if e.ApplyEvent.Error != nil {
 		a.Type = Error
 		a.Error = e.ApplyEvent.Error.Error()
-	} else {
-		switch e.ApplyEvent.Status {
-		case event.ApplySkipped:
-			a.Type = Skip
-		case event.ApplySuccessful:
-			a.Updated = e.ApplyEvent.Resource
-			if a.Original != nil {
-				// TODO: Unclear if we should diff the full resources here. It doesn't work
-				// well with client-side apply as the managedFields property shows up as
-				// changes. It also means there is a race with controllers that might change
-				// the status of resources.
-				if reflect.DeepEqual(a.Original, a.Updated) {
-					a.Type = Unchanged
-				} else {
-					a.Type = Update
-				}
+	} else if e.ApplyEvent.Status == event.ApplySuccessful {
+		a.Updated = e.ApplyEvent.Resource
+		if a.Original != nil {
+			// TODO: Unclear if we should diff the full resources here. It doesn't work
+			// well with client-side apply as the managedFields property shows up as
+			// changes. It also means there is a race with controllers that might change
+			// the status of resources.
+			if reflect.DeepEqual(a.Original, a.Updated) {
+				a.Type = Unchanged
 			} else {
-				a.Type = Create
+				a.Type = Update
 			}
+		} else {
+			a.Type = Create
 		}
 	}
 	return a
 }
 
 func handlePruneEvent(e event.Event, a Action) Action {
+	if e.PruneEvent.Status == event.PruneSkipped {
+		a.Type = Skip
+		if e.PruneEvent.Error != nil {
+			a.SkipReason = e.PruneEvent.Error.Error()
+		}
+		return a
+	}
 	if e.PruneEvent.Error != nil {
 		a.Type = Error
 		a.Error = e.PruneEvent.Error.Error()
-	} else {
-		switch e.PruneEvent.Status {
-		case event.PruneSuccessful:
-			a.Type = Delete
-		// Lifecycle directives can cause resources to remain in the
-		// live state even if they would normally be pruned.
-		// TODO: Handle reason for skipped resources that has recently
-		// been added to the actuation library.
-		case event.PruneSkipped:
-			a.Type = Skip
-		}
+	} else if e.PruneEvent.Status == event.PruneSuccessful {
+		a.Type = Delete
 	}
 	return a
 }
 
 func handleDeleteEvent(e event.Event, a Action) Action {
+	if e.DeleteEvent.Status == event.DeleteSkipped {
+		a.Type = Skip
+		if e.DeleteEvent.Error != nil {
+			a.SkipReason = e.DeleteEvent.Error.Error()
+		}
+		return a
+	}
 	if e.DeleteEvent.Error != nil {
 		a.Type = Error
 		a.Error = e.DeleteEvent.Error.Error()
-	} else {
-		switch e.DeleteEvent.Status {
-		case event.DeleteSuccessful:
-			a.Type = Delete
-		case event.DeleteSkipped:
-			a.Type = Skip
-		}
+	} else if e.DeleteEvent.Status == event.DeleteSuccessful {
+		a.Type = Delete
 	}
 	return a
 }

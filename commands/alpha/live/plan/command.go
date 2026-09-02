@@ -178,8 +178,10 @@ func printText(plan *kptplanner.Plan, objs []*unstructured.Unstructured, ioStrea
 			printEntry(" ", action, ioStreams)
 			findAndPrintDiff(action.Original, action.Updated, ContentPrefix, ioStreams)
 		case kptplanner.Skip:
-			// TODO: provide more information about why the resource was skipped.
 			printEntryWithColor("=", print.YELLOW, action, ioStreams)
+			if action.SkipReason != "" {
+				printWithPrefix(action.SkipReason, ContentPrefix, ioStreams)
+			}
 		case kptplanner.Error:
 			printEntry("!", action, ioStreams)
 			printWithPrefix(action.Error, ContentPrefix, ioStreams)
