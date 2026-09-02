@@ -171,6 +171,9 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher SubpackageMatche
 
 // RemoveStaleItems removes files and directories from the dst package that were present in the org package,
 // but are not present in the src package. It does not remove the root Kptfile of the dst package.
+// Directories that are stale but still contain locally-added files are preserved rather than
+// causing an error, since this represents a legitimate merge outcome where upstream deleted a
+// directory but the local package added files to it.
 func RemoveStaleItems(org, src, dst string, _ bool, _ SubpackageMatcher) error {
 	var dirsToDelete []string
 	walkErr := filepath.Walk(dst, func(path string, info os.FileInfo, err error) error {
@@ -215,11 +218,28 @@ func RemoveStaleItems(org, src, dst string, _ bool, _ SubpackageMatcher) error {
 	if walkErr != nil {
 		return walkErr
 	}
+	// Sort directories deepest-first so children are processed before parents.
 	sort.Slice(dirsToDelete, SubPkgFirstSorter(dirsToDelete))
 	for _, dir := range dirsToDelete {
-		if err := os.Remove(dir); err != nil {
+		// Check whether the directory is empty before removing it. It may still
+		// contain files that were added locally (not present in upstream) and therefore
+		// intentionally preserved by the filepath walk above. Removing a non-empty
+		// directory with os.Remove would fail; instead we skip it so those
+		// locally-added files survive the merge.
+		f, err := os.Open(dir)
+		if err != nil {
 			return err
 		}
+		_, readErr := f.Readdirnames(1)
+		f.Close()
+		if readErr == io.EOF {
+			// Directory is empty — safe to remove.
+			if err := os.Remove(dir); err != nil {
+				return err
+			}
+		}
+		// Otherwise the directory still has contents (locally-added files);
+		// leave it in place.
 	}
 
 	return nil

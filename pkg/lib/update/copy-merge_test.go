@@ -411,7 +411,7 @@ func TestCopyMergeDifferentMetadata(t *testing.T) {
 	}
 }
 
-func TestCopyMergeErrorRemovingFile(t *testing.T) {
+func TestCopyMergePreservesLocalFilesInDeletedDir(t *testing.T) {
 	src := t.TempDir()
 	dst := t.TempDir()
 	org := t.TempDir()
@@ -424,6 +424,8 @@ func TestCopyMergeErrorRemovingFile(t *testing.T) {
 	assert.NoError(t, os.WriteFile(filePathDst, []byte("content"), 0644))
 	assert.NoError(t, os.WriteFile(filePathOrg, []byte("content"), 0644))
 
+	// Replace file in dst with a non-empty directory (simulates upstream deleting
+	// a path that locally became a directory with added files).
 	assert.NoError(t, os.Remove(filePathDst))
 	assert.NoError(t, os.Mkdir(filePathDst, 0755))
 	assert.NoError(t, os.WriteFile(filepath.Join(filePathDst, "dummy"), []byte("x"), 0644))
@@ -436,7 +438,13 @@ func TestCopyMergeErrorRemovingFile(t *testing.T) {
 		IsRoot:      true,
 	}
 
+	// Should succeed — the non-empty directory is preserved with its locally-added file.
 	err := updater.Update(options)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "directory not empty")
+	assert.NoError(t, err)
+
+	// Verify the directory and its contents survive.
+	_, err = os.Stat(filePathDst)
+	assert.NoError(t, err, "non-empty directory should be preserved")
+	_, err = os.Stat(filepath.Join(filePathDst, "dummy"))
+	assert.NoError(t, err, "locally-added file should be preserved")
 }
