@@ -15,3 +15,4 @@ menu:
 - [Value Propagation Pattern]({{% relref "/guides/value-propagation" %}})
 - [Tenant Onboarding]({{% relref "/guides/tenant-onboarding" %}})
 - [Understanding 3-Way Merge in kpt]({{% relref "/guides/3-way-merge" %}})
+- [KRM Function Developer Guide]({{% relref "/guides/krm-functions" %}})
