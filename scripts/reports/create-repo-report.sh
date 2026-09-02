@@ -49,7 +49,7 @@ function create_pr_table () {
     echo "| Number | Title | Author | Draft | Updated | Comment |"
     echo "|-|-|-|-|-|-|"
 
-    gh pr ls -L 200 --json title,author,isDraft,updatedAt,url | jq -r '.[] | "| \(.url) | \(.title) | \(.author.login) | \(.isDraft) | \(.updatedAt) | |"'
+    gh pr ls -L 200 --json title,author,isDraft,updatedAt,url | jq -r '.[] | "| \(.url) | \(.title) | \(.author.login) | \(.isDraft) | \(.updatedAt) | |"' || exit
     popd > /dev/null || exit
     echo ""
   done
@@ -72,13 +72,15 @@ function create_release_table () {
     echo "| Tag | Name | Latest | Pre Release | Published |"
     echo "|-|-|-|-|-|"
 
-    gh release ls -L 1000 --exclude-drafts --json tagName,name,isLatest,isPrerelease,publishedAt | jq -r '.[] | "| \(.tagName) | \(.name) | \(.isLatest) | \(.isPrerelease) | \(.publishedAt) | |" ' | grep ' 202[4-6]-'
+    gh release ls -L 1000 --exclude-drafts --json tagName,name,isLatest,isPrerelease,publishedAt | jq -r '.[] | "| \(.tagName) | \(.name) | \(.isLatest) | \(.isPrerelease) | \(.publishedAt) | |" ' | grep ' 202[4-6]-' || exit
     popd > /dev/null || exit
     echo ""
   done
 }
 
 repo_dir=$(mktemp -d)
+trap 'rm -rf "$repo_dir"' EXIT
+
 pushd "$repo_dir" > /dev/null || exit
 
 clone_repos "$repo_dir"
@@ -86,4 +88,3 @@ create_pr_table "$repo_dir"
 create_release_table "$repo_dir"
 
 popd > /dev/null || exit
-rm -rf "$repo_dir"
