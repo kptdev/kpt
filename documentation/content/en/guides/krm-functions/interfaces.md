@@ -177,6 +177,18 @@ func main() {
 | Access full ResourceList | ❌ | ✅ |
 | Best for | Transformers, Validators | Generators, Complex functions |
 
+As a rule of thumb, pick the interface by what your function does:
+
+- **Transformers and validators** — use `fn.Runner`. It auto-parses the
+  functionConfig and keeps the function focused on modifying items. Examples:
+  set-labels, set-namespace.
+- **Generators and functions needing full ResourceList access** (adding or
+  removing items, reading results from earlier functions) — use
+  `fn.ResourceListProcessor`. Examples: render-helm-chart, starlark.
+
+Both produce spec-compliant ResourceList I/O; the choice is about ergonomics, so
+use the one that fits your function rather than a hard requirement.
+
 ## Wrapping a Runner
 
 `fn.Runner` is wrapped into a `ResourceListProcessor` internally using
