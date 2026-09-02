@@ -28,8 +28,14 @@ type Runner interface {
 ```
 
 Characteristics:
-- The SDK automatically parses `functionConfig` into your struct's exported fields (via JSON tags).
-- You can **modify** existing items, but you cannot add or remove items from the slice.
+- The SDK automatically parses `functionConfig` into your struct's exported fields.
+  A typed functionConfig (its `kind` matching your struct name) is unmarshaled via
+  JSON tags; alternatively, a `ConfigMap` functionConfig has its `.data` map assigned
+  to a `map[string]string` field on your struct.
+- You can **modify** existing items, but adding or removing items is not supported.
+  This is a convention, not a compile-time restriction: the SDK does not read back
+  items appended inside `Run`, so adds and removes are effectively dropped. Use
+  `fn.ResourceListProcessor` when you need to add or remove items.
 - Return `true` for success, `false` for failure.
 - Use `results` to report structured info/warning/error messages.
 

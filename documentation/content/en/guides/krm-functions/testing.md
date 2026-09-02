@@ -34,8 +34,11 @@ Conventions:
 - Files prefixed with `_` are special — they are not included in the input items.
 - `_fnconfig.yaml` contains the functionConfig passed to your function.
 - `_expected.yaml` contains the expected ResourceList output.
-- All other `.yaml` files in the directory are parsed as input resources.
+- All other `.yaml`/`.yml` files (and a `Kptfile`, if present) are parsed as input
+  resources. Files with any other extension are ignored.
 - You can have multiple input files (e.g., `deployments.yaml`, `services.yaml`).
+  Input files are read in sorted (alphabetical) order, so the assembled item
+  ordering is deterministic.
 
 ### Writing a Golden Test
 
@@ -51,7 +54,7 @@ import (
 )
 
 func TestFunction(t *testing.T) {
-    runner := fn.WithContext(context.TODO(), &YourFunction{})
+    runner := fn.WithContext(context.TODO(), &SetLabels{})
     testhelpers.RunGoldenTests(t, "testdata", runner)
 }
 ```
@@ -136,8 +139,12 @@ When your function's output changes intentionally, regenerate the expected files
 WRITE_GOLDEN_OUTPUT=1 go test ./...
 ```
 
-This overwrites all `_expected.yaml` files with the actual output. Review the
-diffs in version control before committing.
+This overwrites any `_expected.yaml` that differs from the actual output. Any
+non-empty value enables write mode (`WRITE_GOLDEN_OUTPUT=1`, `=true`, etc.).
+Note that the run which writes a golden file is reported as a **test failure**
+(`wrote output to ...`) — this is intentional, so a rewrite never silently
+passes in CI. Re-run the tests without the env var to confirm they pass, and
+review the diffs in version control before committing.
 
 **Caution:** `WRITE_GOLDEN_OUTPUT` accepts whatever the function currently
 produces as "correct." If the function has a bug, you have just blessed buggy
