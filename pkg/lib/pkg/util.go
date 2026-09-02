@@ -222,8 +222,8 @@ func RemoveStaleItems(org, src, dst string, _ bool, _ SubpackageMatcher) error {
 	sort.Slice(dirsToDelete, SubPkgFirstSorter(dirsToDelete))
 	for _, dir := range dirsToDelete {
 		// Check whether the directory is empty before removing it. It may still
-		// contain files that were added locally (not present in org) and therefore
-		// intentionally preserved by the walk above. Removing a non-empty
+		// contain files that were added locally (not present in upstream) and therefore
+		// intentionally preserved by the filepath walk above. Removing a non-empty
 		// directory with os.Remove would fail; instead we skip it so those
 		// locally-added files survive the merge.
 		f, err := os.Open(dir)
