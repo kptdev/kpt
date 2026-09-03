@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -409,6 +410,7 @@ func (p *Pkg) LocalResources() (resources []*yaml.RNode, err error) {
 		FileSystem: filesys.FileSystemOrOnDisk{
 			FileSystem: p.fsys,
 		},
+		FileSkipFunc: p.myFileSkipFunc,
 	}
 	resources, err = pkgReader.Read()
 	if err != nil {
@@ -738,6 +740,32 @@ func (p *Pkg) LocalInventory() (kptfilev1.Inventory, error) {
 	// Kptfile stores the inventory.
 	fmt.Println(warnInvInKptfile)
 	return *kf.Inventory, nil
+}
+
+func (p *Pkg) myFileSkipFunc(relPath string) bool {
+	fullResource := string(p.DisplayPath) + "/" + relPath
+	relResoruce := strings.TrimPrefix(fullResource, string(p.getRootPackage().DisplayPath)+"/")
+
+	r, err := regexp.Compile(".*mysql11.*")
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	if r.MatchString(relResoruce) {
+		fmt.Println("MATCHED: " + relResoruce)
+		return false
+	} else {
+		fmt.Println("UNMATCHED: " + relResoruce)
+		return true
+	}
+}
+
+func (p *Pkg) getRootPackage() *Pkg {
+	if p.Parent == nil {
+		return p
+	}
+	return p.Parent.getRootPackage()
 }
 
 // filterResourceGroups only retains ResourceGroup objects.
