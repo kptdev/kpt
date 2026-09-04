@@ -19,9 +19,9 @@ kptArgs:
   - "apply"
   - "--dry-run"
   - "--install-resource-group"
-stdOut: |
-  deployment.apps/nginx-deployment created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
 stdErr: |
   installing inventory ResourceGroup CRD.
+  Dry-run strategy: server
+  deployment.apps/nginx-deployment created
+  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
 exitCode: 0

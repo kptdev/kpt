@@ -73,16 +73,16 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 	if len(args) > 0 {
 		return fmt.Errorf("too many arguments; install-resource-group takes no arguments")
 	}
-	fmt.Fprint(r.ioStreams.Out, "installing inventory ResourceGroup CRD...")
+	fmt.Fprint(r.ioStreams.ErrOut, "installing inventory ResourceGroup CRD...")
 
 	err := (&live.ResourceGroupInstaller{
 		Factory: r.factory,
 	}).InstallRG(r.ctx)
 
 	if err == nil {
-		fmt.Fprintln(r.ioStreams.Out, "success")
+		fmt.Fprintln(r.ioStreams.ErrOut, "success")
 	} else {
-		fmt.Fprintln(r.ioStreams.Out, "failed")
+		fmt.Fprintln(r.ioStreams.ErrOut, "failed")
 	}
 	return err
 }

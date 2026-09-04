@@ -19,7 +19,7 @@ kptArgs:
   - "apply"
   - "--reconcile-timeout=5m"
 
-stdOut: |
+stdErr: |
   inventory update started
   inventory update finished
   apply phase started
