@@ -23,7 +23,7 @@ inputs:
   kpt-fallback-version:
     description: "Fallback kpt version if extraction from go.mod fails"
     required: false
-    default: "v1.0.0-beta.65"
+    default: "v1.0.0"
   go-version:
     description: "Exact version for Go version setup, go-version-file is ignored if set"
     required: false
@@ -31,6 +31,10 @@ inputs:
     description: "Path to go.mod file for Go version setup"
     required: false
     default: "go.mod"
+  kpt-version-file:
+    description: "Path to the go.mod file used to resolve the kpt version. Defaults to go-version-file."
+    required: false
+    default: ""
   go-cache:
     description: "Enable Go module caching"
     required: false
@@ -62,14 +66,26 @@ runs:
       shell: bash
       env:
         GO_VERSION_FILE: ${{ inputs.go-version-file }}
+        KPT_VERSION_FILE: ${{ inputs.kpt-version-file }}
         KPT_FALLBACK: ${{ inputs.kpt-fallback-version }}
       run: |
-        GO_MOD_DIR=$(dirname -- "$GO_VERSION_FILE")
-        KPT_VERSION=$(cd "$GO_MOD_DIR" && go list -m -f '{{.Version}}' github.com/kptdev/kpt 2>/dev/null)
+        set -euo pipefail
+        VERSION_FILE="${KPT_VERSION_FILE:-$GO_VERSION_FILE}"
+        KPT_VERSION=""
+        if [ ! -f "$VERSION_FILE" ]; then
+          echo "::warning::kpt version file '${VERSION_FILE}' not found; using fallback ${KPT_FALLBACK}."
+        else
+          GO_MOD_DIR=$(dirname -- "$VERSION_FILE")
+          KPT_VERSION=$(cd "$GO_MOD_DIR" && go mod edit -json \
+            | jq -r '(.Require[]? | select(.Path=="github.com/kptdev/kpt") | .Version) // ""')
+          if [ -z "$KPT_VERSION" ]; then
+            echo "::warning::Could not resolve github.com/kptdev/kpt from ${VERSION_FILE}; using fallback ${KPT_FALLBACK}."
+          fi
+        fi
         if [ -z "$KPT_VERSION" ]; then
-          echo "Warning: Could not resolve kpt version from ${GO_VERSION_FILE}, using fallback."
           KPT_VERSION="$KPT_FALLBACK"
         fi
+        echo "Using kpt version: ${KPT_VERSION}"
         echo "version=${KPT_VERSION}" >> "$GITHUB_OUTPUT"
 
     - name: Install kpt
