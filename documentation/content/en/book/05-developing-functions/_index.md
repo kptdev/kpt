@@ -133,8 +133,14 @@ for writing functions that manipulate KRM. Go provides:
 
 ### Quickstart
 
-In this quickstart, we will write a function called "set-annotation" that adds an annotation 
-`config.kubernetes.io/managed-by=kpt` to all `Deployment` resources.
+In this quickstart, we will start from the get-started scaffold — a small
+"hello world" function that stamps a greeting annotation on every resource — and
+adapt it into a function that adds `config.kubernetes.io/managed-by=kpt` to all
+`Deployment` resources.
+
+For a deeper treatment of function development — choosing an interface, testing
+with golden files, and containerizing — see the
+[KRM Function Developer Guide]({{% relref "/guides/krm-functions" %}}).
 
 #### Set up your project
 
@@ -181,6 +187,7 @@ package main
 import (
 	"context"
 	_ "embed"
+	"fmt"
 	"os"
 
 	"github.com/kptdev/krm-functions-sdk/go/fn"
@@ -192,26 +199,48 @@ var readme []byte
 //go:embed metadata.yaml
 var metadata []byte
 
-var _ fn.Runner = &YourFunction{}
+// greetingAnnotation is the annotation this example stamps onto every resource.
+const greetingAnnotation = "example.kpt.dev/greeting"
 
-// TODO: Change to your functionConfig "Kind" name.
-type YourFunction struct {
-	FnConfigBool bool
-	FnConfigInt  int
-	FnConfigFoo  string
+var _ fn.Runner = &HelloWorld{}
+
+// HelloWorld is the functionConfig for this example. The struct name is used as
+// the functionConfig `kind`, and each exported field is populated from the
+// matching functionConfig key via its JSON tag.
+//
+// TODO: Rename this struct to your functionConfig "kind" and replace the fields
+// with the configuration your function needs.
+type HelloWorld struct {
+	Greeting string `json:"greeting,omitempty"`
+	Name     string `json:"name,omitempty"`
 }
 
 // Run is the main function logic.
 // `items` is parsed from the STDIN "ResourceList.Items".
-// `functionConfig` is from the STDIN "ResourceList.FunctionConfig". The value has been assigned to the r attributes
+// `functionConfig` is from the STDIN "ResourceList.FunctionConfig". Its values
+// have already been unmarshaled into the receiver's fields.
 // `results` is the "ResourceList.Results" that you can write result info to.
-func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
-	// TODO: Write your code.
-	return true
+func (r *HelloWorld) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
+	greeting := r.Greeting
+	if greeting == "" {
+		greeting = "Hello"
+	}
+	name := r.Name
+	if name == "" {
+		name = "world"
+	}
+	message := fmt.Sprintf("%s, %s!", greeting, name)
+	for _, obj := range items {
+		if err := obj.SetAnnotation(greetingAnnotation, message); err != nil {
+			results.ErrorE(err)
+		}
+	}
+	results.Infof("greeted %d resource(s) with %q", len(items), message)
+	return results.ExitCode() == 0
 }
 
 func main() {
-	runner := fn.WithContext(context.Background(), &YourFunction{})
+	runner := fn.WithContext(context.Background(), &HelloWorld{})
 	if err := fn.AsMain(runner, fn.WithDocs(readme, metadata)); err != nil {
 		os.Exit(1)
 	}
@@ -225,19 +254,21 @@ Basically, the KRM resource `ResourceList.FunctionConfig` and KRM resources `Res
 `KubeObject` objects. You can use `KubeObject` in a similar manner to
 [`unstructured.Unstructured`](https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured).
 
-The set-annotation function (see below) iterates the `ResourceList.Items`, finds out the `Deployment` resources and
-adds the annotation. After the iteration, it adds some user message to the `ResourceList.Results`
+The set-annotation function (see below) iterates the `ResourceList.Items`, finds the `Deployment` resources and
+adds the annotation. After the iteration, it reports a user message to the `ResourceList.Results` via `results.Infof`.
 
 ```go
 func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
 	for _, kubeObject := range items {
-		if kubeObject.IsGVK("apps", "v1", "Deployment") {
-			kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
+		if kubeObject.GetKind() == "Deployment" {
+			if err := kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt"); err != nil {
+				results.ErrorE(err)
+			}
 		}
 	}
-	// This result message will be displayed in the function evaluation time.	
-	*results = append(*results, fn.GeneralResult("Add config.kubernetes.io/managed-by=kpt to all `Deployment` resources", fn.Info))
-	return true
+	// This result message will be displayed at function evaluation time.
+	results.Infof("added config.kubernetes.io/managed-by=kpt to all Deployment resources")
+	return results.ExitCode() == 0
 }
 ```
 
@@ -248,16 +279,16 @@ Learn more about the `KubeObject` from the [go documentation](https://pkg.go.dev
 The "get-started" package contains a `./testdata` directory. You can use this to test out your functions. 
 
 ```shell
-# Edit the `testdata/noop-passthrough/resources.yaml` with your KRM resources. 
-# resources.yaml already has a `Deployment` and `Service` as test data. 
-vim testdata/noop-passthrough/resources.yaml
+# Edit `testdata/hello-world/resources.yaml` with your KRM resources.
+# Add a `Deployment` so the set-annotation logic above has something to match.
+vim testdata/hello-world/resources.yaml
 
 # Convert the KRM resources and FunctionConfig resource to `ResourceList`, and 
 # then pipe the ResourceList as StdIn to your function
 kpt fn source testdata | go run main.go
 ```
 
-Verify the KRM function behavior in the StdOutput `ResourceList` by looking for the new annotation on the "nginx-deplyment":
+Verify the KRM function behavior in the StdOutput `ResourceList` by looking for the new annotation on the `Deployment`:
 
 ```yaml
 apiVersion: apps/v1
@@ -281,10 +312,19 @@ kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
 to
 
 ```shell
-kubeObject.SetAnnotation("config.kubernetes.io/managed-by", r.FnConfigFoo)
+kubeObject.SetAnnotation("config.kubernetes.io/managed-by", r.ManagedBy)
 ```
 
-The annotation value will be set from the value of the `FnConfigFoo` field.
+Add a `ManagedBy` field to your struct so the value can be read from the
+functionConfig:
+
+```go
+type YourFunction struct {
+	ManagedBy string `json:"managedBy,omitempty"`
+}
+```
+
+The annotation value will be set from the value of the `managedBy` field.
 
 Create the configuration information so that we can concatenate it onto the ResourceList generated by the `kpt fn source` command. This
 configuration specifies that the "config.kubernetes.io/managed-by" annotation should be set to a value of "bar".
@@ -298,7 +338,7 @@ functionConfig:
     name: test
     annotations:
       internal.kpt.dev/upstream-identifier: 'fn.kpt.dev|YourFunction|default|test'
-  fnConfigFoo: bar
+  managedBy: bar
 EOF
 ```
 
@@ -363,11 +403,16 @@ docker build . -t ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 
 To verify the image using the same `./testdata` resources
 ```shell
-kpt fn eval ./testdata/noop-passthrough/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
+kpt fn eval ./testdata/hello-world/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
 ### Next Steps
 
+- Read the [KRM Function Developer Guide]({{% relref "/guides/krm-functions" %}})
+  for choosing an [interface]({{% relref "/guides/krm-functions/interfaces" %}})
+  (`fn.Runner` vs `fn.ResourceListProcessor`),
+  [testing]({{% relref "/guides/krm-functions/testing" %}}) with golden files, and
+  [containerizing]({{% relref "/guides/krm-functions/containerizing" %}}) your function.
 - See other [go documentation examples](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn/examples) to use KubeObject.
 - To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/main/CONTRIBUTING.md)
 - For the `metadata.yaml` schema reference (required fields, allowed tags), see the [metadata schema documentation](https://catalog.kpt.dev/metadata-schema/)
