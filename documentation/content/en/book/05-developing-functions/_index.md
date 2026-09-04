@@ -350,9 +350,18 @@ standard input. You can now debug the KRM function in the VSCode debugger.
 
 Build the image
 
-The "get-started" package provides the `Dockerfile` that you can download using:
-```shell
-wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/main/go/kfn/commands/embed/Dockerfile
+Create a `Dockerfile` in your function's directory:
+```dockerfile
+FROM golang:1.26-alpine3.23
+ENV CGO_ENABLED=0
+WORKDIR /go/src/
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go build -o /usr/local/bin/function ./
+FROM scratch
+COPY --from=0 /usr/local/bin/function /usr/local/bin/function
+ENTRYPOINT ["function"]
 ```
 
 ```shell
