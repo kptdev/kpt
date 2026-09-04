@@ -15,8 +15,8 @@
 class Kpt < Formula
   desc "A toolchain for composing, customizing, and deploying Kubernetes packages at scale"
   homepage "https://kpt.dev"
-  url "https://github.com/kptdev/kpt/archive/v1.0.0-beta.67.tar.gz"
-  sha256 "358f6dc09e0ed494432d1b669ee1a9133bc20c285defbdc495ca29994b43b424"
+  url "https://github.com/kptdev/kpt/archive/v1.0.0.tar.gz"
+  sha256 "334bfa273fd57af06324f30e7447306c93b03d7146ddbc2aae8b63dd52b6fc4e"
 
   depends_on "go" => :build
 
