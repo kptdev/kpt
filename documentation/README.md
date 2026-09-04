@@ -33,6 +33,34 @@ The site pulls some dependencies via Git submodules. If `npm install` succeeds b
 git submodule update --init --recursive
 ```
 
+## Checking external links
+
+To validate external links in the documentation, use:
+
+```sh
+make check-links-external
+```
+
+This builds the site with Hugo and runs [lychee](https://github.com/lycheeverse/lychee) against the rendered HTML.
+
+### Prerequisites
+
+- **Hugo** — installed via `npm install` (from `devDependencies`) or [standalone](https://gohugo.io/installation/)
+- **lychee** — install via one of:
+  - macOS: `brew install lychee`
+  - Linux/macOS (Cargo): `cargo install lychee`
+  - Binary download: see [lychee releases](https://github.com/lycheeverse/lychee/releases)
+
+### Using a GitHub token
+
+To avoid GitHub rate limiting, pass a token:
+
+```sh
+GITHUB_TOKEN=$(gh auth token) make check-links-external
+```
+
+The token is only sent to github.com domains.
+
 ## Style guide for documentation
 
 1. Use US English in the documentation

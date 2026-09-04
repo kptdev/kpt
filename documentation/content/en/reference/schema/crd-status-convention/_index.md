@@ -10,7 +10,7 @@ menu:
 
 To enable kpt to calculate the [reconcile status]({{% relref "/book/06-deploying-packages#reconcile-status" %}}) for CRDs, this
 document provides additional conventions for status conditions following the
-[Kubernetes API Guideline](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
+[Kubernetes API Guideline](https://github.com/kubernetes/community/blob/main/contributors/devel/sig-architecture/api-conventions.md).
 Custom controllers should use the following conditions types to signal whether a resource has been fully reconciled, and
 whether it has encountered any problems:
 

@@ -127,7 +127,7 @@ for writing functions that manipulate KRM. Go provides:
 
 - [Install kpt]({{% relref "/installation/kpt-cli" %}})
 
-- [Install Docker](https://docs.docker.com/get-docker/)
+- [Install Docker](https://docs.docker.com/get-started/get-docker/)
 
 - [Golang](https://go.dev/dl/) (at least version 1.24)
 

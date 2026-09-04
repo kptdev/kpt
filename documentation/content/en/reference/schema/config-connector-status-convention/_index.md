@@ -8,11 +8,11 @@ menu:
     parent: "Schema Reference"
 ---
 
-`kpt` includes custom rules for [Config Connector](https://cloud.google.com/config-connector/docs/overview) resources to
+`kpt` includes custom rules for [Config Connector](https://docs.cloud.google.com/config-connector/docs/overview) resources to
 make them easier to work with. This document describes how kpt uses fields and conditions on Config Connector
 resources to compute [reconcile status]({{% relref "/book/06-deploying-packages#reconcile-status" %}}).
 
-[Config Connector](https://cloud.google.com/config-connector/docs/how-to/monitoring-your-resources) resources expose the
+[Config Connector](https://docs.cloud.google.com/config-connector/docs/how-to/monitoring-your-resources) resources expose the
 `observedGeneration` field in the status object, and `kpt` will always report a resource as being `InProgress` if the
 `observedGeneration` doesn't match the value of `metadata.generation`.
 
@@ -22,7 +22,7 @@ as `Current`, i.e it has been successfully reconciled.
 If the `Ready` condition is `False`, `kpt` will look at the `Reason` field on the
 condition object to determine whether the resource is making progress towards
 reconciliation. The possible values mirrors those used by
-[Config Connector events](https://cloud.google.com/config-connector/docs/how-to/monitoring-your-resources#viewing_events).
+[Config Connector events](https://docs.cloud.google.com/config-connector/docs/how-to/monitoring-your-resources#viewing_events).
 If the value is one of the following, the resource is considered to have failed
 reconciliation:
 - `ManagementConflict`
