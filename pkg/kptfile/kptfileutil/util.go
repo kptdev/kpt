@@ -170,6 +170,19 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 	}
 }
 
+// readKptfileOrEmpty reads the Kptfile at the given path, returning an empty
+// KptFile if the file does not exist. Any other error is returned as-is.
+func readKptfileOrEmpty(path string) (*kptfilev1.KptFile, error) {
+	kf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		return &kptfilev1.KptFile{}, nil
+	}
+	return kf, nil
+}
+
 // UpdateKptfileWithoutOrigin updates the Kptfile in the package specified by
 // localPath with values from the package specified by updatedPath using a 3-way
 // merge strategy, but where origin does not have any values.
@@ -177,24 +190,17 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 // sections will also be copied into local.
 func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
-	localKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	localKf, err := readKptfileOrEmpty(localPath)
 	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, kptfilev1.UniquePath(localPath), err)
-		}
-		localKf = &kptfilev1.KptFile{}
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
-	updatedKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
+	updatedKf, err := readKptfileOrEmpty(updatedPath)
 	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, kptfilev1.UniquePath(updatedPath), err)
-		}
-		updatedKf = &kptfilev1.KptFile{}
+		return errors.E(op, kptfilev1.UniquePath(updatedPath), err)
 	}
 
-	err = MergeKptfiles(localKf, updatedKf, &kptfilev1.KptFile{})
-	if err != nil {
+	if err = MergeKptfiles(localKf, updatedKf, &kptfilev1.KptFile{}); err != nil {
 		return err
 	}
 
@@ -202,8 +208,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		updateUpstreamAndUpstreamLock(localKf, updatedKf)
 	}
 
-	err = WriteFile(localPath, localKf)
-	if err != nil {
+	if err = WriteFile(localPath, localKf); err != nil {
 		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 	return nil
@@ -216,32 +221,22 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 // sections will also be copied into local.
 func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfile"
-	localKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	localKf, err := readKptfileOrEmpty(localPath)
 	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, kptfilev1.UniquePath(localPath), err)
-		}
-		localKf = &kptfilev1.KptFile{}
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
-	updatedKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
+	updatedKf, err := readKptfileOrEmpty(updatedPath)
 	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, kptfilev1.UniquePath(localPath), err)
-		}
-		updatedKf = &kptfilev1.KptFile{}
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
-	originKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, originPath)
+	originKf, err := readKptfileOrEmpty(originPath)
 	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, kptfilev1.UniquePath(localPath), err)
-		}
-		originKf = &kptfilev1.KptFile{}
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
-	err = MergeKptfiles(localKf, updatedKf, originKf)
-	if err != nil {
+	if err = MergeKptfiles(localKf, updatedKf, originKf); err != nil {
 		return err
 	}
 
@@ -249,8 +244,49 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		updateUpstreamAndUpstreamLock(localKf, updatedKf)
 	}
 
-	err = WriteFile(localPath, localKf)
+	if err = WriteFile(localPath, localKf); err != nil {
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
+	}
+	return nil
+}
+
+// ReplaceKptfile replaces the Kptfile at localPath with content from the
+// package at updatedPath. Unlike UpdateKptfile, it does not perform a 3-way
+// merge — it takes all content fields directly from the updated Kptfile.
+// This is appropriate for update strategies that discard local changes
+// (fast-forward, force-delete-replace).
+// The package name and namespace from local are preserved. The inventory
+// field is preserved if the updated Kptfile does not define one (since
+// inventory is typically set locally by kpt live init).
+func ReplaceKptfile(localPath, updatedPath string) error {
+	const op errors.Op = "kptfileutil.ReplaceKptfile"
+	localKf, err := readKptfileOrEmpty(localPath)
 	if err != nil {
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
+	}
+
+	updatedKf, err := readKptfileOrEmpty(updatedPath)
+	if err != nil {
+		return errors.E(op, kptfilev1.UniquePath(localPath), err)
+	}
+
+	// Take content fields directly from upstream.
+	localKf.Annotations = updatedKf.Annotations
+	localKf.Labels = updatedKf.Labels
+	localKf.Info = updatedKf.Info
+	localKf.Pipeline = updatedKf.Pipeline
+	localKf.Status = updatedKf.Status
+
+	// Preserve local inventory if upstream doesn't define one, since
+	// inventory is typically set locally by kpt live init.
+	if updatedKf.Inventory != nil {
+		localKf.Inventory = updatedKf.Inventory
+	}
+
+	// Always update upstream tracking fields.
+	updateUpstreamAndUpstreamLock(localKf, updatedKf)
+
+	if err = WriteFile(localPath, localKf); err != nil {
 		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 	return nil
