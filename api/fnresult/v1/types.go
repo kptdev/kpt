@@ -13,6 +13,9 @@
 // limitations under the License.
 
 // +kubebuilder:object:generate=true
+// +kubebuilder:ac:generate=true
+// +kubebuilder:ac:output:package=../../generated/applyconfigurations
+// +groupName=kpt.dev
 package v1
 
 import (
@@ -24,8 +27,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
-
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.21.0 object:headerFile="../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 // Result contains the structured result from an individual function
 type Result struct {
@@ -71,6 +72,7 @@ func ResultListGVK() schema.GroupVersionKind {
 }
 
 // ResultList contains aggregated results from multiple functions
+// +kubebuilder:ac:generate=true
 type ResultList struct {
 	yaml.ResourceMeta `yaml:",inline"`
 	// ExitCode is the exit code of kpt command
