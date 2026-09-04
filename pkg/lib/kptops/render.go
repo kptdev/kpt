@@ -16,16 +16,11 @@ package kptops
 
 import (
 	"context"
-	"fmt"
-	"io"
-	"os"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/fn"
-	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -51,51 +46,5 @@ func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.R
 		FileSystem:    pkg,
 		RunnerOptions: r.runnerOptions,
 	}
-	return rr.Execute(printer.WithContext(ctx, &packagePrinter{}))
-}
-
-type packagePrinter struct{}
-
-var _ printer.Printer = &packagePrinter{}
-
-const (
-	packagePrefixFormat = "Package %q:"
-	logDepth            = 2
-)
-
-func (p *packagePrinter) PrintPackage(pkg *pkg.Pkg, _ bool) {
-	p.printfDepth(logDepth, packagePrefixFormat, pkg.DisplayPath)
-}
-
-func (p *packagePrinter) Printf(format string, args ...any) {
-	p.printfDepth(logDepth, format, args...)
-}
-
-func (p *packagePrinter) printfDepth(depth int, format string, args ...any) {
-	klog.InfofDepth(depth, format, args...)
-}
-
-func (p *packagePrinter) OptPrintf(opt *printer.Options, format string, args ...any) {
-	if opt == nil {
-		p.Printf(format, args...)
-		return
-	}
-	var prefix string
-	switch {
-	case opt.PkgDisplayName != "":
-		prefix = fmt.Sprintf(packagePrefixFormat, opt.PkgDisplayName)
-	case !opt.PkgDisplayPath.Empty():
-		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgDisplayPath))
-	case !opt.PkgPath.Empty():
-		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgPath))
-	}
-	p.printfDepth(logDepth, prefix+format, args...)
-}
-
-func (p *packagePrinter) OutStream() io.Writer {
-	return os.Stdout
-}
-
-func (p *packagePrinter) ErrStream() io.Writer {
-	return os.Stderr
+	return rr.Execute(printer.WithContext(ctx, printer.NewKlogPrinter()))
 }
