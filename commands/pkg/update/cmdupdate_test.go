@@ -692,6 +692,106 @@ Updating package "subpkg1" with strategy "resource-merge".
 Updated 2 package(s).
 `,
 		},
+		"unfetched subpackage deleted from upstream": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg1").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge"),
+									),
+								pkgbuilder.NewSubPkg("subpkg2").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge"),
+									),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.SecretResource),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "master",
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg1").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+						pkgbuilder.NewSubPkg("subpkg2").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					),
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.SecretResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg1").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master", "resource-merge").
+								WithUpstreamLockRef("foo", "/", "master", 0),
+						).
+						WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+				),
+			expectedOutput: `
+Package "{{ .PKG_NAME }}":
+Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
+<git_output>
+Adding package "".
+Deleting package "subpkg2" from local since it is removed in upstream.
+<git_output>
+Adding package "".
+Package "subpkg1" deleted from upstream, but keeping local since it has changes.
+
+Package "{{ .PKG_NAME }}/subpkg1":
+Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "foo").RepoDirectory }}@master
+Updating package "subpkg1" with strategy "resource-merge".
+
+Updated 2 package(s).
+`,
+		},
 		"Adding package in upstream": {
 			reposChanges: map[string][]testutil.Content{
 				testutil.Upstream: {
