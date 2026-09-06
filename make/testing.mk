@@ -23,6 +23,8 @@ TEST_COVERAGE_FUNC_FILE=func_coverage.out
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports (runs tests with coverage instrumentation)
 	go test -cover -coverprofile=$(TEST_COVERAGE_FILE) ${LDFLAGS} ./...
+	cd api && go test -cover -coverprofile=coverage.out ${LDFLAGS} ./...
+	tail -n +2 api/coverage.out >> $(TEST_COVERAGE_FILE)
 	go tool cover -html=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_HTML_FILE)
 	go tool cover -func=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_FUNC_FILE)
 	@echo "Coverage reports generated:"
