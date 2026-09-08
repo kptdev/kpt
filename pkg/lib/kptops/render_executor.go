@@ -835,11 +835,18 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			}
 		}
 
-		// select the resources on which function should be applied
-		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		// select the resource files  on which function should be applied
+		selectedInput, err := mutator.FilterResourceFiles(input)
 		if err != nil {
 			return nil, err
 		}
+
+		// select the resources on which function should be applied
+		selectedInput, err = fnruntime.SelectInput(selectedInput, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		if err != nil {
+			return nil, err
+		}
+
 		output := &kio.PackageBuffer{}
 		// create a kio pipeline from kyaml library to execute the function chains
 		mutation := kio.Pipeline{
@@ -926,7 +933,12 @@ func (pn *pkgNode) runSingleValidator(ctx context.Context, hctx *hydrationContex
 		return err
 	}
 
-	selectedResources, err := fnruntime.SelectInput(
+	selectedResources, err := validator.FilterResourceFiles(validatorInput)
+	if err != nil {
+		return err
+	}
+
+	selectedResources, err = fnruntime.SelectInput(
 		validatorInput, function.Selectors, function.Exclusions,
 		&fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 	if err != nil {
