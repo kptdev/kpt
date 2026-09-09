@@ -62,6 +62,19 @@ type FunctionApplyConfiguration struct {
 	// `Exclude` are used to specify resources on which the function should NOT be executed.
 	// If not specified, all resources selected by `Selectors` are selected.
 	Exclusions []SelectorApplyConfiguration `json:"exclude,omitempty"`
+	// CelCondition is an optional CEL expression (exposed as 'when' in YAML) that determines whether this
+	// function should be executed. The expression is evaluated against the list
+	// of KRM resources passed to this function step (after `Selectors` and
+	// `Exclude` have been applied) and should return a boolean value.
+	// If omitted or evaluates to true, the function executes normally.
+	// If evaluates to false, the function is skipped.
+	//
+	// Example: Check if a specific ConfigMap exists among the selected resources:
+	// when: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"
+	//
+	// Example: Check resource count among the selected resources:
+	// when: "resources.filter(r, r.kind == 'Deployment').size() > 0"
+	CelCondition *string `json:"when,omitempty"`
 }
 
 // FunctionApplyConfiguration constructs a declarative configuration of the Function type for use with
@@ -155,5 +168,13 @@ func (b *FunctionApplyConfiguration) WithExclusions(values ...*SelectorApplyConf
 		}
 		b.Exclusions = append(b.Exclusions, *values[i])
 	}
+	return b
+}
+
+// WithCelCondition sets the CelCondition field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the CelCondition field is set to the value of the last call.
+func (b *FunctionApplyConfiguration) WithCelCondition(value string) *FunctionApplyConfiguration {
+	b.CelCondition = &value
 	return b
 }

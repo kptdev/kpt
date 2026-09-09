@@ -382,33 +382,6 @@ type Function struct {
 	// Example: Check resource count among the selected resources:
 	//   when: "resources.filter(r, r.kind == 'Deployment').size() > 0"
 	CelCondition string `yaml:"when,omitempty" json:"when,omitempty"`
-
-	// ResourceRegexp is an optional regular expression that can be used to specify
-	// which resource files will be processed by a function. If the ResourceRegexp field
-	// is not specified, all json and yaml resource files in the package are processed by
-	// the function. If a regular expression is specified in the field, only resources
-	// in resource files matching the regular expression are processed by the function.
-	//
-	// Example 1:
-	//   resourceFileRegexp: "vol.*.yaml"
-	//
-	//   The resources with the names below will be processed and all other resources
-	//   will be ignored
-	//    deployment/vol1.yaml
-	//    deployment/volume.yaml
-	//    vol0.yaml
-	//    subpkg1/vol2.yaml
-	//    subpkg1/subpkg11/vol3.yaml
-	//    subpkg2/vol4.yaml
-	//
-	// Example 2:
-	//   resourceRegexp: "subpkg1/subpkg11"
-	//
-	//   The resources with the names below will be processed and all other resources
-	//   will be ignored
-	//    subpkg1/subpkg11/vol3.yaml
-	//    subpkg1/subpkg11/deployment.yaml
-	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" resourceRegexp:"when,omitempty"`
 }
 
 // ResourceReference identifies a resource within the package by its API identity.
@@ -448,16 +421,48 @@ func (r *ResourceReference) Matches(meta yaml.ResourceMeta) bool {
 type Selector struct {
 	// APIVersion of the target resources
 	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
+
 	// Kind of the target resources
 	Kind string `yaml:"kind,omitempty" json:"kind,omitempty"`
+
 	// Name of the target resources
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
 	// Namespace of the target resources
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+
 	// Labels on the target resources
 	Labels map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
+
 	// Annotations on the target resources
 	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+
+	// ResourceRegexp is an optional regular expression that can be used to specify
+	// which resource files will be processed by a function. If the ResourceRegexp field
+	// is not specified, all json and yaml resource files in the package are processed by
+	// the function. If a regular expression is specified in the field, only resources
+	// in resource files matching the regular expression are processed by the function.
+	//
+	// Example 1:
+	//   resourceFileRegexp: "vol.*.yaml"
+	//
+	//   The resources with the names below will be processed and all other resources
+	//   will be ignored
+	//    deployment/vol1.yaml
+	//    deployment/volume.yaml
+	//    vol0.yaml
+	//    subpkg1/vol2.yaml
+	//    subpkg1/subpkg11/vol3.yaml
+	//    subpkg2/vol4.yaml
+	//
+	// Example 2:
+	//   resourceRegexp: "subpkg1/subpkg11"
+	//
+	//   The resources with the names below will be processed and all other resources
+	//   will be ignored
+	//    subpkg1/subpkg11/vol3.yaml
+	//    subpkg1/subpkg11/deployment.yaml
+	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" resourceRegexp:"when,omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified

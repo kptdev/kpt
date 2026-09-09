@@ -34,6 +34,10 @@ type PipelineStepResultApplyConfiguration struct {
 	ExitCode       *int                    `json:"exitCode,omitempty"`
 	Results        []fnresultv1.ResultItem `json:"results,omitempty"`
 	ErrorResults   []fnresultv1.ResultItem `json:"errorResults,omitempty"`
+	// When is the CEL condition expression that was evaluated
+	When *string `json:"when,omitempty"`
+	// Skipped indicates if the function was skipped due to a condition
+	Skipped *bool `json:"skipped,omitempty"`
 }
 
 // PipelineStepResultApplyConfiguration constructs a declarative configuration of the PipelineStepResult type for use with
@@ -107,5 +111,21 @@ func (b *PipelineStepResultApplyConfiguration) WithErrorResults(values ...fnresu
 	for i := range values {
 		b.ErrorResults = append(b.ErrorResults, values[i])
 	}
+	return b
+}
+
+// WithWhen sets the When field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the When field is set to the value of the last call.
+func (b *PipelineStepResultApplyConfiguration) WithWhen(value string) *PipelineStepResultApplyConfiguration {
+	b.When = &value
+	return b
+}
+
+// WithSkipped sets the Skipped field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Skipped field is set to the value of the last call.
+func (b *PipelineStepResultApplyConfiguration) WithSkipped(value bool) *PipelineStepResultApplyConfiguration {
+	b.Skipped = &value
 	return b
 }

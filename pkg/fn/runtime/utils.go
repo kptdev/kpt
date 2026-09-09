@@ -17,7 +17,10 @@ package runtime
 import (
 	"bytes"
 	"fmt"
+	"path"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -25,10 +28,20 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// ResourceIDAnnotation is used to uniquely identify the resource during round trip
-// to and from a function execution. This annotation is meant to be consumed by
-// kpt during round trip and should be deleted after that
-const ResourceIDAnnotation = "internal.config.kubernetes.io/kpt-resource-id"
+const (
+	// PackagePathAnnotation is used to store the path to the file that contains
+	// the resource on the file system
+	PackagePathAnnotation = "internal.config.kubernetes.io/package-path"
+
+	// PathAnnotation is used to store the name of a file that contains
+	// the resource on the file system
+	PathAnnotation = "internal.config.kubernetes.io/path"
+
+	// ResourceIDAnnotation is used to uniquely identify the resource during round trip
+	// to and from a function execution. This annotation is meant to be consumed by
+	// kpt during round trip and should be deleted after that
+	ResourceIDAnnotation = "internal.config.kubernetes.io/kpt-resource-id"
+)
 
 // SaveResults saves results gathered from running the pipeline at specified dir in the input FileSystem.
 func SaveResults(fsys filesys.FileSystem, resultsDir string, fnResults *fnresultv1.ResultList) (string, error) {
@@ -97,6 +110,26 @@ func nodeWithResourceID(resourceID string, input []*yaml.RNode) *yaml.RNode {
 	return nil
 }
 
+// GetNodeRelativePath returns the relative path of the resource in the package relative
+// to the supplied `pathOfPackage`
+func GetNodeRelativePath(pathOfPackage string, node *yaml.RNode) string {
+	resourceFilePackagePath := node.GetAnnotations()[PackagePathAnnotation]
+	resourceFilePath := node.GetAnnotations()[PathAnnotation]
+
+	resourceFileRelativePath := strings.TrimPrefix(strings.TrimPrefix(resourceFilePackagePath, pathOfPackage), "/")
+
+	if resourceFileRelativePath == "" {
+		return resourceFilePath
+	} else {
+		return path.Join(resourceFileRelativePath, resourceFilePath)
+	}
+}
+
+// GetNodeResource returns the AIP version, Kind, namespace, and name of a resource
+func GetNodeResource(node *yaml.RNode) string {
+	return fmt.Sprintf("%s:%s:%s:%s", node.GetApiVersion(), node.GetKind(), node.GetNamespace(), node.GetName())
+}
+
 // presentIn returns true if the targetNode identified by kpt-resource-id annotation
 // is present in the input list of resources
 func presentIn(targetNode *yaml.RNode, input []*yaml.RNode) bool {
@@ -139,14 +172,14 @@ type SelectionContext struct {
 }
 
 // SelectInput returns the selected resources based on criteria in selectors
-func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector, _ *SelectionContext) ([]*yaml.RNode, error) {
+func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector, selectionContext *SelectionContext) ([]*yaml.RNode, error) {
 	var selectedInput []*yaml.RNode
 	if len(selectors) == 0 {
 		selectedInput = input
 	} else {
 		for _, node := range input {
 			for _, selector := range selectors {
-				if IsMatch(node, selector) {
+				if IsMatch(node, selector, selectionContext) {
 					selectedInput = append(selectedInput, node)
 				}
 			}
@@ -159,7 +192,7 @@ func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector
 	for _, node := range selectedInput {
 		matchesExclusion := false
 		for _, exclusion := range exclusions {
-			if !exclusion.IsEmpty() && IsMatch(node, exclusion) {
+			if !exclusion.IsEmpty() && IsMatch(node, exclusion, selectionContext) {
 				matchesExclusion = true
 				break
 			}
@@ -172,11 +205,30 @@ func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector
 }
 
 // IsMatch returns true if the resource matches input selection criteria
-func IsMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+func IsMatch(node *yaml.RNode, selector kptfilev1.Selector, selectionContext *SelectionContext) bool {
 	// keep expanding with new selectors
-	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
-		kindMatch(node, selector) && apiVersionMatch(node, selector) &&
-		labelMatch(node, selector) && annoMatch(node, selector)
+	return resourceFileRegexpMatch(node, selector, selectionContext) &&
+		nameMatch(node, selector) &&
+		namespaceMatch(node, selector) &&
+		kindMatch(node, selector) &&
+		apiVersionMatch(node, selector) &&
+		labelMatch(node, selector) &&
+		annoMatch(node, selector)
+}
+
+// resourceFileRegexpMatcch returns true if the resource file matches the regular expression
+func resourceFileRegexpMatch(node *yaml.RNode, selector kptfilev1.Selector, selectionContext *SelectionContext) bool {
+	if selector.ResourceFileRegexp == "" {
+		return true
+	}
+
+	rootPackagePath := ""
+	if selectionContext != nil {
+		rootPackagePath = selectionContext.RootPackagePath.String()
+	}
+
+	matches, _ := regexp.MatchString(selector.ResourceFileRegexp, GetNodeRelativePath(rootPackagePath, node))
+	return matches
 }
 
 // nameMatch returns true if the resource name matches input selection criteria
