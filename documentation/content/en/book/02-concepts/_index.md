@@ -170,11 +170,14 @@ kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/spark
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Details of how to work with packages are set out in [Chapter 3](../03-packages).
 =======
 We will go into details of how to work with packages in [Chapter 3]({{% relref "/book/03-packages" %}}).
 >>>>>>> main
 =======
+=======
+>>>>>>> 132d0e5a3 (Proofreading up to kptfile annotations.)
 Details of how to work with packages are set out in [Chapter 3]({{% relref "/book/03-packages" %}}).
 >>>>>>> bba110b3d (Proofreading up to kptfile annotations.)
 
@@ -226,6 +229,17 @@ pipeline. See [Chapter 4]({{% relref "/book/04-using-functions" %}}) for how fun
 this annotation, and the
 [`local-config` annotation reference]({{% relref "/reference/annotations/local-config" %}}) for
 full details.
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+Details of how to work with packages are set out in [Chapter 3](../03-packages).
+=======
+We will go into details of how to work with packages in [Chapter 3]({{% relref "/book/03-packages" %}}).
+>>>>>>> main
+=======
+Details of how to work with packages are set out in [Chapter 3]({{% relref "/book/03-packages" %}}).
+>>>>>>> bba110b3d (Proofreading up to kptfile annotations.)
+>>>>>>> b976853e6 (Proofreading up to kptfile annotations.)
 
 ### Local Configuration
 
@@ -301,10 +315,14 @@ Let us suppose that you have rendered the package, and would like to deploy it t
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 132d0e5a3 (Proofreading up to kptfile annotations.)
 First, use the `kpt live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
 =======
 First, use the kpt `live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
 >>>>>>> bba110b3d (Proofreading up to kptfile annotations.)
+<<<<<<< HEAD
 =======
 First, use the `kpt live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
 >>>>>>> aa9e252df (Apply suggestions from code review)
@@ -314,6 +332,8 @@ First, use the kpt `live apply --dry-run` command to validate the resources in y
 =======
 First, use the `kpt live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
 >>>>>>> 1a539c1cc (Apply suggestions from code review)
+=======
+>>>>>>> 132d0e5a3 (Proofreading up to kptfile annotations.)
 
 Typically, it is best to store the package in Git:
 
@@ -327,13 +347,19 @@ The publishing flow is orthogonal to the deployment flow. This allows you to act
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 132d0e5a3 (Proofreading up to kptfile annotations.)
 A Kubernetes Resource Model (KRM) function (formerly called a _kpt function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. KRM functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
 =======
 A Kubernetes Resource Model (KRM) function (formerly called a _kpt_ function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. kpt functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
 >>>>>>> bba110b3d (Proofreading up to kptfile annotations.)
+<<<<<<< HEAD
 =======
 A Kubernetes Resource Model (KRM) function (formerly called a _kpt_ function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. kpt functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
 >>>>>>> de0a38c80 (Proofreading up to kptfile annotations.)
+=======
+>>>>>>> 132d0e5a3 (Proofreading up to kptfile annotations.)
 
 - Enforce all `Namespace` resources to have a `cost-center` label.
 - Add a label to resources based on certain filtering criteria.
@@ -391,14 +417,6 @@ There are two different CLI commands that execute the functions corresponding to
 - `kpt fn render`: This command executes the pipeline of functions declared in the package and its subpackages. This is a declarative way to run the functions.
 - `kpt fn eval`: This command executes a given function on the package. The image to run and the `functionConfig` are specified as a CLI argument. This is an imperative way to run functions. Since the function is provided explicitly by the user, an imperative invocation can be more privileged and low-level than a declarative invocation. For example, it can have access to the host system.
 
-<<<<<<< HEAD
-We will discuss how to run functions in [Chapter 4](../04-using-functions), and how to develop functions in [Chapter 5](../05-developing-functions).
-=======
 We will discuss how to run functions in [Chapter 4]({{% relref "/book/04-using-functions" %}}) and how to develop functions
 in [Chapter 5]({{% relref "/book/05-developing-functions" %}}).
-<<<<<<< HEAD
->>>>>>> main
 
-
-=======
->>>>>>> dfe37451e (Chapter 2 proofreading.)
