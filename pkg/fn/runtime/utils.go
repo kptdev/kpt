@@ -24,6 +24,7 @@ import (
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	pkgerrors "github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -227,7 +228,11 @@ func resourceFileRegexpMatch(node *yaml.RNode, selector kptfilev1.Selector, sele
 		rootPackagePath = selectionContext.RootPackagePath.String()
 	}
 
-	matches, _ := regexp.MatchString(selector.ResourceFileRegexp, GetNodeRelativePath(rootPackagePath, node))
+	matches, err := regexp.MatchString(selector.ResourceFileRegexp, GetNodeRelativePath(rootPackagePath, node))
+	if err != nil {
+		panic(pkgerrors.Wrapf(err, "invalid regular expression specified in selector"))
+	}
+
 	return matches
 }
 
