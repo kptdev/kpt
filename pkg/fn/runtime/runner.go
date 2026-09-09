@@ -22,7 +22,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -36,7 +35,6 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
-	pkgerrors "github.com/pkg/errors"
 	"github.com/regclient/regclient"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -189,26 +187,17 @@ func NewRunner(
 		return nil, err
 	}
 
-	name := f.Image
-	if name == "" {
-		name = f.Exec
-	}
-
 	// Set condition; the shared CEL environment from opts is used at evaluation time.
 	if f.CelCondition != "" {
 		if opts.CELEnvironment == nil {
+			name := f.Image
+			if name == "" {
+				name = f.Exec
+			}
 			return nil, fmt.Errorf("CelCondition specified for function %q but no CEL environment is configured in RunnerOptions", name)
 		}
 		fr.celCondition = f.CelCondition
 		fr.celEnv = opts.CELEnvironment
-	}
-
-	// Set resourceFileRegexp, used to filter resources at funciton exection.
-	if f.ResourceFileRegexp != "" {
-		fr.resourceFileRegexp, err = regexp.Compile(f.ResourceFileRegexp)
-		if err != nil {
-			return nil, pkgerrors.Wrapf(err, "the ResourceRegexp specified for function %q is invalid", name)
-		}
 	}
 
 	return fr, nil
@@ -244,27 +233,22 @@ func NewFunctionRunner(ctx context.Context,
 
 // FunctionRunner wraps FunctionFilter and implements kio.Filter interface.
 type FunctionRunner struct {
-	ctx                context.Context
-	name               string
-	pkgPath            kptfilev1.UniquePath
-	disableCLIOutput   bool
-	filter             *runtimeutil.FunctionFilter
-	fnResult           *fnresultv1.Result
-	fnResults          *fnresultv1.ResultList
-	opts               runneroptions.RunnerOptions
-	celCondition       string                        // CEL condition expression
-	celEnv             *runneroptions.CELEnvironment // shared CEL environment for condition evaluation
-	resourceFileRegexp *regexp.Regexp                // regexp to match resource files
-	skipped            bool                          // true if function execution was skipped due to condition
+	ctx              context.Context
+	name             string
+	pkgPath          kptfilev1.UniquePath
+	disableCLIOutput bool
+	filter           *runtimeutil.FunctionFilter
+	fnResult         *fnresultv1.Result
+	fnResults        *fnresultv1.ResultList
+	opts             runneroptions.RunnerOptions
+	celCondition     string                        // CEL condition expression
+	celEnv           *runneroptions.CELEnvironment // shared CEL environment for condition evaluation
+	skipped          bool                          // true if function execution was skipped due to condition
 }
 
 func (fr *FunctionRunner) SetCelCondition(celCondition string, celEnv *runneroptions.CELEnvironment) {
 	fr.celCondition = celCondition
 	fr.celEnv = celEnv
-}
-
-func (fr *FunctionRunner) SetResourceFileRegexp(resourceFileRegexp *regexp.Regexp) {
-	fr.resourceFileRegexp = resourceFileRegexp
 }
 
 func (fr *FunctionRunner) WasSkipped() bool {
@@ -350,40 +334,6 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
-}
-
-// FilterResourceFiles returns the selected resources based on whether the resource file they
-// are in matches the given regular expression
-func (fr *FunctionRunner) FilterResourceFiles(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	if fr.resourceFileRegexp == nil {
-		return input, nil
-	}
-
-	output = []*yaml.RNode{}
-
-	fmt.Println("function start-->" + fr.name)
-	fmt.Println("function package path-->" + fr.pkgPath)
-	fmt.Println("function regex->" + fr.resourceFileRegexp.String())
-	for node := range input {
-		packagePath := input[node].GetAnnotations()["internal.config.kubernetes.io/package-path"]
-		path := input[node].GetAnnotations()["internal.config.kubernetes.io/path"]
-		relativePath := strings.TrimPrefix(packagePath, string(fr.pkgPath))
-		relativePath = strings.TrimPrefix(relativePath, "/")
-		if relativePath != "" {
-			path = relativePath + "/" + path
-		}
-		fmt.Println("path--->" + path)
-
-		if fr.resourceFileRegexp.MatchString(path) {
-			fmt.Println("keeping path--->" + path)
-			output = append(output, input[node])
-		} else {
-			fmt.Println("dropping path--->" + path)
-			output = append(output, input[node])
-		}
-	}
-	fmt.Println("function end-->" + fr.name + "\n")
-	return output, nil
 }
 
 func baseNameAndTag(name string) (string, string) {
