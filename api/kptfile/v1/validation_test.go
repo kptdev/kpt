@@ -693,3 +693,72 @@ func TestConfigRefValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestFieldValidation(t *testing.T) {
+	cases := []struct {
+		name  string
+		kf    KptFile
+		valid bool
+	}{
+		// Upstream validation
+		{"upstream: valid git", KptFile{Upstream: &Upstream{
+			Type: GitOrigin, Git: &Git{Repo: "https://github.com/kubernetes/examples.git", Ref: "main"},
+			UpdateStrategy: ResourceMerge,
+		}}, true},
+		{"upstream: unknown type", KptFile{Upstream: &Upstream{Type: "unknown"}}, false},
+		{"upstream: git type nil git", KptFile{Upstream: &Upstream{Type: GitOrigin}}, false},
+		{"upstream: empty repo", KptFile{Upstream: &Upstream{
+			Git: &Git{Ref: "main"},
+		}}, false},
+		{"upstream: empty ref", KptFile{Upstream: &Upstream{
+			Git: &Git{Repo: "https://github.com/kubernetes/examples.git"},
+		}}, false},
+		{"upstream: bad strategy", KptFile{Upstream: &Upstream{
+			Type: GitOrigin, Git: &Git{Repo: "https://github.com/kubernetes/examples.git", Ref: "main"},
+			UpdateStrategy: "invalid",
+		}}, false},
+		// UpstreamLock validation
+		{"lock: valid git", KptFile{UpstreamLock: &Locator{
+			Type: GitOrigin, Git: &GitLock{Repo: "https://github.com/kubernetes/examples.git", Ref: "main", Commit: "abc123"},
+		}}, true},
+		{"lock: valid generic", KptFile{UpstreamLock: &Locator{
+			Type: GenericOrigin, Generic: &GenericLock{StoreID: "DB", ResourceID: "pkg-123"},
+		}}, true},
+		{"lock: unknown type", KptFile{UpstreamLock: &Locator{Type: "unknown"}}, false},
+		{"lock: both git and generic", KptFile{UpstreamLock: &Locator{
+			Git: &GitLock{Repo: "r", Ref: "m", Commit: "c"}, Generic: &GenericLock{StoreID: "DB"},
+		}}, false},
+		{"lock: git type nil git", KptFile{UpstreamLock: &Locator{Type: GitOrigin}}, false},
+		{"lock: generic type nil generic", KptFile{UpstreamLock: &Locator{Type: GenericOrigin}}, false},
+		{"lock: missing commit", KptFile{UpstreamLock: &Locator{
+			Type: GitOrigin, Git: &GitLock{Repo: "https://github.com/kubernetes/examples.git", Ref: "main"},
+		}}, false},
+		// Info validation
+		{"info: valid", KptFile{Info: &PackageInfo{
+			LicenseFile: "LICENSE.txt", ReadinessGates: []ReadinessGate{{ConditionType: "Ready"}},
+		}}, true},
+		{"info: empty conditionType", KptFile{Info: &PackageInfo{
+			ReadinessGates: []ReadinessGate{{ConditionType: "Ready"}, {ConditionType: ""}},
+		}}, false},
+		{"info: absolute licenseFile", KptFile{Info: &PackageInfo{LicenseFile: "/etc/license"}}, false},
+		{"info: licenseFile traversal", KptFile{Info: &PackageInfo{LicenseFile: "../LICENSE"}}, false},
+		// Inventory validation
+		{"inventory: all set", KptFile{Inventory: &Inventory{
+			Name: "inv", Namespace: "ns", InventoryID: "id",
+		}}, true},
+		{"inventory: all empty", KptFile{Inventory: &Inventory{}}, true},
+		{"inventory: partial", KptFile{Inventory: &Inventory{Name: "inv", Namespace: "ns"}}, false},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			err := c.kf.Validate(filesys.FileSystemOrOnDisk{}, "")
+			if c.valid && err != nil {
+				t.Fatalf("kptfile should be valid, %s", err)
+			}
+			if !c.valid && err == nil {
+				t.Fatal("kptfile should not be valid")
+			}
+		})
+	}
+}

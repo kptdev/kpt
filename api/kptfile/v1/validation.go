@@ -16,6 +16,7 @@ package v1
 
 import (
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -33,13 +34,136 @@ const (
 	kustomizationKind     = "Kustomization"
 )
 
+// validationErr creates a ValidateError with the given field, value, and reason.
+func validationErr(field, value, reason string) error {
+	return &ValidateError{Field: field, Value: value, Reason: reason}
+}
+
 func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
 	if err := kf.Pipeline.validate(fsys, pkgPath); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)
 	}
-	// TODO: validate other fields
+	if err := kf.Upstream.validate(); err != nil {
+		return fmt.Errorf("invalid upstream: %w", err)
+	}
+	if err := kf.UpstreamLock.validate(); err != nil {
+		return fmt.Errorf("invalid upstreamLock: %w", err)
+	}
+	if err := kf.Info.validate(); err != nil {
+		return fmt.Errorf("invalid info: %w", err)
+	}
+	if kf.Inventory != nil {
+		if err := kf.Inventory.validate(); err != nil {
+			return fmt.Errorf("invalid inventory: %w", err)
+		}
+	}
 	return nil
 }
+
+// validate checks the Upstream fields for consistency.
+func (u *Upstream) validate() error {
+	if u == nil {
+		return nil
+	}
+	if u.Type != "" && u.Type != GitOrigin {
+		return validationErr("upstream.type", string(u.Type), fmt.Sprintf("must be %q when set", GitOrigin))
+	}
+	if u.Type == GitOrigin && u.Git == nil {
+		return validationErr("upstream.git", "", `must be set when upstream.type is "git"`)
+	}
+	if u.Git != nil {
+		if u.Git.Repo == "" {
+			return validationErr("upstream.git.repo", "", "must not be empty")
+		} else if _, err := url.Parse(u.Git.Repo); err != nil {
+			return validationErr("upstream.git.repo", u.Git.Repo, fmt.Sprintf("invalid URL: %s", err))
+		}
+		if u.Git.Ref == "" {
+			return validationErr("upstream.git.ref", "", "must not be empty")
+		}
+	}
+	if u.UpdateStrategy != "" {
+		if _, err := ToUpdateStrategy(string(u.UpdateStrategy)); err != nil {
+			return validationErr("upstream.updateStrategy", string(u.UpdateStrategy), err.Error())
+		}
+	}
+	return nil
+}
+
+// validate checks the Locator (upstreamLock) fields for consistency.
+func (l *Locator) validate() error {
+	if l == nil {
+		return nil
+	}
+	if l.Type != "" && l.Type != GitOrigin && l.Type != GenericOrigin {
+		return validationErr("upstreamLock.type", string(l.Type),
+			fmt.Sprintf("must be %q or %q when set", GitOrigin, GenericOrigin))
+	}
+	if l.Git != nil && l.Generic != nil {
+		return validationErr("upstreamLock", "", "must not specify both `git` and `generic`")
+	}
+	if l.Type == GitOrigin && l.Git == nil {
+		return validationErr("upstreamLock.git", "", `must be set when type is "git"`)
+	}
+	if l.Type == GenericOrigin && l.Generic == nil {
+		return validationErr("upstreamLock.generic", "", `must be set when type is "generic"`)
+	}
+	if l.Git != nil {
+		if l.Git.Repo == "" {
+			return validationErr("upstreamLock.git.repo", "", "must not be empty")
+		}
+		if l.Git.Ref == "" {
+			return validationErr("upstreamLock.git.ref", "", "must not be empty")
+		}
+		if l.Git.Commit == "" {
+			return validationErr("upstreamLock.git.commit", "", "must not be empty")
+		}
+	}
+	return nil
+}
+
+// validate checks the PackageInfo fields.
+func (info *PackageInfo) validate() error {
+	if info == nil {
+		return nil
+	}
+	for i, rg := range info.ReadinessGates {
+		if rg.ConditionType == "" {
+			return validationErr(fmt.Sprintf("info.readinessGates[%d].conditionType", i), "", "must not be empty")
+		}
+	}
+	if info.LicenseFile != "" {
+		p := filepath.Clean(info.LicenseFile)
+		if filepath.IsAbs(p) {
+			return validationErr("info.licenseFile", info.LicenseFile, "must be a relative path")
+		}
+		if strings.Contains(p, "..") {
+			return validationErr("info.licenseFile", info.LicenseFile, "must not reference a path outside the package")
+		}
+	}
+	return nil
+}
+
+// validate checks that inventory fields are all-or-nothing.
+func (inv *Inventory) validate() error {
+	hasName, hasNS, hasID := inv.Name != "", inv.Namespace != "", inv.InventoryID != ""
+	if hasName == hasNS && hasNS == hasID {
+		return nil // all set or all empty — both valid
+	}
+	var missing []string
+	if !hasName {
+		missing = append(missing, "`name`")
+	}
+	if !hasNS {
+		missing = append(missing, "`namespace`")
+	}
+	if !hasID {
+		missing = append(missing, "`inventoryID`")
+	}
+	return validationErr("inventory", "",
+		fmt.Sprintf("all of `name`, `namespace`, and `inventoryID` must be specified; missing: %s",
+			strings.Join(missing, ", ")))
+}
+
 
 // validate will validate all fields in the Pipeline
 // 'mutators' and 'validators' share same schema and
