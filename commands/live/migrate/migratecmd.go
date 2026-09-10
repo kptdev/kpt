@@ -90,13 +90,13 @@ func NewRunner(
 				// default to current working directory
 				args = append(args, ".")
 			}
-			fmt.Fprint(ioStreams.Out, "inventory migration...\n")
+			fmt.Fprint(ioStreams.ErrOut, "inventory migration...\n")
 			if err := r.Run(ioStreams.In, args); err != nil {
-				fmt.Fprint(ioStreams.Out, "failed\n")
-				fmt.Fprint(ioStreams.Out, "inventory migration...failed\n")
+				fmt.Fprint(ioStreams.ErrOut, "failed\n")
+				fmt.Fprint(ioStreams.ErrOut, "inventory migration...failed\n")
 				return err
 			}
-			fmt.Fprint(ioStreams.Out, "inventory migration...success\n")
+			fmt.Fprint(ioStreams.ErrOut, "inventory migration...success\n")
 			return nil
 		},
 	}
@@ -165,10 +165,10 @@ func (mr *Runner) Run(reader io.Reader, args []string) error {
 // error if one occurred. Ignores "AlreadyExists" error. Uses the definition
 // stored in the "rgCrd" variable.
 func (mr *Runner) applyCRD() error {
-	fmt.Fprint(mr.ioStreams.Out, "  ensuring ResourceGroup CRD exists in cluster...")
+	fmt.Fprint(mr.ioStreams.ErrOut, "  ensuring ResourceGroup CRD exists in cluster...")
 	// Simply return early if this is a dry run
 	if mr.dryRun {
-		fmt.Fprintln(mr.ioStreams.Out, "success")
+		fmt.Fprintln(mr.ioStreams.ErrOut, "success")
 		return nil
 	}
 	// Install the ResourceGroup CRD to the cluster.
@@ -177,9 +177,9 @@ func (mr *Runner) applyCRD() error {
 		Factory: mr.factory,
 	}).InstallRG(mr.ctx)
 	if err == nil {
-		fmt.Fprintln(mr.ioStreams.Out, "success")
+		fmt.Fprintln(mr.ioStreams.ErrOut, "success")
 	} else {
-		fmt.Fprintln(mr.ioStreams.Out, "failed")
+		fmt.Fprintln(mr.ioStreams.ErrOut, "failed")
 	}
 	return err
 }
@@ -187,7 +187,7 @@ func (mr *Runner) applyCRD() error {
 // retrieveConfigMapInv retrieves the ConfigMap inventory object or
 // an error if one occurred.
 func (mr *Runner) retrieveConfigMapInv(reader io.Reader, args []string) (inventory.Info, error) {
-	fmt.Fprint(mr.ioStreams.Out, "  retrieve the current ConfigMap inventory...")
+	fmt.Fprint(mr.ioStreams.ErrOut, "  retrieve the current ConfigMap inventory...")
 	cmReader, err := mr.cmLoader.ManifestReader(reader, args[0])
 	if err != nil {
 		return nil, err
@@ -198,7 +198,7 @@ func (mr *Runner) retrieveConfigMapInv(reader io.Reader, args []string) (invento
 	}
 	cmInvObj, _, err := inventory.SplitUnstructureds(objs)
 	if err != nil {
-		fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
+		fmt.Fprintln(mr.ioStreams.ErrOut, "no ConfigMap inventory...completed")
 		return nil, err
 	}
 
@@ -206,12 +206,12 @@ func (mr *Runner) retrieveConfigMapInv(reader io.Reader, args []string) (invento
 	// ignore any inventories that are stored as ResourceGroup resources since they do not need migration.
 	if cmInvObj.GetKind() == rgfilev1alpha1.ResourceGroupGVK().Kind {
 		// No ConfigMap inventory means the migration has already run before.
-		fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
+		fmt.Fprintln(mr.ioStreams.ErrOut, "no ConfigMap inventory...completed")
 		return nil, &inventory.NoInventoryObjError{}
 	}
 
 	cmInv := inventory.WrapInventoryInfoObj(cmInvObj)
-	fmt.Fprintf(mr.ioStreams.Out, "success (inventory-id: %s)\n", cmInv.ID())
+	fmt.Fprintf(mr.ioStreams.ErrOut, "success (inventory-id: %s)\n", cmInv.ID())
 	return cmInv, nil
 }
 
@@ -220,12 +220,12 @@ func (mr *Runner) retrieveConfigMapInv(reader io.Reader, args []string) (invento
 // or an error if one occurred.
 func (mr *Runner) retrieveInvObjs(cmInvClient inventory.Client,
 	invObj inventory.Info) ([]object.ObjMetadata, error) {
-	fmt.Fprint(mr.ioStreams.Out, "  retrieve ConfigMap inventory objs...")
+	fmt.Fprint(mr.ioStreams.ErrOut, "  retrieve ConfigMap inventory objs...")
 	cmObjs, err := cmInvClient.GetClusterObjs(invObj)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Fprintf(mr.ioStreams.Out, "success (%d inventory objects)\n", len(cmObjs))
+	fmt.Fprintf(mr.ioStreams.ErrOut, "success (%d inventory objects)\n", len(cmObjs))
 	return cmObjs, nil
 }
 
@@ -237,13 +237,13 @@ func (mr *Runner) migrateObjs(rgInvClient inventory.Client,
 	if err := validateParams(reader, args); err != nil {
 		return err
 	}
-	fmt.Fprint(mr.ioStreams.Out, "  migrate inventory to ResourceGroup...")
+	fmt.Fprint(mr.ioStreams.ErrOut, "  migrate inventory to ResourceGroup...")
 	if len(cmObjs) == 0 {
-		fmt.Fprint(mr.ioStreams.Out, "no inventory objects found\n")
+		fmt.Fprint(mr.ioStreams.ErrOut, "no inventory objects found\n")
 		return nil
 	}
 	if mr.dryRun {
-		fmt.Fprintln(mr.ioStreams.Out, "success")
+		fmt.Fprintln(mr.ioStreams.ErrOut, "success")
 		return nil
 	}
 
@@ -270,7 +270,7 @@ func (mr *Runner) migrateObjs(rgInvClient inventory.Client,
 	if err != nil {
 		return err
 	}
-	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	fmt.Fprint(mr.ioStreams.ErrOut, "success\n")
 	return nil
 }
 
@@ -278,11 +278,11 @@ func (mr *Runner) migrateObjs(rgInvClient inventory.Client,
 // cluster. Returns an error if one occurred.
 func (mr *Runner) deleteConfigMapInv(cmInvClient inventory.Client,
 	invObj inventory.Info) error {
-	fmt.Fprint(mr.ioStreams.Out, "  deleting old ConfigMap inventory object...")
+	fmt.Fprint(mr.ioStreams.ErrOut, "  deleting old ConfigMap inventory object...")
 	if err := cmInvClient.DeleteInventoryObj(invObj, mr.dryRunStrategy()); err != nil {
 		return err
 	}
-	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	fmt.Fprint(mr.ioStreams.ErrOut, "success\n")
 	return nil
 }
 
@@ -299,15 +299,15 @@ func (mr *Runner) deleteConfigMapFile() error {
 			return err
 		}
 		if len(cmFilename) > 0 {
-			fmt.Fprintf(mr.ioStreams.Out, "deleting inventory template file: %s...", cmFilename)
+			fmt.Fprintf(mr.ioStreams.ErrOut, "deleting inventory template file: %s...", cmFilename)
 			if !mr.dryRun {
 				err = os.Remove(cmFilename)
 				if err != nil {
-					fmt.Fprint(mr.ioStreams.Out, "failed\n")
+					fmt.Fprint(mr.ioStreams.ErrOut, "failed\n")
 					return err
 				}
 			}
-			fmt.Fprint(mr.ioStreams.Out, "success\n")
+			fmt.Fprint(mr.ioStreams.ErrOut, "success\n")
 		}
 	}
 	return nil
@@ -345,7 +345,7 @@ func cmInvClient(_ context.Context, factory util.Factory) (inventory.Client, err
 func (mr *Runner) migrateKptfileToRG(args []string) error {
 	const op errors.Op = "migratecmd.migrateKptfileToRG"
 	klog.V(4).Infoln("attempting to migrate from Kptfile inventory")
-	fmt.Fprint(mr.ioStreams.Out, "  reading existing Kptfile...")
+	fmt.Fprint(mr.ioStreams.ErrOut, "  reading existing Kptfile...")
 	if !mr.dryRun {
 		dir, _, err := pathutil.ResolveAbsAndRelPaths(args[0])
 		if err != nil {
@@ -388,7 +388,7 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 			return err
 		}
 	}
-	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	fmt.Fprint(mr.ioStreams.ErrOut, "success\n")
 	return nil
 }
 
@@ -441,7 +441,7 @@ func (mr *Runner) migrateCMToRG(stdinBytes []byte, args []string) error {
 
 // createRGfile writes the inventory information into the resourcegroup object.
 func (mr *Runner) createRGfile(ctx context.Context, args []string, prevID string) error {
-	fmt.Fprint(mr.ioStreams.Out, "  creating ResourceGroup object file...")
+	fmt.Fprint(mr.ioStreams.ErrOut, "  creating ResourceGroup object file...")
 	if !mr.dryRun {
 		dir, _, err := pathutil.ResolveAbsAndRelPaths(args[0])
 		if err != nil {
@@ -463,12 +463,12 @@ func (mr *Runner) createRGfile(ctx context.Context, args []string, prevID string
 		if err != nil {
 			var invExistsError *initialization.InvExistsError
 			if errors.As(err, &invExistsError) {
-				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
+				fmt.Fprint(mr.ioStreams.ErrOut, "values already exist...")
 			} else {
 				return err
 			}
 		}
 	}
-	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	fmt.Fprint(mr.ioStreams.ErrOut, "success\n")
 	return nil
 }

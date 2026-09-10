@@ -19,7 +19,7 @@ kptArgs:
   - "apply"
   - "--reconcile-timeout=1m"
 
-stdOut: |
+stdErr: |
   inventory update started
   inventory update finished
   apply phase started
@@ -45,7 +45,6 @@ stdOut: |
   apply result: 1 attempted, 1 successful, 0 skipped, 0 failed
   prune result: 2 attempted, 2 successful, 0 skipped, 0 failed
   reconcile result: 3 attempted, 3 successful, 0 skipped, 0 failed, 0 timed out
-
 
 optionalStdOut:
   - configmap/cm reconcile pending

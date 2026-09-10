@@ -216,13 +216,19 @@ func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrat
 	// Print the preview strategy unless the output format is json.
 	if dryRunStrategy.ClientOrServerDryRun() && r.output != printers.JSONPrinter {
 		if dryRunStrategy.ServerDryRun() {
-			fmt.Println("Dry-run strategy: server")
+			fmt.Fprintln(r.ioStreams.ErrOut, "Dry-run strategy: server")
 		} else {
-			fmt.Println("Dry-run strategy: client")
+			fmt.Fprintln(r.ioStreams.ErrOut, "Dry-run strategy: client")
 		}
 	}
 	// The printer will print updates from the channel. It will block
 	// until the channel is closed.
-	printer := printers.GetPrinter(r.output, r.ioStreams)
+	// Use ErrOut for event/table printers (progress logs belong on stderr),
+	// but keep Out (stdout) for JSON output (structured, machine-parseable data).
+	printerStreams := r.ioStreams
+	if r.output != printers.JSONPrinter {
+		printerStreams.Out = r.ioStreams.ErrOut
+	}
+	printer := printers.GetPrinter(r.output, printerStreams)
 	return printer.Print(ch, dryRunStrategy, r.printStatusEvents)
 }
