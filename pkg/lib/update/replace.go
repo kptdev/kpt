@@ -36,8 +36,9 @@ var _ updatetypes.Updater = &ReplaceUpdater{}
 func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 	const op errors.Op = "update.Update"
 
-	// Update Kptfile for root package
-	if err := kptfileutil.UpdateKptfile(options.LocalPath, options.UpdatedPath, options.OriginPath, true); err != nil {
+	// Replace Kptfile wholesale — no 3-way merge needed since this strategy
+	// discards local changes.
+	if err := kptfileutil.ReplaceKptfile(options.LocalPath, options.UpdatedPath); err != nil {
 		return errors.E(op, kptfilev1.UniquePath(options.LocalPath), err)
 	}
 

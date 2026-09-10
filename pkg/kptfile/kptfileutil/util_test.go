@@ -25,6 +25,33 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// writeKptfileToTemp writes the given Kptfile content to a fresh temporary
+// directory and returns that directory's path.
+func writeKptfileToTemp(t *testing.T, content string) string {
+	t.Helper()
+	dir := t.TempDir()
+	err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	return dir
+}
+
+const (
+	invalidKptfileContent = `
+apiVersion: kpt.dev/v1alpha1
+kind: Kptfile
+metadata:
+  name: bad
+`
+	validKptfileContent = `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: valid
+`
+)
+
 // TestValidateInventory tests the ValidateInventory function.
 func TestValidateInventory(t *testing.T) {
 	// nil inventory should not validate
@@ -61,15 +88,6 @@ func TestValidateInventory(t *testing.T) {
 }
 
 func TestUpdateKptfile(t *testing.T) {
-	writeKptfileToTemp := func(tt *testing.T, content string) string {
-		dir := tt.TempDir()
-		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		return dir
-	}
-
 	testCases := map[string]struct {
 		origin         string
 		updated        string
@@ -1407,4 +1425,349 @@ pipeline:
 			}
 		})
 	}
+}
+
+func TestReplaceKptfile(t *testing.T) {
+	testCases := map[string]struct {
+		updated  string
+		local    string
+		expected string
+	}{
+		"pipeline is taken from updated, preserving order": {
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: mysql
+upstream:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /mysql
+    ref: v1
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+      configMap:
+        namespace: example-ns
+      name: set namespace
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
+      configMap:
+        color: orange
+      name: set color label
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: mysql
+upstream:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /mysql
+    ref: v2
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+      configMap:
+        namespace: example-ns
+      name: set namespace
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
+      configMap:
+        fruit: apple
+      name: set fruit label
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
+      configMap:
+        color: orange
+      name: set color label
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: mysql
+upstream:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /mysql
+    ref: v2
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+      configMap:
+        namespace: example-ns
+      name: set namespace
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
+      configMap:
+        fruit: apple
+      name: set fruit label
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.0
+      configMap:
+        color: orange
+      name: set color label
+`,
+		},
+
+		"local inventory is preserved when updated has none": {
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+inventory:
+  namespace: test-ns
+  name: test-name
+  inventoryID: test-id
+pipeline:
+  mutators:
+    - image: foo:bar
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:baz
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+pipeline:
+  mutators:
+    - image: foo:baz
+inventory:
+  namespace: test-ns
+  name: test-name
+  inventoryID: test-id
+`,
+		},
+
+		"inventory is replaced when updated defines one": {
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+inventory:
+  namespace: old-ns
+  name: old-name
+  inventoryID: old-id
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+inventory:
+  namespace: new-ns
+  name: new-name
+  inventoryID: new-id
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+inventory:
+  namespace: new-ns
+  name: new-name
+  inventoryID: new-id
+`,
+		},
+
+		"name and namespace are preserved from local": {
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: my-local-name
+  namespace: my-ns
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: upstream-name
+  namespace: upstream-ns
+info:
+  description: from upstream
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: my-local-name
+  namespace: my-ns
+info:
+  description: from upstream
+`,
+		},
+
+		"upstream and upstreamLock are updated from updated": {
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /
+    ref: v1
+upstreamLock:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /
+    ref: v1
+    commit: aaa111
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /
+    ref: v2
+upstreamLock:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /
+    ref: v2
+    commit: bbb222
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /
+    ref: v2
+upstreamLock:
+  type: git
+  git:
+    repo: github.com/example/repo
+    directory: /
+    ref: v2
+    commit: bbb222
+`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			localDir := writeKptfileToTemp(t, tc.local)
+			updatedDir := writeKptfileToTemp(t, tc.updated)
+
+			err := ReplaceKptfile(localDir, updatedDir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			c, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			assert.Equal(t, strings.TrimSpace(tc.expected)+"\n", string(c))
+		})
+	}
+}
+
+func TestReplaceKptfile_errorPaths(t *testing.T) {
+	t.Run("error reading local Kptfile", func(t *testing.T) {
+		localDir := writeKptfileToTemp(t, invalidKptfileContent)
+		updatedDir := writeKptfileToTemp(t, validKptfileContent)
+
+		err := ReplaceKptfile(localDir, updatedDir)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.ReplaceKptfile")
+	})
+
+	t.Run("error reading updated Kptfile", func(t *testing.T) {
+		localDir := writeKptfileToTemp(t, validKptfileContent)
+		updatedDir := writeKptfileToTemp(t, invalidKptfileContent)
+
+		err := ReplaceKptfile(localDir, updatedDir)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.ReplaceKptfile")
+	})
+
+	t.Run("error writing Kptfile", func(t *testing.T) {
+		localDir := writeKptfileToTemp(t, validKptfileContent)
+		updatedDir := writeKptfileToTemp(t, validKptfileContent)
+
+		err := os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0444)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		err = os.Chmod(localDir, 0555)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		defer func() {
+			_ = os.Chmod(localDir, 0755)
+			_ = os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0644)
+		}()
+
+		err = ReplaceKptfile(localDir, updatedDir)
+		assert.Error(t, err)
+	})
+}
+
+func TestUpdateKptfileWithoutOrigin_errorPaths(t *testing.T) {
+	t.Run("error reading local Kptfile", func(t *testing.T) {
+		localDir := writeKptfileToTemp(t, invalidKptfileContent)
+		updatedDir := writeKptfileToTemp(t, validKptfileContent)
+
+		err := UpdateKptfileWithoutOrigin(localDir, updatedDir, true)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.UpdateKptfileWithoutOrigin")
+	})
+
+	t.Run("error reading updated Kptfile", func(t *testing.T) {
+		localDir := writeKptfileToTemp(t, validKptfileContent)
+		updatedDir := writeKptfileToTemp(t, invalidKptfileContent)
+
+		err := UpdateKptfileWithoutOrigin(localDir, updatedDir, true)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "kptfileutil.UpdateKptfileWithoutOrigin")
+	})
+
+	t.Run("error writing Kptfile", func(t *testing.T) {
+		localDir := writeKptfileToTemp(t, validKptfileContent)
+		updatedDir := writeKptfileToTemp(t, validKptfileContent)
+
+		err := os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0444)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		err = os.Chmod(localDir, 0555)
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+		defer func() {
+			_ = os.Chmod(localDir, 0755)
+			_ = os.Chmod(filepath.Join(localDir, kptfilev1.KptFileName), 0644)
+		}()
+
+		err = UpdateKptfileWithoutOrigin(localDir, updatedDir, false)
+		assert.Error(t, err)
+	})
 }

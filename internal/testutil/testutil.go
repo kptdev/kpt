@@ -15,7 +15,6 @@
 package testutil
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -47,10 +46,10 @@ const TmpDirPrefix = "test-kpt"
 
 const (
 	Dataset1            = "dataset1"
-	Dataset2            = "dataset2"
+	Dataset2            = "dataset2" // Dataset2 is a replica of Dataset1 with workload spec changes (ports, replica count etc.) and a Kptfile mod
 	Dataset3            = "dataset3"
-	Dataset4            = "dataset4" // Dataset4 is replica of Dataset2 with different setter values
-	Dataset5            = "dataset5" // Dataset5 is replica of Dataset2 with additional non KRM files
+	Dataset4            = "dataset4" // Dataset4 is a replica of Dataset2 with different setter values
+	Dataset5            = "dataset5" // Dataset5 is a replica of Dataset2 with additional non KRM files
 	Dataset6            = "dataset6" // Dataset6 contains symlinks
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
@@ -98,8 +97,20 @@ func (g *TestGitRepo) AssertEqual(t *testing.T, sourceDir, destDir string, addMe
 	if !assert.NoError(t, err) {
 		return false
 	}
-	diff = diff.Difference(KptfileSet)
+	diff = removeKptfiles(diff)
 	return assert.Empty(t, diff.List())
+}
+
+// removeKptfiles removes all Kptfile paths (at any depth) from the diff set,
+// since Kptfile content is validated separately by AssertKptfile.
+func removeKptfiles(s sets.String) sets.String {
+	result := sets.String{}
+	for _, item := range s.List() {
+		if filepath.Base(item) != kptfilev1.KptFileName {
+			result.Insert(item)
+		}
+	}
+	return result
 }
 
 // KptfileAwarePkgEqual compares two packages (including any subpackages)
@@ -273,12 +284,12 @@ func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1.
 	if !assert.NoError(t, err) {
 		return false
 	}
-	var res bytes.Buffer
-	d := yaml.NewEncoder(&res)
-	if !assert.NoError(t, d.Encode(kpkg)) {
+	// This mirrors 'WriteFile' in pkg/kptfile/kptfileutil/util.go
+	res, err := yaml.MarshalWithOptions(kpkg, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if !assert.NoError(t, err) {
 		return false
 	}
-	return assert.Equal(t, res.String(), string(b))
+	return assert.Equal(t, string(res), string(b))
 }
 
 // CheckoutBranch checks out the git branch in the repo
