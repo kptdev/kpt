@@ -109,6 +109,86 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 	}
 }
 
+func TestCommand_Run_persistsPreserveExplicitNull(t *testing.T) {
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Data:   testutil.Dataset1,
+					Branch: masterBranch,
+				},
+				{
+					Data: testutil.Dataset2,
+				},
+			},
+		},
+	}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+
+	preserve := true
+	if !assert.NoError(t, (&update.Command{
+		Pkg:                  testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Strategy:             kptfilev1.ResourceMerge,
+		PreserveExplicitNull: &preserve,
+	}).Run(fake.CtxWithDefaultPrinter())) {
+		return
+	}
+
+	kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, g.LocalWorkspace.FullPackagePath())
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.True(t, kf.Upstream.PreserveExplicitNull)
+}
+
+func TestCommand_Run_doesNotClearPreserveExplicitNullWhenUnset(t *testing.T) {
+	g := &testutil.TestSetupManager{
+		T: t,
+		ReposChanges: map[string][]testutil.Content{
+			testutil.Upstream: {
+				{
+					Data:   testutil.Dataset1,
+					Branch: masterBranch,
+				},
+				{
+					Data: testutil.Dataset2,
+				},
+			},
+		},
+	}
+	defer g.Clean()
+	if !g.Init() {
+		return
+	}
+
+	pkgPath := g.LocalWorkspace.FullPackagePath()
+	kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, pkgPath)
+	if !assert.NoError(t, err) {
+		return
+	}
+	kf.Upstream.PreserveExplicitNull = true
+	if !assert.NoError(t, kptfileutil.WriteFile(pkgPath, kf)) {
+		return
+	}
+
+	if !assert.NoError(t, (&update.Command{
+		Pkg:      testutil.CreatePkgOrFail(t, pkgPath),
+		Strategy: kptfilev1.ResourceMerge,
+	}).Run(fake.CtxWithDefaultPrinter())) {
+		return
+	}
+
+	kf, err = kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, pkgPath)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.True(t, kf.Upstream.PreserveExplicitNull)
+}
+
 func TestCommand_Run_subDir(t *testing.T) {
 	for i := range kptfilev1.UpdateStrategies {
 		strategy := kptfilev1.UpdateStrategies[i]
