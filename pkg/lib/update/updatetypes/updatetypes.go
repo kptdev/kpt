@@ -40,4 +40,11 @@ type Options struct {
 	// updated and origin were fetched based on the information in the
 	// Kptfile from this package.
 	IsRoot bool
+
+	// PreserveExplicitNull, when true, makes the resource-merge strategy keep
+	// a field that is explicitly null in the local/dest package even when the
+	// origin value was not null, instead of treating it as an implicit
+	// delete. Fields explicitly cleared by the upstream update itself are
+	// still deleted regardless of this flag.
+	PreserveExplicitNull bool
 }

@@ -28,13 +28,17 @@ type tuple struct {
 	original,
 	updated,
 	dest *yaml.RNode
+
+	// preserveExplicitNull is propagated from the owning tuples/Merge call,
+	// see tuples.preserveExplicitNull.
+	preserveExplicitNull bool
 }
 
 // merge performs a 3-way merge on the tuple
 func (t *tuple) merge() (*yaml.RNode, error) {
 	return walk.Walker{
 		// modified Visitor
-		Visitor: &Visitor{},
+		Visitor: &Visitor{PreserveExplicitNull: t.preserveExplicitNull},
 
 		// same as in merge3.Merge()
 		VisitKeysAsScalars: true,
@@ -52,6 +56,10 @@ type tuples struct {
 	tuplelist
 
 	matcher filters.ResourceMatcher
+
+	// preserveExplicitNull is propagated to every tuple created by this
+	// tuples instance, see Merge().
+	preserveExplicitNull bool
 }
 
 // addOriginal adds an original node to the list, returning an error if such a Resource had already been added
@@ -66,7 +74,7 @@ func (ts *tuples) addOriginal(node *yaml.RNode) error {
 			return nil
 		}
 	}
-	ts.tuplelist = append(ts.tuplelist, &tuple{original: node})
+	ts.tuplelist = append(ts.tuplelist, &tuple{original: node, preserveExplicitNull: ts.preserveExplicitNull})
 	return nil
 }
 
@@ -82,7 +90,7 @@ func (ts *tuples) addUpdated(node *yaml.RNode) error {
 			return nil
 		}
 	}
-	ts.tuplelist = append(ts.tuplelist, &tuple{updated: node})
+	ts.tuplelist = append(ts.tuplelist, &tuple{updated: node, preserveExplicitNull: ts.preserveExplicitNull})
 	return nil
 }
 
@@ -98,7 +106,7 @@ func (ts *tuples) addDest(node *yaml.RNode) error {
 			return nil
 		}
 	}
-	ts.tuplelist = append(ts.tuplelist, &tuple{dest: node})
+	ts.tuplelist = append(ts.tuplelist, &tuple{dest: node, preserveExplicitNull: ts.preserveExplicitNull})
 	return nil
 }
 

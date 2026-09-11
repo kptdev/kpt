@@ -80,7 +80,7 @@ func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 		updatedSubPkgPath := filepath.Join(options.UpdatedPath, subPkgPath)
 		originalSubPkgPath := filepath.Join(options.OriginPath, subPkgPath)
 
-		err := u.updatePackage(subPkgPath, localSubPkgPath, updatedSubPkgPath, originalSubPkgPath, isRootPkg)
+		err := u.updatePackage(subPkgPath, localSubPkgPath, updatedSubPkgPath, originalSubPkgPath, isRootPkg, options.PreserveExplicitNull)
 		if err != nil {
 			return errors.E(op, kptfilev1.UniquePath(localSubPkgPath), err)
 		}
@@ -91,7 +91,7 @@ func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 // updatePackage updates the package in the location specified by localPath
 // using the provided paths to the updated version of the package and the
 // original version of the package.
-func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string, isRootPkg bool) error {
+func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string, isRootPkg, preserveExplicitNull bool) error {
 	const op errors.Op = "update.updatePackage"
 	localExists, err := pkg.Exists(localPath)
 	if err != nil {
@@ -141,7 +141,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 			}
 		}
 	default:
-		if err := u.mergePackage(localPath, updatedPath, originalPath, subPkgPath, isRootPkg); err != nil {
+		if err := u.mergePackage(localPath, updatedPath, originalPath, subPkgPath, isRootPkg, preserveExplicitNull); err != nil {
 			return errors.E(op, kptfilev1.UniquePath(localPath), err)
 		}
 	}
@@ -150,7 +150,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 
 // mergePackage merge a package. It does a 3-way merge by using the provided
 // paths to the local, updated and original versions of the package.
-func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath, _ string, isRootPkg bool) error {
+func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath, _ string, isRootPkg, preserveExplicitNull bool) error {
 	const op errors.Op = "update.mergePackage"
 	if err := kptfileutil.UpdateKptfile(localPath, updatedPath, originalPath, !isRootPkg); err != nil {
 		return errors.E(op, kptfilev1.UniquePath(localPath), err)
@@ -166,7 +166,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 	}
 
 	mergedKos, err := merge3.Merge(
-		originalKos, updatedKos, destinationKos, crdSchemas,
+		originalKos, updatedKos, destinationKos, crdSchemas, preserveExplicitNull,
 	)
 	if err != nil {
 		return err
