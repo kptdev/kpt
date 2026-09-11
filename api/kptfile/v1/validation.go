@@ -34,11 +34,6 @@ const (
 	kustomizationKind     = "Kustomization"
 )
 
-// validationErr creates a ValidateError with the given field, value, and reason.
-func validationErr(field, value, reason string) error {
-	return &ValidateError{Field: field, Value: value, Reason: reason}
-}
-
 func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
 	if err := kf.Pipeline.validate(fsys, pkgPath); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)
@@ -66,24 +61,24 @@ func (u *Upstream) validate() error {
 		return nil
 	}
 	if u.Type != "" && u.Type != GitOrigin {
-		return validationErr("upstream.type", string(u.Type), fmt.Sprintf("must be %q when set", GitOrigin))
+		return &ValidateError{Field: "upstream.type", Value: string(u.Type), Reason: fmt.Sprintf("must be %q when set", GitOrigin)}
 	}
 	if u.Type == GitOrigin && u.Git == nil {
-		return validationErr("upstream.git", "", `must be set when upstream.type is "git"`)
+		return &ValidateError{Field: "upstream.git", Reason: `must be set when upstream.type is "git"`}
 	}
 	if u.Git != nil {
 		if u.Git.Repo == "" {
-			return validationErr("upstream.git.repo", "", "must not be empty")
+			return &ValidateError{Field: "upstream.git.repo", Reason: "must not be empty"}
 		} else if _, err := url.Parse(u.Git.Repo); err != nil {
-			return validationErr("upstream.git.repo", u.Git.Repo, fmt.Sprintf("invalid URL: %s", err))
+			return &ValidateError{Field: "upstream.git.repo", Value: u.Git.Repo, Reason: fmt.Sprintf("invalid URL: %s", err)}
 		}
 		if u.Git.Ref == "" {
-			return validationErr("upstream.git.ref", "", "must not be empty")
+			return &ValidateError{Field: "upstream.git.ref", Reason: "must not be empty"}
 		}
 	}
 	if u.UpdateStrategy != "" {
 		if _, err := ToUpdateStrategy(string(u.UpdateStrategy)); err != nil {
-			return validationErr("upstream.updateStrategy", string(u.UpdateStrategy), err.Error())
+			return &ValidateError{Field: "upstream.updateStrategy", Value: string(u.UpdateStrategy), Reason: err.Error()}
 		}
 	}
 	return nil
@@ -95,27 +90,27 @@ func (l *Locator) validate() error {
 		return nil
 	}
 	if l.Type != "" && l.Type != GitOrigin && l.Type != GenericOrigin {
-		return validationErr("upstreamLock.type", string(l.Type),
-			fmt.Sprintf("must be %q or %q when set", GitOrigin, GenericOrigin))
+		return &ValidateError{Field: "upstreamLock.type", Value: string(l.Type),
+			Reason: fmt.Sprintf("must be %q or %q when set", GitOrigin, GenericOrigin)}
 	}
 	if l.Git != nil && l.Generic != nil {
-		return validationErr("upstreamLock", "", "must not specify both `git` and `generic`")
+		return &ValidateError{Field: "upstreamLock", Reason: "must not specify both `git` and `generic`"}
 	}
 	if l.Type == GitOrigin && l.Git == nil {
-		return validationErr("upstreamLock.git", "", `must be set when type is "git"`)
+		return &ValidateError{Field: "upstreamLock.git", Reason: `must be set when type is "git"`}
 	}
 	if l.Type == GenericOrigin && l.Generic == nil {
-		return validationErr("upstreamLock.generic", "", `must be set when type is "generic"`)
+		return &ValidateError{Field: "upstreamLock.generic", Reason: `must be set when type is "generic"`}
 	}
 	if l.Git != nil {
 		if l.Git.Repo == "" {
-			return validationErr("upstreamLock.git.repo", "", "must not be empty")
+			return &ValidateError{Field: "upstreamLock.git.repo", Reason: "must not be empty"}
 		}
 		if l.Git.Ref == "" {
-			return validationErr("upstreamLock.git.ref", "", "must not be empty")
+			return &ValidateError{Field: "upstreamLock.git.ref", Reason: "must not be empty"}
 		}
 		if l.Git.Commit == "" {
-			return validationErr("upstreamLock.git.commit", "", "must not be empty")
+			return &ValidateError{Field: "upstreamLock.git.commit", Reason: "must not be empty"}
 		}
 	}
 	return nil
@@ -128,16 +123,16 @@ func (info *PackageInfo) validate() error {
 	}
 	for i, rg := range info.ReadinessGates {
 		if rg.ConditionType == "" {
-			return validationErr(fmt.Sprintf("info.readinessGates[%d].conditionType", i), "", "must not be empty")
+			return &ValidateError{Field: fmt.Sprintf("info.readinessGates[%d].conditionType", i), Reason: "must not be empty"}
 		}
 	}
 	if info.LicenseFile != "" {
 		p := filepath.Clean(info.LicenseFile)
 		if filepath.IsAbs(p) {
-			return validationErr("info.licenseFile", info.LicenseFile, "must be a relative path")
+			return &ValidateError{Field: "info.licenseFile", Value: info.LicenseFile, Reason: "must be a relative path"}
 		}
 		if strings.Contains(p, "..") {
-			return validationErr("info.licenseFile", info.LicenseFile, "must not reference a path outside the package")
+			return &ValidateError{Field: "info.licenseFile", Value: info.LicenseFile, Reason: "must not reference a path outside the package"}
 		}
 	}
 	return nil
@@ -159,11 +154,10 @@ func (inv *Inventory) validate() error {
 	if !hasID {
 		missing = append(missing, "`inventoryID`")
 	}
-	return validationErr("inventory", "",
-		fmt.Sprintf("all of `name`, `namespace`, and `inventoryID` must be specified; missing: %s",
-			strings.Join(missing, ", ")))
+	return &ValidateError{Field: "inventory", Reason: fmt.Sprintf(
+		"all of `name`, `namespace`, and `inventoryID` must be specified; missing: %s",
+		strings.Join(missing, ", "))}
 }
-
 
 // validate will validate all fields in the Pipeline
 // 'mutators' and 'validators' share same schema and

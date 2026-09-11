@@ -17,7 +17,7 @@ parallel: true
 kptArgs:
   - "live"
   - "apply"
-  - "--reconcile-timeout=5m"
+  - "--reconcile-timeout=10m"
 
 stdOut: |
   inventory update started
