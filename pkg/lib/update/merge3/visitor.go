@@ -24,12 +24,8 @@ import (
 )
 
 type Visitor struct {
-	// PreserveExplicitNull, when true, keeps a field that is explicitly null
-	// in Dest even though Origin was not null: instead of deleting the
-	// field, a persisted null node is returned so the explicit override
-	// survives the merge. A field explicitly cleared by the update itself
-	// (null in Updated, non-null in Origin) is always deleted, regardless of
-	// this flag, since that reflects the upstream's own intent to remove it.
+	// PreserveExplicitNull keeps a field explicitly nulled in Dest instead
+	// of deleting it. Fields cleared by the update itself are still deleted.
 	PreserveExplicitNull bool
 }
 
@@ -143,10 +139,8 @@ func (*Visitor) isCleared(left, right *yaml.RNode) bool {
 }
 
 // NEW
-// persistedNull returns a null-tagged RNode carrying dest's null value that
-// is marked to survive kyaml's generic "clear tagged-null fields" cleanup
-// (see yaml.RNode.ShouldKeep / yaml.MakePersistentNullNode), so an explicit
-// local null override isn't silently turned into an absent field.
+// persistedNull returns dest's null value as an RNode that survives kyaml's
+// generic tagged-null clearing (see yaml.MakePersistentNullNode).
 func (*Visitor) persistedNull(dest *yaml.RNode) *yaml.RNode {
 	value := ""
 	if dest != nil {

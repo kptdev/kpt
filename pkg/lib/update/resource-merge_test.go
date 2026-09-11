@@ -345,12 +345,8 @@ func TestKeepTaggedNull(t *testing.T) {
 	}
 }
 
-// TestPreserveExplicitNull verifies that, when Options.PreserveExplicitNull
-// is set, a field explicitly nulled locally (dest) is kept as an explicit
-// null in the merge result instead of being dropped, even though origin had
-// a non-null value for it (see the "deletedInDest" section of the fixture).
-// Fields explicitly cleared by the update itself ("deletedInOrigin") are
-// still deleted, same as without the flag.
+// TestPreserveExplicitNull verifies a field explicitly nulled in dest is
+// kept null (not dropped) when Options.PreserveExplicitNull is set.
 func TestPreserveExplicitNull(t *testing.T) {
 	updater := update.ResourceMergeUpdater{}
 

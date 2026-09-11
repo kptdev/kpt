@@ -29,8 +29,6 @@ type tuple struct {
 	updated,
 	dest *yaml.RNode
 
-	// preserveExplicitNull is propagated from the owning tuples/Merge call,
-	// see tuples.preserveExplicitNull.
 	preserveExplicitNull bool
 }
 
@@ -57,8 +55,6 @@ type tuples struct {
 
 	matcher filters.ResourceMatcher
 
-	// preserveExplicitNull is propagated to every tuple created by this
-	// tuples instance, see Merge().
 	preserveExplicitNull bool
 }
 

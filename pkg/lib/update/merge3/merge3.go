@@ -22,13 +22,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
-// Merge performs a 3-way merge of original, updated and destination resources.
-//
-// preserveExplicitNull, when true, keeps a field that is explicitly null in
-// destination even if the origin value was not null, instead of treating it
-// as an implicit delete. Fields explicitly cleared by the update itself
-// (i.e. null in updated while non-null in original) are still deleted
-// regardless of this flag.
+// Merge performs a 3-way merge of original, updated and destination
+// resources. See Visitor.PreserveExplicitNull for preserveExplicitNull.
 func Merge(original, updated, destination fn.KubeObjects, additionalSchemas []byte, preserveExplicitNull bool) (fn.KubeObjects, error) {
 	if additionalSchemas != nil {
 		if err := openapi.AddSchema(additionalSchemas); err != nil {
