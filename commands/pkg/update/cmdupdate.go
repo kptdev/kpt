@@ -71,11 +71,13 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 // Runner contains the run function.
 // TODO, support listing versions
 type Runner struct {
-	ctx                  context.Context
+	ctx context.Context
+
 	strategy             string
 	preserveExplicitNull bool
-	Update               update.Command
-	Command              *cobra.Command
+
+	Update  update.Command
+	Command *cobra.Command
 }
 
 func (r *Runner) preRunE(cmd *cobra.Command, args []string) error {
