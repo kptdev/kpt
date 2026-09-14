@@ -15,29 +15,42 @@
 # Testing tools and targets for SonarQube coverage generation
 
 TEST_COVERAGE_FILE=coverage.out
-TEST_COVERAGE_HTML_FILE=coverage_unit.html
-TEST_COVERAGE_FUNC_FILE=func_coverage.out
+TEST_MODULE_COVERAGE_FILE=module_coverage.out
+TEST_MODULE_COVERAGE_HTML_FILE=module_coverage_unit.html
+TEST_MODULE_COVERAGE_FUNC_FILE=module_func_coverage.out
 
 ##@ Testing
 
+MODULE_COVERAGE_FILES      = $(CURDIR)/$(TEST_MODULE_COVERAGE_FILE)      $(CURDIR)/api/$(TEST_MODULE_COVERAGE_FILE)      $(CURDIR)/mdtogo/$(TEST_MODULE_COVERAGE_FILE)
+MODULE_COVERAGE_HTML_FILES = $(CURDIR)/$(TEST_MODULE_COVERAGE_HTML_FILE) $(CURDIR)/api/$(TEST_MODULE_COVERAGE_HTML_FILE) $(CURDIR)/mdtogo/$(TEST_MODULE_COVERAGE_HTML_FILE)
+MODULE_COVERAGE_FUNC_FILES = $(CURDIR)/$(TEST_MODULE_COVERAGE_FUNC_FILE) $(CURDIR)/api/$(TEST_MODULE_COVERAGE_FUNC_FILE) $(CURDIR)/mdtogo/$(TEST_MODULE_COVERAGE_FUNC_FILE)
+
 .PHONY: test-coverage
-test-coverage: ## Generate coverage reports (runs tests with coverage instrumentation)
-	find . -name go.mod -execdir go test -cover -coverprofile=$(TEST_COVERAGE_FILE) ${LDFLAGS} ./... \;
-	find . -name go.mod -execdir go tool cover -html=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_HTML_FILE) \;
-	find . -name go.mod -execdir go tool cover -func=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_FUNC_FILE) \;
+test-coverage: $(MODULE_COVERAGE_FILES) $(MODULE_COVERAGE_HTML_FILES) $(MODULE_COVERAGE_FUNC_FILES) $(TEST_COVERAGE_FILE)
 
-	cat api/$(TEST_COVERAGE_FILE) | grep -v "mode: set" >> $(TEST_COVERAGE_FILE)
-	cat mdtogo/$(TEST_COVERAGE_FILE) | grep -v "mode: set" >> $(TEST_COVERAGE_FILE)
-	rm api/$(TEST_COVERAGE_FILE)
-	rm mdtogo/$(TEST_COVERAGE_FILE)
+%/$(TEST_MODULE_COVERAGE_FILE):
+	cd $(dir $@) &&	go test -cover -coverprofile=$@ ${LDFLAGS} ./...
+	@echo "  - $@: Coverage data (for SonarQube)"
 
-	@echo "Coverage reports generated:"
+%/$(TEST_MODULE_COVERAGE_HTML_FILE): 
+	cd $(dir $@) && go tool cover -html=$(TEST_MODULE_COVERAGE_FILE) -o $@
+	@echo "  - $@: : HTML coverage report"
+
+%/$(TEST_MODULE_COVERAGE_FUNC_FILE):
+	cd $(dir $@) && go tool cover -html=$(TEST_MODULE_COVERAGE_FILE) -o $@
+	@echo "  - $@: Function-level coverage"
+
+$(TEST_COVERAGE_FILE):
+	rm -f $(TEST_COVERAGE_FILE)
+	find . -name $(TEST_MODULE_COVERAGE_FILE) -exec cat {} \; >> $(TEST_COVERAGE_FILE)
 	@echo "  - $(TEST_COVERAGE_FILE): Coverage data (for SonarQube)"
-	@echo "  - $(TEST_COVERAGE_HTML_FILE): HTML coverage report"
-	@echo "  - $(TEST_COVERAGE_FUNC_FILE): Function-level coverage"
 
-.PHONY: test-clean
-test-clean: ## Clean up coverage artifacts
-	rm -f $(TEST_COVERAGE_FILE) $(TEST_COVERAGE_HTML_FILE) $(TEST_COVERAGE_FUNC_FILE)
+.PHONY: test-coverage-clean
+test-coverage-clean: ## Clean up coverage artifacts
+	rm -f $(TEST_COVERAGE_FILE)
+
+	find . -name $(TEST_MODULE_COVERAGE_FILE)      -exec rm -f {} \;
+	find . -name $(TEST_MODULE_COVERAGE_HTML_FILE) -exec rm -f {} \;
+	find . -name $(TEST_MODULE_COVERAGE_FUNC_FILE) -exec rm -f {} \;
 	@echo "Coverage artifacts cleaned"
 
