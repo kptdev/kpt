@@ -461,7 +461,7 @@ type Selector struct {
 	//    subpkg2/vol4.yaml
 	//
 	// Example 2:
-	//   resourceRegexp: "subpkg1/subpkg11"
+	//   resourceFileRegexp: "subpkg1/subpkg11"
 	//
 	//   The resources with the names below will be processed and all other resources
 	//   will be ignored

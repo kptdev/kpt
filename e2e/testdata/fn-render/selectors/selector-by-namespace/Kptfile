@@ -1,0 +1,11 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        env: production
+      selectors:
+        - namespace: prod
