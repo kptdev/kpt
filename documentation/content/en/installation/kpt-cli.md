@@ -143,10 +143,10 @@ For instructions on how to enable the script for the given shell, see the help p
 
 ## Homebrew
 
-Install the latest release with Homebrew on MacOS.
+kpt is available in [homebrew-core](https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/k/kpt.rb),
+so you can install the latest release with Homebrew directly:
 
 ```shell
-brew tap kptdev/kpt https://github.com/kptdev/kpt.git
 brew install kpt
 ```
 
@@ -154,7 +154,12 @@ brew install kpt
 kpt version
 ```
 
-The version of kpt installed using `brew` can only be a tagged release, master releases are not shipped.
+The version of kpt installed using `brew` is a tagged release. To build and
+install the current `main` branch instead, use the `--HEAD` flag:
+
+```shell
+brew install --HEAD kpt
+```
 
 ## Docker
 
