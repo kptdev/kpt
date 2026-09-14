@@ -434,7 +434,9 @@ func TestCmd_NonExistent(t *testing.T) {
 	d := t.TempDir()
 	_, err := runCat(t, filepath.Join(d, "nope.yaml"))
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no such file or directory")
+	isNotFound := os.IsNotExist(err) || strings.Contains(err.Error(), "no such file or directory") ||
+		strings.Contains(err.Error(), "cannot find the file")
+	assert.True(t, isNotFound, "expected file not found error")
 }
 
 // TestCmd_KptfileArgDisplayed: passing the Kptfile directly should display
@@ -826,11 +828,21 @@ metadata:
   name: secret
 `)
 	// Symlink inside the package — should be skipped.
-	require.NoError(t, os.Symlink(filepath.Join(d, "external.yaml"), filepath.Join(real, "link.yaml")))
+	if err := os.Symlink(filepath.Join(d, "external.yaml"), filepath.Join(real, "link.yaml")); err != nil {
+		if strings.Contains(err.Error(), "privilege is not held") {
+			t.Skip("skipping symlink test on Windows without symlink privileges")
+		}
+		require.NoError(t, err)
+	}
 
 	// Symlink as the argument — should be resolved.
 	link := filepath.Join(d, "pkg-link")
-	require.NoError(t, os.Symlink(real, link))
+	if err := os.Symlink(real, link); err != nil {
+		if strings.Contains(err.Error(), "privilege is not held") {
+			t.Skip("skipping symlink test on Windows without symlink privileges")
+		}
+		require.NoError(t, err)
+	}
 
 	got, err := runCat(t, link)
 	require.NoError(t, err)

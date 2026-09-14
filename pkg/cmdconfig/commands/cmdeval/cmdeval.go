@@ -15,14 +15,14 @@ import (
 	"github.com/google/shlex"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/pkg/cmdconfig/commands/runner"
+	"github.com/kptdev/kpt/pkg/fn/runfn"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
-	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -89,7 +89,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	})
 
 	r.Command.Flags().BoolVar(
-		&r.RunnerOptions.AllowWasm, "allow-alpha-wasm", false, "allow alpha wasm functions to be run. If true, you can specify a wasm image with --image flag or a path to a wasm file (must have the .wasm file extension) with --exec flag.")
+		&r.RunnerOptions.AllowWasm, "allow-alpha-wasm", false,
+		"allow alpha wasm functions to be run. If true, you can specify a wasm image with --image flag or a path to a wasm file (must have the .wasm file extension) with --exec flag.")
 
 	// selector flags
 	r.Command.Flags().StringVar(

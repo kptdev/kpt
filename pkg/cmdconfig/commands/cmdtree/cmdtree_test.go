@@ -604,8 +604,13 @@ func TestTreeCommand_symlink(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(d, "foo"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink("foo", "foo-link")
-	if !assert.NoError(t, err) {
-		return
+	if err != nil {
+		if strings.Contains(err.Error(), "privilege is not held") {
+			t.Skip("skipping symlink test on Windows without symlink privileges")
+		}
+		if !assert.NoError(t, err) {
+			return
+		}
 	}
 	defer os.RemoveAll(d)
 	err = os.WriteFile(filepath.Join(d, "foo", "f1.yaml"), []byte(`

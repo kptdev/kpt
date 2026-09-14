@@ -14,9 +14,9 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/pkg/fn/runfn"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer/fake"
-	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"

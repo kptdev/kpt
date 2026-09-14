@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kptdev/kpt/internal/testutil"
@@ -497,8 +498,13 @@ func TestSourceCommand_Symlink(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(d, "foo"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink("foo", "foo-link")
-	if !assert.NoError(t, err) {
-		return
+	if err != nil {
+		if strings.Contains(err.Error(), "privilege is not held") {
+			t.Skip("skipping symlink test on Windows without symlink privileges")
+		}
+		if !assert.NoError(t, err) {
+			return
+		}
 	}
 	err = os.WriteFile(filepath.Join(d, "foo", "f1.yaml"), []byte(`
 kind: Deployment

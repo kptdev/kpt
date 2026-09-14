@@ -20,9 +20,9 @@ import (
 	"github.com/kptdev/kpt/commands/fn/doc"
 	"github.com/kptdev/kpt/commands/fn/render"
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdeval"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdsink"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdsource"
+	"github.com/kptdev/kpt/pkg/cmdconfig/commands/cmdeval"
+	"github.com/kptdev/kpt/pkg/cmdconfig/commands/cmdsink"
+	"github.com/kptdev/kpt/pkg/cmdconfig/commands/cmdsource"
 	"github.com/spf13/cobra"
 )
 

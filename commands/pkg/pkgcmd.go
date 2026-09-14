@@ -22,8 +22,8 @@ import (
 	initialization "github.com/kptdev/kpt/commands/pkg/init"
 	"github.com/kptdev/kpt/commands/pkg/update"
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdcat"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdtree"
+	"github.com/kptdev/kpt/pkg/cmdconfig/commands/cmdcat"
+	"github.com/kptdev/kpt/pkg/cmdconfig/commands/cmdtree"
 	"github.com/spf13/cobra"
 )
 

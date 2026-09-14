@@ -473,11 +473,8 @@ func (p TreeWriter) getFields(leaf *yaml.RNode) (treeFields, error) {
 			elem := &treeField{name: match}
 			field.matchingElementsAndFields = append(field.matchingElementsAndFields, elem)
 
-			// iterate over collection of queried fields for the element
-			for i := range subFields {
-				// add to the list of fields for this element
-				elem.matchingElementsAndFields = append(elem.matchingElementsAndFields, subFields[i])
-			}
+			// add to the list of fields for this element
+			elem.matchingElementsAndFields = append(elem.matchingElementsAndFields, subFields...)
 		}
 		// clear this cached data
 		field.subFieldByMatch = nil
