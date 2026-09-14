@@ -671,89 +671,72 @@ func TestResourceFileRegexpMatch(t *testing.T) {
 func TestIndividualMatchFunctions(t *testing.T) {
 	t.Run("nameMatch", func(t *testing.T) {
 		node := makeNode(t, "v1", "ConfigMap", "my-cm", "", nil, nil, "", "")
-		match, err := nameMatch(node, kptfilev1.Selector{Name: "my-cm"})
-		assert.NoError(t, err)
+		match := nameMatch(node, kptfilev1.Selector{Name: "my-cm"})
 		assert.True(t, match)
 
-		match, err = nameMatch(node, kptfilev1.Selector{Name: "other"})
-		assert.NoError(t, err)
+		match = nameMatch(node, kptfilev1.Selector{Name: "other"})
 		assert.False(t, match)
 
-		match, err = nameMatch(node, kptfilev1.Selector{})
-		assert.NoError(t, err)
+		match = nameMatch(node, kptfilev1.Selector{})
 		assert.True(t, match)
 	})
 
 	t.Run("namespaceMatch", func(t *testing.T) {
 		node := makeNode(t, "v1", "ConfigMap", "cm", "prod", nil, nil, "", "")
-		match, err := namespaceMatch(node, kptfilev1.Selector{Namespace: "prod"})
-		assert.NoError(t, err)
+		match := namespaceMatch(node, kptfilev1.Selector{Namespace: "prod"})
 		assert.True(t, match)
 
-		match, err = namespaceMatch(node, kptfilev1.Selector{Namespace: "staging"})
-		assert.NoError(t, err)
+		match = namespaceMatch(node, kptfilev1.Selector{Namespace: "staging"})
 		assert.False(t, match)
 
-		match, err = namespaceMatch(node, kptfilev1.Selector{})
-		assert.NoError(t, err)
+		match = namespaceMatch(node, kptfilev1.Selector{})
 		assert.True(t, match)
 	})
 
 	t.Run("kindMatch", func(t *testing.T) {
 		node := makeNode(t, "apps/v1", "Deployment", "d", "", nil, nil, "", "")
-		match, err := kindMatch(node, kptfilev1.Selector{Kind: "Deployment"})
-		assert.NoError(t, err)
+		match := kindMatch(node, kptfilev1.Selector{Kind: "Deployment"})
 		assert.True(t, match)
 
-		match, err = kindMatch(node, kptfilev1.Selector{Kind: "Service"})
-		assert.NoError(t, err)
+		match = kindMatch(node, kptfilev1.Selector{Kind: "Service"})
 		assert.False(t, match)
 
-		match, err = kindMatch(node, kptfilev1.Selector{})
-		assert.NoError(t, err)
+		match = kindMatch(node, kptfilev1.Selector{})
 		assert.True(t, match)
 	})
 
 	t.Run("apiVersionMatch", func(t *testing.T) {
 		node := makeNode(t, "apps/v1", "Deployment", "d", "", nil, nil, "", "")
-		match, err := apiVersionMatch(node, kptfilev1.Selector{APIVersion: "apps/v1"})
-		assert.NoError(t, err)
+		match := apiVersionMatch(node, kptfilev1.Selector{APIVersion: "apps/v1"})
 		assert.True(t, match)
 
-		match, err = apiVersionMatch(node, kptfilev1.Selector{APIVersion: "v1"})
-		assert.NoError(t, err)
+		match = apiVersionMatch(node, kptfilev1.Selector{APIVersion: "v1"})
 		assert.False(t, match)
 
-		match, err = apiVersionMatch(node, kptfilev1.Selector{})
-		assert.NoError(t, err)
+		match = apiVersionMatch(node, kptfilev1.Selector{})
 		assert.True(t, match)
 	})
 
 	t.Run("labelMatch", func(t *testing.T) {
 		node := makeNode(t, "v1", "ConfigMap", "cm", "", map[string]string{"env": "prod", "team": "infra"}, nil, "", "")
 
-		match, err := labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"env": "prod"}})
-		assert.NoError(t, err)
+		match := labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"env": "prod"}})
 		assert.True(t, match)
 
 		// both labels present
-		match, err = labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"env": "prod", "team": "infra"}})
-		assert.NoError(t, err)
+		match = labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"env": "prod", "team": "infra"}})
 		assert.True(t, match)
 
 		// wrong value
-		match, err = labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"env": "staging"}})
-		assert.NoError(t, err)
+		match = labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"env": "staging"}})
 		assert.False(t, match)
 
 		// missing key
-		match, err = labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"owner": "alice"}})
-		assert.NoError(t, err)
+		match = labelMatch(node, kptfilev1.Selector{Labels: map[string]string{"owner": "alice"}})
 		assert.False(t, match)
 
 		// empty selector labels always match
-		match, err = labelMatch(node, kptfilev1.Selector{})
-		assert.NoError(t, err)
+		match = labelMatch(node, kptfilev1.Selector{})
 		assert.True(t, match)
 	})
 
@@ -761,28 +744,23 @@ func TestIndividualMatchFunctions(t *testing.T) {
 		node := makeNode(t, "v1", "ConfigMap", "cm", "", nil,
 			map[string]string{"owner": "alice", "team": "infra"}, "", "")
 
-		match, err := annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"owner": "alice"}})
-		assert.NoError(t, err)
+		match := annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"owner": "alice"}})
 		assert.True(t, match)
 
 		// both annotations present
-		match, err = annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"owner": "alice", "team": "infra"}})
-		assert.NoError(t, err)
+		match = annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"owner": "alice", "team": "infra"}})
 		assert.True(t, match)
 
 		// wrong value
-		match, err = annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"owner": "bob"}})
-		assert.NoError(t, err)
+		match = annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"owner": "bob"}})
 		assert.False(t, match)
 
 		// missing key
-		match, err = annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"env": "prod"}})
-		assert.NoError(t, err)
+		match = annoMatch(node, kptfilev1.Selector{Annotations: map[string]string{"env": "prod"}})
 		assert.False(t, match)
 
 		// empty selector annotations always match
-		match, err = annoMatch(node, kptfilev1.Selector{})
-		assert.NoError(t, err)
+		match = annoMatch(node, kptfilev1.Selector{})
 		assert.True(t, match)
 	})
 }

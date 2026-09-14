@@ -238,32 +238,12 @@ func IsMatch(node *yaml.RNode, selector kptfilev1.Selector, selectionContext *Se
 		return false, err
 	}
 
-	match, err = nameMatch(node, selector)
-	if err != nil || !match {
-		return false, err
-	}
-
-	match, err = namespaceMatch(node, selector)
-	if err != nil || !match {
-		return false, err
-	}
-
-	match, err = kindMatch(node, selector)
-	if err != nil || !match {
-		return false, err
-	}
-
-	match, err = apiVersionMatch(node, selector)
-	if err != nil || !match {
-		return false, err
-	}
-
-	match, err = labelMatch(node, selector)
-	if err != nil || !match {
-		return false, err
-	}
-
-	return annoMatch(node, selector)
+	return nameMatch(node, selector) &&
+		namespaceMatch(node, selector) &&
+		kindMatch(node, selector) &&
+		apiVersionMatch(node, selector) &&
+		labelMatch(node, selector) &&
+		annoMatch(node, selector), nil
 }
 
 // resourceFileRegexpMatcch returns true if the resource file matches the regular expression
@@ -286,45 +266,45 @@ func resourceFileRegexpMatch(node *yaml.RNode, selector kptfilev1.Selector, sele
 }
 
 // nameMatch returns true if the resource name matches input selection criteria
-func nameMatch(node *yaml.RNode, selector kptfilev1.Selector) (bool, error) {
-	return selector.Name == "" || selector.Name == node.GetName(), nil
+func nameMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.Name == "" || selector.Name == node.GetName()
 }
 
 // namespaceMatch returns true if the resource namespace matches input selection criteria
-func namespaceMatch(node *yaml.RNode, selector kptfilev1.Selector) (bool, error) {
-	return selector.Namespace == "" || selector.Namespace == node.GetNamespace(), nil
+func namespaceMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.Namespace == "" || selector.Namespace == node.GetNamespace()
 }
 
 // kindMatch returns true if the resource kind matches input selection criteria
-func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) (bool, error) {
-	return selector.Kind == "" || selector.Kind == node.GetKind(), nil
+func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.Kind == "" || selector.Kind == node.GetKind()
 }
 
 // apiVersionMatch returns true if the resource apiVersion matches input selection criteria
-func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) (bool, error) {
-	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion(), nil
+func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()
 }
 
 // labelMatch returns true if the resource labels match input selection criteria
-func labelMatch(node *yaml.RNode, selector kptfilev1.Selector) (bool, error) {
+func labelMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	nodeLabels := node.GetLabels()
 	for sk, sv := range selector.Labels {
 		if nv, found := nodeLabels[sk]; !found || sv != nv {
-			return false, nil
+			return false
 		}
 	}
-	return true, nil
+	return true
 }
 
 // annoMatch returns true if the resource annotations match input selection criteria
-func annoMatch(node *yaml.RNode, selector kptfilev1.Selector) (bool, error) {
+func annoMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	nodeAnnos := node.GetAnnotations()
 	for sk, sv := range selector.Annotations {
 		if nv, found := nodeAnnos[sk]; !found || sv != nv {
-			return false, nil
+			return false
 		}
 	}
-	return true, nil
+	return true
 }
 
 func NewConfigMap(data map[string]string) (*yaml.RNode, error) {
