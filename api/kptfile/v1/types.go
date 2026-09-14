@@ -462,7 +462,7 @@ type Selector struct {
 	//   will be ignored
 	//    subpkg1/subpkg11/vol3.yaml
 	//    subpkg1/subpkg11/deployment.yaml
-	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" resourceRegexp:"when,omitempty"`
+	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" resourceFileRegexp:"when,omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
