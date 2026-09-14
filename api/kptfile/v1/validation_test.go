@@ -693,3 +693,217 @@ func TestConfigRefValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestUpstreamValidation(t *testing.T) {
+	cases := map[string]struct {
+		kf    KptFile
+		valid bool
+	}{
+		"valid git": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "https://github.com/kubernetes/examples.git",
+					Ref:  "main",
+				},
+				UpdateStrategy: ResourceMerge,
+			}},
+			valid: true,
+		},
+		"unknown type": {
+			kf: KptFile{
+				Upstream: &Upstream{
+					Type: "unknown",
+				},
+			},
+			valid: false,
+		},
+		"git type nil git": {
+			kf: KptFile{
+				Upstream: &Upstream{
+					Type: GitOrigin,
+				},
+			},
+			valid: false,
+		},
+		"empty repo": {
+			kf: KptFile{Upstream: &Upstream{
+				Git: &Git{Ref: "main"},
+			}},
+			valid: false,
+		},
+		"empty ref": {
+			kf: KptFile{Upstream: &Upstream{
+				Git: &Git{Repo: "https://github.com/kubernetes/examples.git"},
+			}},
+			valid: false,
+		},
+		"bad strategy": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "https://github.com/kubernetes/examples.git",
+					Ref:  "main",
+				},
+				UpdateStrategy: "invalid",
+			}},
+			valid: false,
+		},
+	}
+
+	runValidationCases(t, cases)
+}
+
+func TestUpstreamLockValidation(t *testing.T) {
+	cases := map[string]struct {
+		kf    KptFile
+		valid bool
+	}{
+		"valid git": {
+			kf: KptFile{UpstreamLock: &Locator{
+				Type: GitOrigin,
+				Git: &GitLock{
+					Repo:   "https://github.com/kubernetes/examples.git",
+					Ref:    "main",
+					Commit: "abc123",
+				},
+			}},
+			valid: true,
+		},
+		"valid generic": {
+			kf: KptFile{UpstreamLock: &Locator{
+				Type:    GenericOrigin,
+				Generic: &GenericLock{StoreID: "DB", ResourceID: "pkg-123"},
+			}},
+			valid: true,
+		},
+		"unknown type": {
+			kf: KptFile{
+				UpstreamLock: &Locator{
+					Type: "unknown",
+				},
+			},
+			valid: false,
+		},
+		"both git and generic": {
+			kf: KptFile{UpstreamLock: &Locator{
+				Git:     &GitLock{Repo: "r", Ref: "m", Commit: "c"},
+				Generic: &GenericLock{StoreID: "DB"},
+			}},
+			valid: false,
+		},
+		"git type nil git": {
+			kf: KptFile{
+				UpstreamLock: &Locator{
+					Type: GitOrigin,
+				},
+			},
+			valid: false,
+		},
+		"generic type nil generic": {
+			kf: KptFile{
+				UpstreamLock: &Locator{
+					Type: GenericOrigin,
+				},
+			},
+			valid: false,
+		},
+		"missing commit": {
+			kf: KptFile{UpstreamLock: &Locator{
+				Type: GitOrigin,
+				Git:  &GitLock{Repo: "https://github.com/kubernetes/examples.git", Ref: "main"},
+			}},
+			valid: false,
+		},
+	}
+
+	runValidationCases(t, cases)
+}
+
+func TestInfoValidation(t *testing.T) {
+	cases := map[string]struct {
+		kf    KptFile
+		valid bool
+	}{
+		"valid": {
+			kf: KptFile{Info: &PackageInfo{
+				LicenseFile:    "LICENSE.txt",
+				ReadinessGates: []ReadinessGate{{ConditionType: "Ready"}},
+			}},
+			valid: true,
+		},
+		"empty conditionType": {
+			kf: KptFile{Info: &PackageInfo{
+				ReadinessGates: []ReadinessGate{{ConditionType: "Ready"}, {ConditionType: ""}},
+			}},
+			valid: false,
+		},
+		"absolute licenseFile": {
+			kf: KptFile{
+				Info: &PackageInfo{
+					LicenseFile: "/etc/license",
+				},
+			},
+			valid: false,
+		},
+		"licenseFile traversal": {
+			kf: KptFile{
+				Info: &PackageInfo{
+					LicenseFile: "../LICENSE",
+				},
+			},
+			valid: false,
+		},
+	}
+
+	runValidationCases(t, cases)
+}
+
+func TestInventoryValidation(t *testing.T) {
+	cases := map[string]struct {
+		kf    KptFile
+		valid bool
+	}{
+		"all set": {
+			kf: KptFile{Inventory: &Inventory{
+				Name:        "inv",
+				Namespace:   "ns",
+				InventoryID: "id",
+			}},
+			valid: true,
+		},
+		"all empty": {
+			kf: KptFile{
+				Inventory: &Inventory{},
+			},
+			valid: true,
+		},
+		"partial": {
+			kf: KptFile{Inventory: &Inventory{
+				Name:      "inv",
+				Namespace: "ns",
+			}},
+			valid: false,
+		},
+	}
+
+	runValidationCases(t, cases)
+}
+
+func runValidationCases(t *testing.T, cases map[string]struct {
+	kf    KptFile
+	valid bool
+}) {
+	t.Helper()
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			err := tc.kf.Validate(filesys.FileSystemOrOnDisk{}, "")
+			if tc.valid && err != nil {
+				t.Fatalf("kptfile should be valid, %s", err)
+			}
+			if !tc.valid && err == nil {
+				t.Fatal("kptfile should not be valid")
+			}
+		})
+	}
+}
