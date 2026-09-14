@@ -22,9 +22,9 @@ TEST_COVERAGE_FUNC_FILE=func_coverage.out
 
 .PHONY: test-coverage
 test-coverage: ## Generate coverage reports (runs tests with coverage instrumentation)
-	go test -cover -coverprofile=$(TEST_COVERAGE_FILE) ${LDFLAGS} ./...
-	go tool cover -html=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_HTML_FILE)
-	go tool cover -func=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_FUNC_FILE)
+	find . -name go.mod -execdir go test -cover -coverprofile=$(TEST_COVERAGE_FILE) ${LDFLAGS} ./... \;
+	find . -name go.mod -execdir go tool cover -html=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_HTML_FILE) \;
+	find . -name go.mod -execdir go tool cover -func=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_FUNC_FILE) \;
 	@echo "Coverage reports generated:"
 	@echo "  - $(TEST_COVERAGE_FILE): Coverage data (for SonarQube)"
 	@echo "  - $(TEST_COVERAGE_HTML_FILE): HTML coverage report"
