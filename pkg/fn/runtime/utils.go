@@ -114,8 +114,9 @@ func nodeWithResourceID(resourceID string, input []*yaml.RNode) *yaml.RNode {
 // GetNodeRelativePath returns the relative path of the resource in the package relative
 // to the supplied `pathOfPackage`
 func GetNodeRelativePath(pathOfPackage string, node *yaml.RNode) string {
-	resourceFilePackagePath := node.GetAnnotations()[PackagePathAnnotation]
-	resourceFilePath := node.GetAnnotations()[PathAnnotation]
+	resourceFilePackagePath := filepath.ToSlash(node.GetAnnotations()[PackagePathAnnotation])
+	resourceFilePath := filepath.ToSlash(node.GetAnnotations()[PathAnnotation])
+	pathOfPackage = filepath.ToSlash(pathOfPackage)
 
 	resourceFileRelativePath := strings.TrimPrefix(strings.TrimPrefix(resourceFilePackagePath, pathOfPackage), "/")
 
@@ -246,7 +247,7 @@ func IsMatch(node *yaml.RNode, selector kptfilev1.Selector, selectionContext *Se
 		annoMatch(node, selector), nil
 }
 
-// resourceFileRegexpMatcch returns true if the resource file matches the regular expression
+// resourceFileRegexpMatch returns true if the resource file matches the regular expression
 func resourceFileRegexpMatch(node *yaml.RNode, selector kptfilev1.Selector, selectionContext *SelectionContext) (bool, error) {
 	if selector.ResourceFileRegexp == "" {
 		return true, nil
