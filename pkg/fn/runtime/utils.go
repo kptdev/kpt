@@ -121,7 +121,10 @@ func GetNodeRelativePath(pathOfPackage string, node *yaml.RNode) string {
 	resourceFileRelativePath := strings.TrimPrefix(strings.TrimPrefix(resourceFilePackagePath, pathOfPackage), "/")
 
 	if resourceFileRelativePath == "" {
-		return resourceFilePath
+		if resourceFilePath == "" {
+			return ""
+		}
+		return path.Clean(resourceFilePath)
 	} else {
 		return path.Join(resourceFileRelativePath, resourceFilePath)
 	}
