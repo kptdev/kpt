@@ -477,7 +477,8 @@ func (s Selector) IsEmpty() bool {
 		s.Name == "" &&
 		s.Kind == "" &&
 		len(s.Labels) == 0 &&
-		len(s.Annotations) == 0
+		len(s.Annotations) == 0 &&
+		s.ResourceFileRegexp == ""
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.

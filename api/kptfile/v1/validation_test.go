@@ -935,6 +935,102 @@ func TestInventoryValidation(t *testing.T) {
 	runValidationCases(t, cases)
 }
 
+func TestSelectorValidation(t *testing.T) {
+	cases := map[string]struct {
+		kf    KptFile
+		valid bool
+	}{
+		"valid selector: empty": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:     "set-namespace",
+					Selectors: []Selector{{}},
+				}},
+			}},
+			valid: true,
+		},
+		"valid selector: all fields set": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image: "set-namespace",
+					Selectors: []Selector{{
+						APIVersion:         "apps/v1",
+						Kind:               "Deployment",
+						Name:               "my-app",
+						Namespace:          "default",
+						Labels:             map[string]string{"env": "prod"},
+						Annotations:        map[string]string{"team": "infra"},
+						ResourceFileRegexp: `deploy/.*\.yaml`,
+					}},
+				}},
+			}},
+			valid: true,
+		},
+		"valid selector: regexp in exclusion": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:      "set-namespace",
+					Exclusions: []Selector{{ResourceFileRegexp: `test/.*`}},
+				}},
+			}},
+			valid: true,
+		},
+		"invalid selector: bad regexp in selector": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:     "set-namespace",
+					Selectors: []Selector{{ResourceFileRegexp: `[invalid`}},
+				}},
+			}},
+			valid: false,
+		},
+		"invalid selector: bad regexp in exclusion": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:      "set-namespace",
+					Exclusions: []Selector{{ResourceFileRegexp: `(unclosed`}},
+				}},
+			}},
+			valid: false,
+		},
+		"invalid selector: bad regexp in validator": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Validators: []Function{{
+					Image:     "gatekeeper",
+					Selectors: []Selector{{ResourceFileRegexp: `*bad`}},
+				}},
+			}},
+			valid: false,
+		},
+		"valid selector: multiple selectors, all valid": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image: "set-namespace",
+					Selectors: []Selector{
+						{ResourceFileRegexp: `a/.*`},
+						{ResourceFileRegexp: `b/.*`},
+					},
+				}},
+			}},
+			valid: true,
+		},
+		"invalid selector: second of multiple selectors is bad": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image: "set-namespace",
+					Selectors: []Selector{
+						{ResourceFileRegexp: `a/.*`},
+						{ResourceFileRegexp: `[bad`},
+					},
+				}},
+			}},
+			valid: false,
+		},
+	}
+
+	runValidationCases(t, cases)
+}
+
 func runValidationCases(t *testing.T, cases map[string]struct {
 	kf    KptFile
 	valid bool
