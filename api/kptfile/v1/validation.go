@@ -37,7 +37,16 @@ func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
 	if err := kf.Pipeline.validate(fsys, pkgPath); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)
 	}
-	// TODO: validate other fields
+	if kf.Inventory != nil {
+		if err := kf.Inventory.validate(); err != nil {
+			return err
+		}
+	}
+	if kf.Upstream != nil {
+		if err := kf.Upstream.validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -324,4 +333,48 @@ func RecognizedKustomizationFileNames() []string {
 		"kustomization.yml",
 		"Kustomization",
 	}
+}
+
+func (i *Inventory) validate() error {
+	if !i.IsValid() {
+		return &ValidateError{
+			Field:  "inventory",
+			Reason: "inventory must have name, namespace, and inventoryID",
+		}
+	}
+	return nil
+}
+
+func (u *Upstream) validate() error {
+	if u.Type != GitOrigin && u.Type != GenericOrigin && u.Type != "" {
+		return &ValidateError{
+			Field:  "upstream.type",
+			Value:  string(u.Type),
+			Reason: "upstream type must be one of: git, generic",
+		}
+	}
+	if u.UpdateStrategy != "" {
+		if _, err := ToUpdateStrategy(string(u.UpdateStrategy)); err != nil {
+			return &ValidateError{
+				Field:  "upstream.updateStrategy",
+				Value:  string(u.UpdateStrategy),
+				Reason: err.Error(),
+			}
+		}
+	}
+	if u.Type == GitOrigin {
+		if u.Git == nil {
+			return &ValidateError{
+				Field:  "upstream.git",
+				Reason: "git origin must specify git locator",
+			}
+		}
+		if u.Git.Repo == "" {
+			return &ValidateError{
+				Field:  "upstream.git.repo",
+				Reason: "git locator must specify repo",
+			}
+		}
+	}
+	return nil
 }

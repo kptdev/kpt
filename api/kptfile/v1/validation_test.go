@@ -32,6 +32,74 @@ func TestKptfileValidate(t *testing.T) {
 
 	cases := []input{
 		{
+			name: "inventory: valid",
+			kptfile: KptFile{
+				Inventory: &Inventory{
+					Name:        "my-inv",
+					Namespace:   "default",
+					InventoryID: "123",
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "inventory: invalid (missing name)",
+			kptfile: KptFile{
+				Inventory: &Inventory{
+					Namespace:   "default",
+					InventoryID: "123",
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "upstream: valid git",
+			kptfile: KptFile{
+				Upstream: &Upstream{
+					Type:           GitOrigin,
+					UpdateStrategy: ResourceMerge,
+					Git: &Git{
+						Repo: "https://github.com/a/b.git",
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "upstream: invalid (invalid strategy)",
+			kptfile: KptFile{
+				Upstream: &Upstream{
+					Type:           GitOrigin,
+					UpdateStrategy: "invalid-strategy",
+					Git: &Git{
+						Repo: "https://github.com/a/b.git",
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "upstream: invalid (git missing repo)",
+			kptfile: KptFile{
+				Upstream: &Upstream{
+					Type:           GitOrigin,
+					UpdateStrategy: ResourceMerge,
+					Git:            &Git{},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "upstream: invalid (git missing git locator)",
+			kptfile: KptFile{
+				Upstream: &Upstream{
+					Type:           GitOrigin,
+					UpdateStrategy: ResourceMerge,
+				},
+			},
+			valid: false,
+		},
+		{
 			name: "pipeline: empty",
 			kptfile: KptFile{
 				Pipeline: &Pipeline{},
