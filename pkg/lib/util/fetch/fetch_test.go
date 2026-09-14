@@ -699,3 +699,87 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestCommand_Run_specificCommit(t *testing.T) {
+	testCases := map[string]struct {
+		setCommit bool
+		expected  *pkgbuilder.RootPkg
+	}{
+		"ref is branch without commit specified": {
+			setCommit: false,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "foo", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "foo", 1),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"ref is branch with commit specified": {
+			setCommit: true,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "foo", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "foo", 0),
+				).
+				WithResource(pkgbuilder.SecretResource),
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			repoContent := map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.SecretResource),
+						Branch: "foo",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithResource(pkgbuilder.DeploymentResource),
+					},
+				},
+			}
+			repos, w, clean := testutil.SetupReposAndWorkspace(t, repoContent)
+			defer clean()
+			if err := testutil.UpdateRepos(t, repos, repoContent); err != nil {
+				t.FailNow()
+			}
+
+			g := repos[testutil.Upstream]
+			w.PackageDir = g.RepoName
+
+			err := os.MkdirAll(w.FullPackagePath(), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = createKptfile(w, &kptfilev1.Git{
+				Repo:      g.RepoDirectory,
+				Directory: "/",
+				Ref:       "foo",
+			}, kptfilev1.ResourceMerge)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualPkg := testutil.CreatePkgOrFail(t, w.FullPackagePath())
+			var commit string
+			if tc.setCommit {
+				commit = g.Commits[0]
+			}
+			err = fetch.Command{
+				Pkg:    actualPkg,
+				Commit: commit,
+			}.Run(fake.CtxWithDefaultPrinter())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			expectedPath := tc.expected.ExpandPkgWithName(t, w.PackageDir, testutil.ToReposInfo(repos))
+			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), false)
+		})
+	}
+}

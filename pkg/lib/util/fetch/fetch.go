@@ -38,7 +38,15 @@ import (
 // provided package, and fetches the package referenced if it isn't already
 // there.
 type Command struct {
+	// Pkg is required and contains information about the package that should be
+	// fetched. The package directory referenced must contain a valid Kptfile.
 	Pkg *pkg.Pkg
+
+	// Commit stores a git commit SHA. If this is set when invoking the command,
+	// the package will be fetched based on this commit SHA rather than based on
+	// the ref provided in the Kptfile. This allows for fetching specific
+	// commits even if the Kptfile references a branch.
+	Commit string
 }
 
 // Run runs the Command.
@@ -58,6 +66,7 @@ func (c Command) Run(ctx context.Context) error {
 		OrgRepo: g.Repo,
 		Path:    g.Directory,
 		Ref:     g.Ref,
+		Commit:  c.Commit,
 	}
 	err = NewCloner(repoSpec).cloneAndCopy(ctx, c.Pkg.UniquePath.String())
 	if err != nil {
@@ -176,21 +185,22 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 		c.cachedRepo[c.repoSpec.CloneSpec()] = upstreamRepo
 	}
 
-	// Check if we have a ref in the upstream that matches the package-specific
-	// reference. If we do, we use that reference.
-	ps := strings.Split(c.repoSpec.Path, "/")
-	for len(ps) != 0 {
-		p := path.Join(ps...)
-		packageRef := path.Join(strings.TrimLeft(p, "/"), c.repoSpec.Ref)
-		if _, found := upstreamRepo.ResolveTag(packageRef); found {
-			c.repoSpec.Ref = packageRef
-			break
-		}
-		ps = ps[:len(ps)-1]
+	var commit string
+	// If a commit SHA is provided in the repoSpec, we use it directly instead
+	// of resolving the ref. This allows fetching a specific commit even if the
+	// ref (e.g. a branch) has since moved forward.
+	if c.repoSpec.Commit != "" {
+		commit = c.repoSpec.Commit
+	} else {
+		// Check if we have a ref in the upstream that matches the package-specific
+		// reference. If we do, we use that reference.
+		ref := checkPackageTags(c.repoSpec.Path, c.repoSpec.Ref, upstreamRepo)
+		c.repoSpec.Ref = ref
+		commit = upstreamRepo.ResolveRef(ref)
 	}
 
 	// Pull the required ref into the repo git cache.
-	dir, err := upstreamRepo.GetRepo(ctx, []string{c.repoSpec.Ref})
+	dir, err := upstreamRepo.GetRepo(ctx, []string{commit})
 	if err != nil {
 		return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 	}
@@ -199,10 +209,6 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	if err != nil {
 		return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 	}
-
-	// Find the commit SHA for the ref that was just fetched. We need the SHA
-	// rather than the ref to be able to do a hard reset of the cache repo.
-	commit := upstreamRepo.ResolveRef(c.repoSpec.Ref)
 
 	// Reset the local repo to the commit we need. Doing a hard reset instead of
 	// a checkout means we don't create any local branches so we don't need to
@@ -288,4 +294,20 @@ func copyDir(ctx context.Context, srcDir string, dstDir string) error {
 		},
 	}
 	return copy.Copy(srcDir, dstDir, opts)
+}
+
+// checkPackageTags looks up the most specific tag for the package at the
+// provided pkgPath. It checks if there is a tag in the upstream that matches
+// a package-specific reference (i.e. path/ref).
+func checkPackageTags(pkgPath, ref string, upstreamRepo internalgitutil.GitUpstreamRepo) string {
+	ps := strings.Split(pkgPath, "/")
+	for len(ps) != 0 {
+		p := path.Join(ps...)
+		packageRef := path.Join(strings.TrimLeft(p, "/"), ref)
+		if _, found := upstreamRepo.ResolveTag(packageRef); found {
+			return packageRef
+		}
+		ps = ps[:len(ps)-1]
+	}
+	return ref
 }
