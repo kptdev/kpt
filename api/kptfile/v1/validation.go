@@ -218,14 +218,14 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 	}
 	if f.Selectors != nil {
 		for i, s := range f.Selectors {
-			if err := s.validate(fnType, idx, "Selector", i); err != nil {
+			if err := s.validate(fnType, idx, "selectors", i); err != nil {
 				return err
 			}
 		}
 	}
 	if f.Exclusions != nil {
 		for i, e := range f.Exclusions {
-			if err := e.validate(fnType, idx, "Exclusion", i); err != nil {
+			if err := e.validate(fnType, idx, "exclude", i); err != nil {
 				return err
 			}
 		}

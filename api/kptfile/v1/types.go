@@ -442,8 +442,8 @@ type Selector struct {
 	// Annotations on the target resources
 	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
 
-	// ResourceRegexp is an optional regular expression that can be used to specify
-	// which resource files will be processed by a function. If the ResourceRegexp field
+	// ResourceFileRegexp is an optional regular expression that can be used to specify
+	// which resource files will be processed by a function. If the ResourceFileRegexp field
 	// is not specified, all json and yaml resource files in the package are processed by
 	// the function. If a regular expression is specified in the field, only resources
 	// in resource files matching the regular expression are processed by the function.
@@ -467,7 +467,7 @@ type Selector struct {
 	//   will be ignored
 	//    subpkg1/subpkg11/vol3.yaml
 	//    subpkg1/subpkg11/deployment.yaml
-	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" resourceFileRegexp:"when,omitempty"`
+	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" resourceFileRegexp:"omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
