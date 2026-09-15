@@ -31,6 +31,10 @@ type UpstreamApplyConfiguration struct {
 	Git *GitApplyConfiguration `json:"git,omitempty"`
 	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy *kptfilev1.UpdateStrategyType `json:"updateStrategy,omitempty"`
+	// PreserveExplicitNull, when true, keeps a field explicitly nulled in the
+	// local package during resource-merge instead of deleting it. Only applies
+	// to the resource-merge update strategy.
+	PreserveExplicitNull *bool `json:"preserveExplicitNull,omitempty"`
 }
 
 // UpstreamApplyConfiguration constructs a declarative configuration of the Upstream type for use with
@@ -60,5 +64,13 @@ func (b *UpstreamApplyConfiguration) WithGit(value *GitApplyConfiguration) *Upst
 // If called multiple times, the UpdateStrategy field is set to the value of the last call.
 func (b *UpstreamApplyConfiguration) WithUpdateStrategy(value kptfilev1.UpdateStrategyType) *UpstreamApplyConfiguration {
 	b.UpdateStrategy = &value
+	return b
+}
+
+// WithPreserveExplicitNull sets the PreserveExplicitNull field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the PreserveExplicitNull field is set to the value of the last call.
+func (b *UpstreamApplyConfiguration) WithPreserveExplicitNull(value bool) *UpstreamApplyConfiguration {
+	b.PreserveExplicitNull = &value
 	return b
 }
