@@ -456,6 +456,10 @@ definitions:
                 $ref: '#/definitions/OriginType'
             updateStrategy:
                 $ref: '#/definitions/UpdateStrategyType'
+            preserveExplicitNull:
+                description: PreserveExplicitNull, when true, keeps a field explicitly nulled in the local package during resource-merge instead of deleting it. Only applies to the resource-merge update strategy.
+                type: boolean
+                x-go-name: PreserveExplicitNull
         title: Upstream is a user-specified upstream locator for a package.
         type: object
         x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
