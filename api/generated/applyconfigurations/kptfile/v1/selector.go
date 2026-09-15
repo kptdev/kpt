@@ -34,6 +34,32 @@ type SelectorApplyConfiguration struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations on the target resources
 	Annotations map[string]string `json:"annotations,omitempty"`
+	// ResourceFileRegexp is an optional regular expression that can be used to specify
+	// which resource files will be processed by a function. If the ResourceFileRegexp field
+	// is not specified, all json and yaml resource files in the package are processed by
+	// the function. If a regular expression is specified in the field, only resources
+	// in resource files matching the regular expression are processed by the function.
+	//
+	// Example 1:
+	// resourceFileRegexp: "vol.*.yaml"
+	//
+	// The resources with the names below will be processed and all other resources
+	// will be ignored
+	// deployment/vol1.yaml
+	// deployment/volume.yaml
+	// vol0.yaml
+	// subpkg1/vol2.yaml
+	// subpkg1/subpkg11/vol3.yaml
+	// subpkg2/vol4.yaml
+	//
+	// Example 2:
+	// resourceFileRegexp: "subpkg1/subpkg11"
+	//
+	// The resources with the names below will be processed and all other resources
+	// will be ignored
+	// subpkg1/subpkg11/vol3.yaml
+	// subpkg1/subpkg11/deployment.yaml
+	ResourceFileRegexp *string `json:"resourceFileRegexp:omitempty,omitempty"`
 }
 
 // SelectorApplyConfiguration constructs a declarative configuration of the Selector type for use with
@@ -99,5 +125,13 @@ func (b *SelectorApplyConfiguration) WithAnnotations(entries map[string]string) 
 	for k, v := range entries {
 		b.Annotations[k] = v
 	}
+	return b
+}
+
+// WithResourceFileRegexp sets the ResourceFileRegexp field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ResourceFileRegexp field is set to the value of the last call.
+func (b *SelectorApplyConfiguration) WithResourceFileRegexp(value string) *SelectorApplyConfiguration {
+	b.ResourceFileRegexp = &value
 	return b
 }
