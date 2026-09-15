@@ -166,6 +166,14 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return err
 	}
 
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObjWithContext(r.ctx), live.InvToUnstructuredFunc, inventory.StatusPolicyNone, live.ResourceGroupGVK)
+	if err != nil {
+		return err
+	}
+	if err := live.VerifyInventoryIDMatch(invClient, invInfo); err != nil {
+		return err
+	}
+
 	dryRunStrategy := common.DryRunNone
 	if r.dryRun {
 		dryRunStrategy = common.DryRunClient

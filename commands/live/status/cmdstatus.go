@@ -90,5 +90,14 @@ func (rir *RGInventoryLoader) GetInvInfo(cmd *cobra.Command, args []string) (inv
 		return nil, err
 	}
 
+	invClient, err := inventory.NewClient(rir.factory, live.WrapInventoryObjWithContext(rir.ctx),
+		live.InvToUnstructuredFunc, inventory.StatusPolicyNone, live.ResourceGroupGVK)
+	if err != nil {
+		return nil, err
+	}
+	if err := live.VerifyInventoryIDMatch(invClient, invInfo); err != nil {
+		return nil, err
+	}
+
 	return invInfo, nil
 }

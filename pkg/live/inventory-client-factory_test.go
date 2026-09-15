@@ -20,6 +20,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/inventory"
+	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
 // TestNewClusterClientFactoryWithContext_NilIsNormalized verifies nil ctx is
@@ -57,4 +61,73 @@ func TestNewClusterClientFactory_StructLiteralPathTolerated(t *testing.T) {
 	// cmdutil.Factory; the observable contract is that inside NewClient
 	// the nil Ctx is normalized to Background(). That path is exercised
 	// in the existing apply/destroy tests via the CLI integration tests.
+}
+
+// fakeInvClient embeds FakeClient and overrides GetClusterInventoryObjs
+// to return configurable inventory objects.
+type fakeInvClient struct {
+	inventory.FakeClient
+	objs object.UnstructuredSet
+}
+
+func (f *fakeInvClient) GetClusterInventoryObjs(_ inventory.Info) (object.UnstructuredSet, error) {
+	return f.objs, f.Err
+}
+
+func invObj(id string) *unstructured.Unstructured {
+	return &unstructured.Unstructured{
+		Object: map[string]any{
+			"apiVersion": "kpt.dev/v1alpha1",
+			"kind":       "ResourceGroup",
+			"metadata": map[string]any{
+				"name":      "test-inv",
+				"namespace": "test-ns",
+				"labels": map[string]any{
+					common.InventoryLabel: id,
+				},
+			},
+		},
+	}
+}
+
+func TestVerifyInventoryIDMatch(t *testing.T) {
+	testCases := map[string]struct {
+		invInfo   inventory.Info
+		client    *fakeInvClient
+		expectErr string
+	}{
+		"empty ID skips verification": {
+			invInfo: WrapInventoryInfoObj(invObj("")),
+			client:  &fakeInvClient{},
+		},
+		"no inventory on cluster passes": {
+			invInfo: WrapInventoryInfoObj(invObj("my-id")),
+			client:  &fakeInvClient{},
+		},
+		"matching inventory-id passes": {
+			invInfo: WrapInventoryInfoObj(invObj("my-id")),
+			client: &fakeInvClient{
+				objs: object.UnstructuredSet{invObj("my-id")},
+			},
+		},
+		"mismatched inventory-id returns error": {
+			invInfo: WrapInventoryInfoObj(invObj("local-id")),
+			client: &fakeInvClient{
+				objs: object.UnstructuredSet{invObj("cluster-id")},
+			},
+			expectErr: `inventory-id of inventory object in cluster doesn't match provided id "local-id"`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			err := VerifyInventoryIDMatch(tc.client, tc.invInfo)
+			if tc.expectErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
