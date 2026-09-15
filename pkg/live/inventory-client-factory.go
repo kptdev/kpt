@@ -16,8 +16,11 @@ package live
 
 import (
 	"context"
+	"fmt"
 
+	"k8s.io/apimachinery/pkg/api/meta"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 )
 
@@ -64,4 +67,32 @@ func (ccf *ClusterClientFactory) NewClient(factory cmdutil.Factory) (inventory.C
 		ctx = context.Background()
 	}
 	return inventory.NewClient(factory, WrapInventoryObjWithContext(ctx), InvToUnstructuredFunc, ccf.StatusPolicy, ResourceGroupGVK)
+}
+
+// VerifyInventoryIDMatch checks that the inventory-id on the cluster matches
+// the locally provided id, preventing operations against the wrong inventory.
+func VerifyInventoryIDMatch(invClient inventory.Client, invInfo inventory.Info) error {
+	if invInfo.Strategy() != inventory.NameStrategy || invInfo.ID() == "" {
+		return nil
+	}
+
+	prevInvObjs, err := invClient.GetClusterInventoryObjs(invInfo)
+	if err != nil {
+		// If the ResourceGroup CRD isn't installed, there's no inventory
+		// object to mismatch against.
+		if meta.IsNoMatchError(err) {
+			return nil
+		}
+		return err
+	}
+	if len(prevInvObjs) > 1 {
+		return fmt.Errorf("found %d inventory objects with Name strategy", len(prevInvObjs))
+	}
+	if len(prevInvObjs) == 1 {
+		val := prevInvObjs[0].GetLabels()[common.InventoryLabel]
+		if val != invInfo.ID() {
+			return fmt.Errorf("inventory-id of inventory object in cluster doesn't match provided id %q", invInfo.ID())
+		}
+	}
+	return nil
 }
