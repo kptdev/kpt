@@ -1,4 +1,4 @@
-// Copyright 2025 The kpt Authors
+// Copyright 2025-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,11 @@ type tuple struct {
 
 // merge performs a 3-way merge on the tuple
 func (t *tuple) merge() (*yaml.RNode, error) {
+	if t.preserveExplicitNull {
+		// Associative-list walk continues after VisitList, so dest-null lists are
+		// only kept if origin/updated are absent at that path.
+		dropOriginUpdatedAtDestNulls(t.dest, t.original, t.updated)
+	}
 	return walk.Walker{
 		// modified Visitor
 		Visitor: &Visitor{PreserveExplicitNull: t.preserveExplicitNull},
@@ -45,6 +50,35 @@ func (t *tuple) merge() (*yaml.RNode, error) {
 		// added
 		InferAssociativeLists: false,
 	}.Walk()
+}
+
+// dropOriginUpdatedAtDestNulls hides origin/updated at dest-null list fields so
+// kyaml walks them as empty nodes (its associative-list walk would otherwise
+// drop the null). Update-driven deletes (updated also null) are left alone.
+func dropOriginUpdatedAtDestNulls(dest, origin, updated *yaml.RNode) {
+	if dest.YNode() == nil || dest.YNode().Kind != yaml.MappingNode {
+		return
+	}
+	keys, _ := dest.Fields()
+	for _, key := range keys {
+		d, _ := dest.Pipe(yaml.Get(key))
+		o, _ := origin.Pipe(yaml.Get(key))
+		u, _ := updated.Pipe(yaml.Get(key))
+		if d.IsTaggedNull() {
+			if !u.IsTaggedNull() && !o.IsTaggedNull() && (isSeq(o) || isSeq(u)) {
+				_ = origin.PipeE(yaml.Clear(key))
+				_ = updated.PipeE(yaml.Clear(key))
+			}
+			continue
+		}
+		if d.YNode() != nil && d.YNode().Kind == yaml.MappingNode {
+			dropOriginUpdatedAtDestNulls(d, o, u)
+		}
+	}
+}
+
+func isSeq(n *yaml.RNode) bool {
+	return n.YNode() != nil && n.YNode().Kind == yaml.SequenceNode
 }
 
 type tuplelist []*tuple

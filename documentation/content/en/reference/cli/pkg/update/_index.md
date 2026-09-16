@@ -202,11 +202,12 @@ On the resource level, the rules are:
 * A resource in both upstream and local will be merged into local.
 
 On the field level, the rules differ based on the type of field.
+When `--preserve-explicit-null` (or `upstream.preserveExplicitNull` in the
+Kptfile) is set, a field explicitly nulled in local is kept as null instead of
+being removed. This applies to scalars, mappings, and lists.
 
 For scalars and non-associative lists:
 * If the field is present in either upstream or local and the value is `null`, remove the field from local.
-  When `--preserve-explicit-null` (or `upstream.preserveExplicitNull` in the Kptfile) is set, a field
-  explicitly nulled in local is kept as null instead of being removed.
 * If the field is unchanged between upstream and local, leave the local value unchanged.
 * If the field has been changed in both upstream and local, update local with the value from upstream.
 

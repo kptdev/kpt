@@ -57,6 +57,17 @@ func (m *Visitor) VisitMap(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml
 }
 
 func (m *Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
+	if m.isCleared(nodes.Origin(), nodes.Updated()) {
+		// explicitly cleared by the update itself
+		return walk.ClearNode, nil
+	}
+	if m.isCleared(nodes.Origin(), nodes.Dest()) {
+		// explicitly cleared locally
+		if m.PreserveExplicitNull {
+			return m.persistedNull(nodes.Dest()), nil
+		}
+		return walk.ClearNode, nil
+	}
 	if yaml.IsMissingOrNull(nodes.Updated()) && !yaml.IsMissingOrNull(nodes.Origin()) {
 		// implicitly cleared from update -- element was deleted
 		return walk.ClearNode, nil
