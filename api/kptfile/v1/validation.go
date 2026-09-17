@@ -69,8 +69,8 @@ func (u *Upstream) validate() error {
 	if u.Git != nil {
 		if u.Git.Repo == "" {
 			return &ValidateError{Field: "upstream.git.repo", Reason: "must not be empty"}
-		} else if _, err := url.Parse(u.Git.Repo); err != nil {
-			return &ValidateError{Field: "upstream.git.repo", Value: u.Git.Repo, Reason: fmt.Sprintf("invalid URL: %s", err)}
+		} else if err := validateGitRepo(u.Git.Repo); err != nil {
+			return &ValidateError{Field: "upstream.git.repo", Value: u.Git.Repo, Reason: err.Error()}
 		}
 		if u.Git.Ref == "" {
 			return &ValidateError{Field: "upstream.git.ref", Reason: "must not be empty"}
@@ -79,6 +79,21 @@ func (u *Upstream) validate() error {
 	if u.UpdateStrategy != "" {
 		if _, err := ToUpdateStrategy(string(u.UpdateStrategy)); err != nil {
 			return &ValidateError{Field: "upstream.updateStrategy", Value: string(u.UpdateStrategy), Reason: err.Error()}
+		}
+	}
+	return nil
+}
+
+// validateGitRepo accepts anything git can clone from: a URL with a scheme
+// (https://, ssh://, file://, ...), an scp-style remote ([user@]host:path),
+// or a local path.
+func validateGitRepo(repo string) error {
+	if strings.ContainsAny(repo, " 	\r\n") {
+		return fmt.Errorf("must not contain whitespace")
+	}
+	if strings.Contains(repo, "://") {
+		if _, err := url.Parse(repo); err != nil {
+			return fmt.Errorf("invalid URL: %s", err)
 		}
 	}
 	return nil

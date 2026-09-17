@@ -710,6 +710,39 @@ func TestUpstreamValidation(t *testing.T) {
 			}},
 			valid: true,
 		},
+		"valid scp-style ssh repo": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "git@github.com:kubernetes/examples.git",
+					Ref:  "main",
+				},
+				UpdateStrategy: ResourceMerge,
+			}},
+			valid: true,
+		},
+		"valid ssh scheme repo": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "ssh://git@github.com/kubernetes/examples.git",
+					Ref:  "main",
+				},
+				UpdateStrategy: ResourceMerge,
+			}},
+			valid: true,
+		},
+		"valid local path repo": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "/tmp/test-kpt-upstream",
+					Ref:  "main",
+				},
+				UpdateStrategy: ResourceMerge,
+			}},
+			valid: true,
+		},
 		"unknown type": {
 			kf: KptFile{
 				Upstream: &Upstream{
@@ -735,6 +768,18 @@ func TestUpstreamValidation(t *testing.T) {
 		"empty ref": {
 			kf: KptFile{Upstream: &Upstream{
 				Git: &Git{Repo: "https://github.com/kubernetes/examples.git"},
+			}},
+			valid: false,
+		},
+		"repo with whitespace": {
+			kf: KptFile{Upstream: &Upstream{
+				Git: &Git{Repo: "not a valid url at all", Ref: "main"},
+			}},
+			valid: false,
+		},
+		"malformed scheme url": {
+			kf: KptFile{Upstream: &Upstream{
+				Git: &Git{Repo: "https://github.com/%zz/examples.git", Ref: "main"},
 			}},
 			valid: false,
 		},
