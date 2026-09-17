@@ -426,16 +426,48 @@ func (r *ResourceReference) Matches(meta yaml.ResourceMeta) bool {
 type Selector struct {
 	// APIVersion of the target resources
 	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
+
 	// Kind of the target resources
 	Kind string `yaml:"kind,omitempty" json:"kind,omitempty"`
+
 	// Name of the target resources
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
 	// Namespace of the target resources
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+
 	// Labels on the target resources
 	Labels map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
+
 	// Annotations on the target resources
 	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+
+	// ResourceFileRegexp is an optional regular expression that can be used to specify
+	// which resource files will be processed by a function. If the ResourceFileRegexp field
+	// is not specified, all json and yaml resource files in the package are processed by
+	// the function. If a regular expression is specified in the field, only resources
+	// in resource files matching the regular expression are processed by the function.
+	//
+	// Example 1:
+	//   resourceFileRegexp: "vol.*.yaml"
+	//
+	//   The resources with the names below will be processed and all other resources
+	//   will be ignored
+	//    deployment/vol1.yaml
+	//    deployment/volume.yaml
+	//    vol0.yaml
+	//    subpkg1/vol2.yaml
+	//    subpkg1/subpkg11/vol3.yaml
+	//    subpkg2/vol4.yaml
+	//
+	// Example 2:
+	//   resourceFileRegexp: "subpkg1/subpkg11"
+	//
+	//   The resources with the names below will be processed and all other resources
+	//   will be ignored
+	//    subpkg1/subpkg11/vol3.yaml
+	//    subpkg1/subpkg11/deployment.yaml
+	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" json:"resourceFileRegexp:omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
@@ -445,7 +477,8 @@ func (s Selector) IsEmpty() bool {
 		s.Name == "" &&
 		s.Kind == "" &&
 		len(s.Labels) == 0 &&
-		len(s.Annotations) == 0
+		len(s.Annotations) == 0 &&
+		s.ResourceFileRegexp == ""
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.
@@ -490,12 +523,12 @@ type RenderStatus struct {
 // PipelineStepResult contains the structured result from an individual function
 // call in the pipeline.
 type PipelineStepResult struct {
-	Name           string `yaml:"name,omitempty" json:"name,omitempty"`
-	Image          string `yaml:"image,omitempty" json:"image,omitempty"`
-	ExecPath       string `yaml:"exec,omitempty" json:"exec,omitempty"`
-	ExecutionError string `yaml:"executionError,omitempty" json:"executionError,omitempty"`
-	Stderr         string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
-	ExitCode       int    `yaml:"exitCode" json:"exitCode"`
+	Name           string                  `yaml:"name,omitempty" json:"name,omitempty"`
+	Image          string                  `yaml:"image,omitempty" json:"image,omitempty"`
+	ExecPath       string                  `yaml:"exec,omitempty" json:"exec,omitempty"`
+	ExecutionError string                  `yaml:"executionError,omitempty" json:"executionError,omitempty"`
+	Stderr         string                  `yaml:"stderr,omitempty" json:"stderr,omitempty"`
+	ExitCode       int                     `yaml:"exitCode" json:"exitCode"`
 	Results        []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
 	ErrorResults   []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
 	// When is the CEL condition expression that was evaluated

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -215,6 +216,23 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 			return err
 		}
 	}
+	if f.Selectors != nil {
+		for i, s := range f.Selectors {
+			if err := s.validate(fnType, idx, "selectors", i); err != nil {
+				return err
+			}
+		}
+	}
+	if f.Exclusions != nil {
+		for i, e := range f.Exclusions {
+			if err := e.validate(fnType, idx, "exclude", i); err != nil {
+				return err
+			}
+		}
+	}
+	if err := f.validateExecutor(fnType, idx); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -320,6 +338,20 @@ func validateFnConfigPathSyntax(p string) error {
 		// Allowing outside path opens up an attack vector that allows
 		// reading any YAML file on package consumer's machine.
 		return fmt.Errorf("path must not be outside the package")
+	}
+	return nil
+}
+
+// validate checks that the Selector fields are consistent.
+func (s Selector) validate(fnType string, idx int, selectorType string, selectorIdx int) error {
+	if s.ResourceFileRegexp != "" {
+		if _, err := regexp.Compile(s.ResourceFileRegexp); err != nil {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].%s[%d].resourceFileRegexp", fnType, idx, selectorType, selectorIdx),
+				Value:  s.ResourceFileRegexp,
+				Reason: fmt.Sprintf("invalid regular expression: %s", err),
+			}
+		}
 	}
 	return nil
 }

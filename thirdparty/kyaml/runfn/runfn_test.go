@@ -585,6 +585,41 @@ data:
 	}
 }
 
+// TestInit_pathsAreSymlinkResolved verifies that after init(), both uniquePath and
+// FnConfigPath have symlinks resolved so they can be compared correctly. On macOS,
+// os.MkdirTemp returns /var/... paths while os.Getwd() returns /private/var/... paths;
+// without EvalSymlinks the fn-config exclusion check silently fails.
+func TestInit_pathsAreSymlinkResolved(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	fnConfigPath := filepath.Join(dir, "fn-config.yaml")
+	require.NoError(t, os.WriteFile(fnConfigPath, []byte("x: y\n"), 0600))
+
+	// Use a relative path so init() resolves it via os.Getwd(), which on macOS
+	// returns the /private/... form while filepath.Abs returns /var/...
+	rel, err := filepath.Rel(filepath.Dir(dir), fnConfigPath)
+	require.NoError(t, err)
+
+	r := &RunFns{
+		Ctx:          fake.CtxWithDefaultPrinter(),
+		Path:         dir,
+		FnConfigPath: rel,
+		fnResults:    fnresultv1.NewResultList(),
+	}
+	require.NoError(t, r.init())
+
+	// Both paths must have symlinks resolved so the equality check in
+	// runFunctions (filepath.Join(uniquePath, p) == FnConfigPath) works.
+	wantUnique, err := filepath.EvalSymlinks(dir)
+	require.NoError(t, err)
+	wantFnConfig, err := filepath.EvalSymlinks(fnConfigPath)
+	require.NoError(t, err)
+
+	assert.Equal(t, kptfilev1.UniquePath(wantUnique), r.uniquePath)
+	assert.Equal(t, wantFnConfig, r.FnConfigPath)
+}
+
 func TestRunFns_mergeContainerEnv(t *testing.T) {
 	testcases := []struct {
 		name      string
