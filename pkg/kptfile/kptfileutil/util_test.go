@@ -223,6 +223,78 @@ upstreamLock:
 `,
 		},
 
+		"local preserveExplicitNull is kept when updateUpstream is true": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/kptdev/kpt
+    directory: /pkg
+    ref: v1
+  updateStrategy: resource-merge
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/kptdev/kpt
+    directory: /pkg
+    ref: v2
+  updateStrategy: fast-forward
+upstreamLock:
+  type: git
+  git:
+    repo: github.com/kptdev/kpt
+    directory: /pkg
+    ref: v2
+    commit: abc123
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/kptdev/kpt
+    directory: /pkg
+    ref: v1
+  updateStrategy: resource-merge
+  preserveExplicitNull: true
+`,
+			updateUpstream: true,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+upstream:
+  type: git
+  git:
+    repo: github.com/kptdev/kpt
+    directory: /pkg
+    ref: v2
+  updateStrategy: fast-forward
+  preserveExplicitNull: true
+upstreamLock:
+  type: git
+  git:
+    repo: github.com/kptdev/kpt
+    directory: /pkg
+    ref: v2
+    commit: abc123
+`,
+		},
+
 		"pipeline in local remains if there are no changes in upstream": {
 			origin: `
 apiVersion: kpt.dev/v1
