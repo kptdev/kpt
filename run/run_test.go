@@ -19,7 +19,6 @@ import (
 	"context"
 	"io"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,100 +46,86 @@ func resetVersionCmdFlags() {
 	}
 }
 
-func TestVersionCmd_AuthoritativeGitCommit(t *testing.T) {
-	oldVersion := version
-	oldGitCommit := gitCommit
-	defer func() {
-		version = oldVersion
-		gitCommit = oldGitCommit
-		resetVersionCmdFlags()
-	}()
-	resetVersionCmdFlags()
+func TestVersionCmd(t *testing.T) {
+	const testCommit = "0123456789abcdef0123456789abcdef01234567"
 
-	testCommit := "0123456789abcdef0123456789abcdef01234567"
-	gitCommit = testCommit
-	version = "v1.0.0"
+	testCases := []struct {
+		name                string
+		gitCommit           string
+		version             string
+		args                []string
+		expectedOutput      string
+		expectedContains    []string
+		expectedNotContains []string
+	}{
+		{
+			name:      "authoritative git commit",
+			gitCommit: testCommit,
+			version:   "v1.0.0",
+			args:      []string{"version"},
+			expectedContains: []string{
+				"Version: v1.0.0",
+				"Git commit: " + testCommit,
+			},
+			expectedNotContains: []string{
+				"(dirty)",
+			},
+		},
+		{
+			name:           "authoritative git commit short with unknown version",
+			gitCommit:      testCommit,
+			version:        "unknown",
+			args:           []string{"version", "--short"},
+			expectedOutput: "0123456\n",
+		},
+		{
+			name:           "authoritative git commit short with version",
+			gitCommit:      testCommit,
+			version:        "v1.0.0",
+			args:           []string{"version", "--short"},
+			expectedOutput: "v1.0.0\n",
+		},
+		{
+			name:      "empty git commit falls back to build info",
+			gitCommit: "",
+			version:   "v1.0.0",
+			args:      []string{"version"},
+			expectedContains: []string{
+				"Version: v1.0.0\nGit commit: ",
+			},
+		},
+	}
 
-	cmd := GetMain(context.Background())
-	cmd.SetArgs([]string{"version"})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			oldVersion := version
+			oldGitCommit := gitCommit
+			defer func() {
+				version = oldVersion
+				gitCommit = oldGitCommit
+				resetVersionCmdFlags()
+			}()
+			resetVersionCmdFlags()
 
-	out := captureOutput(func() {
-		_ = cmd.Execute()
-	})
+			gitCommit = tc.gitCommit
+			version = tc.version
 
-	assert.Contains(t, out, "Version: v1.0.0")
-	assert.Contains(t, out, "Git commit: "+testCommit)
-	assert.NotContains(t, out, "(dirty)")
-}
+			cmd := GetMain(context.Background())
+			cmd.SetArgs(tc.args)
 
-func TestVersionCmd_AuthoritativeGitCommitShort(t *testing.T) {
-	oldVersion := version
-	oldGitCommit := gitCommit
-	defer func() {
-		version = oldVersion
-		gitCommit = oldGitCommit
-		resetVersionCmdFlags()
-	}()
-	resetVersionCmdFlags()
+			out := captureOutput(func() {
+				_ = cmd.Execute()
+			})
 
-	testCommit := "0123456789abcdef0123456789abcdef01234567"
-	gitCommit = testCommit
-	version = "unknown"
-
-	cmd := GetMain(context.Background())
-	cmd.SetArgs([]string{"version", "--short"})
-
-	out := captureOutput(func() {
-		_ = cmd.Execute()
-	})
-
-	assert.Equal(t, "0123456\n", out)
-}
-
-func TestVersionCmd_AuthoritativeGitCommitShortWithVersion(t *testing.T) {
-	oldVersion := version
-	oldGitCommit := gitCommit
-	defer func() {
-		version = oldVersion
-		gitCommit = oldGitCommit
-		resetVersionCmdFlags()
-	}()
-	resetVersionCmdFlags()
-
-	testCommit := "0123456789abcdef0123456789abcdef01234567"
-	gitCommit = testCommit
-	version = "v1.0.0"
-
-	cmd := GetMain(context.Background())
-	cmd.SetArgs([]string{"version", "--short"})
-
-	out := captureOutput(func() {
-		_ = cmd.Execute()
-	})
-
-	assert.Equal(t, "v1.0.0\n", out)
-}
-
-func TestVersionCmd_EmptyGitCommitFallsBack(t *testing.T) {
-	oldVersion := version
-	oldGitCommit := gitCommit
-	defer func() {
-		version = oldVersion
-		gitCommit = oldGitCommit
-		resetVersionCmdFlags()
-	}()
-	resetVersionCmdFlags()
-
-	gitCommit = ""
-	version = "v1.0.0"
-
-	cmd := GetMain(context.Background())
-	cmd.SetArgs([]string{"version"})
-
-	out := captureOutput(func() {
-		_ = cmd.Execute()
-	})
-
-	assert.Contains(t, out, "Version: v1.0.0")
-	assert.True(t, strings.HasPrefix(out, "Version: v1.0.0\nGit commit: "))
+			if tc.expectedOutput != "" {
+				assert.Equal(t, tc.expectedOutput, out)
+			}
+			for _, exp := range tc.expectedContains {
+				assert.Contains(t, out, exp)
+			}
+			for _, notExp := range tc.expectedNotContains {
+				assert.NotContains(t, out, notExp)
+			}
+		})
+	}
 }
