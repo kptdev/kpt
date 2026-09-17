@@ -59,6 +59,13 @@ VERSION:
       since it was fetched.
     * force-delete-replace: Wipe all the local changes to the package and replace
       it with the remote version.
+
+--preserve-explicit-null:
+  When set, fields explicitly nulled in the local package (for example
+  `field:`, `null`, or `~`) are kept as null during resource-merge instead of
+  being deleted. This changes the default for the current and future updates
+  and is persisted as `upstream.preserveExplicitNull` in the Kptfile.
+  Only applies to the resource-merge strategy. Defaults to false.
 ```
 
 #### Env Vars
@@ -195,6 +202,9 @@ On the resource level, the rules are:
 * A resource in both upstream and local will be merged into local.
 
 On the field level, the rules differ based on the type of field.
+When `--preserve-explicit-null` (or `upstream.preserveExplicitNull` in the
+Kptfile) is set, a field explicitly nulled in local is kept as null instead of
+being removed. This applies to scalars, mappings, and lists.
 
 For scalars and non-associative lists:
 * If the field is present in either upstream or local and the value is `null`, remove the field from local.
