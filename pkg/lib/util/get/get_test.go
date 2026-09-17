@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -663,7 +663,7 @@ func TestCommand_Run_ref(t *testing.T) {
 
 // TestCommand_Run_failExistingDir verifies that command will fail without changing anything if the
 // directory already exists
-func TestCommand_Run_failExistingDir(t *testing.T) {
+func TestCommand_Run_reFetchSamePackageIsIdempotent(t *testing.T) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -726,7 +726,9 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	_, err = g.Commit("new-data")
 	assert.NoError(t, err)
 
-	// try to clone and expect a failure
+	// Re-fetching the same upstream package into the same destination is
+	// idempotent: it succeeds and refreshes the local package to the latest
+	// upstream content, without requiring --force.
 	err = get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
@@ -735,13 +737,13 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
-	if !assert.Error(t, err) {
-		t.FailNow()
-	}
-	assert.Contains(t, err.Error(), "destination directory already exists")
+	assert.NoError(t, err)
 
-	// verify files are unchanged
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
+	newCommit, err := g.GetCommit()
+	assert.NoError(t, err)
+
+	// verify files now match the updated dataset
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -759,7 +761,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
+				Commit:    newCommit, // verify the commit matches the updated repo
 			},
 		},
 		Upstream: &kptfilev1.Upstream{
@@ -772,6 +774,71 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
+}
+
+// TestCommand_Run_differentPackageWithoutForceFails verifies that fetching a
+// different package into an existing, non-empty destination fails unless
+// --force is used.
+func TestCommand_Run_differentPackageWithoutForceFails(t *testing.T) {
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		"a": {{Data: testutil.Dataset1, Branch: "main"}},
+		"b": {{Data: testutil.Dataset2, Branch: "main"}},
+	})
+	defer clean()
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+	gA := repos["a"]
+	gB := repos["b"]
+
+	absPath := filepath.Join(w.WorkspaceDirectory, "pkg")
+	err := get.Command{
+		Git:         &kptfilev1.Git{Repo: gA.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	assert.NoError(t, err)
+
+	// fetching a different upstream into the same dest must fail without force
+	err = get.Command{
+		Git:         &kptfilev1.Git{Repo: gB.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "use --force")
+
+	// the original package (A) must be untouched
+	gA.AssertEqual(t, filepath.Join(gA.DatasetDirectory, testutil.Dataset1), absPath, true)
+}
+
+// TestCommand_Run_differentPackageWithForceOverwrites verifies that --force
+// replaces an existing, non-empty destination that holds a different package.
+func TestCommand_Run_differentPackageWithForceOverwrites(t *testing.T) {
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		"a": {{Data: testutil.Dataset1, Branch: "main"}},
+		"b": {{Data: testutil.Dataset2, Branch: "main"}},
+	})
+	defer clean()
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+	gA := repos["a"]
+	gB := repos["b"]
+
+	absPath := filepath.Join(w.WorkspaceDirectory, "pkg")
+	err := get.Command{
+		Git:         &kptfilev1.Git{Repo: gA.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	assert.NoError(t, err)
+
+	// fetching a different upstream into the same dest succeeds with force
+	err = get.Command{
+		Git:         &kptfilev1.Git{Repo: gB.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+		Force:       true,
+	}.Run(fake.CtxWithDefaultPrinter())
+	assert.NoError(t, err)
+
+	// the destination now holds package B's contents
+	gB.AssertEqual(t, filepath.Join(gB.DatasetDirectory, testutil.Dataset2), absPath, true)
 }
 
 func TestCommand_Run_nonexistingParentDir(t *testing.T) {
