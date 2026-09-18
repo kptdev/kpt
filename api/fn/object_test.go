@@ -15,12 +15,11 @@
 package fn
 
 import (
+	"errors"
 	"reflect"
 	"sort"
 	"testing"
 
-	"github.com/go-errors/errors"
-	"github.com/google/go-cmp/cmp"
 	schema "github.com/kptdev/kpt/api/schema/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -583,9 +582,7 @@ func TestUpsertMap(t *testing.T) {
 	sort.Strings(got)
 
 	want := []string{"foo", "foo2"}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("Unexpected expect (-want, +got): %s", diff)
-	}
+	assert.Equal(t, want, got)
 }
 
 func TestGetMap(t *testing.T) {

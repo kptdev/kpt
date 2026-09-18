@@ -23,7 +23,6 @@ import (
 
 	"github.com/kptdev/kpt/api/fn/internal"
 	schema "github.com/kptdev/kpt/api/schema/v1"
-	pkgerrors "github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -136,7 +135,7 @@ func ParseResourceList(in []byte) (*ResourceList, error) {
 	// Parse Results. Results can be empty.
 	res, found, err := rlObj.obj.GetNestedValue("results")
 	if err != nil {
-		return nil, pkgerrors.Wrap(err, "failed when trying to get results")
+		return nil, fmt.Errorf("failed when trying to get results: %w", err)
 	}
 
 	var resultsItems *internal.SliceVariant
@@ -148,14 +147,14 @@ func ParseResourceList(in []byte) (*ResourceList, error) {
 		found = false
 	}
 	if err != nil {
-		return nil, pkgerrors.Wrap(err, "failed when trying to get results")
+		return nil, fmt.Errorf("failed when trying to get results: %w", err)
 	}
 
 	if found {
 		var results Results
 		err = resultsItems.Node().Decode(&results)
 		if err != nil {
-			return nil, pkgerrors.Wrap(err, "failed to decode results")
+			return nil, fmt.Errorf("failed to decode results: %w", err)
 		}
 		rl.Results = results
 	}
