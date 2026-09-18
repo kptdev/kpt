@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/util/get"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -663,7 +664,7 @@ func TestCommand_Run_ref(t *testing.T) {
 
 // TestCommand_Run_failExistingDir verifies that command will fail without changing anything if the
 // directory already exists
-func TestCommand_Run_failExistingDir(t *testing.T) {
+func TestCommand_Run_reFetchSamePackageIsIdempotent(t *testing.T) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -681,11 +682,11 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
@@ -722,11 +723,13 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// update the data that would be cloned
 	err = g.ReplaceData(testutil.Dataset2)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = g.Commit("new-data")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	// try to clone and expect a failure
+	// Re-fetching the same upstream package into the same destination is
+	// idempotent: it succeeds and refreshes the local package to the latest
+	// upstream content, without requiring --force.
 	err = get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
@@ -735,13 +738,13 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 		},
 		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
-	if !assert.Error(t, err) {
-		t.FailNow()
-	}
-	assert.Contains(t, err.Error(), "destination directory already exists")
+	require.NoError(t, err)
 
-	// verify files are unchanged
-	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
+	newCommit, err := g.GetCommit()
+	require.NoError(t, err)
+
+	// verify files now match the updated dataset
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
@@ -759,7 +762,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
-				Commit:    commit, // verify the commit matches the repo
+				Commit:    newCommit, // verify the commit matches the updated repo
 			},
 		},
 		Upstream: &kptfilev1.Upstream{
@@ -772,6 +775,184 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
+}
+
+// TestCommand_Run_differentPackageWithoutForceFails verifies that fetching a
+// different package into an existing, non-empty destination fails unless
+// --force is used.
+func TestCommand_Run_differentPackageWithoutForceFails(t *testing.T) {
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		"a": {{Data: testutil.Dataset1, Branch: "main"}},
+		"b": {{Data: testutil.Dataset2, Branch: "main"}},
+	})
+	defer clean()
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+	gA := repos["a"]
+	gB := repos["b"]
+
+	absPath := filepath.Join(w.WorkspaceDirectory, "pkg")
+	err := get.Command{
+		Git:         &kptfilev1.Git{Repo: gA.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	require.NoError(t, err)
+
+	// fetching a different upstream into the same dest must fail without force
+	err = get.Command{
+		Git:         &kptfilev1.Git{Repo: gB.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "use --force")
+
+	// the original package (A) must be untouched
+	gA.AssertEqual(t, filepath.Join(gA.DatasetDirectory, testutil.Dataset1), absPath, true)
+}
+
+// TestCommand_Run_differentPackageWithForceOverwrites verifies that --force
+// replaces an existing, non-empty destination that holds a different package.
+func TestCommand_Run_differentPackageWithForceOverwrites(t *testing.T) {
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		"a": {{Data: testutil.Dataset1, Branch: "main"}},
+		"b": {{Data: testutil.Dataset2, Branch: "main"}},
+	})
+	defer clean()
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+	gA := repos["a"]
+	gB := repos["b"]
+
+	absPath := filepath.Join(w.WorkspaceDirectory, "pkg")
+	err := get.Command{
+		Git:         &kptfilev1.Git{Repo: gA.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	require.NoError(t, err)
+
+	// fetching a different upstream into the same dest succeeds with force
+	err = get.Command{
+		Git:         &kptfilev1.Git{Repo: gB.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+		Force:       true,
+	}.Run(fake.CtxWithDefaultPrinter())
+	require.NoError(t, err)
+
+	// the destination now holds package B's contents
+	gB.AssertEqual(t, filepath.Join(gB.DatasetDirectory, testutil.Dataset2), absPath, true)
+}
+
+// TestCommand_Run_overwriteDecisionForExistingDest is a table-driven test
+// covering how `get` decides whether a pre-existing, non-empty destination may
+// be overwritten. Each case populates the destination in a particular way, then
+// verifies that the fetch fails without --force (with an actionable message) and
+// succeeds when --force is set.
+func TestCommand_Run_overwriteDecisionForExistingDest(t *testing.T) {
+	testCases := []struct {
+		name string
+		// setupDest populates the (already created) destination directory.
+		setupDest func(t *testing.T, dest string)
+		// wantErrContains are substrings expected in the no-force error.
+		wantErrContains []string
+	}{
+		{
+			name: "unreadable Kptfile",
+			setupDest: func(t *testing.T, dest string) {
+				// A corrupt Kptfile makes ReadKptfile fail.
+				err := os.WriteFile(filepath.Join(dest, kptfilev1.KptFileName), []byte(":\n\tnot: valid: yaml"), 0600)
+				require.NoError(t, err, "failed to write corrupt Kptfile")
+			},
+			wantErrContains: []string{"cannot determine existing package upstream", "use --force"},
+		},
+		{
+			name: "no Kptfile",
+			setupDest: func(t *testing.T, dest string) {
+				err := os.WriteFile(filepath.Join(dest, "data.txt"), []byte("hello"), 0600)
+				require.NoError(t, err, "failed to write file")
+			},
+			wantErrContains: []string{"not the same package", "use --force"},
+		},
+		{
+			name: "Kptfile without upstream",
+			setupDest: func(t *testing.T, dest string) {
+				kptfileContent := `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pkg
+`
+				err := os.WriteFile(filepath.Join(dest, kptfilev1.KptFileName), []byte(kptfileContent), 0600)
+				require.NoError(t, err, "failed to write Kptfile")
+			},
+			wantErrContains: []string{"not the same package", "use --force"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "main",
+			})
+			defer clean()
+			defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+			absPath := filepath.Join(w.WorkspaceDirectory, "pkg")
+			require.NoError(t, os.MkdirAll(absPath, 0700), "failed to create dest")
+			tc.setupDest(t, absPath)
+
+			// Without --force the fetch fails with an actionable message.
+			err := get.Command{
+				Git:         &kptfilev1.Git{Repo: g.RepoDirectory, Ref: "main", Directory: "/"},
+				Destination: absPath,
+			}.Run(fake.CtxWithDefaultPrinter())
+			require.Error(t, err)
+			for _, want := range tc.wantErrContains {
+				assert.Contains(t, err.Error(), want)
+			}
+
+			// With --force the destination is overwritten and the fetch succeeds.
+			err = get.Command{
+				Git:         &kptfilev1.Git{Repo: g.RepoDirectory, Ref: "main", Directory: "/"},
+				Destination: absPath,
+				Force:       true,
+			}.Run(fake.CtxWithDefaultPrinter())
+			require.NoError(t, err)
+			g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
+		})
+	}
+}
+
+// TestCommand_Run_forceOverwriteReplacesDestContents verifies that a --force
+// overwrite of a different package fully replaces the destination's contents
+// (mirrors porch `rpkg pull` remove-and-recreate behaviour).
+func TestCommand_Run_forceOverwriteReplacesDestContents(t *testing.T) {
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		"a": {{Data: testutil.Dataset1, Branch: "main"}},
+		"b": {{Data: testutil.Dataset2, Branch: "main"}},
+	})
+	defer clean()
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+	gA := repos["a"]
+	gB := repos["b"]
+
+	absPath := filepath.Join(w.WorkspaceDirectory, "pkg")
+	err := get.Command{
+		Git:         &kptfilev1.Git{Repo: gA.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	require.NoError(t, err)
+
+	err = get.Command{
+		Git:         &kptfilev1.Git{Repo: gB.RepoDirectory, Ref: "main", Directory: "/"},
+		Destination: absPath,
+		Force:       true,
+	}.Run(fake.CtxWithDefaultPrinter())
+	require.NoError(t, err)
+
+	// The destination directory must still exist and now contain package b's
+	// contents (package a's content has been fully replaced).
+	info, err := os.Stat(absPath)
+	require.NoError(t, err)
+	assert.True(t, info.IsDir())
+	gB.AssertEqual(t, filepath.Join(gB.DatasetDirectory, testutil.Dataset2), absPath, true)
 }
 
 func TestCommand_Run_nonexistingParentDir(t *testing.T) {
