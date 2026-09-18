@@ -68,7 +68,7 @@ func NewRunner(
 		}
 
 		if len(opts.ExtraTlsCerts) != 0 {
-			regclient.WithRegOpts(regclientreg.WithCerts(opts.ExtraTlsCerts))
+			rcOpts = append(rcOpts, regclient.WithRegOpts(regclientreg.WithCerts(opts.ExtraTlsCerts)))
 		}
 
 		listers := []TagLister{
