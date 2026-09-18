@@ -32,7 +32,7 @@ builds:
       - darwin
     goarch:
       - amd64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}}
+    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}}
 
   - id: darwin-arm64
     env:
@@ -42,7 +42,7 @@ builds:
       - darwin
     goarch:
       - arm64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}}
+    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}}
 
   - id: linux-amd64
     env:
@@ -52,7 +52,7 @@ builds:
       - linux
     goarch:
       - amd64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
 
   - id: linux-arm64
     env:
@@ -62,7 +62,7 @@ builds:
       - linux
     goarch:
       - arm64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
 
 dockers_v2:
   - ids:

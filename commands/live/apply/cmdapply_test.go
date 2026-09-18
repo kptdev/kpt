@@ -15,6 +15,7 @@
 package apply
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -186,6 +187,12 @@ func TestCmd(t *testing.T) {
 			kf := kptfileutil.DefaultKptfile(filepath.Base(w.WorkspaceDirectory))
 			kf.Inventory = tc.inventory
 			testutil.AddKptfileToWorkspace(t, w, kf)
+
+			// This test exercises command flag behavior and does not require
+			// Git metadata. Avoid Git maintenance-lock races in live.Load.
+			if err := os.RemoveAll(filepath.Join(w.WorkspaceDirectory, ".git")); err != nil {
+				t.Fatalf("remove test workspace Git metadata: %v", err)
+			}
 
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
