@@ -4,13 +4,17 @@ go 1.24.0
 
 require (
 	github.com/distribution/reference v0.6.0
+	github.com/go-errors/errors v1.4.2
+	github.com/google/go-cmp v0.7.0
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
+	k8s.io/klog/v2 v2.130.1
 	sigs.k8s.io/kustomize/kyaml v0.21.1
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/go-errors/errors v1.4.2 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
