@@ -154,7 +154,9 @@ func GetMain(ctx context.Context) *cobra.Command {
 
 	replace(cmd)
 
-	versionCmd.Flags().Bool("short", false, "Print only the concise version identifier")
+	if versionCmd.Flags().Lookup("short") == nil {
+		versionCmd.Flags().Bool("short", false, "Print only the concise version identifier")
+	}
 	cmd.AddCommand(versionCmd)
 	hideFlags(cmd)
 	return cmd
@@ -206,12 +208,17 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 
 var version = "unknown"
 
+// gitCommit is set via -ldflags; authoritative when non-empty.
+var gitCommit = ""
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
 	Run: func(cmd *cobra.Command, _ []string) {
 		var hash, dirty string
-		if info, ok := debug.ReadBuildInfo(); ok {
+		if gitCommit != "" {
+			hash = gitCommit
+		} else if info, ok := debug.ReadBuildInfo(); ok {
 			for _, setting := range info.Settings {
 				switch setting.Key {
 				case "vcs.revision":
