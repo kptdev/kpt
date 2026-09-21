@@ -103,10 +103,29 @@ archives:
       - linux-amd64
       - linux-arm64
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+nfpms:
+  - id: linux-packages
+    ids:
+      - linux-amd64
+      - linux-arm64
+    formats:
+      - deb
+      - rpm
+      - apk
+    homepage: https://kpt.dev
+    maintainer: The kpt Authors
+    description: kpt - Automate Kubernetes Configuration Editing
+    license: Apache-2.0
+    section: utils
+    dependencies:
+      - git
+    bindir: /usr/local/bin
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/kpt/LICENSE
+    file_name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
 checksum:
   name_template: "checksums.txt"
-snapshot:
-  version_template: "master"
 changelog:
   sort: asc
   filters:
