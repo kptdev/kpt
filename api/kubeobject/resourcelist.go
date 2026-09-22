@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/kptdev/kpt/api/kubeobject/internal"
+	"github.com/kptdev/kpt/api/kubeobject/node"
 	schema "github.com/kptdev/kpt/api/schema/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -138,11 +138,11 @@ func ParseResourceList(in []byte) (*ResourceList, error) {
 		return nil, fmt.Errorf("failed when trying to get results: %w", err)
 	}
 
-	var resultsItems *internal.SliceVariant
+	var resultsItems *node.SliceVariant
 	// compatibility between kyaml versions
-	if m, ok := res.(*internal.MapVariant); ok {
+	if m, ok := res.(*node.MapVariant); ok {
 		resultsItems, found, err = m.GetNestedSlice("items")
-	} else if resultsItems, ok = res.(*internal.SliceVariant); !ok {
+	} else if resultsItems, ok = res.(*node.SliceVariant); !ok {
 		// no results
 		found = false
 	}
@@ -163,7 +163,7 @@ func ParseResourceList(in []byte) (*ResourceList, error) {
 
 // toYNode converts the ResourceList to the yaml.Node representation.
 func (rl *ResourceList) toYNode() (*yaml.Node, error) {
-	reMap := internal.NewMap(nil)
+	reMap := node.NewMap(nil)
 	reObj := &KubeObject{SubObject{obj: reMap, parentGVK: schema.GroupVersionKind{}, fieldpath: ""}}
 	if err := reObj.SetAPIVersion(kio.ResourceListAPIVersion); err != nil {
 		return nil, err
@@ -173,7 +173,7 @@ func (rl *ResourceList) toYNode() (*yaml.Node, error) {
 	}
 
 	if len(rl.Items) > 0 {
-		itemsSlice := internal.NewSliceVariant()
+		itemsSlice := node.NewSliceVariant()
 		for i := range rl.Items {
 			itemsSlice.Add(rl.Items[i].node())
 		}
@@ -188,9 +188,9 @@ func (rl *ResourceList) toYNode() (*yaml.Node, error) {
 	}
 
 	if len(rl.Results) > 0 {
-		resultsSlice := internal.NewSliceVariant()
+		resultsSlice := node.NewSliceVariant()
 		for _, result := range rl.Results {
-			mv, err := internal.TypedObjectToMapVariant(result)
+			mv, err := node.TypedObjectToMapVariant(result)
 			if err != nil {
 				return nil, err
 			}
@@ -212,7 +212,7 @@ func (rl *ResourceList) ToYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	doc := internal.NewDoc([]*yaml.Node{ynode}...)
+	doc := node.NewDoc([]*yaml.Node{ynode}...)
 	return doc.ToYAML()
 }
 

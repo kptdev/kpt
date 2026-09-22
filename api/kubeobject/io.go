@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
-	"github.com/kptdev/kpt/api/kubeobject/internal"
+	"github.com/kptdev/kpt/api/kubeobject/node"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -32,7 +32,7 @@ import (
 
 // ParseKubeObjects parses input byte slice to multiple KubeObjects.
 func ParseKubeObjects(in []byte) ([]*KubeObject, error) {
-	doc, err := internal.ParseDoc(in)
+	doc, err := node.ParseDoc(in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse input bytes: %w", err)
 	}

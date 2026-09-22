@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package internal has code not exposed for use outside this module
-package internal
+package node
 
 import (
 	"bytes"
