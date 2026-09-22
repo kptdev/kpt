@@ -154,6 +154,10 @@ func (i *ResultItem) String() string {
 	return fmt.Sprintf(formatString, list...)
 }
 
+func (i ResultItem) Error() string {
+	return i.String()
+}
+
 // Field is a modified version of sigs.k8s.io/kustomize/kyaml/fn/framework.Field
 // where CurrentValue and ProposedValue are strings instead of the original any type.
 type Field struct {
