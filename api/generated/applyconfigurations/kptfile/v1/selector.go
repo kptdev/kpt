@@ -34,31 +34,9 @@ type SelectorApplyConfiguration struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations on the target resources
 	Annotations map[string]string `json:"annotations,omitempty"`
-	// ResourceFileRegexp is an optional regular expression that can be used to specify
-	// which resource files will be processed by a function. If the ResourceFileRegexp field
-	// is not specified, all json and yaml resource files in the package are processed by
-	// the function. If a regular expression is specified in the field, only resources
-	// in resource files matching the regular expression are processed by the function.
-	//
-	// Example 1:
-	// resourceFileRegexp: "vol.*.yaml"
-	//
-	// The resources with the names below will be processed and all other resources
-	// will be ignored
-	// deployment/vol1.yaml
-	// deployment/volume.yaml
-	// vol0.yaml
-	// subpkg1/vol2.yaml
-	// subpkg1/subpkg11/vol3.yaml
-	// subpkg2/vol4.yaml
-	//
-	// Example 2:
-	// resourceFileRegexp: "subpkg1/subpkg11"
-	//
-	// The resources with the names below will be processed and all other resources
-	// will be ignored
-	// subpkg1/subpkg11/vol3.yaml
-	// subpkg1/subpkg11/deployment.yaml
+	// ResourceFileRegexp a regular expression matched against the path of the file
+	// containing the resource, relative to the package root. Resources whose file path
+	// matches the expression will be selected.
 	ResourceFileRegexp *string `json:"resourceFileRegexp:omitempty,omitempty"`
 }
 
