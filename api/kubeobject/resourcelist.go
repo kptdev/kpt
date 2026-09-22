@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fn
+package kubeobject
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/kptdev/kpt/api/fn/internal"
+	"github.com/kptdev/kpt/api/kubeobject/internal"
 	schema "github.com/kptdev/kpt/api/schema/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"

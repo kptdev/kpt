@@ -14,7 +14,7 @@
 
 // this code is based on https://github.com/nephio-project/porch/blob/main/pkg/engine/kio.go
 
-package fn
+package kubeobject
 
 import (
 	"bytes"
@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/kpt/api/fn/internal"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/api/kubeobject/internal"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"

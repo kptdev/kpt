@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package fn provides KubeObject and related helpers for working with
+// Package kubeobject provides KubeObject and related helpers for working with
 // Kubernetes resources as YAML (used by kpt and KRM function tooling).
-package fn
+package kubeobject
