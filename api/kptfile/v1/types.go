@@ -501,12 +501,12 @@ type RenderStatus struct {
 // PipelineStepResult contains the structured result from an individual function
 // call in the pipeline.
 type PipelineStepResult struct {
-	Name           string                  `yaml:"name,omitempty" json:"name,omitempty"`
-	Image          string                  `yaml:"image,omitempty" json:"image,omitempty"`
-	ExecPath       string                  `yaml:"exec,omitempty" json:"exec,omitempty"`
-	ExecutionError string                  `yaml:"executionError,omitempty" json:"executionError,omitempty"`
-	Stderr         string                  `yaml:"stderr,omitempty" json:"stderr,omitempty"`
-	ExitCode       int                     `yaml:"exitCode" json:"exitCode"`
+	Name           string `yaml:"name,omitempty" json:"name,omitempty"`
+	Image          string `yaml:"image,omitempty" json:"image,omitempty"`
+	ExecPath       string `yaml:"exec,omitempty" json:"exec,omitempty"`
+	ExecutionError string `yaml:"executionError,omitempty" json:"executionError,omitempty"`
+	Stderr         string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
+	ExitCode       int    `yaml:"exitCode" json:"exitCode"`
 
 	Results      []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
 	ErrorResults []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
