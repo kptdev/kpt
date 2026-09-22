@@ -18,8 +18,9 @@ go.work.sum
 .idea/
 *.iml
 coverage.out
-coverage_unit.html
-func_coverage.out
+module_coverage.out
+module_coverage_unit.html
+module_func_coverage.out
 kpt/kpt
 *.exe
 *.gif
