@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 
+	"golang.org/x/mod/module"
+
 	kptcommands "github.com/kptdev/kpt/commands"
 	"github.com/kptdev/kpt/internal/docs/generated/overview"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
@@ -206,45 +208,103 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 	}
 }
 
-var version = "unknown"
+const unknown = "unknown"
+
+var version = unknown
 
 // gitCommit is set via -ldflags; authoritative when non-empty.
 var gitCommit = ""
+
+var readBuildInfo = debug.ReadBuildInfo
+
+func extractVCSSettings(settings []debug.BuildSetting) (string, bool) {
+	var hash string
+	var dirty bool
+	for _, setting := range settings {
+		switch setting.Key {
+		case "vcs.revision":
+			hash = setting.Value
+		case "vcs.modified":
+			dirty = strings.EqualFold(setting.Value, "true")
+		}
+	}
+	return hash, dirty
+}
+
+func extractPseudoVersionCommit(ver string) string {
+	if ver == "" {
+		return ""
+	}
+	if !strings.HasPrefix(ver, "v") {
+		ver = "v" + ver
+	}
+	if !module.IsPseudoVersion(ver) {
+		return ""
+	}
+	rev, err := module.PseudoVersionRev(ver)
+	if err != nil {
+		return ""
+	}
+	return rev
+}
+
+func fallbackUnknown(val string) string {
+	if val == "" {
+		return unknown
+	}
+	return val
+}
+
+// resolveVersion resolves the version, git commit hash, and dirty status.
+// If v is "unknown" or empty, it attempts to fall back to info.Main.Version
+// from debug.ReadBuildInfo(). If commitOverride is non-empty, it takes precedence for the commit.
+func resolveVersion(v string, commitOverride string, info *debug.BuildInfo) (string, string, bool) {
+	var hash string
+	var dirty bool
+
+	if info != nil {
+		if (v == unknown || v == "") && info.Main.Version != "" && info.Main.Version != "(devel)" {
+			v = strings.TrimPrefix(info.Main.Version, "v")
+		}
+		hash, dirty = extractVCSSettings(info.Settings)
+		if hash == "" {
+			hash = extractPseudoVersionCommit(info.Main.Version)
+		}
+	}
+
+	if commitOverride != "" {
+		hash = commitOverride
+		dirty = false
+	}
+
+	return fallbackUnknown(v), fallbackUnknown(hash), dirty
+}
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
 	Run: func(cmd *cobra.Command, _ []string) {
-		var hash, dirty string
-		if gitCommit != "" {
-			hash = gitCommit
-		} else if info, ok := debug.ReadBuildInfo(); ok {
-			for _, setting := range info.Settings {
-				switch setting.Key {
-				case "vcs.revision":
-					hash = setting.Value
-				case "vcs.modified":
-					if strings.ToLower(setting.Value) == "true" {
-						dirty = " (dirty)"
-					}
-				}
-			}
+		var info *debug.BuildInfo
+		if bi, ok := readBuildInfo(); ok {
+			info = bi
 		}
+		resolvedVer, hash, dirty := resolveVersion(version, gitCommit, info)
 
 		short, _ := cmd.Flags().GetBool("short")
 		if short {
-			if version == "unknown" && len(hash) >= 7 {
+			if resolvedVer == unknown && len(hash) >= 7 && hash != unknown {
 				fmt.Printf("%s\n", hash[:7])
 			} else {
-				fmt.Printf("%s\n", version)
+				fmt.Printf("%s\n", resolvedVer)
 			}
 			return
 		}
-		fmt.Printf("Version: %s\n", version)
-		if hash == "" {
-			hash = "unknown"
+		fmt.Printf("Version: %s\n", resolvedVer)
+		dirtySuffix := ""
+		if dirty {
+			dirtySuffix = " (dirty)"
 		}
-		fmt.Printf("Git commit: %s%s\n", hash, dirty)
+		fmt.Printf("Git commit: %s%s\n", hash, dirtySuffix)
 	},
 }
 

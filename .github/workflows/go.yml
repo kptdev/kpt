@@ -45,6 +45,7 @@ jobs:
               - 'e2e/**'
               - 'internal/**'
               - 'pkg/**'
+              - 'run/**'
               - 'mdtogo/**'
               - 'scripts/**'
               - 'Makefile'
