@@ -647,6 +647,169 @@ The following are the matchers that you can specify in a selector:
 4. `namespace`: this is the `metadata.namespace` field of the resources to be selected.
 5. `annotations`: the resources with matching annotations will be selected.
 6. `labels`: the resources with matching labels will be selected.
+7. `resourceFileRegexp`: a regular expression matched against the path of the file containing the resource, relative to the package root. Resources whose file path matches the expression will be selected.
+
+#### Selecting resources by file path with `resourceFileRegexp`
+
+The `resourceFileRegexp` matcher selects resources based on the path of the file they are defined in,
+relative to the package root. This is useful when your package is organised into subdirectories by
+concern (for example `services/`, `deployments/`, `config/`) and you want a function to operate only
+on resources that live in a particular part of the directory tree.
+
+The value is a standard Go regular expression. A resource is selected when the expression matches
+any part of its relative file path.
+
+For example, to apply `set-namespace` only to resources defined under the `services/` directory:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+      configMap:
+        namespace: production
+      selectors:
+        - resourceFileRegexp: "services/.*"
+```
+
+Multiple `resourceFileRegexp` entries in the same selector list act as a union — a resource is
+selected if its file path matches **any** of the expressions:
+
+```yaml
+      selectors:
+        - resourceFileRegexp: "services/.*"
+        - resourceFileRegexp: "deployments/.*"
+```
+
+You can combine `resourceFileRegexp` with other matchers in the same selector entry. All fields in
+a single entry must match simultaneously (logical AND):
+
+```yaml
+      selectors:
+        - resourceFileRegexp: "services/.*"
+          kind: Service
+```
+
+This selects only resources that are both in the `services/` directory **and** have `kind: Service`.
+
+#### Excluding resources by file path with `resourceFileRegexp`
+
+The `resourceFileRegexp` matcher is also available in `exclude` entries. A resource is excluded from
+the function if its file path matches the expression.
+
+For example, to apply `set-labels` to all resources except those under `legacy/`:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        env: prod
+      exclude:
+        - resourceFileRegexp: "legacy/.*"
+```
+
+#### Chaining mutators with `resourceFileRegexp` selectors and exclusions
+
+Because each mutator in the pipeline has its own independent `selectors` and `exclude` list, you can
+build pipelines where different functions operate on different subsets of the package, all determined
+by file path. This is a powerful pattern for packages that are organised into subdirectories by
+concern.
+
+Consider a package with the following layout:
+
+```
+Kptfile
+services/resources.yaml      # Service resources
+deployments/resources.yaml   # Deployment resources
+internal/resources.yaml      # Internal ConfigMaps — must not be labelled tier=frontend
+legacy/resources.yaml        # Legacy resources — must not be labelled env=prod
+```
+
+The following pipeline applies four mutators, each targeting a different subset:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    # M1: set namespace ns-m1 on resources in services/ only
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+      configMap:
+        namespace: ns-m1
+      selectors:
+        - resourceFileRegexp: "services/.*"
+    # M2: set namespace ns-m2 on resources in deployments/ only
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+      configMap:
+        namespace: ns-m2
+      selectors:
+        - resourceFileRegexp: "deployments/.*"
+    # M3: add tier=frontend to all resources except those in internal/
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        tier: frontend
+      exclude:
+        - resourceFileRegexp: "internal/.*"
+    # M4: add env=prod to all resources except those in legacy/
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        env: prod
+      exclude:
+        - resourceFileRegexp: "legacy/.*"
+```
+
+The net effect on each directory is:
+
+| Directory | M1 (selector) | M2 (selector) | M3 (exclude internal) | M4 (exclude legacy) | Result |
+|---|---|---|---|---|---|
+| `services/` | ✅ selected | — | ✅ not excluded | ✅ not excluded | `namespace: ns-m1`, `tier: frontend`, `env: prod` |
+| `deployments/` | — | ✅ selected | ✅ not excluded | ✅ not excluded | `namespace: ns-m2`, `tier: frontend`, `env: prod` |
+| `internal/` | — | — | ❌ excluded | ✅ not excluded | `env: prod` only |
+| `legacy/` | — | — | ✅ not excluded | ❌ excluded | `tier: frontend` only |
+
+Running `kpt fn render` on this package produces:
+
+```shell
+$ kpt fn render app
+Package "app":
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s) on package "app"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [Results]:
+    [info]: namespace [default] updated to "ns-m1", 1 value(s) changed
+    [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s) on package "app"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [Results]:
+    [info]: namespace [default] updated to "ns-m2", 1 value(s) changed
+    [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 4 resource(s) on package "app"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [Results]:
+    [info]: set 7 labels in total
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 4 resource(s) on package "app"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [Results]:
+    [info]: set 6 labels in total
+
+Successfully executed 4 function(s) in 1 package(s).
+```
+
+{{% alert title="Note" color="primary" %}}
+When a mutator has a `selectors` list, only the matched resources are passed to the function — the
+resource count shown in `[RUNNING] ... on N resource(s)` reflects the selected subset, not the full
+package. When a mutator has only an `exclude` list (no `selectors`), all resources are passed except
+the excluded ones.
+{{% /alert %}}
 
 #### Specifying `exclude`
 
@@ -698,6 +861,7 @@ The following are the matchers you can specify in an exclusion:
 4. `namespace`: this is the `metadata.namespace` field of the resources to be excluded.
 5. `annotations`: the resources with matching annotations will be excluded.
 6. `labels`: the resources with matching labels will be excluded.
+7. `resourceFileRegexp`: a regular expression matched against the relative file path of the resource. Resources whose file path matches the expression will be excluded. See [Excluding resources by file path](#excluding-resources-by-file-path-with-resourcefileregexp) above for details and examples.
 
 ## Imperative function execution
 

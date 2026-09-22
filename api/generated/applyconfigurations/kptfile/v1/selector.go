@@ -34,6 +34,10 @@ type SelectorApplyConfiguration struct {
 	Labels map[string]string `json:"labels,omitempty"`
 	// Annotations on the target resources
 	Annotations map[string]string `json:"annotations,omitempty"`
+	// ResourceFileRegexp a regular expression matched against the path of the file
+	// containing the resource, relative to the package root. Resources whose file path
+	// matches the expression will be selected.
+	ResourceFileRegexp *string `json:"resourceFileRegexp:omitempty,omitempty"`
 }
 
 // SelectorApplyConfiguration constructs a declarative configuration of the Selector type for use with
@@ -99,5 +103,13 @@ func (b *SelectorApplyConfiguration) WithAnnotations(entries map[string]string) 
 	for k, v := range entries {
 		b.Annotations[k] = v
 	}
+	return b
+}
+
+// WithResourceFileRegexp sets the ResourceFileRegexp field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the ResourceFileRegexp field is set to the value of the last call.
+func (b *SelectorApplyConfiguration) WithResourceFileRegexp(value string) *SelectorApplyConfiguration {
+	b.ResourceFileRegexp = &value
 	return b
 }

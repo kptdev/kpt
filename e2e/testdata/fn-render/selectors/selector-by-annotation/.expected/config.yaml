@@ -1,0 +1,15 @@
+actualStripLines:
+  - "    stderr: 'WARNING: The requested image''s platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested'"
+
+stdErrStripLines:
+  - "  Stderr:"
+  - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
+
+stdErr: |
+  Package "selector-by-annotation":
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 2 resource(s) on package "selector-by-annotation"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+    [Results]:
+      [info]: set 3 labels in total
+
+  Successfully executed 1 function(s) in 1 package(s).

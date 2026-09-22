@@ -1,0 +1,46 @@
+diff --git a/Kptfile b/Kptfile
+index b484b8c..e462210 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -10,3 +10,15 @@ pipeline:
+       selectors:
+         - annotations:
+             deploy: "true"
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
++        exitCode: 0
++        results:
++          - message: set 3 labels in total
++            severity: info
+diff --git a/resources.yaml b/resources.yaml
+index b06f45e..602cd9a 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -4,8 +4,13 @@ metadata:
+   name: web
+   annotations:
+     deploy: "true"
++  labels:
++    managed-by: kpt
+ spec:
+   replicas: 1
++  selector:
++    matchLabels:
++      managed-by: kpt
+ ---
+ apiVersion: apps/v1
+ kind: Deployment
+@@ -20,5 +25,7 @@ metadata:
+   name: app-config
+   annotations:
+     deploy: "true"
++  labels:
++    managed-by: kpt
+ data:
+   key: value

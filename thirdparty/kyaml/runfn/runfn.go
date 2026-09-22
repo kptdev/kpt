@@ -308,6 +308,11 @@ func (r *RunFns) init() error {
 		if err != nil {
 			return errors.Wrap(err)
 		}
+		// Resolve symlinks so path comparisons work correctly on macOS where
+		// os.Getwd() returns the /private/... resolved form of /var/... paths.
+		if resolved, err := filepath.EvalSymlinks(absPath); err == nil {
+			absPath = resolved
+		}
 		r.uniquePath = kptfilev1.UniquePath(absPath)
 	}
 
@@ -327,6 +332,14 @@ func (r *RunFns) init() error {
 			return fmt.Errorf("failed to get working directory: %w", err)
 		}
 		r.FnConfigPath = filepath.Join(path, r.FnConfigPath)
+	}
+	// Resolve symlinks so the path compares correctly against r.uniquePath
+	// (which comes from filepath.Abs). On macOS, os.Getwd() returns the
+	// /private/var/... resolved path while os.MkdirTemp paths use /var/...
+	if r.FnConfigPath != "" {
+		if resolved, err := filepath.EvalSymlinks(r.FnConfigPath); err == nil {
+			r.FnConfigPath = resolved
+		}
 	}
 	return nil
 }

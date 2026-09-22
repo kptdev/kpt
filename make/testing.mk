@@ -14,24 +14,46 @@
 
 # Testing tools and targets for SonarQube coverage generation
 
-TEST_COVERAGE_FILE=coverage.out
-TEST_COVERAGE_HTML_FILE=coverage_unit.html
-TEST_COVERAGE_FUNC_FILE=func_coverage.out
+TEST_COVERAGE_FILE             = coverage.out
+TEST_MODULE_COVERAGE_FILE      = module_coverage.out
+TEST_MODULE_COVERAGE_HTML_FILE = module_coverage_unit.html
+TEST_MODULE_COVERAGE_FUNC_FILE = module_func_coverage.out
 
 ##@ Testing
 
+MODULES = $(CURDIR) $(CURDIR)/api $(CURDIR)/mdtogo
+
+MODULE_COVERAGE_FILES      = $(addsuffix /$(TEST_MODULE_COVERAGE_FILE),      $(MODULES))
+MODULE_COVERAGE_HTML_FILES = $(addsuffix /$(TEST_MODULE_COVERAGE_HTML_FILE), $(MODULES))
+MODULE_COVERAGE_FUNC_FILES = $(addsuffix /$(TEST_MODULE_COVERAGE_FUNC_FILE), $(MODULES))
+
+## Generate per-module and aggregated coverage reports
 .PHONY: test-coverage
-test-coverage: ## Generate coverage reports (runs tests with coverage instrumentation)
-	go test -cover -coverprofile=$(TEST_COVERAGE_FILE) ${LDFLAGS} ./...
-	go tool cover -html=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_HTML_FILE)
-	go tool cover -func=$(TEST_COVERAGE_FILE) -o $(TEST_COVERAGE_FUNC_FILE)
-	@echo "Coverage reports generated:"
-	@echo "  - $(TEST_COVERAGE_FILE): Coverage data (for SonarQube)"
-	@echo "  - $(TEST_COVERAGE_HTML_FILE): HTML coverage report"
-	@echo "  - $(TEST_COVERAGE_FUNC_FILE): Function-level coverage"
+test-coverage: $(MODULE_COVERAGE_FILES) $(MODULE_COVERAGE_HTML_FILES) $(MODULE_COVERAGE_FUNC_FILES) $(TEST_COVERAGE_FILE)
 
-.PHONY: test-clean
-test-clean: ## Clean up coverage artifacts
-	rm -f $(TEST_COVERAGE_FILE) $(TEST_COVERAGE_HTML_FILE) $(TEST_COVERAGE_FUNC_FILE)
+%/$(TEST_MODULE_COVERAGE_FILE):
+	cd $(dir $@) && go test -cover -coverprofile=$@ ${LDFLAGS} ./...
+	@echo "  - $@: Coverage data (for SonarQube)"
+
+%/$(TEST_MODULE_COVERAGE_HTML_FILE): %/$(TEST_MODULE_COVERAGE_FILE)
+	cd $(dir $@) && go tool cover -html=$(TEST_MODULE_COVERAGE_FILE) -o $(notdir $@)
+	@echo "  - $@: HTML coverage report"
+
+%/$(TEST_MODULE_COVERAGE_FUNC_FILE): %/$(TEST_MODULE_COVERAGE_FILE)
+	cd $(dir $@) && go tool cover -func=$(TEST_MODULE_COVERAGE_FILE) -o $(notdir $@)
+	@echo "  - $@: Function-level coverage"
+
+$(TEST_COVERAGE_FILE): $(MODULE_COVERAGE_FILES)
+	rm -f $@
+	@# Merge per-module coverage files; keep the mode line only from the first file.
+	head -1 $(firstword $(MODULE_COVERAGE_FILES)) > $@
+	for f in $(MODULE_COVERAGE_FILES); do grep -v '^mode:' $$f >> $@; done
+	@echo "  - $@: Aggregated coverage data (for SonarQube)"
+
+.PHONY: test-coverage-clean
+test-coverage-clean: ## Clean up coverage artifacts
+	rm -f $(TEST_COVERAGE_FILE)
+	find . -name $(TEST_MODULE_COVERAGE_FILE)      -exec rm -f {} +
+	find . -name $(TEST_MODULE_COVERAGE_HTML_FILE) -exec rm -f {} +
+	find . -name $(TEST_MODULE_COVERAGE_FUNC_FILE) -exec rm -f {} +
 	@echo "Coverage artifacts cleaned"
-
