@@ -318,7 +318,7 @@ func (o *SubObject) SetNestedStringMap(value map[string]string, fields ...string
 // It returns error if the fields type is not map[string]string.
 func (o *SubObject) UpdateNestedStringMap(values map[string]string, fields ...string) error {
 	for field, value := range values {
-		path := append(fields, field)
+		path := append(fields, field) //nolint:gocritic
 		if err := o.SetNestedString(value, path...); err != nil {
 			return fmt.Errorf("couldn't update field %s: %w", strings.Join(fields, "."), err)
 		}
@@ -506,6 +506,7 @@ func (o *KubeObject) IsGroupKind(gk schema.GroupKind) bool {
 
 // IsGVK compares the given group, version, and kind with KubeObject's apiVersion and Kind.
 // It only matches on specified arguments, for example if the group is empty this will match any group.
+//
 // Deprecated: Prefer exact matching with IsGroupVersionKind or IsGroupKind
 func (o *KubeObject) IsGVK(group, version, kind string) bool {
 	gvk := o.GroupVersionKind()

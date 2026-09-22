@@ -90,7 +90,7 @@ func deepCopyFormatting(src, dst *yaml.Node) {
 	switch dst.Kind {
 	case yaml.MappingNode:
 		copyMapFormatting(src, dst)
-	case yaml.SequenceNode, yaml.DocumentNode:
+	case yaml.SequenceNode:
 		copyListFormatting(src, dst)
 	case yaml.DocumentNode:
 		if len(src.Content) == 1 && len(dst.Content) == 1 {

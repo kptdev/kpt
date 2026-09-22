@@ -137,6 +137,7 @@ func (kos KubeObjects) SetAnnotation(key, value string) error {
 }
 
 // IsGVK returns a function that checks if a KubeObject has a certain GVK.
+//
 // Deprecated: Prefer exact matching with IsGroupVersionKind or IsGroupKind
 func IsGVK(group, version, kind string) func(*KubeObject) bool {
 	return func(o *KubeObject) bool {

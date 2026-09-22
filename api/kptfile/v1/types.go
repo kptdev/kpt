@@ -507,8 +507,10 @@ type PipelineStepResult struct {
 	ExecutionError string                  `yaml:"executionError,omitempty" json:"executionError,omitempty"`
 	Stderr         string                  `yaml:"stderr,omitempty" json:"stderr,omitempty"`
 	ExitCode       int                     `yaml:"exitCode" json:"exitCode"`
-	Results        []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
-	ErrorResults   []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+
+	Results      []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	ErrorResults []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+
 	// When is the CEL condition expression that was evaluated
 	When string `yaml:"when,omitempty" json:"when,omitempty"`
 	// Skipped indicates if the function was skipped due to a condition

@@ -94,7 +94,7 @@ func (o *MapVariant) GetNestedStringMap(fields ...string) (map[string]string, bo
 		return nil, found, fmt.Errorf("invalid yaml map node")
 	}
 	m := make(map[string]string, len(children)/2)
-	for i := 0; i < len(children); i = i + 2 {
+	for i := 0; i < len(children); i += 2 {
 		m[children[i].Value] = children[i+1].Value
 	}
 	return m, found, nil
