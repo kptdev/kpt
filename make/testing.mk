@@ -31,7 +31,10 @@ MODULE_COVERAGE_FUNC_FILES = $(addsuffix /$(TEST_MODULE_COVERAGE_FUNC_FILE), $(M
 .PHONY: test-coverage
 test-coverage: $(MODULE_COVERAGE_FILES) $(MODULE_COVERAGE_HTML_FILES) $(MODULE_COVERAGE_FUNC_FILES) $(TEST_COVERAGE_FILE)
 
-%/$(TEST_MODULE_COVERAGE_FILE):
+.PHONY: FORCE
+FORCE:
+
+%/$(TEST_MODULE_COVERAGE_FILE): FORCE
 	cd $(dir $@) && go test -cover -coverprofile=$@ ${LDFLAGS} ./...
 	@echo "  - $@: Coverage data (for SonarQube)"
 
