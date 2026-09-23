@@ -154,7 +154,7 @@ func (i *ResultItem) String() string {
 	return fmt.Sprintf(formatString, list...)
 }
 
-func (i ResultItem) Error() string {
+func (i *ResultItem) Error() string {
 	return i.String()
 }
 

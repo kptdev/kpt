@@ -277,8 +277,6 @@ func (rl *ResourceList) LogResult(err error) {
 	switch result := err.(type) {
 	case Results:
 		rl.Results = append(rl.Results, result...)
-	case Result:
-		rl.Results = append(rl.Results, &result)
 	case *Result:
 		rl.Results = append(rl.Results, result)
 	default:
