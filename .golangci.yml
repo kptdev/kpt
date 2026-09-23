@@ -61,6 +61,7 @@ linters:
         linters:
           - gosec
           - funlen
+          - goconst # TODO: fix
       - path: (.+)/test(.+)/(.+)\.go$ # test, testutil packages
         linters:
           - gosec

@@ -33,6 +33,8 @@ const (
 	// constants related to kustomize
 	kustomizationAPIGroup = "kustomize.config.k8s.io"
 	kustomizationKind     = "Kustomization"
+
+	mustNotBeEmpty = "must not be empty"
 )
 
 func (kf *KptFile) Validate(fsys filesys.FileSystem, pkgPath UniquePath) error {
@@ -69,12 +71,12 @@ func (u *Upstream) validate() error {
 	}
 	if u.Git != nil {
 		if u.Git.Repo == "" {
-			return &ValidateError{Field: "upstream.git.repo", Reason: "must not be empty"}
+			return &ValidateError{Field: "upstream.git.repo", Reason: mustNotBeEmpty}
 		} else if err := validateGitRepo(u.Git.Repo); err != nil {
 			return &ValidateError{Field: "upstream.git.repo", Value: u.Git.Repo, Reason: err.Error()}
 		}
 		if u.Git.Ref == "" {
-			return &ValidateError{Field: "upstream.git.ref", Reason: "must not be empty"}
+			return &ValidateError{Field: "upstream.git.ref", Reason: mustNotBeEmpty}
 		}
 	}
 	if u.UpdateStrategy != "" {
@@ -120,13 +122,13 @@ func (l *Locator) validate() error {
 	}
 	if l.Git != nil {
 		if l.Git.Repo == "" {
-			return &ValidateError{Field: "upstreamLock.git.repo", Reason: "must not be empty"}
+			return &ValidateError{Field: "upstreamLock.git.repo", Reason: mustNotBeEmpty}
 		}
 		if l.Git.Ref == "" {
-			return &ValidateError{Field: "upstreamLock.git.ref", Reason: "must not be empty"}
+			return &ValidateError{Field: "upstreamLock.git.ref", Reason: mustNotBeEmpty}
 		}
 		if l.Git.Commit == "" {
-			return &ValidateError{Field: "upstreamLock.git.commit", Reason: "must not be empty"}
+			return &ValidateError{Field: "upstreamLock.git.commit", Reason: mustNotBeEmpty}
 		}
 	}
 	return nil
@@ -139,7 +141,7 @@ func (info *PackageInfo) validate() error {
 	}
 	for i, rg := range info.ReadinessGates {
 		if rg.ConditionType == "" {
-			return &ValidateError{Field: fmt.Sprintf("info.readinessGates[%d].conditionType", i), Reason: "must not be empty"}
+			return &ValidateError{Field: fmt.Sprintf("info.readinessGates[%d].conditionType", i), Reason: mustNotBeEmpty}
 		}
 	}
 	if info.LicenseFile != "" {
