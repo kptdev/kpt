@@ -1,0 +1,48 @@
+diff --git a/Kptfile b/Kptfile
+index fff6086..6d44299 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -9,3 +9,15 @@ pipeline:
+         env: production
+       selectors:
+         - namespace: prod
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
++        exitCode: 0
++        results:
++          - message: set 4 labels in total
++            severity: info
+diff --git a/resources.yaml b/resources.yaml
+index c88f0a3..cb6b32c 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -3,8 +3,13 @@ kind: Deployment
+ metadata:
+   name: frontend
+   namespace: prod
++  labels:
++    env: production
+ spec:
+   replicas: 1
++  selector:
++    matchLabels:
++      env: production
+ ---
+ apiVersion: apps/v1
+ kind: Deployment
+@@ -19,6 +24,9 @@ kind: Service
+ metadata:
+   name: frontend-svc
+   namespace: prod
++  labels:
++    env: production
+ spec:
+   selector:
+     app: frontend
++    env: production

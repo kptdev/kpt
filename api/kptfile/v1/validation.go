@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -69,8 +70,8 @@ func (u *Upstream) validate() error {
 	if u.Git != nil {
 		if u.Git.Repo == "" {
 			return &ValidateError{Field: "upstream.git.repo", Reason: "must not be empty"}
-		} else if _, err := url.Parse(u.Git.Repo); err != nil {
-			return &ValidateError{Field: "upstream.git.repo", Value: u.Git.Repo, Reason: fmt.Sprintf("invalid URL: %s", err)}
+		} else if err := validateGitRepo(u.Git.Repo); err != nil {
+			return &ValidateError{Field: "upstream.git.repo", Value: u.Git.Repo, Reason: err.Error()}
 		}
 		if u.Git.Ref == "" {
 			return &ValidateError{Field: "upstream.git.ref", Reason: "must not be empty"}
@@ -79,6 +80,21 @@ func (u *Upstream) validate() error {
 	if u.UpdateStrategy != "" {
 		if _, err := ToUpdateStrategy(string(u.UpdateStrategy)); err != nil {
 			return &ValidateError{Field: "upstream.updateStrategy", Value: string(u.UpdateStrategy), Reason: err.Error()}
+		}
+	}
+	return nil
+}
+
+// validateGitRepo accepts anything git can clone from: a URL with a scheme
+// (https://, ssh://, file://, ...), an scp-style remote ([user@]host:path),
+// or a local path.
+func validateGitRepo(repo string) error {
+	if strings.ContainsAny(repo, " 	\r\n") {
+		return fmt.Errorf("must not contain whitespace")
+	}
+	if strings.Contains(repo, "://") {
+		if _, err := url.Parse(repo); err != nil {
+			return fmt.Errorf("invalid URL: %s", err)
 		}
 	}
 	return nil
@@ -200,6 +216,23 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 			return err
 		}
 	}
+	if f.Selectors != nil {
+		for i, s := range f.Selectors {
+			if err := s.validate(fnType, idx, "selectors", i); err != nil {
+				return err
+			}
+		}
+	}
+	if f.Exclusions != nil {
+		for i, e := range f.Exclusions {
+			if err := e.validate(fnType, idx, "exclude", i); err != nil {
+				return err
+			}
+		}
+	}
+	if err := f.validateExecutor(fnType, idx); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -305,6 +338,20 @@ func validateFnConfigPathSyntax(p string) error {
 		// Allowing outside path opens up an attack vector that allows
 		// reading any YAML file on package consumer's machine.
 		return fmt.Errorf("path must not be outside the package")
+	}
+	return nil
+}
+
+// validate checks that the Selector fields are consistent.
+func (s Selector) validate(fnType string, idx int, selectorType string, selectorIdx int) error {
+	if s.ResourceFileRegexp != "" {
+		if _, err := regexp.Compile(s.ResourceFileRegexp); err != nil {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].%s[%d].resourceFileRegexp", fnType, idx, selectorType, selectorIdx),
+				Value:  s.ResourceFileRegexp,
+				Reason: fmt.Sprintf("invalid regular expression: %s", err),
+			}
+		}
 	}
 	return nil
 }

@@ -710,6 +710,39 @@ func TestUpstreamValidation(t *testing.T) {
 			}},
 			valid: true,
 		},
+		"valid scp-style ssh repo": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "git@github.com:kubernetes/examples.git",
+					Ref:  "main",
+				},
+				UpdateStrategy: ResourceMerge,
+			}},
+			valid: true,
+		},
+		"valid ssh scheme repo": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "ssh://git@github.com/kubernetes/examples.git",
+					Ref:  "main",
+				},
+				UpdateStrategy: ResourceMerge,
+			}},
+			valid: true,
+		},
+		"valid local path repo": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo: "/tmp/test-kpt-upstream",
+					Ref:  "main",
+				},
+				UpdateStrategy: ResourceMerge,
+			}},
+			valid: true,
+		},
 		"unknown type": {
 			kf: KptFile{
 				Upstream: &Upstream{
@@ -735,6 +768,18 @@ func TestUpstreamValidation(t *testing.T) {
 		"empty ref": {
 			kf: KptFile{Upstream: &Upstream{
 				Git: &Git{Repo: "https://github.com/kubernetes/examples.git"},
+			}},
+			valid: false,
+		},
+		"repo with whitespace": {
+			kf: KptFile{Upstream: &Upstream{
+				Git: &Git{Repo: "not a valid url at all", Ref: "main"},
+			}},
+			valid: false,
+		},
+		"malformed scheme url": {
+			kf: KptFile{Upstream: &Upstream{
+				Git: &Git{Repo: "https://github.com/%zz/examples.git", Ref: "main"},
 			}},
 			valid: false,
 		},
@@ -882,6 +927,102 @@ func TestInventoryValidation(t *testing.T) {
 			kf: KptFile{Inventory: &Inventory{
 				Name:      "inv",
 				Namespace: "ns",
+			}},
+			valid: false,
+		},
+	}
+
+	runValidationCases(t, cases)
+}
+
+func TestSelectorValidation(t *testing.T) {
+	cases := map[string]struct {
+		kf    KptFile
+		valid bool
+	}{
+		"valid selector: empty": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:     "set-namespace",
+					Selectors: []Selector{{}},
+				}},
+			}},
+			valid: true,
+		},
+		"valid selector: all fields set": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image: "set-namespace",
+					Selectors: []Selector{{
+						APIVersion:         "apps/v1",
+						Kind:               "Deployment",
+						Name:               "my-app",
+						Namespace:          "default",
+						Labels:             map[string]string{"env": "prod"},
+						Annotations:        map[string]string{"team": "infra"},
+						ResourceFileRegexp: `deploy/.*\.yaml`,
+					}},
+				}},
+			}},
+			valid: true,
+		},
+		"valid selector: regexp in exclusion": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:      "set-namespace",
+					Exclusions: []Selector{{ResourceFileRegexp: `test/.*`}},
+				}},
+			}},
+			valid: true,
+		},
+		"invalid selector: bad regexp in selector": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:     "set-namespace",
+					Selectors: []Selector{{ResourceFileRegexp: `[invalid`}},
+				}},
+			}},
+			valid: false,
+		},
+		"invalid selector: bad regexp in exclusion": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image:      "set-namespace",
+					Exclusions: []Selector{{ResourceFileRegexp: `(unclosed`}},
+				}},
+			}},
+			valid: false,
+		},
+		"invalid selector: bad regexp in validator": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Validators: []Function{{
+					Image:     "gatekeeper",
+					Selectors: []Selector{{ResourceFileRegexp: `*bad`}},
+				}},
+			}},
+			valid: false,
+		},
+		"valid selector: multiple selectors, all valid": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image: "set-namespace",
+					Selectors: []Selector{
+						{ResourceFileRegexp: `a/.*`},
+						{ResourceFileRegexp: `b/.*`},
+					},
+				}},
+			}},
+			valid: true,
+		},
+		"invalid selector: second of multiple selectors is bad": {
+			kf: KptFile{Pipeline: &Pipeline{
+				Mutators: []Function{{
+					Image: "set-namespace",
+					Selectors: []Selector{
+						{ResourceFileRegexp: `a/.*`},
+						{ResourceFileRegexp: `[bad`},
+					},
+				}},
 			}},
 			valid: false,
 		},
