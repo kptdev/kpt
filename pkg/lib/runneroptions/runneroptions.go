@@ -83,6 +83,8 @@ type RunnerOptions struct {
 
 	// CelCostLimit is the maximum cost of a CEL evaluation.
 	CelCostLimit uint64
+
+	ExtraTlsCerts [][]byte
 }
 
 type PackageIDType int8
