@@ -37,7 +37,7 @@ type SelectorApplyConfiguration struct {
 	// ResourceFileRegexp a regular expression matched against the path of the file
 	// containing the resource, relative to the package root. Resources whose file path
 	// matches the expression will be selected.
-	ResourceFileRegexp *string `json:"resourceFileRegexp:omitempty,omitempty"`
+	ResourceFileRegexp *string `json:"resourceFileRegexp,omitempty"`
 }
 
 // SelectorApplyConfiguration constructs a declarative configuration of the Selector type for use with

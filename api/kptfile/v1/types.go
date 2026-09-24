@@ -445,7 +445,7 @@ type Selector struct {
 	// ResourceFileRegexp a regular expression matched against the path of the file
 	// containing the resource, relative to the package root. Resources whose file path
 	// matches the expression will be selected.
-	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" json:"resourceFileRegexp:omitempty"`
+	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" json:"resourceFileRegexp,omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
