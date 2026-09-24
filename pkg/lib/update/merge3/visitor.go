@@ -23,11 +23,22 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
 
-type Visitor struct{}
+type Visitor struct {
+	// PreserveExplicitNull keeps a field explicitly nulled in Dest instead
+	// of deleting it. Fields cleared by the update itself are still deleted.
+	PreserveExplicitNull bool
+}
 
 func (m *Visitor) VisitMap(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
-	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) { // MODIFIED
-		// explicitly cleared from either dest or update
+	if m.isCleared(nodes.Origin(), nodes.Updated()) {
+		// explicitly cleared by the update itself
+		return walk.ClearNode, nil
+	}
+	if m.isCleared(nodes.Origin(), nodes.Dest()) {
+		// explicitly cleared locally
+		if m.PreserveExplicitNull {
+			return m.persistedNull(nodes.Dest()), nil
+		}
 		return walk.ClearNode, nil
 	}
 	if nodes.Dest() == nil && nodes.Updated() == nil {
@@ -46,6 +57,17 @@ func (m *Visitor) VisitMap(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml
 }
 
 func (m *Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
+	if m.isCleared(nodes.Origin(), nodes.Updated()) {
+		// explicitly cleared by the update itself
+		return walk.ClearNode, nil
+	}
+	if m.isCleared(nodes.Origin(), nodes.Dest()) {
+		// explicitly cleared locally
+		if m.PreserveExplicitNull {
+			return m.persistedNull(nodes.Dest()), nil
+		}
+		return walk.ClearNode, nil
+	}
 	if yaml.IsMissingOrNull(nodes.Updated()) && !yaml.IsMissingOrNull(nodes.Origin()) {
 		// implicitly cleared from update -- element was deleted
 		return walk.ClearNode, nil
@@ -61,8 +83,15 @@ func (m *Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*ya
 }
 
 func (m *Visitor) VisitScalar(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
-	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) { // MODIFIED
-		// explicitly cleared from either dest or update
+	if m.isCleared(nodes.Origin(), nodes.Updated()) {
+		// explicitly cleared by the update itself
+		return nil, nil
+	}
+	if m.isCleared(nodes.Origin(), nodes.Dest()) {
+		// explicitly cleared locally
+		if m.PreserveExplicitNull {
+			return m.persistedNull(nodes.Dest()), nil
+		}
 		return nil, nil
 	}
 	if yaml.IsMissingOrNull(nodes.Updated()) != yaml.IsMissingOrNull(nodes.Origin()) {
@@ -84,8 +113,15 @@ func (m *Visitor) VisitScalar(nodes walk.Sources, _ *openapi.ResourceSchema) (*y
 }
 
 func (m *Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
-	if m.isCleared(nodes.Origin(), nodes.Updated()) || m.isCleared(nodes.Origin(), nodes.Dest()) { // MODIFIED
-		// explicitly cleared from either dest or update
+	if m.isCleared(nodes.Origin(), nodes.Updated()) {
+		// explicitly cleared by the update itself
+		return walk.ClearNode, nil
+	}
+	if m.isCleared(nodes.Origin(), nodes.Dest()) {
+		// explicitly cleared locally
+		if m.PreserveExplicitNull {
+			return m.persistedNull(nodes.Dest()), nil
+		}
 		return walk.ClearNode, nil
 	}
 
@@ -111,6 +147,17 @@ func (m *Visitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
 // isCleared returns if the node has not tagged null in `left` but explicitly removed in `right`
 func (*Visitor) isCleared(left, right *yaml.RNode) bool {
 	return !left.IsTaggedNull() && right.IsTaggedNull()
+}
+
+// NEW
+// persistedNull returns dest's null value as an RNode that survives kyaml's
+// generic tagged-null clearing (see yaml.MakePersistentNullNode).
+func (*Visitor) persistedNull(dest *yaml.RNode) *yaml.RNode {
+	value := ""
+	if dest != nil {
+		value = dest.YNode().Value
+	}
+	return yaml.MakePersistentNullNode(value)
 }
 
 func (m *Visitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind walk.ListKind) (*yaml.RNode, error) {

@@ -454,6 +454,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "", r.Update.Ref)
 	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
+	assert.Nil(t, r.Update.PreserveExplicitNull)
 
 	// verify an error is thrown if multiple paths are specified
 	r = update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -490,6 +491,24 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
+
+	r = update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{dir, "--preserve-explicit-null"})
+	err = r.Command.Execute()
+	assert.NoError(t, err)
+	if assert.NotNil(t, r.Update.PreserveExplicitNull) {
+		assert.True(t, *r.Update.PreserveExplicitNull)
+	}
+
+	r = update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{dir, "--preserve-explicit-null=false"})
+	err = r.Command.Execute()
+	assert.NoError(t, err)
+	if assert.NotNil(t, r.Update.PreserveExplicitNull) {
+		assert.False(t, *r.Update.PreserveExplicitNull)
+	}
 }
 
 func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {

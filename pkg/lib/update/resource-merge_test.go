@@ -344,3 +344,46 @@ func TestKeepTaggedNull(t *testing.T) {
 		t.Errorf("unexpected result (-want, +got): %s", diff)
 	}
 }
+
+// TestPreserveExplicitNull verifies a field explicitly nulled in dest is
+// kept null (not dropped) when Options.PreserveExplicitNull is set.
+func TestPreserveExplicitNull(t *testing.T) {
+	updater := update.ResourceMergeUpdater{}
+
+	testdata, err := filepath.Abs(filepath.Join(".", "testdata", "keep-tagged-null-preserve"))
+	require.NoError(t, err)
+
+	tmpDir := t.TempDir()
+	newDest := filepath.Join(tmpDir, "dest")
+	err = os.MkdirAll(newDest, 0755)
+	require.NoError(t, err)
+
+	oldDestFiles, err := os.ReadDir(filepath.Join(testdata, "dest"))
+	require.NoError(t, err)
+	for _, file := range oldDestFiles {
+		if file.Type().IsRegular() {
+			content, err := os.ReadFile(filepath.Join(testdata, "dest", file.Name()))
+			require.NoError(t, err)
+			err = os.WriteFile(filepath.Join(newDest, file.Name()), content, 0644)
+			require.NoError(t, err)
+		}
+	}
+
+	options := updatetypes.Options{
+		OriginPath:           filepath.Join(testdata, "origin"),
+		UpdatedPath:          filepath.Join(testdata, "updated"),
+		LocalPath:            newDest,
+		PreserveExplicitNull: true,
+	}
+	err = updater.Update(options)
+	require.NoError(t, err)
+
+	destBytes, err := os.ReadFile(filepath.Join(newDest, "configmap.yaml"))
+	require.NoError(t, err)
+	expBytes, err := os.ReadFile(filepath.Join(testdata, "expected", "configmap.yaml"))
+	require.NoError(t, err)
+
+	if diff := cmp.Diff(expBytes, destBytes); diff != "" {
+		t.Errorf("unexpected result (-want, +got): %s", diff)
+	}
+}

@@ -40,4 +40,8 @@ type Options struct {
 	// updated and origin were fetched based on the information in the
 	// Kptfile from this package.
 	IsRoot bool
+
+	// PreserveExplicitNull keeps a field explicitly nulled locally instead of
+	// deleting it during resource-merge. See merge3.Visitor.PreserveExplicitNull.
+	PreserveExplicitNull bool
 }

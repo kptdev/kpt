@@ -22,7 +22,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 )
 
-func Merge(original, updated, destination fn.KubeObjects, additionalSchemas []byte) (fn.KubeObjects, error) {
+// Merge performs a 3-way merge of original, updated and destination
+// resources. See Visitor.PreserveExplicitNull for preserveExplicitNull.
+func Merge(original, updated, destination fn.KubeObjects, additionalSchemas []byte, preserveExplicitNull bool) (fn.KubeObjects, error) {
 	if additionalSchemas != nil {
 		if err := openapi.AddSchema(additionalSchemas); err != nil {
 			return nil, pkgerrors.Wrap(err, "error adding schema")
@@ -30,7 +32,7 @@ func Merge(original, updated, destination fn.KubeObjects, additionalSchemas []by
 	}
 	o, u, d := original.CopyToResourceNodes(), updated.CopyToResourceNodes(), destination.CopyToResourceNodes()
 
-	tl := tuples{matcher: &resourceMergeMatcher{}}
+	tl := tuples{matcher: &resourceMergeMatcher{}, preserveExplicitNull: preserveExplicitNull}
 	for i := range o {
 		if err := tl.addOriginal(o[i]); err != nil {
 			return nil, err

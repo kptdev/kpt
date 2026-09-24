@@ -295,6 +295,13 @@ Flags:
       * force-delete-replace: Wipe all the local changes to the package and replace
         it with the remote version.
 
+  --preserve-explicit-null:
+    When set, fields explicitly nulled in the local package (for example
+    ` + "`" + `field:` + "`" + `, ` + "`" + `null` + "`" + `, or ` + "`" + `~` + "`" + `) are kept as null during resource-merge instead of
+    being deleted. This changes the default for the current and future updates
+    and is persisted as ` + "`" + `upstream.preserveExplicitNull` + "`" + ` in the Kptfile.
+    Only applies to the resource-merge strategy. Defaults to false.
+
 Env Vars:
 
   KPT_CACHE_DIR:

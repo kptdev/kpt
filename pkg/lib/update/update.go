@@ -99,6 +99,10 @@ type Command struct {
 	// Strategy is the update strategy to use
 	Strategy kptfilev1.UpdateStrategyType
 
+	// PreserveExplicitNull, when non-nil, is written to the package Kptfile
+	// and used for this update. Nil leaves the Kptfile field unchanged.
+	PreserveExplicitNull *bool
+
 	// cachedUpstreamRepos is an upstream repo already fetched for a given repoSpec CloneRef
 	cachedUpstreamRepos map[string]internalgitutil.GitUpstreamRepo
 }
@@ -141,6 +145,9 @@ func (u *Command) Run(ctx context.Context) error {
 	if u.Strategy != "" {
 		rootKf.Upstream.UpdateStrategy = u.Strategy
 	}
+	if u.PreserveExplicitNull != nil {
+		rootKf.Upstream.PreserveExplicitNull = *u.PreserveExplicitNull
+	}
 	err = kptfileutil.WriteFile(u.Pkg.UniquePath.String(), rootKf)
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
@@ -177,7 +184,7 @@ func (u *Command) Run(ctx context.Context) error {
 				// update subpackage kf ref/strategy if current pkg is a subpkg of root pkg or is root pkg
 				// and if original root pkg ref matches the subpkg ref
 				if shouldUpdateSubPkgRef(subKf, rootKf, originalRootKfRef) {
-					updateSubKf(subKf, u.Ref, u.Strategy)
+					updateSubKf(subKf, u.Ref, u.Strategy, u.PreserveExplicitNull)
 					err = kptfileutil.WriteFile(subPkg.UniquePath.String(), subKf)
 					if err != nil {
 						return errors.E(op, subPkg.UniquePath, err)
@@ -202,13 +209,16 @@ func (u Command) GetCachedUpstreamRepos() map[string]internalgitutil.GitUpstream
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, ref string, strategy kptfilev1.UpdateStrategyType) {
+func updateSubKf(subKf *kptfilev1.KptFile, ref string, strategy kptfilev1.UpdateStrategyType, preserveExplicitNull *bool) {
 	// check if explicit ref provided
 	if ref != "" {
 		subKf.Upstream.Git.Ref = ref
 	}
 	if strategy != "" {
 		subKf.Upstream.UpdateStrategy = strategy
+	}
+	if preserveExplicitNull != nil {
+		subKf.Upstream.PreserveExplicitNull = *preserveExplicitNull
 	}
 }
 
@@ -516,13 +526,17 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 			fmt.Errorf("unrecognized update strategy %s", u.Strategy))
 	}
 	pr.Printf("Updating package %q with strategy %q.\n", packageName(localPath), pkgKf.Upstream.UpdateStrategy)
-	if err := updater().Update(updatetypes.Options{
+	opts := updatetypes.Options{
 		RelPackagePath: relPath,
 		LocalPath:      localPath,
 		UpdatedPath:    updatedPath,
 		OriginPath:     originPath,
 		IsRoot:         isRootPkg,
-	}); err != nil {
+	}
+	if pkgKf.Upstream != nil {
+		opts.PreserveExplicitNull = pkgKf.Upstream.PreserveExplicitNull
+	}
+	if err := updater().Update(opts); err != nil {
 		return errors.E(op, kptfilev1.UniquePath(localPath), err)
 	}
 
