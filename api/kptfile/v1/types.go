@@ -445,7 +445,7 @@ type Selector struct {
 	// ResourceFileRegexp a regular expression matched against the path of the file
 	// containing the resource, relative to the package root. Resources whose file path
 	// matches the expression will be selected.
-	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" json:"resourceFileRegexp:omitempty"`
+	ResourceFileRegexp string `yaml:"resourceFileRegexp,omitempty" json:"resourceFileRegexp,omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
@@ -501,14 +501,16 @@ type RenderStatus struct {
 // PipelineStepResult contains the structured result from an individual function
 // call in the pipeline.
 type PipelineStepResult struct {
-	Name           string                  `yaml:"name,omitempty" json:"name,omitempty"`
-	Image          string                  `yaml:"image,omitempty" json:"image,omitempty"`
-	ExecPath       string                  `yaml:"exec,omitempty" json:"exec,omitempty"`
-	ExecutionError string                  `yaml:"executionError,omitempty" json:"executionError,omitempty"`
-	Stderr         string                  `yaml:"stderr,omitempty" json:"stderr,omitempty"`
-	ExitCode       int                     `yaml:"exitCode" json:"exitCode"`
-	Results        []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
-	ErrorResults   []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+	Name           string `yaml:"name,omitempty" json:"name,omitempty"`
+	Image          string `yaml:"image,omitempty" json:"image,omitempty"`
+	ExecPath       string `yaml:"exec,omitempty" json:"exec,omitempty"`
+	ExecutionError string `yaml:"executionError,omitempty" json:"executionError,omitempty"`
+	Stderr         string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
+	ExitCode       int    `yaml:"exitCode" json:"exitCode"`
+
+	Results      []fnresultv1.ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	ErrorResults []fnresultv1.ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+
 	// When is the CEL condition expression that was evaluated
 	When string `yaml:"when,omitempty" json:"when,omitempty"`
 	// Skipped indicates if the function was skipped due to a condition
