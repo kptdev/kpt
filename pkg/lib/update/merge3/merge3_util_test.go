@@ -104,7 +104,7 @@ func (t *Merge3TestSuite) innerTest(original, updated, dest string, addSchemas [
 	o, u, d := t.parsePrrsToKubeObjects(original, updated, dest)
 
 	openapi.ResetOpenAPI()
-	result, err := Merge(o, u, d, addSchemas)
+	result, err := Merge(o, u, d, addSchemas, false)
 	t.Require().NoError(err)
 
 	checkFn(t, result)
