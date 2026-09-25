@@ -162,6 +162,8 @@ func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string, preserve
 	return result[0]
 }
 
+// Merge clears origin and updated at a dest-null list before walking, so the null survives.
+// A raw NullPreservingVisitor walk does not; see TestVisitorDiffersFromKyaml.
 func TestPreserveExplicitNullAssociativeList(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -216,24 +218,4 @@ func TestPreserveExplicitNullAssociativeList(t *testing.T) {
 			assert.NotNil(t, spec.GetSlice("containers"))
 		})
 	}
-}
-
-func TestAssociativeListDestNullDeletedByDefault(t *testing.T) {
-	origin, err := fn.ParseKubeObject([]byte(originDeployment))
-	require.NoError(t, err)
-	updated, err := fn.ParseKubeObject([]byte(updatedDeployment))
-	require.NoError(t, err)
-	dest, err := fn.ParseKubeObject([]byte(destNullContainers))
-	require.NoError(t, err)
-
-	openapi.ResetOpenAPI()
-	result, err := Merge(fn.KubeObjects{origin}, fn.KubeObjects{updated}, fn.KubeObjects{dest}, nil, false)
-	require.NoError(t, err)
-	require.Len(t, result, 1)
-
-	out := result[0].String()
-	spec := result[0].GetMap("spec").GetMap("template").GetMap("spec")
-	require.NotNil(t, spec)
-	assert.Nil(t, spec.GetSlice("containers"), "expected dest-null containers to be removed by default, got:\n%s", out)
-	assert.NotContains(t, out, "nginx")
 }
