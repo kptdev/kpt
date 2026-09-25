@@ -26,8 +26,8 @@ var _ walk.Visitor = &NullPreservingVisitor{}
 
 func (m *NullPreservingVisitor) VisitMap(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if IsCleared(nodes.Origin(), nodes.Updated()) {
-		// explicitly cleared by the update itself
-		return walk.ClearNode, nil
+		// upstream set this field to null; keep that null
+		return PersistedNull(nodes.Updated()), nil
 	}
 	if IsCleared(nodes.Origin(), nodes.Dest()) {
 		return PersistedNull(nodes.Dest()), nil
@@ -42,6 +42,15 @@ func (m *NullPreservingVisitor) VisitMap(nodes walk.Sources, _ *openapi.Resource
 		// initialize a new value that can be recursively merged
 		return yaml.NewRNode(&yaml.Node{Kind: yaml.MappingNode}), nil
 	}
+	// Tagged nulls are IsMissingOrNull, so a field that is null on every side
+	// is walked as an empty map. Keep dest's null instead of dropping it.
+	// A concrete updated value still replaces a null origin.
+	if nodes.Dest().IsTaggedNull() {
+		if yaml.IsMissingOrNull(nodes.Updated()) {
+			return PersistedNull(nodes.Dest()), nil
+		}
+		return yaml.NewRNode(&yaml.Node{Kind: yaml.MappingNode}), nil
+	}
 
 	// recursively merge the dest with the original and updated
 	return nodes.Dest(), nil
@@ -49,8 +58,8 @@ func (m *NullPreservingVisitor) VisitMap(nodes walk.Sources, _ *openapi.Resource
 
 func (m *NullPreservingVisitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if IsCleared(nodes.Origin(), nodes.Updated()) {
-		// explicitly cleared by the update itself
-		return walk.ClearNode, nil
+		// upstream set this list to null; keep that null
+		return PersistedNull(nodes.Updated()), nil
 	}
 	if IsCleared(nodes.Origin(), nodes.Dest()) {
 		return PersistedNull(nodes.Dest()), nil
@@ -71,19 +80,19 @@ func (m *NullPreservingVisitor) visitAList(nodes walk.Sources, _ *openapi.Resour
 
 func (m *NullPreservingVisitor) VisitScalar(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
 	if IsCleared(nodes.Origin(), nodes.Updated()) {
-		// explicitly cleared by the update itself
-		return nil, nil
+		// upstream set this field to null; keep that null
+		return PersistedNull(nodes.Updated()), nil
 	}
 	if IsCleared(nodes.Origin(), nodes.Dest()) {
 		return PersistedNull(nodes.Dest()), nil
 	}
 	if yaml.IsMissingOrNull(nodes.Updated()) != yaml.IsMissingOrNull(nodes.Origin()) {
 		// value added or removed in update
-		return nodes.Updated(), nil
+		return KeepNull(nodes.Updated()), nil
 	}
 	if yaml.IsMissingOrNull(nodes.Updated()) && yaml.IsMissingOrNull(nodes.Origin()) {
 		// value absent in both origin and update
-		return nodes.Dest(), nil
+		return KeepNull(nodes.Dest()), nil
 	}
 
 	if nodes.Updated().YNode().Value != nodes.Origin().YNode().Value {
@@ -92,13 +101,13 @@ func (m *NullPreservingVisitor) VisitScalar(nodes walk.Sources, _ *openapi.Resou
 	}
 
 	// unchanged between origin and update, keep the dest
-	return nodes.Dest(), nil
+	return KeepNull(nodes.Dest()), nil
 }
 
 func (m *NullPreservingVisitor) visitNAList(nodes walk.Sources) (*yaml.RNode, error) {
 	if IsCleared(nodes.Origin(), nodes.Updated()) {
-		// explicitly cleared by the update itself
-		return walk.ClearNode, nil
+		// upstream set this list to null; keep that null
+		return PersistedNull(nodes.Updated()), nil
 	}
 	if IsCleared(nodes.Origin(), nodes.Dest()) {
 		return PersistedNull(nodes.Dest()), nil
@@ -106,11 +115,11 @@ func (m *NullPreservingVisitor) visitNAList(nodes walk.Sources) (*yaml.RNode, er
 
 	if yaml.IsMissingOrNull(nodes.Updated()) != yaml.IsMissingOrNull(nodes.Origin()) {
 		// value added or removed in update
-		return nodes.Updated(), nil
+		return KeepNull(nodes.Updated()), nil
 	}
 	if yaml.IsMissingOrNull(nodes.Updated()) && yaml.IsMissingOrNull(nodes.Origin()) {
 		// value not present in source or dest
-		return nodes.Dest(), nil
+		return KeepNull(nodes.Dest()), nil
 	}
 
 	if !m.isNodeContentEqual(nodes.Origin().YNode(), nodes.Updated().YNode()) {
@@ -119,7 +128,7 @@ func (m *NullPreservingVisitor) visitNAList(nodes walk.Sources) (*yaml.RNode, er
 	}
 
 	// unchanged between origin and update, keep the dest
-	return nodes.Dest(), nil
+	return KeepNull(nodes.Dest()), nil
 }
 
 func (m *NullPreservingVisitor) VisitList(nodes walk.Sources, s *openapi.ResourceSchema, kind walk.ListKind) (*yaml.RNode, error) {

@@ -16,6 +16,7 @@ package merge3
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/kptdev/krm-functions-sdk/go/fn"
@@ -56,7 +57,7 @@ type twoKeyPair struct {
 }
 
 func (tk *twoKeyPair) Templated() string {
-	return fmt.Sprintf(configMapTemplate, tk.key1, tk.key2)
+	return strings.Replace(fmt.Sprintf(configMapTemplate, tk.key1, tk.key2), " \n", "\n", 2)
 }
 
 func TestPreserveExplicitNull(t *testing.T) {
