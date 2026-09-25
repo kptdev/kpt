@@ -86,7 +86,6 @@ func TestPreserveExplicitNull(t *testing.T) {
 				tc.orig.Templated(),
 				tc.upstream.Templated(),
 				tc.dest.Templated(),
-				true,
 			)
 
 			assert.Equal(t, tc.expected.Templated(), mergedKo.String())
@@ -127,7 +126,6 @@ func TestPreserveImplicitNull(t *testing.T) {
 				tc.orig.Templated(),
 				tc.upstream.Templated(),
 				tc.dest.Templated(),
-				true,
 			)
 
 			assert.Equal(t, tc.expected.Templated(), mergedKo.String())
@@ -135,7 +133,7 @@ func TestPreserveImplicitNull(t *testing.T) {
 	}
 }
 
-func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string, preserve bool) *fn.KubeObject {
+func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string) *fn.KubeObject {
 	t.Helper()
 	var origin fn.KubeObjects
 	var err error
@@ -149,7 +147,7 @@ func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string, preserve
 	require.NoError(t, err)
 
 	openapi.ResetOpenAPI()
-	result, err := Merge(origin, updated, dest, nil, preserve)
+	result, err := Merge(origin, updated, dest, nil, true)
 	require.NoError(t, err)
 	require.Len(t, result, 1)
 	return result[0]
@@ -202,7 +200,7 @@ func TestPreserveExplicitNullAssociativeList(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := mergeYamls(t, tc.origin, tc.updated, destNullContainers, true)
+			got := mergeYamls(t, tc.origin, tc.updated, destNullContainers)
 			out := got.String()
 			spec := got.GetMap("spec").GetMap("template").GetMap("spec")
 			require.NotNil(t, spec)
@@ -219,7 +217,7 @@ func TestPreserveExplicitNullAssociativeList(t *testing.T) {
 
 	t.Run("dest implicit null list is kept when all sides present", func(t *testing.T) {
 		dest := fmt.Sprintf(deploymentTemplate, "\n      containers:")
-		got := mergeYamls(t, originDeployment, updatedDeployment, dest, true)
+		got := mergeYamls(t, originDeployment, updatedDeployment, dest)
 		out := got.String()
 		spec := got.GetMap("spec").GetMap("template").GetMap("spec")
 		require.NotNil(t, spec)
