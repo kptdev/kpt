@@ -179,8 +179,8 @@ func TestVisitorDiffersFromKyaml(t *testing.T) {
 			wantPlain: "key1:\n- b\nkey2: control\n",
 			wantKyaml: twoFieldDocNoKey1(),
 		},
-		// visitAList clears a dest-null list when origin had elements.
-		// kyaml keeps the list and fills it from updated.
+		// Direct walk, no dropOriginUpdatedAtDestNulls, so both visitors delete the list.
+		// Merge(preserve=true) keeps it; see TestPreserveExplicitNullAssociativeList.
 		"dest null removes an associative list origin had": {
 			origin:  deploymentWithImage("nginx"),
 			updated: deploymentWithImage("nginx:updated"),
