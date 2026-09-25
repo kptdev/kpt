@@ -39,9 +39,15 @@ func (t *tuple) merge() (*yaml.RNode, error) {
 		// only kept if origin/updated are absent at that path.
 		dropOriginUpdatedAtDestNulls(t.dest, t.original, t.updated)
 	}
+
+	var visitor walk.Visitor = &Visitor{}
+	if t.preserveExplicitNull {
+		visitor = &NullPreservingVisitor{}
+	}
+
 	return walk.Walker{
 		// modified Visitor
-		Visitor: &Visitor{PreserveExplicitNull: t.preserveExplicitNull},
+		Visitor: visitor,
 
 		// same as in merge3.Merge()
 		VisitKeysAsScalars: true,
