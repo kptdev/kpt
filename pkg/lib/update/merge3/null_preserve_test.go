@@ -44,13 +44,6 @@ spec:
     spec: %s`
 )
 
-var (
-	originDeployment       = fmt.Sprintf(deploymentTemplate, "\n      containers:\n      - name: web\n        image: nginx")
-	updatedDeployment      = fmt.Sprintf(deploymentTemplate, "\n      containers:\n      - name: web\n        image: nginx:updated")
-	destNullContainers     = fmt.Sprintf(deploymentTemplate, "\n      containers: null")
-	deploymentNoContainers = fmt.Sprintf(deploymentTemplate, "{}")
-)
-
 // key1 is the one we are mainly testing, key2 is just for control
 type twoKeyPair struct {
 	key1, key2 string
@@ -165,6 +158,11 @@ func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string, preserve
 // Merge clears origin and updated at a dest-null list before walking, so the null survives.
 // A raw NullPreservingVisitor walk does not; see TestVisitorDiffersFromKyaml.
 func TestPreserveExplicitNullAssociativeList(t *testing.T) {
+	originDeployment := fmt.Sprintf(deploymentTemplate, "\n      containers:\n      - name: web\n        image: nginx")
+	updatedDeployment := fmt.Sprintf(deploymentTemplate, "\n      containers:\n      - name: web\n        image: nginx:updated")
+	destNullContainers := fmt.Sprintf(deploymentTemplate, "\n      containers: null")
+	deploymentNoContainers := fmt.Sprintf(deploymentTemplate, "{}")
+
 	tests := []struct {
 		name        string
 		origin      string
@@ -218,4 +216,15 @@ func TestPreserveExplicitNullAssociativeList(t *testing.T) {
 			assert.NotNil(t, spec.GetSlice("containers"))
 		})
 	}
+
+	t.Run("dest implicit null list is kept when all sides present", func(t *testing.T) {
+		dest := fmt.Sprintf(deploymentTemplate, "\n      containers:")
+		got := mergeYamls(t, originDeployment, updatedDeployment, dest, true)
+		out := got.String()
+		spec := got.GetMap("spec").GetMap("template").GetMap("spec")
+		require.NotNil(t, spec)
+		assert.Regexp(t, `(?m)^\s*containers:\s*$`, out, "expected containers to stay an implicit null, got:\n%s", out)
+		assert.Nil(t, spec.GetSlice("containers"), "got:\n%s", out)
+		assert.NotContains(t, out, "image:")
+	})
 }
