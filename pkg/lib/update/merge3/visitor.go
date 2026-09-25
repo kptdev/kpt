@@ -23,6 +23,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
 
+// Visitor is a copy of kyaml's sigs.k8s.io/kustomize/kyaml/yaml/merge3.Visitor that
+// only treats a null as a delete when the origin was not already null.
+// kyaml drops the field whenever updated or dest is null, so an upstream value
+// is lost when origin and dest were both null.
 type Visitor struct{}
 
 var _ walk.Visitor = &Visitor{}

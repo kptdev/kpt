@@ -20,6 +20,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/walk"
 )
 
+// NullPreservingVisitor is a copy of our Visitor that preserves nulls.
+// This behavior is necessary when the merged packages themselves are patches.
 type NullPreservingVisitor struct{}
 
 var _ walk.Visitor = &NullPreservingVisitor{}
