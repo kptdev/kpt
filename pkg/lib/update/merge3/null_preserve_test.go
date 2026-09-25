@@ -15,6 +15,7 @@
 package merge3
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/kptdev/krm-functions-sdk/go/fn"
@@ -24,48 +25,123 @@ import (
 )
 
 const (
-	originDeployment = `apiVersion: apps/v1
+	configMapTemplate = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+data:
+  key1: %s
+  key2: %s
+`
+
+	deploymentTemplate = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: test-app
 spec:
   template:
-    spec:
-      containers:
-      - name: web
-        image: nginx
-`
-	updatedDeployment = `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test-app
-spec:
-  template:
-    spec:
-      containers:
-      - name: web
-        image: nginx:updated
-`
-	destNullContainers = `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test-app
-spec:
-  template:
-    spec:
-      containers: null
-`
-	deploymentNoContainers = `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test-app
-spec:
-  template:
-    spec: {}
-`
+    spec: %s`
 )
 
-func mergeDeployments(t *testing.T, originYAML, updatedYAML, destYAML string, preserve bool) *fn.KubeObject {
+var (
+	originDeployment       = fmt.Sprintf(deploymentTemplate, "\n      containers:\n      - name: web\n        image: nginx")
+	updatedDeployment      = fmt.Sprintf(deploymentTemplate, "\n      containers:\n      - name: web\n        image: nginx:updated")
+	destNullContainers     = fmt.Sprintf(deploymentTemplate, "\n      containers: null")
+	deploymentNoContainers = fmt.Sprintf(deploymentTemplate, "{}")
+)
+
+// key1 is the one we are mainly testing, key2 is just for control
+type twoKeyPair struct {
+	key1, key2 string
+}
+
+func (tk *twoKeyPair) Templated() string {
+	return fmt.Sprintf(configMapTemplate, tk.key1, tk.key2)
+}
+
+func TestPreserveExplicitNull(t *testing.T) {
+	testCases := map[string]struct {
+		orig, upstream, dest, expected twoKeyPair
+	}{
+		"original null unchanged": {
+			orig:     twoKeyPair{key1: "null", key2: "value2"},
+			upstream: twoKeyPair{key1: "null", key2: "newvalue2"},
+			dest:     twoKeyPair{key1: "null", key2: "value2"},
+
+			expected: twoKeyPair{key1: "null", key2: "newvalue2"},
+		},
+		"upstream null preserved": {
+			orig:     twoKeyPair{key1: "value1", key2: "value2"},
+			upstream: twoKeyPair{key1: "null", key2: "value2"},
+			dest:     twoKeyPair{key1: "newvalue1", key2: "newvalue2"},
+
+			expected: twoKeyPair{key1: "null", key2: "newvalue2"},
+		},
+		"destination null preserved": {
+			orig:     twoKeyPair{key1: "value1", key2: "value2"},
+			upstream: twoKeyPair{key1: "value1", key2: "newvalue2"},
+			dest:     twoKeyPair{key1: "null", key2: "value2"},
+
+			expected: twoKeyPair{key1: "null", key2: "newvalue2"},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			mergedKo := mergeYamls(t,
+				tc.orig.Templated(),
+				tc.upstream.Templated(),
+				tc.dest.Templated(),
+				true,
+			)
+
+			assert.Equal(t, tc.expected.Templated(), mergedKo.String())
+		})
+	}
+}
+
+func TestPreserveImplicitNull(t *testing.T) {
+	testCases := map[string]struct {
+		orig, upstream, dest, expected twoKeyPair
+	}{
+		"original null unchanged": {
+			orig:     twoKeyPair{key1: "", key2: "value2"},
+			upstream: twoKeyPair{key1: "", key2: "newvalue2"},
+			dest:     twoKeyPair{key1: "", key2: "value2"},
+
+			expected: twoKeyPair{key1: "", key2: "newvalue2"},
+		},
+		"upstream null preserved": {
+			orig:     twoKeyPair{key1: "value1", key2: "value2"},
+			upstream: twoKeyPair{key1: "", key2: "value2"},
+			dest:     twoKeyPair{key1: "newvalue1", key2: "newvalue2"},
+
+			expected: twoKeyPair{key1: "", key2: "newvalue2"},
+		},
+		"destination null preserved": {
+			orig:     twoKeyPair{key1: "value1", key2: "value2"},
+			upstream: twoKeyPair{key1: "value1", key2: "newvalue2"},
+			dest:     twoKeyPair{key1: "", key2: "value2"},
+
+			expected: twoKeyPair{key1: "", key2: "newvalue2"},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			mergedKo := mergeYamls(t,
+				tc.orig.Templated(),
+				tc.upstream.Templated(),
+				tc.dest.Templated(),
+				true,
+			)
+
+			assert.Equal(t, tc.expected.Templated(), mergedKo.String())
+		})
+	}
+}
+
+func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string, preserve bool) *fn.KubeObject {
 	t.Helper()
 	var origin fn.KubeObjects
 	var err error
@@ -125,7 +201,7 @@ func TestPreserveExplicitNullAssociativeList(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := mergeDeployments(t, tc.origin, tc.updated, destNullContainers, true)
+			got := mergeYamls(t, tc.origin, tc.updated, destNullContainers, true)
 			out := got.String()
 			spec := got.GetMap("spec").GetMap("template").GetMap("spec")
 			require.NotNil(t, spec)
