@@ -239,7 +239,7 @@ Also note that `go install` may produce little or no output, and may complete ve
 
 If you suspect a stale module cache is affecting the build (for example, unexpected build results or missing updates), `go clean -modcache` can be a useful diagnostic step. This clears the module download cache and forces Go to re-fetch modules on the next build; it is not required for routine installs.
 
-kpt version will return `unknown` for binaries built from source:
+When installed with `go install`, `kpt version` reports the installed module version from Go build metadata. For pseudo-version installs, it also derives the git commit hash from the pseudo-version:
 
 ```shell
 kpt version
