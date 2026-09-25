@@ -34,14 +34,17 @@ type tuple struct {
 
 // merge performs a 3-way merge on the tuple
 func (t *tuple) merge() (*yaml.RNode, error) {
+	var visitor walk.Visitor = &Visitor{}
 	if t.preserveExplicitNull {
+		visitor = &NullPreservingVisitor{}
 		// Associative-list walk continues after VisitList, so dest-null lists are
 		// only kept if origin/updated are absent at that path.
 		dropOriginUpdatedAtDestNulls(t.dest, t.original, t.updated)
 	}
+
 	return walk.Walker{
 		// modified Visitor
-		Visitor: &Visitor{PreserveExplicitNull: t.preserveExplicitNull},
+		Visitor: visitor,
 
 		// same as in merge3.Merge()
 		VisitKeysAsScalars: true,
