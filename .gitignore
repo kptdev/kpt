@@ -54,3 +54,5 @@ public/
 # Build directory
 .build/
 dist/
+.release-env
+

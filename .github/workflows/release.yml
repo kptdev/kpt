@@ -53,10 +53,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Setup release environment
-        id: setup-release-env
-        run: |-
-          echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
+      - name: Ensure clean git tree
+        run: |
+          git checkout .
+          git clean -fd
       - name: Run GoReleaser
         id: run-goreleaser
         uses: goreleaser/goreleaser-action@v6
