@@ -16,25 +16,31 @@ package merge3
 
 import kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 
-func IsExplicitNull(n *kyaml.RNode) bool {
-	return n.IsTaggedNull() && n.YNode().Value == "null"
-}
-
-func IsImplicitNull(n *kyaml.RNode) bool {
-	return n.IsTaggedNull() && n.YNode().Value == ""
-}
-
 // IsCleared returns if the node has not tagged null in `left` but explicitly removed in `right`
 func IsCleared(left, right *kyaml.RNode) bool {
 	return !left.IsTaggedNull() && right.IsTaggedNull()
 }
 
-// PersistedNull returns dest's null value as an RNode that survives kyaml's
-// generic tagged-null clearing (see yaml.MakePersistentNullNode).
-func PersistedNull(dest *kyaml.RNode) *kyaml.RNode {
+// PersistedNull returns n's null as an RNode that survives kyaml's generic
+// tagged-null clearing (see yaml.MakePersistentNullNode). The scalar value is
+// kept so an explicit "null" and an implicit empty null stay distinct.
+func PersistedNull(n *kyaml.RNode) *kyaml.RNode {
 	value := ""
-	if dest != nil {
-		value = dest.YNode().Value
+	style := kyaml.Style(0)
+	if n != nil && n.YNode() != nil {
+		value = n.YNode().Value
+		style = n.YNode().Style
 	}
-	return kyaml.MakePersistentNullNode(value)
+	out := kyaml.MakePersistentNullNode(value)
+	out.YNode().Style = style
+	return out
+}
+
+// KeepNull marks a tagged null so FieldSetter will not drop it. Other nodes
+// are returned unchanged.
+func KeepNull(n *kyaml.RNode) *kyaml.RNode {
+	if n.IsTaggedNull() {
+		return PersistedNull(n)
+	}
+	return n
 }
