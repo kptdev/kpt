@@ -140,4 +140,4 @@ release:
     owner: kptdev
     name: kpt
   draft: false
-  prerelease: true
+  prerelease: auto
