@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -414,7 +414,9 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	assert.NoError(t, err)
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir", "foo"), r.Get.Destination)
+	// The symlink resolves to an existing directory that was explicitly named,
+	// so the package is fetched directly into it (no container subdirectory).
+	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir"), r.Get.Destination)
 
 	// make the link broken by deleting the dir
 	err = os.RemoveAll(filepath.Join("path", "to", "pkg", "dir"))
