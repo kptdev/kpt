@@ -192,19 +192,17 @@ url = "https://porch.kpt.dev/docs/"
 weight = 50
 target = "_self"
 
-# Static fallback for the version selector so it renders during working-tree
-# builds (plain `hugo serve` and Netlify deploy previews) where the versioned
-# subsites are not built. scripts/build-versioned-docs.sh generates the
-# authoritative list from documentation/versions.json and passes it as a config
-# overlay that replaces this array for the real multi-version production build.
-#
-# Because these builds do NOT produce the /vX.Y/ subdirectories, released
-# versions here link to their absolute URLs on the live site so the entries
-# never 404 in a preview. "latest" stays site-relative (it is whatever is being
-# built). Keep this in sync with documentation/versions.json.
+# Static fallback for the version selector so it renders during a plain
+# `hugo serve` of the working tree. scripts/build-versioned-docs.sh generates
+# the authoritative list from documentation/versions.json and passes it as a
+# config overlay that replaces this array for the real multi-version build
+# (production and deploy previews). A plain `hugo serve` does not build the
+# /vX.Y/ subsites, so those links only resolve in a full versioned build; use
+# `make serve` for a complete local preview. Keep this in sync with
+# documentation/versions.json.
 [[params.versions]]
   version = "latest"
   url = "/"
 [[params.versions]]
   version = "v1.0"
-  url = "https://kpt.dev/v1.0/"
+  url = "/v1.0/"

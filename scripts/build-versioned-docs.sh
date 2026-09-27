@@ -142,6 +142,15 @@ resolve_latest_tag() {
   git -C "${REPO_ROOT}" tag --list "${pattern}" --sort=-v:refname | head -1
 }
 
+# Optional Hugo flags. Deploy previews set HUGO_BUILD_DRAFTS/HUGO_BUILD_FUTURE
+# so draft and future-dated content is visible for review, matching the old
+# preview-build behavior. Production leaves them unset. All sites use
+# root-relative URLs (latest at /, releases at /vX.Y/), which resolve correctly
+# under any domain root, so no per-environment baseURL is needed.
+HUGO_EXTRA_FLAGS=()
+[[ "${HUGO_BUILD_DRAFTS:-}" == "true" ]] && HUGO_EXTRA_FLAGS+=("--buildDrafts")
+[[ "${HUGO_BUILD_FUTURE:-}" == "true" ]] && HUGO_EXTRA_FLAGS+=("--buildFuture")
+
 # Build the main/latest version from the current working tree.
 echo "==> Building latest (main) docs..."
 (cd "${DOCS_DIR}" && { hugo mod clean 2>/dev/null || true; })
@@ -153,6 +162,7 @@ versions_toml > "${DOCS_DIR}/config-versions-overlay.toml"
     --environment "${HUGO_ENV}" \
     --destination "${OUTPUT_DIR}" \
     -b "/" \
+    "${HUGO_EXTRA_FLAGS[@]}" \
     --config config.toml,config-versions-overlay.toml
 )
 rm -f "${DOCS_DIR}/config-versions-overlay.toml"
@@ -245,6 +255,7 @@ while IFS=$'\t' read -r VERSION PATTERN URL_PATH LATEST_GA; do
       --environment "${HUGO_ENV}" \
       --destination "${VERSION_OUTPUT}" \
       -b "${URL_PATH}" \
+      "${HUGO_EXTRA_FLAGS[@]}" \
       --config config.toml,config-version-override.toml
   )
   echo "    Done: ${VERSION} (${TAG}) -> ${URL_PATH}"

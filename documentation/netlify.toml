@@ -15,11 +15,22 @@ NODE_VERSION = "24.15.0"
 HUGO_VERSION = "0.161.1"
 HUGO_ENABLEGITINFO = "true"
 
+# Previews build the full versioned site (same as production) so the version
+# selector matches what will be deployed and every entry resolves to a real
+# subsite served from the preview domain. Drafts and future-dated content are
+# enabled so unpublished changes are reviewable.
 [context.deploy-preview.environment]
 HUGO_ENV = "preview"
+HUGO_BUILD_DRAFTS = "true"
+HUGO_BUILD_FUTURE = "true"
 
 [context.deploy-preview]
-command = "make preview-build"
+command = "make build-versioned"
+
+[context.branch-deploy.environment]
+HUGO_ENV = "preview"
+HUGO_BUILD_DRAFTS = "true"
+HUGO_BUILD_FUTURE = "true"
 
 [context.branch-deploy]
-command = "make preview-build"
+command = "make build-versioned"
