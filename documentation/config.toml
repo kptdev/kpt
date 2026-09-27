@@ -102,23 +102,26 @@ copyright = "kpt contributors "
 # First one is picked as the Twitter card image if not set on page.
 #image = "https://tag-env-sustainability.cncf.io/images/cncf-sustainability-share.webp"
 
-# Menu title if your navbar has a versions selector to access old versions of your site.
-# This menu appears only if you have at least one [params.versions] set.
-#version_menu = "Releases"
+# Title of the navbar/sidebar versions selector, used to switch between the
+# "latest" docs and archived release snapshots. The selector only appears when
+# at least one [[params.versions]] entry exists. Those entries are generated
+# from documentation/versions.json by scripts/build-versioned-docs.sh at build
+# time, so do not add [[params.versions]] here.
+version_menu = "Releases"
 
-# Flag used in the "version-banner" partial to decide whether to display a 
+# Flag used in the "version-banner" partial to decide whether to display a
 # banner on every page indicating that this is an archived version of the docs.
-# Set this flag to "true" if you want to display the banner.
-#archived_version = false
+# The working-tree ("latest") build is not archived; the build script overrides
+# this to true for each tagged snapshot.
+archived_version = false
 
-# The version number for the version of the docs represented in this doc set.
-# Used in the "version-banner" partial to display a version number for the 
-# current doc set.
-#version = "0.0"
+# The version label for this doc set. The working-tree build is "latest"; the
+# build script overrides this with the release label (e.g. "v1.0") per snapshot.
+version = "latest"
 
-# A link to latest version of the docs. Used in the "version-banner" partial to
-# point people to the main doc site.
-#url_latest_version = "https://tag-env-sustainability.cncf.io"
+# A link to the latest version of the docs. Used in the "version-banner" partial
+# to point readers of an archived snapshot back to the current site.
+url_latest_version = "/"
 
 # Google Custom Search Engine ID. Remove or comment out to disable search.
 # gcs_engine_id = "06963a606b9934e7b"
