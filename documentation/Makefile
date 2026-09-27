@@ -18,7 +18,7 @@ build-versioned:
 	@command -v npm >/dev/null 2>&1 || { echo "Error: npm not found. See https://nodejs.org/"; exit 1; }
 	@real_root="$$(realpath $(CURDIR)/..)"; \
 	real_out="$$(realpath -m $(OUTPUT_DIR))"; \
-	HUGO_ENV=production "$$real_root/scripts/build-versioned-docs.sh" "$$real_out"
+	HUGO_ENV="$${HUGO_ENV:-production}" "$$real_root/scripts/build-versioned-docs.sh" "$$real_out"
 
 # Build the full versioned site and serve it locally. This is the one command
 # to preview the docs exactly as deployed, including the versioned subsites
