@@ -225,8 +225,13 @@ while IFS=$'\t' read -r VERSION PATTERN URL_PATH LATEST_GA; do
 done <<< "${TAGGED_VERSIONS}"
 
 # Build the search index once over the full combined output (latest + versions).
+# A failure here (e.g. pagefind not installable in a restricted environment)
+# should not fail the whole build: the site is fully rendered without it, only
+# in-site search is degraded.
 echo "==> Building search index (pagefind)..."
-npx -y pagefind --site "${OUTPUT_DIR}"
+if ! npx -y pagefind --site "${OUTPUT_DIR}"; then
+  echo "    WARNING: pagefind failed; search index not built. Site output is still complete." >&2
+fi
 echo ""
 
 echo "==> All versions built successfully."

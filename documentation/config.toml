@@ -103,10 +103,10 @@ copyright = "kpt contributors "
 #image = "https://tag-env-sustainability.cncf.io/images/cncf-sustainability-share.webp"
 
 # Title of the navbar/sidebar versions selector, used to switch between the
-# "latest" docs and archived release snapshots. The selector only appears when
-# at least one [[params.versions]] entry exists. Those entries are generated
-# from documentation/versions.json by scripts/build-versioned-docs.sh at build
-# time, so do not add [[params.versions]] here.
+# "latest" docs and archived release snapshots. The selector appears when at
+# least one [[params.versions]] entry exists. The authoritative entries are
+# generated from documentation/versions.json by scripts/build-versioned-docs.sh
+# and override the static fallback at the end of this file (see there).
 version_menu = "Releases"
 
 # Flag used in the "version-banner" partial to decide whether to display a
@@ -191,3 +191,15 @@ name = "Porch"
 url = "https://porch.kpt.dev/docs/"
 weight = 50
 target = "_self"
+
+# Static fallback for the version selector so it renders during a plain
+# `hugo serve` / working-tree build. scripts/build-versioned-docs.sh generates
+# the authoritative list from documentation/versions.json and passes it as a
+# config overlay, which replaces this array for the real multi-version build.
+# Keep this in sync with documentation/versions.json.
+[[params.versions]]
+  version = "latest"
+  url = "/"
+[[params.versions]]
+  version = "v1.0"
+  url = "/v1.0/"
