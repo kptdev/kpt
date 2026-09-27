@@ -49,7 +49,7 @@ cleanup() {
 trap cleanup EXIT
 
 # Ensure required tools are available
-for cmd in hugo git npx awk tar mktemp; do
+for cmd in hugo git node npx tar mktemp; do
   if ! command -v "${cmd}" &> /dev/null; then
     echo "ERROR: ${cmd} is required but not installed." >&2
     exit 1
@@ -61,6 +61,43 @@ if [[ ! -f "${VERSIONS_FILE}" ]]; then
   echo "ERROR: ${VERSIONS_FILE} not found." >&2
   exit 1
 fi
+
+# read_versions: parse and validate versions.json with a real JSON parser and
+# emit one tab-separated record per entry: version<TAB>tagPattern<TAB>path<TAB>latestGA
+# (tagPattern is the literal string "null" when the entry has no pattern). Using
+# a JSON parser instead of line-oriented text tooling means the manifest can be
+# reformatted (e.g. minified) without breaking the build. A malformed manifest
+# fails the build loudly rather than silently producing an empty version list.
+read_versions() {
+  # shellcheck disable=SC2016  # single quotes are intentional: this is JS, not shell
+  node -e '
+    const fs = require("fs");
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+    } catch (e) {
+      console.error("ERROR: failed to parse versions.json: " + e.message);
+      process.exit(1);
+    }
+    if (!Array.isArray(data)) {
+      console.error("ERROR: versions.json must be a JSON array.");
+      process.exit(1);
+    }
+    for (const [i, e] of data.entries()) {
+      if (!e || typeof e.version !== "string" || typeof e.path !== "string") {
+        console.error(`ERROR: versions.json entry ${i} must have string "version" and "path".`);
+        process.exit(1);
+      }
+      const tagPattern = (e.tagPattern === null || e.tagPattern === undefined) ? "null" : String(e.tagPattern);
+      const latestGA = e.latestGA === true ? "true" : "false";
+      process.stdout.write([e.version, tagPattern, e.path, latestGA].join("\t") + "\n");
+    }
+  ' "${VERSIONS_FILE}"
+}
+
+# Read (and validate) the manifest once up front so a malformed file fails
+# before we start building anything.
+VERSIONS_TSV="$(read_versions)"
 
 echo "==> Building versioned docs"
 echo "    Output: ${OUTPUT_DIR}"
@@ -81,14 +118,12 @@ fi
 rm -rf "${OUTPUT_DIR}"
 mkdir -p "${OUTPUT_DIR}"
 
-# Emit [[params.versions]] TOML from versions.json (single source of truth).
-# NOTE: expects versions.json to have one key per line (standard pretty-printed
-# JSON). Reformatting to single-line objects will break this AWK parser.
+# Emit [[params.versions]] TOML from the parsed manifest (single source of truth).
 versions_toml() {
-  awk '
-    /"version"/ { gsub(/[",]/, ""); ver=$2 }
-    /"path"/ { gsub(/[",]/, ""); path=$2; print "[[params.versions]]"; print "  version = \"" ver "\""; print "  url = \"" path "\""; print "" }
-  ' "${VERSIONS_FILE}"
+  while IFS=$'\t' read -r version _pattern path _latest_ga; do
+    [[ -z "${version}" ]] && continue
+    printf '[[params.versions]]\n  version = "%s"\n  url = "%s"\n\n' "${version}" "${path}"
+  done <<< "${VERSIONS_TSV}"
 }
 
 # resolve_latest_tag: given a glob like "v1.0.*", return the newest tag.
@@ -124,20 +159,12 @@ rm -f "${DOCS_DIR}/config-versions-overlay.toml"
 echo "    Done: latest -> /"
 echo ""
 
-# Parse versions.json and build each tagged version.
-# Extract entries where tagPattern is not null.
-# NOTE: expects versions.json to have one key per line (standard pretty-printed
-# JSON). Each object is emitted on its closing brace so optional keys (e.g.
-# latestGA) that appear after "path" are captured. Fields reset on each opening
-# brace.
-TAGGED_VERSIONS=$(awk '
-  /{/ { version=""; pattern=""; path=""; latest_ga="false" }
-  /"version"/ { gsub(/[",]/, ""); version=$2 }
-  /"tagPattern"/ { gsub(/[",]/, ""); pattern=$2 }
-  /"path"/ { gsub(/[",]/, ""); path=$2 }
-  /"latestGA"/ { gsub(/[",]/, ""); latest_ga=$2 }
-  /}/ { if (pattern != "null" && pattern != "") print version "\t" pattern "\t" path "\t" latest_ga }
-' "${VERSIONS_FILE}")
+# Build each tagged version (entries whose tagPattern is not null).
+TAGGED_VERSIONS=$(while IFS=$'\t' read -r version pattern path latest_ga; do
+  [[ -z "${version}" ]] && continue
+  [[ "${pattern}" == "null" || -z "${pattern}" ]] && continue
+  printf '%s\t%s\t%s\t%s\n' "${version}" "${pattern}" "${path}" "${latest_ga}"
+done <<< "${VERSIONS_TSV}")
 
 while IFS=$'\t' read -r VERSION PATTERN URL_PATH LATEST_GA; do
   [[ -z "${VERSION}" ]] && continue
