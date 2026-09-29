@@ -104,10 +104,16 @@ type LogOptions struct {
 	// TruncateImageName determines whether the full image name or just the base
 	// name and the tag will be logged.
 	TruncateImageName bool
+
+	// ResultSeparator is used to join the per-item lines of a function's
+	// structured [Results] output. Defaults to "\n" (multi-line) when empty.
+	// Embedding applications (e.g. Porch) can set this to "; " to keep the
+	// result output on a single line for log-friendliness.
+	ResultSeparator string
 }
 
 func (o *LogOptions) IsZero() bool {
-	return o.PkgNameFormat == "" && o.PkgNameSep == "" && o.PkgNameID == 0 && !o.TruncateImageName
+	return o.PkgNameFormat == "" && o.PkgNameSep == "" && o.PkgNameID == 0 && !o.TruncateImageName && o.ResultSeparator == ""
 }
 
 func (o *LogOptions) FillDefaults() {

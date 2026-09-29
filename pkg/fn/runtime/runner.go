@@ -328,7 +328,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	output, err = fr.do(input)
 	if err != nil {
 		pr.Printf("[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
-		printFnResult(fr.ctx, fr.fnResult)
+		printFnResult(fr.ctx, fr.fnResult, fr.opts.LogOptions.ResultSeparator)
 		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
@@ -337,7 +337,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	}
 	if !fr.disableCLIOutput {
 		pr.Printf("[PASS] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
-		printFnResult(fr.ctx, fr.fnResult)
+		printFnResult(fr.ctx, fr.fnResult, fr.opts.LogOptions.ResultSeparator)
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
@@ -536,7 +536,9 @@ func populateResourceRef(item *yaml.RNode, resultItem *fnresultv1.ResultItem) er
 }
 
 // printFnResult prints given function result in a user-friendly format on kpt CLI.
-func printFnResult(ctx context.Context, fnResult *fnresultv1.Result) {
+// separator joins the per-item result lines (defaults to "\n"); embedding
+// applications can set it to e.g. "; " to keep the [Results] output single-line.
+func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, separator string) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(fnResult.Results) > 0 {
 		// function returned structured results
@@ -544,12 +546,14 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result) {
 		for _, item := range fnResult.Results {
 			lines = append(lines, item.String())
 		}
+		if separator == "" {
+			separator = "\n"
+		}
 		ri := &runneroptions.SingleLineFormatter{
-			Title:     "[Results]",
-			Lines:     lines,
-			UseQuote:  false,
-			Separator: "\n",
-
+			Title:      "[Results]",
+			Lines:      lines,
+			UseQuote:   false,
+			Separator:  separator,
 			Indent:     2,
 			LineIndent: 2,
 		}

@@ -119,3 +119,35 @@ func TestDefaultImagePrefix(t *testing.T) {
 		}
 	})
 }
+
+func TestLogOptions_IsZero(t *testing.T) {
+	tests := map[string]struct {
+		opts LogOptions
+		want bool
+	}{
+		"fully empty is zero": {
+			opts: LogOptions{},
+			want: true,
+		},
+		"separator-only is not zero": {
+			opts: LogOptions{ResultSeparator: "; "},
+			want: false,
+		},
+		"pkg name format set is not zero": {
+			opts: LogOptions{PkgNameFormat: "%s"},
+			want: false,
+		},
+		"truncate image name set is not zero": {
+			opts: LogOptions{TruncateImageName: true},
+			want: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got := tc.opts.IsZero(); got != tc.want {
+				t.Errorf("IsZero() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
