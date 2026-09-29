@@ -113,7 +113,7 @@ type LogOptions struct {
 }
 
 func (o *LogOptions) IsZero() bool {
-	return o.PkgNameFormat == "" && o.PkgNameSep == "" && o.PkgNameID == 0 && !o.TruncateImageName
+	return o.PkgNameFormat == "" && o.PkgNameSep == "" && o.PkgNameID == 0 && !o.TruncateImageName && o.ResultSeparator == ""
 }
 
 func (o *LogOptions) FillDefaults() {
