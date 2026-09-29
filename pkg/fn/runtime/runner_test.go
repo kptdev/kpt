@@ -1077,3 +1077,46 @@ data:
 		assert.Equal(t, "ns-b", meta.Namespace)
 	})
 }
+
+func TestPrintFnResult(t *testing.T) {
+	results := []fnresultv1.ResultItem{
+		{Severity: framework.Info, Message: "first"},
+		{Severity: framework.Error, Message: "second"},
+	}
+
+	tests := map[string]struct {
+		results   []fnresultv1.ResultItem
+		separator string
+		expected  string
+	}{
+		"no results produces no output": {
+			results:   nil,
+			separator: "",
+			expected:  "",
+		},
+		"empty separator preserves newline output": {
+			results:   results,
+			separator: "",
+			expected:  "  [Results]:\n    [info]: first\n    [error]: second\n",
+		},
+		"custom separator joins result items": {
+			results:   results,
+			separator: "; ",
+			expected:  "  [Results]:\n    [info]: first;     [error]: second\n",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			out := &bytes.Buffer{}
+			errOut := &bytes.Buffer{}
+			ctx := printer.WithContext(context.Background(), printer.New(out, errOut))
+
+			printFnResult(ctx, &fnresultv1.Result{Results: tc.results}, tc.separator)
+
+			// printFnResult writes to the printer's stderr stream.
+			assert.Equal(t, tc.expected, errOut.String())
+			assert.Equal(t, "", out.String())
+		})
+	}
+}
