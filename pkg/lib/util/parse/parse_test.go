@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -285,20 +285,24 @@ func Test_getDest(t *testing.T) {
 			want:         func(dest string) string { return dest },
 		},
 		"explicit destination that already contains a package": {
+			// getDest returns the directory as-is; whether the existing
+			// package may be overwritten is decided by get.Command.Run.
 			dest: func(t *testing.T) string {
 				dir := t.TempDir()
 				require.NoError(t, os.WriteFile(filepath.Join(dir, "Kptfile"), []byte("apiVersion: kpt.dev/v1"), 0o600))
 				return dir
 			},
 			explicitDest: true,
-			errS:         "already exists and contains a package",
+			want:         func(dest string) string { return dest },
 		},
-		"explicit destination that exists without a package defaults to a subdirectory": {
+		"explicit destination that exists without a package": {
+			// An explicit, existing directory is fetched into directly (no
+			// container subdirectory).
 			dest: func(t *testing.T) string {
 				return t.TempDir()
 			},
 			explicitDest: true,
-			want:         func(dest string) string { return filepath.Join(dest, "nginx") },
+			want:         func(dest string) string { return dest },
 		},
 		"explicit current directory": {
 			dest:         func(t *testing.T) string { return "." },

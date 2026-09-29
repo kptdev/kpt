@@ -20,6 +20,7 @@ import (
 	goerrors "errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -64,6 +65,12 @@ type Command struct {
 	// DefaultKrmFunctionImagePrefix is the prefix to be used with unqualified
 	// KRM function image names. Defaults to "ghcr.io/kptdev/krm-functions-catalog/".
 	DefaultKrmFunctionImagePrefix string
+
+	// Force allows fetching into an existing, non-empty destination that holds
+	// a different package, replacing its contents. Re-fetching the same
+	// upstream package into its existing destination is always idempotent and
+	// does not require Force.
+	Force bool
 }
 
 // Run runs the Command.
@@ -76,7 +83,7 @@ func (c Command) Run(ctx context.Context) error {
 	destInfo, err := os.Stat(c.Destination)
 	switch {
 	case err == nil:
-		// Destination exists - check if it's an empty directory
+		// Destination exists - it must be a directory.
 		if !destInfo.IsDir() {
 			return errors.E(op, errors.Exist, kptfilev1.UniquePath(c.Destination), fmt.Errorf("destination exists and is not a directory"))
 		}
@@ -87,9 +94,27 @@ func (c Command) Run(ctx context.Context) error {
 			return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
 		}
 		if len(entries) > 0 {
-			return errors.E(op, errors.Exist, kptfilev1.UniquePath(c.Destination), fmt.Errorf("destination directory already exists"))
+			// Destination is non-empty. Decide whether we may overwrite it:
+			//   - re-fetching the same upstream package -> idempotent overwrite
+			//   - a different package and --force -> destructive overwrite
+			//   - otherwise -> error, suggesting --force
+			same, err := sameUpstreamPackage(c.Destination, c.Git)
+			if err != nil {
+				return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
+			}
+			if !same && !c.Force {
+				return errors.E(op, errors.Exist, kptfilev1.UniquePath(c.Destination),
+					fmt.Errorf("destination directory already exists and is not the same package; use --force to overwrite"))
+			}
+			// Replace the existing contents so the fetch starts from a clean directory.
+			if err := os.RemoveAll(c.Destination); err != nil {
+				return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
+			}
+			if err := os.MkdirAll(c.Destination, 0700); err != nil {
+				return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
+			}
 		}
-		// Directory exists but is empty, we can use it
+		// Directory exists and is (now) empty, we can use it
 	case goerrors.Is(err, os.ErrNotExist):
 		// Directory doesn't exist, create it
 		err = os.MkdirAll(c.Destination, 0700)
@@ -262,4 +287,33 @@ func cleanUpDirAndError(destination string, err error) error {
 		return errors.E(op, kptfilev1.UniquePath(destination), err, rmErr)
 	}
 	return errors.E(op, kptfilev1.UniquePath(destination), err)
+}
+
+// sameUpstreamPackage reports whether the package already fetched into dest has
+// the same upstream git coordinates (repo and directory) as the requested git
+// source. It reads dest's Kptfile to determine the current upstream. A missing
+// Kptfile or absent upstream means the directory does not hold the same package
+// (so it is not treated as an idempotent re-fetch).
+func sameUpstreamPackage(dest string, requested *kptfilev1.Git) (bool, error) {
+	if requested == nil {
+		return false, nil
+	}
+	if _, err := os.Stat(filepath.Join(dest, kptfilev1.KptFileName)); err != nil {
+		if goerrors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+		return false, err
+	}
+	kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, dest)
+	if err != nil {
+		// An unreadable/invalid Kptfile is not a matching package; let the
+		// caller fall back to the --force decision rather than failing hard.
+		return false, nil
+	}
+	if kf.Upstream == nil || kf.Upstream.Git == nil {
+		return false, nil
+	}
+	existing := kf.Upstream.Git
+	return existing.Repo == requested.Repo &&
+		path.Clean(existing.Directory) == path.Clean(requested.Directory), nil
 }
