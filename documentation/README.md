@@ -23,15 +23,35 @@ from this folder:
 npm install
 ```
 
-Then run the site using `make serve`. 
+Then run the site using `make serve`. This builds the full versioned site (the
+current working tree at `/` plus a snapshot of each released version listed in
+[versions.json](./versions.json)) and serves it locally, matching what Netlify
+deploys. It requires *python3* to serve the built output.
 
-### Windows note (PowerShell/CMD)
+## Versioned documentation
 
-The site pulls some dependencies via Git submodules. If `npm install` succeeds but the site fails to build (for example, missing theme assets), initialize submodules and try again:
+The published site is versioned: the current `main` working tree is served at
+the site root as *latest*, and each released version in
+[versions.json](./versions.json) is built from its git tag and served under a
+subdirectory (for example, `/v1.0/`). A version selector in the navbar switches
+between them.
 
-```powershell
-git submodule update --init --recursive
-```
+Each version entry tracks a *minor* release line (`v1.0`, `v1.1`, ...), which
+is the unit at which the documentation changes meaningfully; patch releases
+(`v1.0.1`, `v1.0.2`, ...) roll up into their minor's entry automatically. The
+`tagPattern` glob resolves to the newest stable patch on that line, so a new
+patch is picked up on the next build with no manifest change.
+
+To publish a new minor version, add an entry to
+[versions.json](./versions.json) with the version label (for example, `v1.1`),
+a `tagPattern` glob (`v1.1.*`), and a `path` (`/v1.1/`), then move the
+`latestGA` flag to the new entry. Moving `latestGA` marks the previous line as
+archived (it starts showing the "no longer actively maintained" banner) and
+keeps the new line banner-free as the current release. The build script
+([scripts/build-versioned-docs.sh](../scripts/build-versioned-docs.sh))
+resolves the pattern to the newest matching stable release tag (pre-releases
+such as `-beta` are ignored) and builds that version's content with the current
+theme and layouts.
 
 ## Checking external links
 

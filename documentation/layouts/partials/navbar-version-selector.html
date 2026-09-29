@@ -1,0 +1,46 @@
+{{/* Custom version selector.
+
+     Based on the Docsy navbar-version-selector.html with one fix: Docsy trims a
+     trailing "/" from each entry's url, which turns the "latest" entry ("/")
+     into an empty string and renders it as disabled. Here we use the raw .url
+     for the href and only treat entries with no url at all as disabled. */}}
+{{ $menuName := .Site.Params.version_menu -}}
+<div class="td-version-menu dropdown">
+  <a class="nav-link dropdown-toggle td-version-menu__title" href="#" role="button"
+      data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <span class="td-version-menu__title-text">
+      {{- $menuName -}}
+    </span>
+  </a>
+  <ul class="dropdown-menu">
+    {{ range .Site.Params.versions -}}
+      {{ $isSeparator := eq .name "---" -}}
+      <li>
+        {{ if $isSeparator -}}
+          <hr class="dropdown-divider">
+        {{ else -}}
+          {{ $url := .url | default "" -}}
+          {{ $hasURL := ne $url "" -}}
+          {{ $isActive := eq .version $.Site.Params.version -}}
+          {{ $isDisabled := not $hasURL -}}
+          {{ $name := .name | default .version -}}
+          {{ if $hasURL -}}
+            <a
+          {{- else -}}
+            <span
+          {{- end }}
+            class="dropdown-item
+              {{- if $isActive }} active
+              {{- else if $isDisabled }} disabled
+              {{- end -}}
+            "
+            {{- if $isActive }} aria-current="page" {{- end -}}
+            {{- if $hasURL }} href="{{ $url }}"{{ end -}}
+          >
+          {{- $name | markdownify -}}
+          {{ if $hasURL }}</a>{{ else }}</span>{{ end }}
+        {{ end }}
+      </li>
+    {{ end }}
+  </ul>
+</div>
