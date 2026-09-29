@@ -98,15 +98,21 @@ func (c Command) Run(ctx context.Context) error {
 			//   - re-fetching the same upstream package -> idempotent overwrite
 			//   - a different package and --force -> destructive overwrite
 			//   - otherwise -> error, suggesting --force
-			same, err := sameUpstreamPackage(c.Destination, c.Git)
-			if err != nil {
-				return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
-			}
-			if !same && !c.Force {
+			same, sameErr := sameUpstreamPackage(c.Destination, c.Git)
+			if sameErr != nil {
+				// Could not determine the existing package (e.g. unreadable
+				// Kptfile). With --force we still overwrite; otherwise surface
+				// the underlying reason so the failure is actionable.
+				if !c.Force {
+					return errors.E(op, errors.Exist, kptfilev1.UniquePath(c.Destination),
+						fmt.Errorf("cannot determine existing package upstream (%v); use --force to overwrite", sameErr))
+				}
+			} else if !same && !c.Force {
 				return errors.E(op, errors.Exist, kptfilev1.UniquePath(c.Destination),
 					fmt.Errorf("destination directory already exists and is not the same package; use --force to overwrite"))
 			}
-			// Replace the existing contents so the fetch starts from a clean directory.
+			// Replace the existing contents so the fetch starts from a clean
+			// directory
 			if err := os.RemoveAll(c.Destination); err != nil {
 				return errors.E(op, errors.IO, kptfilev1.UniquePath(c.Destination), err)
 			}
@@ -306,9 +312,9 @@ func sameUpstreamPackage(dest string, requested *kptfilev1.Git) (bool, error) {
 	}
 	kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, dest)
 	if err != nil {
-		// An unreadable/invalid Kptfile is not a matching package; let the
-		// caller fall back to the --force decision rather than failing hard.
-		return false, nil
+		// Surface the read failure so the caller can distinguish "cannot
+		// determine the existing package" from "it is a different package".
+		return false, err
 	}
 	if kf.Upstream == nil || kf.Upstream.Git == nil {
 		return false, nil
