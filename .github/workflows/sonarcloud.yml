@@ -87,15 +87,6 @@ jobs:
           echo "head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> "$GITHUB_OUTPUT"
           echo "base_ref=$(echo "$PR_DATA" | jq -r '.base.ref')" >> "$GITHUB_OUTPUT"
 
-      - name: Debug - Show PR metadata
-        if: github.event.workflow_run.event == 'pull_request'
-        run: |
-          echo "=== DEBUG: PR Metadata ==="
-          echo "PR Number: ${{ steps.pr_meta.outputs.number }}"
-          echo "Head Ref: ${{ steps.pr_meta.outputs.head_ref }}"
-          echo "Base Ref: ${{ steps.pr_meta.outputs.base_ref }}"
-          echo "=== END DEBUG ==="
-
       - name: Checkout PR head
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -154,24 +145,63 @@ jobs:
           ls -la ./ | grep -E "coverage|PR_NUMBER|sonar" || echo "No matching files"
           echo "=== END DEBUG ==="
 
+      # Scan PR source, but never use PR-controlled scanner configuration. Fetch
+      # settings from the same trusted revision as this workflow, after all
+      # checkouts and artifact downloads, and keep them outside the worktree.
+      - name: Load trusted SonarCloud settings
+        id: sonar_settings
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TRUSTED_WORKFLOW_SHA: ${{ github.workflow_sha }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const ref = process.env.TRUSTED_WORKFLOW_SHA;
+            if (!/^[0-9a-f]{40}$/i.test(ref || '')) {
+              throw new Error('A trusted workflow commit is required for SonarCloud settings');
+            }
+            const { data } = await github.rest.repos.getContent({
+              ...context.repo,
+              path: 'sonar.properties',
+              ref,
+            });
+            if (data.type !== 'file' || data.encoding !== 'base64' || typeof data.content !== 'string') {
+              throw new Error('Trusted SonarCloud settings must be a file with inline content');
+            }
+            const settings = Buffer.from(data.content, 'base64');
+            if (settings.length === 0 || settings.length !== data.size) {
+              throw new Error('Trusted SonarCloud settings are empty or incomplete');
+            }
+            const directory = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP, 'sonar-settings-'));
+            const settingsPath = path.join(directory, 'sonar.properties');
+            fs.writeFileSync(settingsPath, settings, { mode: 0o600, flag: 'wx' });
+            core.setOutput('path', settingsPath);
+
       - name: SonarQube Scan on PR
-        if: github.event.workflow_run.event == 'pull_request'
+        if: github.event.workflow_run.event == 'pull_request' && steps.sonar_settings.outputs.path != ''
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # Keep PR metadata as JSON data, never as additional scanner arguments.
+          SONAR_SCANNER_JSON_PARAMS: >-
+            {
+              "sonar.pullrequest.key": ${{ toJSON(steps.pr_meta.outputs.number) }},
+              "sonar.pullrequest.branch": ${{ toJSON(steps.pr_meta.outputs.head_ref) }},
+              "sonar.pullrequest.base": ${{ toJSON(steps.pr_meta.outputs.base_ref) }}
+            }
         with:
           args:
             -Dsonar.projectKey=kptdev_kpt
             -Dsonar.organization=kptdev
-            -Dproject.settings=sonar.properties
-            -Dsonar.pullrequest.key=${{ steps.pr_meta.outputs.number }}
-            -Dsonar.pullrequest.branch=${{ steps.pr_meta.outputs.head_ref }}
-            -Dsonar.pullrequest.base=${{ steps.pr_meta.outputs.base_ref }}
+            -Dsonar.host.url=https://sonarcloud.io
+            "-Dproject.settings=${{ steps.sonar_settings.outputs.path }}"
 
       - name: SonarCloud Scan on push
         if: >-
           github.event.workflow_run.event == 'push' &&
-          github.event.workflow_run.head_repository.full_name == github.event.repository.full_name
+          github.event.workflow_run.head_repository.full_name == github.event.repository.full_name &&
+          steps.sonar_settings.outputs.path != ''
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e # v8.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -179,5 +209,6 @@ jobs:
           args:
             -Dsonar.projectKey=kptdev_kpt
             -Dsonar.organization=kptdev
-            -Dproject.settings=sonar.properties
+            -Dsonar.host.url=https://sonarcloud.io
+            "-Dproject.settings=${{ steps.sonar_settings.outputs.path }}"
 
