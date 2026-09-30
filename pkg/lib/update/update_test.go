@@ -109,7 +109,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 	}
 }
 
-func TestCommand_Run_persistsPreserveExplicitNull(t *testing.T) {
+func TestCommand_Run_persistsPreserveNulls(t *testing.T) {
 	g := &testutil.TestSetupManager{
 		T: t,
 		ReposChanges: map[string][]testutil.Content{
@@ -131,9 +131,9 @@ func TestCommand_Run_persistsPreserveExplicitNull(t *testing.T) {
 
 	preserve := true
 	if !assert.NoError(t, (&update.Command{
-		Pkg:                  testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
-		Strategy:             kptfilev1.ResourceMerge,
-		PreserveExplicitNull: &preserve,
+		Pkg:           testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Strategy:      kptfilev1.ResourceMerge,
+		PreserveNulls: &preserve,
 	}).Run(fake.CtxWithDefaultPrinter())) {
 		return
 	}
@@ -142,10 +142,10 @@ func TestCommand_Run_persistsPreserveExplicitNull(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.True(t, kf.Upstream.PreserveExplicitNull)
+	assert.True(t, kf.Upstream.PreserveNulls)
 }
 
-func TestCommand_Run_doesNotClearPreserveExplicitNullWhenUnset(t *testing.T) {
+func TestCommand_Run_doesNotClearPreserveNullsWhenUnset(t *testing.T) {
 	g := &testutil.TestSetupManager{
 		T: t,
 		ReposChanges: map[string][]testutil.Content{
@@ -170,7 +170,7 @@ func TestCommand_Run_doesNotClearPreserveExplicitNullWhenUnset(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	kf.Upstream.PreserveExplicitNull = true
+	kf.Upstream.PreserveNulls = true
 	if !assert.NoError(t, kptfileutil.WriteFile(pkgPath, kf)) {
 		return
 	}
@@ -186,7 +186,7 @@ func TestCommand_Run_doesNotClearPreserveExplicitNullWhenUnset(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.True(t, kf.Upstream.PreserveExplicitNull)
+	assert.True(t, kf.Upstream.PreserveNulls)
 }
 
 func TestCommand_Run_subDir(t *testing.T) {

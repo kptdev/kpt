@@ -163,10 +163,12 @@ type Upstream struct {
 	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty" json:"updateStrategy,omitempty"`
 
-	// PreserveExplicitNull, when true, keeps a field explicitly nulled in the
+	// PreserveNulls, when true, keeps a field explicitly nulled in the
 	// local package during resource-merge instead of deleting it. Only applies
 	// to the resource-merge update strategy.
-	PreserveExplicitNull bool `yaml:"preserveExplicitNull,omitempty" json:"preserveExplicitNull,omitempty"`
+	//
+	// Experimental: Behavior and naming are subject to change.
+	PreserveNulls bool `yaml:"preserveNulls,omitempty" json:"preserveNulls,omitempty"`
 }
 
 // Git is the user-specified locator for a package on Git.
