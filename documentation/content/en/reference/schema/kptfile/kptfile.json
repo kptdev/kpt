@@ -30,11 +30,48 @@
           "x-go-name": "Type"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "ConditionStatus": {
       "type": "string",
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
+    },
+    "Field": {
+      "description": "Field is a modified version of sigs.k8s.io/kustomize/kyaml/fn/framework.Field\nwhere CurrentValue and ProposedValue are strings instead of the original any type.",
+      "type": "object",
+      "properties": {
+        "currentValue": {
+          "type": "string",
+          "x-go-name": "CurrentValue"
+        },
+        "path": {
+          "type": "string",
+          "x-go-name": "Path"
+        },
+        "proposedValue": {
+          "type": "string",
+          "x-go-name": "ProposedValue"
+        }
+      },
+      "x-go-package": "github.com/kptdev/kpt/api/fnresult/v1"
+    },
+    "File": {
+      "description": "File references a file containing a resource",
+      "type": "object",
+      "properties": {
+        "index": {
+          "description": "Index is the index into the file containing the resource\n(i.e. if there are multiple resources in a single file)",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Index"
+        },
+        "path": {
+          "description": "Path is relative path to the file containing the resource.\nThis field is required.",
+          "type": "string",
+          "x-go-name": "Path"
+        }
+      },
+      "x-go-package": "sigs.k8s.io/kustomize/kyaml/fn/framework"
     },
     "Function": {
       "type": "object",
@@ -54,9 +91,7 @@
           "x-go-name": "ConfigPath"
         },
         "configRef": {
-          "$ref": "#/definitions/ResourceReference",
-          "description": "`ConfigRef` references an existing resource in the package as the function config.\nThe resource is identified by apiVersion, kind, and name. This is mutually exclusive\nwith `configPath` and `configMap`.",
-          "x-go-name": "ConfigRef"
+          "$ref": "#/definitions/ResourceReference"
         },
         "exclude": {
           "description": "`Exclude` are used to specify resources on which the function should NOT be executed.\nIf not specified, all resources selected by `Selectors` are selected.",
@@ -93,9 +128,15 @@
           "description": "`Tag` is an optional field for specifying/overriding the tag of the function image.\nCan be a semver constraint satisfying this spec: https://github.com/Masterminds/semver?tab=readme-ov-file#checking-version-constraints",
           "type": "string",
           "x-go-name": "Tag"
+        },
+        "when": {
+          "description": "CelCondition is an optional CEL expression (exposed as 'when' in YAML) that determines whether this\nfunction should be executed. The expression is evaluated against the list\nof KRM resources passed to this function step (after `Selectors` and\n`Exclude` have been applied) and should return a boolean value.\nIf omitted or evaluates to true, the function executes normally.\nIf evaluates to false, the function is skipped.",
+          "type": "string",
+          "x-go-name": "CelCondition",
+          "example": "Check if a specific ConfigMap exists among the selected resources:"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "GenericLock": {
       "type": "object",
@@ -117,7 +158,7 @@
           "x-go-name": "StoreID"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "Git": {
       "type": "object",
@@ -139,7 +180,7 @@
           "x-go-name": "Repo"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "GitLock": {
       "type": "object",
@@ -166,7 +207,7 @@
           "x-go-name": "Repo"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "Inventory": {
       "description": "All of the the parameters are required if any are set.",
@@ -203,7 +244,7 @@
           "x-go-name": "Namespace"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "Locator": {
       "type": "object",
@@ -219,7 +260,7 @@
           "$ref": "#/definitions/OriginType"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "NameMeta": {
       "type": "object",
@@ -274,7 +315,7 @@
     "OriginType": {
       "type": "string",
       "title": "OriginType defines the type of origin for a package.",
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "PackageInfo": {
       "description": "These fields are not consumed by any functionality in kpt and are simply passed through.\nNote that like any other KRM resource, humans and automation can also use `metadata.labels` and\n`metadata.annotations` as the extension mechanism.",
@@ -330,7 +371,7 @@
           "x-go-name": "Site"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "Pipeline": {
       "type": "object",
@@ -353,7 +394,63 @@
           "x-go-name": "Validators"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
+    },
+    "PipelineStepResult": {
+      "description": "PipelineStepResult contains the structured result from an individual function\ncall in the pipeline.",
+      "type": "object",
+      "properties": {
+        "errorResults": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ResultItem"
+          },
+          "x-go-name": "ErrorResults"
+        },
+        "exec": {
+          "type": "string",
+          "x-go-name": "ExecPath"
+        },
+        "executionError": {
+          "type": "string",
+          "x-go-name": "ExecutionError"
+        },
+        "exitCode": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ExitCode"
+        },
+        "image": {
+          "type": "string",
+          "x-go-name": "Image"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ResultItem"
+          },
+          "x-go-name": "Results"
+        },
+        "skipped": {
+          "description": "Skipped indicates if the function was skipped due to a condition",
+          "type": "boolean",
+          "x-go-name": "Skipped"
+        },
+        "stderr": {
+          "type": "string",
+          "x-go-name": "Stderr"
+        },
+        "when": {
+          "description": "When is the CEL condition expression that was evaluated",
+          "type": "string",
+          "x-go-name": "When"
+        }
+      },
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "ReadinessGate": {
       "type": "object",
@@ -363,34 +460,59 @@
           "x-go-name": "ConditionType"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
-    "ResourceReference": {
-      "description": "ResourceReference identifies a resource within the package by its API identity.",
+    "RenderStatus": {
+      "description": "RenderStatus represents the result of performing render operation\non a package's resources.",
+      "type": "object",
+      "properties": {
+        "errorSummary": {
+          "type": "string",
+          "x-go-name": "ErrorSummary"
+        },
+        "mutationSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PipelineStepResult"
+          },
+          "x-go-name": "MutationSteps"
+        },
+        "validationSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PipelineStepResult"
+          },
+          "x-go-name": "ValidationSteps"
+        }
+      },
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
+    },
+    "ResourceIdentifier": {
+      "description": "ResourceIdentifier contains the information needed to uniquely\nidentify a resource in a cluster.",
       "type": "object",
       "properties": {
         "apiVersion": {
-          "description": "APIVersion of the referenced resource. Optional; when omitted, matches regardless of apiVersion.",
+          "description": "APIVersion is the apiVersion field of a Resource",
           "type": "string",
           "x-go-name": "APIVersion"
         },
         "kind": {
-          "description": "Kind of the referenced resource. Required.",
+          "description": "Kind is the kind field of a Resource",
           "type": "string",
           "x-go-name": "Kind"
         },
         "name": {
-          "description": "Name of the referenced resource. Required.",
+          "description": "Name is the metadata.name field of a Resource",
           "type": "string",
           "x-go-name": "Name"
         },
         "namespace": {
-          "description": "Namespace of the referenced resource. Optional; when omitted, matches regardless of namespace.",
+          "description": "Namespace is the metadata.namespace field of a Resource",
           "type": "string",
           "x-go-name": "Namespace"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "sigs.k8s.io/kustomize/kyaml/yaml"
     },
     "ResourceMeta": {
       "type": "object",
@@ -435,6 +557,63 @@
       },
       "x-go-package": "sigs.k8s.io/kustomize/kyaml/yaml"
     },
+    "ResourceReference": {
+      "type": "object",
+      "title": "ResourceReference identifies a resource within the package by its API identity.",
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion of the referenced resource (e.g. \"v1\"). Optional; when omitted,\nmatches resources regardless of apiVersion.",
+          "type": "string",
+          "x-go-name": "APIVersion"
+        },
+        "kind": {
+          "description": "Kind of the referenced resource (e.g. \"ConfigMap\"). Required.",
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "name": {
+          "description": "Name of the referenced resource. Required.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace of the referenced resource. Optional; when omitted, matches\nresources regardless of namespace.",
+          "type": "string",
+          "x-go-name": "Namespace"
+        }
+      },
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
+    },
+    "ResultItem": {
+      "description": "ResultItem is a modified version of sigs.k8s.io/kustomize/kyaml/fn/framework.Result\nwith a simplified Field field.",
+      "type": "object",
+      "properties": {
+        "field": {
+          "$ref": "#/definitions/Field"
+        },
+        "file": {
+          "$ref": "#/definitions/File"
+        },
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        },
+        "resourceRef": {
+          "$ref": "#/definitions/ResourceIdentifier"
+        },
+        "severity": {
+          "$ref": "#/definitions/Severity"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Tags"
+        }
+      },
+      "x-go-package": "github.com/kptdev/kpt/api/fnresult/v1"
+    },
     "Selector": {
       "description": "Selector specifies the selection criteria\nplease update IsEmpty method if more properties are added",
       "type": "object",
@@ -474,9 +653,19 @@
           "description": "Namespace of the target resources",
           "type": "string",
           "x-go-name": "Namespace"
+        },
+        "resourceFileRegexp": {
+          "description": "ResourceFileRegexp a regular expression matched against the path of the file\ncontaining the resource, relative to the package root. Resources whose file path\nmatches the expression will be selected.",
+          "type": "string",
+          "x-go-name": "ResourceFileRegexp"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
+    },
+    "Severity": {
+      "description": "Severity indicates the severity of the Result",
+      "type": "string",
+      "x-go-package": "sigs.k8s.io/kustomize/kyaml/fn/framework"
     },
     "Status": {
       "type": "object",
@@ -487,9 +676,12 @@
             "$ref": "#/definitions/Condition"
           },
           "x-go-name": "Conditions"
+        },
+        "renderStatus": {
+          "$ref": "#/definitions/RenderStatus"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "TypeMeta": {
       "description": "TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta\nNo need for a direct dependence; the fields are stable.",
@@ -511,7 +703,7 @@
     "UpdateStrategyType": {
       "type": "string",
       "title": "UpdateStrategyType defines the strategy for updating a package from upstream.",
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "Upstream": {
       "type": "object",
@@ -520,19 +712,19 @@
         "git": {
           "$ref": "#/definitions/Git"
         },
+        "preserveNulls": {
+          "description": "PreserveNulls, when true, keeps a field explicitly nulled in the\nlocal package during resource-merge instead of deleting it. Only applies\nto the resource-merge update strategy.\n\nExperimental: Behavior and naming are subject to change.",
+          "type": "boolean",
+          "x-go-name": "PreserveNulls"
+        },
         "type": {
           "$ref": "#/definitions/OriginType"
         },
         "updateStrategy": {
           "$ref": "#/definitions/UpdateStrategyType"
-        },
-        "preserveExplicitNull": {
-          "description": "PreserveExplicitNull, when true, keeps a field explicitly nulled in the local package during resource-merge instead of deleting it. Only applies to the resource-merge update strategy.",
-          "type": "boolean",
-          "x-go-name": "PreserveExplicitNull"
         }
       },
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     },
     "kptfile": {
       "type": "object",
@@ -594,7 +786,7 @@
         }
       },
       "x-go-name": "KptFile",
-      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
     }
   }
 }

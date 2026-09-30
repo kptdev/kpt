@@ -13,10 +13,44 @@ definitions:
                 type: string
                 x-go-name: Type
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     ConditionStatus:
         type: string
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
+    Field:
+        description: |-
+            Field is a modified version of sigs.k8s.io/kustomize/kyaml/fn/framework.Field
+            where CurrentValue and ProposedValue are strings instead of the original any type.
+        properties:
+            currentValue:
+                type: string
+                x-go-name: CurrentValue
+            path:
+                type: string
+                x-go-name: Path
+            proposedValue:
+                type: string
+                x-go-name: ProposedValue
+        type: object
+        x-go-package: github.com/kptdev/kpt/api/fnresult/v1
+    File:
+        description: File references a file containing a resource
+        properties:
+            index:
+                description: |-
+                    Index is the index into the file containing the resource
+                    (i.e. if there are multiple resources in a single file)
+                format: int64
+                type: integer
+                x-go-name: Index
+            path:
+                description: |-
+                    Path is relative path to the file containing the resource.
+                    This field is required.
+                type: string
+                x-go-name: Path
+        type: object
+        x-go-package: sigs.k8s.io/kustomize/kyaml/fn/framework
     Function:
         properties:
             configMap:
@@ -35,11 +69,6 @@ definitions:
                 x-go-name: ConfigPath
             configRef:
                 $ref: '#/definitions/ResourceReference'
-                description: |-
-                    `ConfigRef` references an existing resource in the package as the function config.
-                    The resource is identified by apiVersion, kind, and name. This is mutually exclusive
-                    with `configPath` and `configMap`.
-                x-go-name: ConfigRef
             exclude:
                 description: |-
                     `Exclude` are used to specify resources on which the function should NOT be executed.
@@ -78,16 +107,6 @@ definitions:
                     this is primarily used for merging function declaration with upstream counterparts
                 type: string
                 x-go-name: Name
-            when:
-                description: |-
-                    `CelCondition` is an optional CEL expression that determines whether this
-                    function should be executed. The expression is evaluated against the list
-                    of KRM resources passed to this function step (after `Selectors` and
-                    `Exclude` have been applied) and should return a boolean value.
-                    If omitted or evaluates to true, the function executes normally.
-                    If evaluates to false, the function is skipped.
-                type: string
-                x-go-name: CelCondition
             selectors:
                 description: |-
                     `Selectors` are used to specify resources on which the function should be executed
@@ -102,9 +121,20 @@ definitions:
                     Can be a semver constraint satisfying this spec: https://github.com/Masterminds/semver?tab=readme-ov-file#checking-version-constraints
                 type: string
                 x-go-name: Tag
+            when:
+                description: |-
+                    CelCondition is an optional CEL expression (exposed as 'when' in YAML) that determines whether this
+                    function should be executed. The expression is evaluated against the list
+                    of KRM resources passed to this function step (after `Selectors` and
+                    `Exclude` have been applied) and should return a boolean value.
+                    If omitted or evaluates to true, the function executes normally.
+                    If evaluates to false, the function is skipped.
+                example: 'Check if a specific ConfigMap exists among the selected resources:'
+                type: string
+                x-go-name: CelCondition
         title: Function specifies a KRM function.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     GenericLock:
         properties:
             resourceID:
@@ -127,7 +157,7 @@ definitions:
                 x-go-name: StoreID
         title: GenericLock is a minimal locator for a package stored in a generic storage backend.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     Git:
         properties:
             directory:
@@ -148,7 +178,7 @@ definitions:
                 x-go-name: Repo
         title: Git is the user-specified locator for a package on Git.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     GitLock:
         properties:
             commit:
@@ -177,7 +207,7 @@ definitions:
                 x-go-name: Repo
         title: GitLock is the resolved locator for a package on Git.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     Inventory:
         description: All of the the parameters are required if any are set.
         properties:
@@ -205,7 +235,7 @@ definitions:
                 x-go-name: Namespace
         title: Inventory encapsulates the parameters for the inventory resource applied to a cluster.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     Locator:
         properties:
             generic:
@@ -216,7 +246,7 @@ definitions:
                 $ref: '#/definitions/OriginType'
         title: Locator is a resolved locator for the last fetch of the package.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     NameMeta:
         properties:
             name:
@@ -258,7 +288,7 @@ definitions:
     OriginType:
         title: OriginType defines the type of origin for a package.
         type: string
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     PackageInfo:
         description: |-
             These fields are not consumed by any functionality in kpt and are simply passed through.
@@ -304,7 +334,7 @@ definitions:
                 x-go-name: Site
         title: PackageInfo contains optional information about the package such as license, documentation, etc.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     Pipeline:
         properties:
             mutators:
@@ -323,35 +353,101 @@ definitions:
                 x-go-name: Validators
         title: Pipeline declares a pipeline of functions used to mutate or validate resources.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
+    PipelineStepResult:
+        description: |-
+            PipelineStepResult contains the structured result from an individual function
+            call in the pipeline.
+        properties:
+            errorResults:
+                items:
+                    $ref: '#/definitions/ResultItem'
+                type: array
+                x-go-name: ErrorResults
+            exec:
+                type: string
+                x-go-name: ExecPath
+            executionError:
+                type: string
+                x-go-name: ExecutionError
+            exitCode:
+                format: int64
+                type: integer
+                x-go-name: ExitCode
+            image:
+                type: string
+                x-go-name: Image
+            name:
+                type: string
+                x-go-name: Name
+            results:
+                items:
+                    $ref: '#/definitions/ResultItem'
+                type: array
+                x-go-name: Results
+            skipped:
+                description: Skipped indicates if the function was skipped due to a condition
+                type: boolean
+                x-go-name: Skipped
+            stderr:
+                type: string
+                x-go-name: Stderr
+            when:
+                description: When is the CEL condition expression that was evaluated
+                type: string
+                x-go-name: When
+        type: object
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     ReadinessGate:
         properties:
             conditionType:
                 type: string
                 x-go-name: ConditionType
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
-    ResourceReference:
-        description: ResourceReference identifies a resource within the package by its API identity.
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
+    RenderStatus:
+        description: |-
+            RenderStatus represents the result of performing render operation
+            on a package's resources.
+        properties:
+            errorSummary:
+                type: string
+                x-go-name: ErrorSummary
+            mutationSteps:
+                items:
+                    $ref: '#/definitions/PipelineStepResult'
+                type: array
+                x-go-name: MutationSteps
+            validationSteps:
+                items:
+                    $ref: '#/definitions/PipelineStepResult'
+                type: array
+                x-go-name: ValidationSteps
+        type: object
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
+    ResourceIdentifier:
+        description: |-
+            ResourceIdentifier contains the information needed to uniquely
+            identify a resource in a cluster.
         properties:
             apiVersion:
-                description: APIVersion of the referenced resource. Optional; when omitted, matches regardless of apiVersion.
+                description: APIVersion is the apiVersion field of a Resource
                 type: string
                 x-go-name: APIVersion
             kind:
-                description: Kind of the referenced resource. Required.
+                description: Kind is the kind field of a Resource
                 type: string
                 x-go-name: Kind
             name:
-                description: Name of the referenced resource. Required.
+                description: Name is the metadata.name field of a Resource
                 type: string
                 x-go-name: Name
             namespace:
-                description: Namespace of the referenced resource. Optional; when omitted, matches regardless of namespace.
+                description: Namespace is the metadata.namespace field of a Resource
                 type: string
                 x-go-name: Namespace
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: sigs.k8s.io/kustomize/kyaml/yaml
     ResourceMeta:
         properties:
             annotations:
@@ -385,6 +481,54 @@ definitions:
         title: ResourceMeta contains the metadata for a both Resource Type and Resource.
         type: object
         x-go-package: sigs.k8s.io/kustomize/kyaml/yaml
+    ResourceReference:
+        properties:
+            apiVersion:
+                description: |-
+                    APIVersion of the referenced resource (e.g. "v1"). Optional; when omitted,
+                    matches resources regardless of apiVersion.
+                type: string
+                x-go-name: APIVersion
+            kind:
+                description: Kind of the referenced resource (e.g. "ConfigMap"). Required.
+                type: string
+                x-go-name: Kind
+            name:
+                description: Name of the referenced resource. Required.
+                type: string
+                x-go-name: Name
+            namespace:
+                description: |-
+                    Namespace of the referenced resource. Optional; when omitted, matches
+                    resources regardless of namespace.
+                type: string
+                x-go-name: Namespace
+        title: ResourceReference identifies a resource within the package by its API identity.
+        type: object
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
+    ResultItem:
+        description: |-
+            ResultItem is a modified version of sigs.k8s.io/kustomize/kyaml/fn/framework.Result
+            with a simplified Field field.
+        properties:
+            field:
+                $ref: '#/definitions/Field'
+            file:
+                $ref: '#/definitions/File'
+            message:
+                type: string
+                x-go-name: Message
+            resourceRef:
+                $ref: '#/definitions/ResourceIdentifier'
+            severity:
+                $ref: '#/definitions/Severity'
+            tags:
+                additionalProperties:
+                    type: string
+                type: object
+                x-go-name: Tags
+        type: object
+        x-go-package: github.com/kptdev/kpt/api/fnresult/v1
     Selector:
         description: |-
             Selector specifies the selection criteria
@@ -418,8 +562,19 @@ definitions:
                 description: Namespace of the target resources
                 type: string
                 x-go-name: Namespace
+            resourceFileRegexp:
+                description: |-
+                    ResourceFileRegexp a regular expression matched against the path of the file
+                    containing the resource, relative to the package root. Resources whose file path
+                    matches the expression will be selected.
+                type: string
+                x-go-name: ResourceFileRegexp
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
+    Severity:
+        description: Severity indicates the severity of the Result
+        type: string
+        x-go-package: sigs.k8s.io/kustomize/kyaml/fn/framework
     Status:
         properties:
             conditions:
@@ -427,8 +582,10 @@ definitions:
                     $ref: '#/definitions/Condition'
                 type: array
                 x-go-name: Conditions
+            renderStatus:
+                $ref: '#/definitions/RenderStatus'
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     TypeMeta:
         description: |-
             TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta
@@ -447,22 +604,27 @@ definitions:
     UpdateStrategyType:
         title: UpdateStrategyType defines the strategy for updating a package from upstream.
         type: string
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     Upstream:
         properties:
             git:
                 $ref: '#/definitions/Git'
+            preserveNulls:
+                description: |-
+                    PreserveNulls, when true, keeps a field explicitly nulled in the
+                    local package during resource-merge instead of deleting it. Only applies
+                    to the resource-merge update strategy.
+
+                    Experimental: Behavior and naming are subject to change.
+                type: boolean
+                x-go-name: PreserveNulls
             type:
                 $ref: '#/definitions/OriginType'
             updateStrategy:
                 $ref: '#/definitions/UpdateStrategyType'
-            preserveExplicitNull:
-                description: PreserveExplicitNull, when true, keeps a field explicitly nulled in the local package during resource-merge instead of deleting it. Only applies to the resource-merge update strategy.
-                type: boolean
-                x-go-name: PreserveExplicitNull
         title: Upstream is a user-specified upstream locator for a package.
         type: object
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     kptfile:
         properties:
             annotations:
@@ -508,7 +670,7 @@ definitions:
         title: KptFile contains information about a package managed with kpt.
         type: object
         x-go-name: KptFile
-        x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
 info:
     title: Kptfile schema.
     version: v1

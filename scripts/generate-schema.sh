@@ -15,6 +15,8 @@
 
 set -o errexit -o nounset -o pipefail -o posix -x
 
+SWAGGER_VERSION=${SWAGGER_VERSION:-"v0.33.1"}
+
 if ! command -v jq >/dev/null; then
   echo "jq must be installed. Follow https://stedolan.github.io/jq/download/ to install jq."
   exit 1
@@ -30,8 +32,15 @@ BUILD_DIR="${REPO_ROOT}/.build"
 mkdir -p ${BUILD_DIR}
 cd "${REPO_ROOT}"
 
-$GOBIN/swagger generate spec -m -w pkg/api/kptfile/v1 -o documentation/content/en/reference/schema/kptfile/kptfile.yaml
-$GOBIN/swagger generate spec -m -w pkg/api/kptfile/v1 -o documentation/content/en/reference/schema/kptfile/kptfile.json
+# shellcheck disable=SC2076
+if [[ $(command -v swagger) && $(swagger version) =~ "${SWAGGER_VERSION}" ]]; then
+  SWAGGER_CMD=swagger
+else
+  SWAGGER_CMD="go run github.com/go-swagger/go-swagger/cmd/swagger@${SWAGGER_VERSION}"
+fi
+
+$SWAGGER_CMD generate spec -m -w api/kptfile/v1 -o documentation/content/en/reference/schema/kptfile/kptfile.yaml
+$SWAGGER_CMD generate spec -m -w api/kptfile/v1 -o documentation/content/en/reference/schema/kptfile/kptfile.json
 
 # Strip kubebuilder annotations from generated schema files.
 jq -f ${REPO_ROOT}/scripts/strip-kubebuilder-annos.jq documentation/content/en/reference/schema/kptfile/kptfile.json > "${BUILD_DIR}/kptfile-schema.json"

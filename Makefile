@@ -41,7 +41,7 @@ install-golangci-lint:
 
 .PHONY: install-swagger
 install-swagger:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
+	go install github.com/go-swagger/go-swagger/cmd/swagger@$(SWAGGER_VERSION)
 
 .PHONY: install-mdtogo
 install-mdtogo:
@@ -53,7 +53,7 @@ fix: fix-api
 fmt: fmt-api
 	go fmt ./...
 
-schema: install-swagger
+schema:
 	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate: install-mdtogo generate-api
@@ -61,6 +61,7 @@ generate: install-mdtogo generate-api
 	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./...
 	go fmt ./internal/docs/generated/...
+	make schema
 
 tidy: tidy-api
 	go mod tidy

@@ -14,6 +14,7 @@
 
 GOLANG_VERSION    := 1.26.3
 GOLANGCI_LINT_VERSION := 2.11.4
+SWAGGER_VERSION := v0.33.1
 
 GORELEASER_CONFIG = release/tag/goreleaser.yaml
 GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
