@@ -41,8 +41,8 @@ type Options struct {
 	// Kptfile from this package.
 	IsRoot bool
 
-	// PreserveNulls keeps a field explicitly nulled locally instead of
-	// deleting it during resource-merge.
+	// PreserveNulls keeps a null field (`null`, `~`, or an empty value) in
+	// local or upstream instead of deleting it during resource-merge.
 	//
 	// Experimental: Behavior and naming are subject to change.
 	PreserveNulls bool

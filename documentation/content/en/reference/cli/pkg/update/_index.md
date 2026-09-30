@@ -61,10 +61,10 @@ VERSION:
       it with the remote version.
 
 --preserve-nulls:
-  When set, fields explicitly nulled in the local package (for example
-  `field:`, `null`, or `~`) are kept as null during resource-merge instead of
-  being deleted. This changes the default for the current and future updates
-  and is persisted as `upstream.preserveNulls` in the Kptfile.
+  (Experimental) When set, null fields in the local package or upstream (`field:`, `null`, or
+  `~`) are kept during resource-merge instead of being deleted. This changes
+  the default for the current and future updates and is persisted as
+  `upstream.preserveNulls` in the Kptfile.
   Only applies to the resource-merge strategy. Defaults to false.
 ```
 
@@ -203,22 +203,23 @@ On the resource level, the rules are:
 
 On the field level, the rules differ based on the type of field.
 When `--preserve-nulls` (or `upstream.preserveNulls` in the
-Kptfile) is set, a field nulled in local is kept as null instead of
-being removed. This applies to scalars, mappings, and lists.
+Kptfile) is set, a null in local or upstream is kept instead of being
+removed. This includes `null`, `~`, and an empty value (`field:`), and
+applies to scalars, mappings, and lists.
 
 For scalars and non-associative lists:
-* If the field is present in either upstream or local and the value is `null`, remove the field from local.
+* Unless `--preserve-nulls` is set, a field present in either upstream or local whose value is `null`, `~`, or empty is removed from local.
 * If the field is unchanged between upstream and local, leave the local value unchanged.
 * If the field has been changed in both upstream and local, update local with the value from upstream.
 
 For mappings:
-* If the field is present in either upstream or local and the value is `null`, remove the field from local.
+* Unless `--preserve-nulls` is set, a field present in either upstream or local whose value is `null`, `~`, or empty is removed from local.
 * If the field is present only in local, leave the local value unchanged.
 * If the field is not present in local, add the delta between origin and upstream as the value in local.
 * If the field is present in both upstream and local, recursively merge the values between local, upstream and origin.
 
 For associative lists:
-* If the field is present in either upstream or local and the value is `null`, remove the field from local.
+* Unless `--preserve-nulls` is set, a field present in either upstream or local whose value is `null`, `~`, or empty is removed from local.
 * If the field is present only in local, leave the local value unchanged.
 * If the field is not present in local, add the delta between origin and upstream as the value in local.
 * If the field is present in both upstream and local, recursively merge the values between local, upstream and origin.

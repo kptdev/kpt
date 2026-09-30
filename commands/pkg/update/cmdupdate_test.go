@@ -494,7 +494,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 
 	r = update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{dir, "--preserve-explicit-null"})
+	r.Command.SetArgs([]string{dir, "--preserve-nulls"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	if assert.NotNil(t, r.Update.PreserveNulls) {
@@ -503,7 +503,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 
 	r = update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{dir, "--preserve-explicit-null=false"})
+	r.Command.SetArgs([]string{dir, "--preserve-nulls=false"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	if assert.NotNil(t, r.Update.PreserveNulls) {

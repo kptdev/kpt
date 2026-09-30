@@ -713,7 +713,7 @@
           "$ref": "#/definitions/Git"
         },
         "preserveNulls": {
-          "description": "PreserveNulls, when true, keeps a field explicitly nulled in the\nlocal package during resource-merge instead of deleting it. Only applies\nto the resource-merge update strategy.\n\nExperimental: Behavior and naming are subject to change.",
+          "description": "PreserveNulls, when true, keeps a null field (`null`, `~`, or an empty\nvalue) in the local package or upstream during resource-merge instead of\ndeleting it. Only applies to the resource-merge update strategy.\n\nExperimental: Behavior and naming are subject to change.",
           "type": "boolean",
           "x-go-name": "PreserveNulls"
         },
