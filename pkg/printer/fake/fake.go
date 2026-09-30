@@ -17,6 +17,7 @@ package fake
 import (
 	"context"
 	"io"
+	"time"
 
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -28,6 +29,24 @@ type Printer struct {
 	outStream io.Writer
 	errStream io.Writer
 }
+
+func (np *Printer) WithField(string, string) printer.Printer { return np }
+
+func (np *Printer) WithFields(printer.ContextualFields) printer.Printer { return np }
+
+func (np *Printer) WithPackage(string) printer.Printer { return np }
+
+func (np *Printer) WithFunction(string, string) printer.Printer { return np }
+
+func (np *Printer) PrintRunning(string, int) {}
+
+func (np *Printer) PrintPass(string, time.Duration) {}
+
+func (np *Printer) PrintFail(string, time.Duration, error) {}
+
+func (np *Printer) PrintResult(string, string, string) {}
+
+func (np *Printer) PrintSummary(int, int, time.Duration) {}
 
 func (np *Printer) PrintPackage(*pkg.Pkg, bool) {}
 

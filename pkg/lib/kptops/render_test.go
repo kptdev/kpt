@@ -163,7 +163,7 @@ func TestPackagePrinter(t *testing.T) {
 
 func TestPackagePrinterStub(t *testing.T) {
 	t.Run("PrintPackage stub", func(t *testing.T) {
-		p := &packagePrinter{}
+		p := printer.NewKlogPrinter()
 		testPkg := &pkg.Pkg{
 			DisplayPath: "test/path",
 		}
@@ -178,7 +178,7 @@ func TestPackagePrinterStub(t *testing.T) {
 	})
 
 	t.Run("Printf stub", func(t *testing.T) {
-		p := &packagePrinter{}
+		p := printer.NewKlogPrinter()
 
 		assert.NotPanics(t, func() {
 			p.Printf("test message")
@@ -190,7 +190,7 @@ func TestPackagePrinterStub(t *testing.T) {
 	})
 
 	t.Run("OptPrintf stub with nil options", func(t *testing.T) {
-		p := &packagePrinter{}
+		p := printer.NewKlogPrinter()
 
 		assert.NotPanics(t, func() {
 			p.OptPrintf(nil, "test message")
@@ -198,7 +198,7 @@ func TestPackagePrinterStub(t *testing.T) {
 	})
 
 	t.Run("OptPrintf stub with options", func(t *testing.T) {
-		p := &packagePrinter{}
+		p := printer.NewKlogPrinter()
 		opt := printer.NewOpt().DisplayName("my-package")
 
 		assert.NotPanics(t, func() {
@@ -207,7 +207,7 @@ func TestPackagePrinterStub(t *testing.T) {
 	})
 
 	t.Run("OutStream stub", func(t *testing.T) {
-		p := &packagePrinter{}
+		p := printer.NewKlogPrinter()
 
 		stream := p.OutStream()
 		assert.NotNil(t, stream)
@@ -215,7 +215,7 @@ func TestPackagePrinterStub(t *testing.T) {
 	})
 
 	t.Run("ErrStream stub", func(t *testing.T) {
-		p := &packagePrinter{}
+		p := printer.NewKlogPrinter()
 
 		stream := p.ErrStream()
 		assert.NotNil(t, stream)
@@ -236,7 +236,7 @@ func TestPrinterLoggingDepth(t *testing.T) {
 	}
 	expectedFile := filepath.Base(filename)
 
-	p := &packagePrinter{}
+	p := printer.NewKlogPrinter()
 
 	tests := []struct {
 		name string
