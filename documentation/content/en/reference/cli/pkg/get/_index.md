@@ -45,11 +45,25 @@ VERSION:
 LOCAL_DEST_DIRECTORY:
   The local directory to write the package to. Defaults to a subdirectory of the
   current working directory named after the upstream package.
+
+  Behaviour when a destination is provided explicitly:
+
+    * If the directory does not exist, the package is written directly to it.
+    * If the directory exists and is empty, the package is written into it.
+    * If the directory already contains the same upstream package, it is
+      re-fetched in place (idempotent).
+    * If the directory exists and contains different content, get fails unless
+      --force is specified, in which case the existing contents are replaced.
 ```
 
 #### Flags
 
 ```shell
+--force:
+  Overwrite the local destination directory if it already exists and is not the
+  same package. Re-fetching the same upstream package is always idempotent and
+  does not require this flag. It is `false` by default.
+
 --strategy:
   Defines which strategy should be used to update the package. It defaults to
   'resource-merge'.
@@ -115,6 +129,13 @@ $ kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792
 # Create a deployable instance of examples package from github.com/kubernetes/examples
 # This will create a new directory 'examples' for the package.
 $ kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792 --for-deployment
+```
+
+<!-- @pkgGet @verifyExamples-->
+
+```shell
+# Fetch a different package into an existing directory, replacing its contents.
+$ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/ --force
 ```
 
 <!--mdtogo-->

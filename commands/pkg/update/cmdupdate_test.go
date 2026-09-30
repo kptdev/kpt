@@ -1,4 +1,4 @@
-// Copyright 2019-2025 The kpt Authors
+// Copyright 2019-2025,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ func TestCmd_execute(t *testing.T) {
 
 	// clone the repo
 	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dest})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -170,7 +170,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 
 	// pkg get package version 'dataset1'
 	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/mysql@dataset1", w.WorkspaceDirectory})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/mysql@dataset1", dest})
 	err = getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -293,7 +293,7 @@ func TestCmd_successUnCommitted(t *testing.T) {
 
 	// clone the repo
 	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dest})
 	err := getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -343,7 +343,7 @@ func TestCmd_successNoGit(t *testing.T) {
 
 	// clone the repo
 	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dest})
 	err = getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -391,7 +391,7 @@ func TestCmd_onlyVersionAsInput(t *testing.T) {
 
 	// clone the repo
 	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", dest})
 	err = getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
