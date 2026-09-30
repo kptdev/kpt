@@ -155,7 +155,16 @@ HUGO_EXTRA_FLAGS=()
 echo "==> Building latest (main) docs..."
 (cd "${DOCS_DIR}" && { hugo mod clean 2>/dev/null || true; })
 
-versions_toml > "${DOCS_DIR}/config-versions-overlay.toml"
+LATEST_TAG="$(resolve_latest_tag 'v[0-9]*')"
+
+{
+  echo "[params]"
+  if [[ -n "${LATEST_TAG}" ]]; then
+    echo "kpt_version = \"${LATEST_TAG}\""
+  fi
+  echo ""
+  versions_toml
+} > "${DOCS_DIR}/config-versions-overlay.toml"
 (
   cd "${DOCS_DIR}"
   hugo --gc --minify \
@@ -243,6 +252,9 @@ while IFS=$'\t' read -r VERSION PATTERN URL_PATH LATEST_GA; do
     echo "[params]"
     echo "archived_version = ${ARCHIVED_VERSION}"
     echo "version = \"${VERSION}\""
+    if [[ -n "${TAG}" ]]; then
+      echo "kpt_version = \"${TAG}\""
+    fi
     echo "url_latest_version = \"/\""
     echo "version_menu = \"Releases\""
     echo ""
