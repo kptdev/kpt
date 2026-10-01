@@ -163,7 +163,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 	}
 
 	mergedKos, err := merge3.Merge(
-		originalKos, updatedKos, destinationKos, crdSchemas, options.PreserveExplicitNull,
+		originalKos, updatedKos, destinationKos, crdSchemas, options.PreserveNulls,
 	)
 	if err != nil {
 		return err

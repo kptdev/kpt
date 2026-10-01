@@ -346,7 +346,7 @@ func TestKeepTaggedNull(t *testing.T) {
 }
 
 // TestPreserveExplicitNull verifies a field explicitly nulled in dest is
-// kept null (not dropped) when Options.PreserveExplicitNull is set.
+// kept null (not dropped) when Options.PreserveNulls is set.
 func TestPreserveExplicitNull(t *testing.T) {
 	updater := update.ResourceMergeUpdater{}
 
@@ -370,10 +370,10 @@ func TestPreserveExplicitNull(t *testing.T) {
 	}
 
 	options := updatetypes.Options{
-		OriginPath:           filepath.Join(testdata, "origin"),
-		UpdatedPath:          filepath.Join(testdata, "updated"),
-		LocalPath:            newDest,
-		PreserveExplicitNull: true,
+		OriginPath:    filepath.Join(testdata, "origin"),
+		UpdatedPath:   filepath.Join(testdata, "updated"),
+		LocalPath:     newDest,
+		PreserveNulls: true,
 	}
 	err = updater.Update(options)
 	require.NoError(t, err)

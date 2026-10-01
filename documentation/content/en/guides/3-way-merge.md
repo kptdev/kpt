@@ -59,11 +59,12 @@ Uses structural comparison of Kubernetes resources to intelligently merge change
 - Matches resources by their identity (group, kind, name, namespace)
 - Intelligently handles lists using merge keys (e.g., containers matched by name)
 - Preserves your customizations while applying upstream improvements
-- By default, an explicit local `null` is treated as a field deletion. Pass
-  `--preserve-explicit-null` (persisted as `upstream.preserveExplicitNull` in
-  the Kptfile) to keep those nulls instead.
+- (Experimental) By default, a null (`null`, `~`, or an empty value) in local
+  or upstream is treated as a field deletion. Pass `--preserve-nulls`
+  (persisted as `upstream.preserveNulls` in the Kptfile) to keep those nulls
+  instead.
 
-**When to use**: 
+**When to use**:
 - **Default choice** - recommended for most situations
 - When you have significant local customizations
 - When you want to receive upstream improvements

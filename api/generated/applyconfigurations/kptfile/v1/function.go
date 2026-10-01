@@ -69,11 +69,13 @@ type FunctionApplyConfiguration struct {
 	// If omitted or evaluates to true, the function executes normally.
 	// If evaluates to false, the function is skipped.
 	//
-	// Example: Check if a specific ConfigMap exists among the selected resources:
-	// when: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"
+	// Examples:
 	//
-	// Example: Check resource count among the selected resources:
-	// when: "resources.filter(r, r.kind == 'Deployment').size() > 0"
+	// - Check if a specific ConfigMap exists among the selected resources:
+	// when: `"resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"`
+	//
+	// - Check resource count among the selected resources:
+	// `when: "resources.filter(r, r.kind == 'Deployment').size() > 0"`
 	CelCondition *string `json:"when,omitempty"`
 }
 
