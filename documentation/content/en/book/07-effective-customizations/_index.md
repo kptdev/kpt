@@ -89,6 +89,10 @@ pipeline:
    that the package author has provided. [kpt pkg update]({{% relref "/book/03-packages#updating-a-package" %}}) merges the local edits
    made by consumer with the changes in the upstream package made by publisher. In the example above, `storageClass` can be set
    directly by the user.
+   
+   **Note:** When using `kpt pkg update` with the default `resource-merge` strategy, if both you and upstream modify the same field,
+   the upstream value is chosen automatically. The update succeeds without conflict markers. If you need to preserve a local value
+   for a field that upstream is also changing, re-apply your value after the update.
 1. Attributes like resource names which are often updated by consumers to add prefixes or suffixes
    (e.g. *-dev, *-stage, *-prod, na1-*, eu1-*) are best handled by the
    [ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.2/) function that will handle dependency
