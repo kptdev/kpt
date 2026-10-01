@@ -130,10 +130,9 @@
           "x-go-name": "Tag"
         },
         "when": {
-          "description": "CelCondition is an optional CEL expression (exposed as 'when' in YAML) that determines whether this\nfunction should be executed. The expression is evaluated against the list\nof KRM resources passed to this function step (after `Selectors` and\n`Exclude` have been applied) and should return a boolean value.\nIf omitted or evaluates to true, the function executes normally.\nIf evaluates to false, the function is skipped.",
+          "description": "CelCondition is an optional CEL expression (exposed as 'when' in YAML) that determines whether this\nfunction should be executed. The expression is evaluated against the list\nof KRM resources passed to this function step (after `Selectors` and\n`Exclude` have been applied) and should return a boolean value.\nIf omitted or evaluates to true, the function executes normally.\nIf evaluates to false, the function is skipped.\n\nExamples:\n\nCheck if a specific ConfigMap exists among the selected resources:\nwhen: `\"resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')\"`\n\nCheck resource count among the selected resources:\n`when: \"resources.filter(r, r.kind == 'Deployment').size() > 0\"`",
           "type": "string",
-          "x-go-name": "CelCondition",
-          "example": "Check if a specific ConfigMap exists among the selected resources:"
+          "x-go-name": "CelCondition"
         }
       },
       "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"

@@ -36,29 +36,25 @@ func twoFieldDocNoKey1() string {
 	return "key2: control\n"
 }
 
-func deploymentWithImage(image string) string {
-	return fmt.Sprintf(`apiVersion: apps/v1
+const (
+	deploymentBase = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: test
 spec:
   template:
-    spec:
-      containers:
-      - name: web
-        image: %s
+    spec:`
+	deploymentWithoutContainers          = deploymentBase + " {}\n"
+	deploymentWithImplicitNullContainers = deploymentBase + "\n      containers:"
+	deploymentWithNullContainers         = deploymentWithImplicitNullContainers + " null"
+)
+
+func deploymentWithImage(image string) string {
+	return deploymentWithImplicitNullContainers + fmt.Sprintf(`
+      - image: %s
+        name: web
 `, image)
 }
-
-const deploymentWithNullContainers = `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test
-spec:
-  template:
-    spec:
-      containers: null
-`
 
 func mergeWithVisitor(t *testing.T, visitor walk.Visitor, origin, updated, dest string) string {
 	t.Helper()
@@ -182,28 +178,27 @@ func TestVisitorDiffersFromKyaml(t *testing.T) {
 		// Direct walk, no dropOriginUpdatedAtDestNulls, so both visitors delete the list.
 		// Merge(preserve=true) keeps it; see TestPreserveExplicitNullAssociativeList.
 		"dest null removes an associative list origin had": {
-			origin:  deploymentWithImage("nginx"),
-			updated: deploymentWithImage("nginx:updated"),
-			dest:    deploymentWithNullContainers,
-			wantPlain: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test
-spec:
-  template:
-    spec: {}
-`,
-			wantKyaml: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test
-spec:
-  template:
-    spec:
-      containers:
-      - image: nginx:updated
-        name: web
-`,
+			origin:    deploymentWithImage("nginx"),
+			updated:   deploymentWithImage("nginx:updated"),
+			dest:      deploymentWithNullContainers,
+			wantPlain: deploymentWithoutContainers,
+			wantKyaml: deploymentWithImage("nginx:updated"),
+		},
+		// kyaml skips the delete when origin omits the field. IsCleared still
+		// treats an upstream tagged null as a deletion.
+		"updated null removes an associative list origin omitted": {
+			origin:    deploymentWithoutContainers,
+			updated:   deploymentWithNullContainers,
+			dest:      deploymentWithImage("nginx"),
+			wantPlain: deploymentWithoutContainers,
+			wantKyaml: deploymentWithImage("nginx"),
+		},
+		"updated implicit null removes an associative list origin omitted": {
+			origin:    deploymentWithoutContainers,
+			updated:   deploymentWithImplicitNullContainers,
+			dest:      deploymentWithImage("nginx"),
+			wantPlain: deploymentWithoutContainers,
+			wantKyaml: deploymentWithImage("nginx"),
 		},
 	}
 

@@ -129,7 +129,14 @@ definitions:
                     `Exclude` have been applied) and should return a boolean value.
                     If omitted or evaluates to true, the function executes normally.
                     If evaluates to false, the function is skipped.
-                example: 'Check if a specific ConfigMap exists among the selected resources:'
+
+                    Examples:
+
+                    Check if a specific ConfigMap exists among the selected resources:
+                    when: `"resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"`
+
+                    Check resource count among the selected resources:
+                    `when: "resources.filter(r, r.kind == 'Deployment').size() > 0"`
                 type: string
                 x-go-name: CelCondition
         title: Function specifies a KRM function.

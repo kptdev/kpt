@@ -33,7 +33,7 @@ mkdir -p ${BUILD_DIR}
 cd "${REPO_ROOT}"
 
 # shellcheck disable=SC2076
-if [[ $(command -v swagger) && $(swagger version) =~ "${SWAGGER_VERSION}" ]]; then
+if command -v swagger >/dev/null && swagger version | grep -qxF "version: ${SWAGGER_VERSION}"; then
   SWAGGER_CMD=swagger
 else
   SWAGGER_CMD="go run github.com/go-swagger/go-swagger/cmd/swagger@${SWAGGER_VERSION}"

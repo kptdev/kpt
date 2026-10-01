@@ -54,7 +54,7 @@ fmt: fmt-api
 	go fmt ./...
 
 schema:
-	GOBIN=$(GOBIN) scripts/generate-schema.sh
+	SWAGGER_VERSION=$(SWAGGER_VERSION) GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate: install-mdtogo generate-api
 	rm -rf internal/docs/generated

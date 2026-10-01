@@ -52,7 +52,7 @@ func (m *Visitor) VisitMap(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml
 }
 
 func (m *Visitor) visitAList(nodes walk.Sources, _ *openapi.ResourceSchema) (*yaml.RNode, error) {
-	if IsCleared(nodes.Origin(), nodes.Dest()) {
+	if IsCleared(nodes.Origin(), nodes.Updated()) || IsCleared(nodes.Origin(), nodes.Dest()) {
 		return walk.ClearNode, nil
 	}
 	if yaml.IsMissingOrNull(nodes.Updated()) && !yaml.IsMissingOrNull(nodes.Origin()) {
