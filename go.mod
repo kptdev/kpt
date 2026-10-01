@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt
 
-go 1.26.5
+go 1.26.8
 
 // replace github.com/kptdev/kpt/api => ./api
 
