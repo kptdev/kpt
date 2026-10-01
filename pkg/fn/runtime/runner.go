@@ -547,6 +547,9 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, separator s
 		for _, item := range fnResult.Results {
 			lines = append(lines, item.String())
 		}
+		if separator == "" {
+			separator = "\n"
+		}
 		ri := &apiutils.SingleLineFormatter{
 			Title:      "[Results]",
 			Lines:      lines,
