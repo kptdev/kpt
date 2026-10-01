@@ -86,7 +86,7 @@ FORK_OWNER=kptdev ./upgrade.sh all --push --force # ← allowed
 ### Target Versions
 
 ```bash
-TARGET_GO_VERSION="1.26.5"
+TARGET_GO_VERSION="1.26.8"
 TARGET_GOLANGCI_LINT_VERSION="2.12.2"
 ```
 
