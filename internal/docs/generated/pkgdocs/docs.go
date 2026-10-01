@@ -159,6 +159,8 @@ Flags:
   
       * resource-merge: Perform a structural comparison of the original /
         updated resources, and merge the changes into the local package.
+      * copy-merge: Replace local files with the upstream version at the file
+        level, keeping files that were added purely locally.
       * fast-forward: Fail without updating if the local package was modified
         since it was fetched.
       * force-delete-replace: Wipe all the local changes to the package and replace
@@ -290,11 +292,13 @@ Flags:
   
       * resource-merge: Perform a structural comparison of the original /
         updated resources, and merge the changes into the local package.
+      * copy-merge: Replace local files with the upstream version at the file
+        level, keeping files that were added purely locally.
       * fast-forward: Fail without updating if the local package was modified
         since it was fetched.
       * force-delete-replace: Wipe all the local changes to the package and replace
         it with the remote version.
-
+  
   --preserve-explicit-null:
     When set, fields explicitly nulled in the local package (for example
     ` + "`" + `field:` + "`" + `, ` + "`" + `null` + "`" + `, or ` + "`" + `~` + "`" + `) are kept as null during resource-merge instead of
