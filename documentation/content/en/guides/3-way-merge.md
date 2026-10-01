@@ -87,8 +87,9 @@ merging field-by-field.
 **How it works**:
 - For most files present in both local and upstream, the upstream version wins
   (in-file local edits to upstream-owned files are lost)
-- The root Kptfile is an exception: it is 3-way merged (not overwritten), so
-  local Kptfile customizations are preserved
+- The root Kptfile is an exception: it is 3-way merged rather than overwritten,
+  preserving local-only, non-conflicting customizations; conflicting values
+  follow the Kptfile merge rules and upstream metadata is refreshed
 - Files that were added purely locally (never in upstream) are kept
 - A file that originated upstream but was edited locally is still upstream-owned:
   if upstream deletes it, it is removed and the local edits are lost
@@ -263,10 +264,12 @@ image: nginx:1.20
 
 ### How resource-merge resolves conflicts
 
-Unlike `git merge`, resource-merge does **not** stop on a conflict and does
-**not** write conflict markers into your YAML. Instead it auto-resolves every
-field-level conflict by **always choosing the new upstream value**, and the
-update **succeeds**.
+Unlike `git merge`, resource-merge does **not** stop or write conflict markers
+when upstream and local assign different non-null values to the same scalar or
+non-associative list. It chooses the new upstream value and the update
+**succeeds**. Local field removals and nulls follow separate deletion semantics
+and may remain deleted even when upstream changes the field (unless
+`--preserve-nulls` is set).
 
 In the example above, the result is `image: nginx:2.0` (the upstream value); your
 local `nginx:1.20` is overwritten. This is deterministic and silent, so the
