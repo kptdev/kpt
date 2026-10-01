@@ -213,10 +213,13 @@ For scalars and non-associative lists:
 * If the field is unchanged between upstream and local, leave the local value unchanged.
 * If the field has been changed in both upstream and local, update local with the value from upstream.
 
-When a field is changed in both upstream and local (a conflict), resource-merge
-does not stop or emit conflict markers. It auto-resolves by always choosing the
-new upstream value, and the update succeeds. If you need to keep the local value
-for such a field, re-apply it after the update.
+When a scalar or non-associative list is changed to different non-null values in
+both upstream and local, resource-merge does not stop or emit conflict markers.
+It chooses the new upstream value and the update succeeds. Local field removals
+and nulls follow the deletion behavior described above and may remain deleted
+rather than taking an upstream change (unless `--preserve-explicit-null` is set).
+If you need to keep a local non-null value for such a field, re-apply it after
+the update.
 
 For mappings:
 * If the field is present in either upstream or local and the value is `null`, remove the field from local.
@@ -240,10 +243,12 @@ upstream-owned files are lost.
 There are two cases where a local file is NOT overwritten:
 
 * The **root Kptfile** is an exception: copy-merge 3-way merges it (via the same
-  Kptfile merge used by resource-merge) instead of overwriting it, so local
-  customizations in the root Kptfile are preserved.
-* Files that were **added purely locally** and never existed in the upstream
-  package the local package was cloned from are kept.
+  Kptfile merge used by resource-merge) instead of overwriting it. Local-only,
+  non-conflicting customizations are preserved, while conflicting values follow
+  the Kptfile merge rules and upstream metadata is refreshed.
+* Files that are absent from both the original and updated upstream packages are
+  kept. If the updated upstream introduces the same path as a locally added
+  file, the upstream version replaces it.
 
 Deletions when upstream removes a file follow the same ownership rule:
 
