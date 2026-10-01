@@ -48,7 +48,7 @@ By comparing all three, kpt can determine:
 
 ## Merge Strategies
 
-kpt supports three merge strategies via the `--strategy` flag. Choose the one that fits your workflow:
+kpt supports four merge strategies via the `--strategy` flag. Choose the one that fits your workflow:
 
 ### 1. resource-merge (Default)
 
@@ -79,7 +79,32 @@ Uses structural comparison of Kubernetes resources to intelligently merge change
 
 For detailed technical information on how resource-merge works, see the [update command reference]({{% relref "/reference/cli/pkg/update#resource-merge-strategy" %}}).
 
-### 2. fast-forward
+### 2. copy-merge
+
+Replaces local files with the upstream version at the file level, rather than
+merging field-by-field.
+
+**How it works**:
+- For most files present in both local and upstream, the upstream version wins
+  (in-file local edits to upstream-owned files are lost)
+- The root Kptfile is an exception: it is 3-way merged (not overwritten), so
+  local Kptfile customizations are preserved
+- Files that were added purely locally (never in upstream) are kept
+- A file that originated upstream but was edited locally is still upstream-owned:
+  if upstream deletes it, it is removed and the local edits are lost
+
+**When to use**:
+- When you trust the upstream content over local in-file edits
+- When kpt cannot structurally parse the files (e.g. non-KRM files)
+- When you still want to keep files you added alongside the package
+
+**Example**:
+```bash
+$ kpt pkg update my-pkg --strategy copy-merge
+# Shared files replaced by upstream; purely-local files preserved
+```
+
+### 3. fast-forward
 
 Ensures your package hasn't changed since you fetched it.
 
@@ -91,7 +116,7 @@ Ensures your package hasn't changed since you fetched it.
 **When to use**:
 - When you want guaranteed clean updates
 - For packages you don't customize
-- When you prefer explicit conflict resolution
+- When you want the update to stop rather than silently overwrite local edits
 - For "pin to upstream" workflows
 
 **Example**:
@@ -101,7 +126,7 @@ $ kpt pkg update my-pkg --strategy fast-forward
 # Fails if any local changes exist
 ```
 
-### 3. force-delete-replace
+### 4. force-delete-replace
 
 Replaces your entire local package with upstream, discarding all local changes.
 
@@ -233,47 +258,48 @@ image: nginx:2.0
 # You also changed to
 image: nginx:1.20
 
-# Conflict: Which version wins?
+# Conflict: which value wins?
 ```
 
-### When Conflicts Happen
+### How resource-merge resolves conflicts
 
-- Both you and upstream changed the same field differently
-- The merge algorithm can't determine the intent
-- Update fails with a clear error message
+Unlike `git merge`, resource-merge does **not** stop on a conflict and does
+**not** write conflict markers into your YAML. Instead it auto-resolves every
+field-level conflict by **always choosing the new upstream value**, and the
+update **succeeds**.
 
-### Resolving Conflicts
+In the example above, the result is `image: nginx:2.0` (the upstream value); your
+local `nginx:1.20` is overwritten. This is deterministic and silent, so the
+important thing to understand is that **a local edit can be replaced by an
+upstream change to the same field without any warning**.
 
-When conflicts are detected:
+### Keeping a local value instead
 
-1. **Update fails** - clearly indicating which resources have conflicts
-2. **No merge markers** - YAML is not modified (unlike git text merge)
-3. **You must resolve** by choosing one of these approaches:
+Because the merge never fails, there is nothing to "resolve" interactively. If
+you need to retain a local value that upstream also changed, choose one of these:
 
-**Option A**: Accept upstream value
-- Edit your local package manually
-- Use the upstream value
-- Run update again
+**Option A — re-apply after update**
+- Run the update (upstream wins the conflicting field)
+- Re-apply your local value and commit
 
-**Option B**: Keep your value
-- Don't accept the upstream change
-- Update manually later when convenient
+**Option B — avoid the clash**
+- Pin to an upstream ref that doesn't change that field, or
+- Move your customization to a field upstream doesn't touch
 
-**Option C**: Manual merge
-- Carefully combine both changes if possible
-- Commit your resolution
-- Run update again
+**Option C — take everything from upstream**
+- Use `--strategy force-delete-replace` to reset to upstream, then re-apply
+  customizations deliberately
 
-**Option D**: Start fresh
-- Use `--strategy force-delete-replace` to accept all upstream changes
-- Re-apply your customizations afterward
+> Note: the other strategies behave differently on the same clash — `copy-merge`
+> and `force-delete-replace` also take the upstream value (at the file level),
+> while `fast-forward` refuses to run at all if the local package was modified.
 
 ### Tips for Avoiding Conflicts
 
 - Keep customizations minimal and well-documented
-- Update frequently to catch conflicts early
+- Update frequently to catch upstream changes to fields you also edit
 - Communicate with upstream about your customizations
-- Use Kptfile `upstream` field to control update targets
+- Use the Kptfile `upstream` field to control update targets
 
 ## Common Use Cases
 
@@ -339,14 +365,14 @@ $ git commit -am "Updated packages to latest"
    - Run your validation checks
    - Ensure customizations still work
 
-5. **Handle conflicts early**
-   - Fix conflicts immediately
-   - Document resolution decisions
-   - Consider if you still need the customization
+5. **Review fields that upstream may also change**
+   - Remember resource-merge silently takes the upstream value on a clash
+   - Re-apply any local value that got overwritten, and document why you need it
+   - Consider whether you still need the customization
 
 6. **Update frequently**
    - Smaller, more frequent updates
-   - Fewer complex conflicts
+   - Fewer surprising overwrites of locally-edited fields
    - Easier to track changes
    - Better security posture
 

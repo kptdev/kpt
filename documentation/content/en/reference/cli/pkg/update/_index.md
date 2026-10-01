@@ -55,6 +55,8 @@ VERSION:
 
     * resource-merge: Perform a structural comparison of the original /
       updated resources, and merge the changes into the local package.
+    * copy-merge: Replace local files with the upstream version at the file
+      level, keeping files that were added purely locally.
     * fast-forward: Fail without updating if the local package was modified
       since it was fetched.
     * force-delete-replace: Wipe all the local changes to the package and replace
@@ -212,6 +214,11 @@ For scalars and non-associative lists:
 * If the field is unchanged between upstream and local, leave the local value unchanged.
 * If the field has been changed in both upstream and local, update local with the value from upstream.
 
+When a field is changed in both upstream and local (a conflict), resource-merge
+does not stop or emit conflict markers. It auto-resolves by always choosing the
+new upstream value, and the update succeeds. If you need to keep the local value
+for such a field, re-apply it after the update.
+
 For mappings:
 * Unless `--preserve-nulls` is set, a field present in either upstream or local whose value is `null`, `~`, or empty is removed from local.
 * If the field is present only in local, leave the local value unchanged.
@@ -223,6 +230,34 @@ For associative lists:
 * If the field is present only in local, leave the local value unchanged.
 * If the field is not present in local, add the delta between origin and upstream as the value in local.
 * If the field is present in both upstream and local, recursively merge the values between local, upstream and origin.
+
+#### Copy-merge strategy
+
+The copy-merge strategy is a file-level replacement rather than a structural,
+field-level merge. For most files that exist in both the local and upstream
+packages, the upstream version replaces the local one, so in-file local edits to
+upstream-owned files are lost.
+
+There are two cases where a local file is NOT overwritten:
+
+* The **root Kptfile** is an exception: copy-merge 3-way merges it (via the same
+  Kptfile merge used by resource-merge) instead of overwriting it, so local
+  customizations in the root Kptfile are preserved.
+* Files that were **added purely locally** and never existed in the upstream
+  package the local package was cloned from are kept.
+
+Deletions when upstream removes a file follow the same ownership rule:
+
+* A file that originated upstream and was later modified locally is still treated
+  as upstream-owned. If upstream deletes it, it is deleted from local and the
+  local modifications are lost.
+* A file that was added only locally is kept, even if upstream deletes the
+  directory now containing it (the containing directory is preserved too; only
+  the upstream-owned files inside it are removed).
+
+Use copy-merge when you trust the upstream content over local edits, or when kpt
+cannot structurally parse the files (for example, non-KRM files). If you need to
+preserve local modifications to upstream-owned files, use resource-merge instead.
 
 #### Fast-forward strategy
 
