@@ -210,6 +210,10 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	// Validate or autogenerate the inventory ID if not provided through the flag.
 	if c.InventoryID != "" {
 		c.InventoryID = strings.TrimSpace(c.InventoryID)
+		if c.InventoryID == "" {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("inventory-id must not be empty"))
+		}
 		if errs := validation.IsValidLabelValue(c.InventoryID); len(errs) > 0 {
 			return errors.E(op, c.Pkg.UniquePath,
 				fmt.Errorf("inventory-id %q is not a valid Kubernetes label value: %s",

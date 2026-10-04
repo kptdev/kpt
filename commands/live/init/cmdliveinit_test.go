@@ -182,6 +182,14 @@ func TestCmd_Run(t *testing.T) {
 			namespace:        "testns",
 			expectedErrorMsg: "inventory-id \"-invalid-label-\" is not a valid Kubernetes label value",
 		},
+		"Whitespace inventory-id is an error": {
+			kptfile:          kptFile,
+			name:             "my-pkg",
+			inventoryID:      "   ",
+			rgfilename:       "resourcegroup.yaml",
+			namespace:        "testns",
+			expectedErrorMsg: "inventory-id must not be empty",
+		},
 		"Kptfile with inventory already set is error": {
 			kptfile:          kptFileWithInventory,
 			name:             inventoryName,
