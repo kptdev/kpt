@@ -480,15 +480,14 @@ function assertCMInventory {
 }
 
 # assertRGInventory checks that a ResourceGroup inventory object exists
-# in the passed namespace. Assumes the inventory object name begins
-# with "inventory-".
+# in the passed namespace.
 function assertRGInventory {
     local ns=$1
     
     echo "kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}'"
     kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}' > $OUTPUT_DIR/invname
 
-    test 1 == $(grep "inventory-" $OUTPUT_DIR/invname | wc -l);
+    test 1 == $(grep -v '^$' $OUTPUT_DIR/invname | wc -l);
     if [ $? == 0 ]; then
 	echo -n '.'
     else
@@ -745,13 +744,13 @@ assertContains "initializing \"resourcegroup.yaml\" data (namespace: rg-test-nam
 diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "inventory:"
 assertNotContains "namespace: rg-test-namespace"
-assertNotContains "name: inventory-"
+assertNotContains "name: rg-test-case-1a"
 assertNotContains "inventoryID:"
 # ResourceGroup file should contain inventory information
 cat e2e/live/testdata/rg-test-case-1a/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
 assertContains "kind: ResourceGroup"
 assertContains "namespace: rg-test-namespace"
-assertContains "name: inventory-"
+assertContains "name: rg-test-case-1a"
 printResult
 
 echo "Testing init Kptfile/ResourceGroup already initialized"

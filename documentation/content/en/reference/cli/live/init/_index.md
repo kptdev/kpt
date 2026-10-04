@@ -39,7 +39,7 @@ PKG_PATH:
 --inventory-id:
   Inventory identifier for the package. This is used to detect overlap between
   packages that might use the same name and namespace for the inventory object.
-  Defaults to an auto-generated value.
+  Defaults to a deterministic hash of namespace and name.
 
 --name:
   The name for the ResourceGroup resource that contains the inventory
