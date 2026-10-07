@@ -560,14 +560,14 @@ func removeFnKey(kfs ...*kptfilev1.KptFile) {
 }
 
 func updateUpstreamAndUpstreamLock(localKf, updatedKf *kptfilev1.KptFile) {
-	preserveExplicitNull := localKf != nil && localKf.Upstream != nil && localKf.Upstream.PreserveExplicitNull
+	preserveNulls := localKf != nil && localKf.Upstream != nil && localKf.Upstream.PreserveNulls
 
 	if updatedKf.Upstream != nil {
 		localKf.Upstream = updatedKf.Upstream
 	}
 
 	if localKf.Upstream != nil {
-		localKf.Upstream.PreserveExplicitNull = preserveExplicitNull
+		localKf.Upstream.PreserveNulls = preserveNulls
 	}
 
 	if updatedKf.UpstreamLock != nil {

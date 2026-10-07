@@ -56,9 +56,10 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	_ = c.RegisterFlagCompletionFunc("strategy", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
-	c.Flags().BoolVar(&r.preserveExplicitNull, "preserve-explicit-null", false,
-		"keep fields explicitly set to null in the local package during resource-merge "+
-			"instead of deleting them. This will change the default for the package.")
+	c.Flags().BoolVar(&r.preserveNulls, "preserve-nulls", false,
+		"keep null fields (null, ~, or an empty value) in the local package or upstream "+
+			"during resource-merge instead of deleting them. This will change the default for the package.\n\n"+
+			"EXPERIMENTAL: Behavior and naming are subject to change.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -73,8 +74,8 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 type Runner struct {
 	ctx context.Context
 
-	strategy             string
-	preserveExplicitNull bool
+	strategy      string
+	preserveNulls bool
 
 	Update  update.Command
 	Command *cobra.Command
@@ -90,8 +91,8 @@ func (r *Runner) preRunE(cmd *cobra.Command, args []string) error {
 	} else {
 		r.Update.Strategy = kptfilev1.UpdateStrategyType(r.strategy)
 	}
-	if cmd.Flags().Changed("preserve-explicit-null") {
-		r.Update.PreserveExplicitNull = &r.preserveExplicitNull
+	if cmd.Flags().Changed("preserve-nulls") {
+		r.Update.PreserveNulls = &r.preserveNulls
 	}
 
 	parts := strings.Split(args[0], "@")

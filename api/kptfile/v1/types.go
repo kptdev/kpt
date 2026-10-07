@@ -163,10 +163,12 @@ type Upstream struct {
 	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty" json:"updateStrategy,omitempty"`
 
-	// PreserveExplicitNull, when true, keeps a field explicitly nulled in the
-	// local package during resource-merge instead of deleting it. Only applies
-	// to the resource-merge update strategy.
-	PreserveExplicitNull bool `yaml:"preserveExplicitNull,omitempty" json:"preserveExplicitNull,omitempty"`
+	// PreserveNulls, when true, keeps a null field (`null`, `~`, or an empty
+	// value) in the local package or upstream during resource-merge instead of
+	// deleting it. Only applies to the resource-merge update strategy.
+	//
+	// Experimental: Behavior and naming are subject to change.
+	PreserveNulls bool `yaml:"preserveNulls,omitempty" json:"preserveNulls,omitempty"`
 }
 
 // Git is the user-specified locator for a package on Git.
@@ -381,11 +383,13 @@ type Function struct {
 	// If omitted or evaluates to true, the function executes normally.
 	// If evaluates to false, the function is skipped.
 	//
-	// Example: Check if a specific ConfigMap exists among the selected resources:
-	//   when: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"
+	// Examples:
 	//
-	// Example: Check resource count among the selected resources:
-	//   when: "resources.filter(r, r.kind == 'Deployment').size() > 0"
+	// - Check if a specific ConfigMap exists among the selected resources:
+	//     when: `"resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"`
+	//
+	// - Check resource count among the selected resources:
+	//     `when: "resources.filter(r, r.kind == 'Deployment').size() > 0"`
 	CelCondition string `yaml:"when,omitempty" json:"when,omitempty"`
 }
 

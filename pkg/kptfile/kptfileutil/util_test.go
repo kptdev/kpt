@@ -223,7 +223,7 @@ upstreamLock:
 `,
 		},
 
-		"local preserveExplicitNull is kept when updateUpstream is true": {
+		"local preserveNulls is kept when updateUpstream is true": {
 			origin: `
 apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -269,7 +269,7 @@ upstream:
     directory: /pkg
     ref: v1
   updateStrategy: resource-merge
-  preserveExplicitNull: true
+  preserveNulls: true
 `,
 			updateUpstream: true,
 			expected: `
@@ -284,7 +284,7 @@ upstream:
     directory: /pkg
     ref: v2
   updateStrategy: fast-forward
-  preserveExplicitNull: true
+  preserveNulls: true
 upstreamLock:
   type: git
   git:
