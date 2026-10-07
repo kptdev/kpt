@@ -144,3 +144,74 @@ func TestIsSupportedDockerVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestDockerCLIOutputFilter(t *testing.T) {
+	testcases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "should filter docker CLI output successfully",
+			input: `Unable to find image 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest' locally
+v0.3: Pulling from ghcr.io/kptdev/krm-functions-catalog/starlark
+4e9f2cdf4387: Already exists
+aafbf7df3ddf: Pulling fs layer
+aafbf7df3ddf: Verifying Checksum
+aafbf7df3ddf: Download complete
+aafbf7df3ddf: Pull complete
+6b759ab96cb2: Waiting
+Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a
+Status: Downloaded newer image for ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+`,
+			expected: "",
+		},
+		{
+			name: "should filter docker messages and shouldn't truncate trailing lines",
+			input: `Unable to find image 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest' locally
+v0.3: Pulling from ghcr.io/kptdev/krm-functions-catalog/starlark
+4e9f2cdf4387: Already exists
+aafbf7df3ddf: Pulling fs layer
+aafbf7df3ddf: Verifying Checksum
+aafbf7df3ddf: Download complete
+aafbf7df3ddf: Pull complete
+6b759ab96cb2: Waiting
+Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a
+Status: Downloaded newer image for ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+line before last line
+lastline
+
+`,
+			expected: `line before last line
+lastline
+`,
+		},
+		{
+			name: "should filter interleaved docker messages",
+			input: `firstline
+Unable to find image 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest' locally
+v0.3: Pulling from ghcr.io/kptdev/krm-functions-catalog/starlark
+4e9f2cdf4387: Already exists
+aafbf7df3ddf: Pulling fs layer
+aafbf7df3ddf: Verifying Checksum
+line in the middle
+aafbf7df3ddf: Download complete
+aafbf7df3ddf: Pull complete
+6b759ab96cb2: Waiting
+Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a
+Status: Downloaded newer image for ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+lastline
+`,
+			expected: `firstline
+line in the middle
+lastline`,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := filterDockerCLIOutput(bytes.NewBufferString(tc.input))
+			assert.Equal(t, tc.expected, s)
+		})
+	}
+}

@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runtime
+package v1
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	apiutils "github.com/kptdev/kpt/api/utils"
 )
 
 const (
@@ -47,7 +47,7 @@ type ExecError struct {
 func (fe *ExecError) String() string {
 	var b strings.Builder
 
-	errLine := &runneroptions.SingleLineFormatter{
+	errLine := &apiutils.SingleLineFormatter{
 		Title:     "[Stderr]",
 		Lines:     strings.Split(fe.Stderr, "\n"),
 		UseQuote:  false,
