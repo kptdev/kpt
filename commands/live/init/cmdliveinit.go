@@ -21,9 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"time"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
@@ -35,15 +33,13 @@ import (
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
-
-const defaultInventoryName = "inventory"
 
 // InvExistsError defines new error when the inventory
 // values have already been set on the Kptfile.
@@ -89,10 +85,10 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	}
 	r.Command = cmd
 
-	cmd.Flags().StringVar(&r.Name, "name", "", "Inventory object name")
+	cmd.Flags().StringVar(&r.Name, "name", "", "Inventory object name (defaults to package name)")
 	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile or ResourceGroup file")
 	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
-	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package")
+	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package (defaults to a deterministic hash of namespace and name)")
 	cmd.Flags().StringVar(&r.RGFileName, "rg-file", rgfilev1alpha1.RGFileName, "Name of the file holding the ResourceGroup resource.")
 	return r
 }
@@ -192,15 +188,39 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 		pr.Printf("initializing %q data (namespace: %s)...", c.RGFileName, namespace)
 	}
 
-	// Autogenerate the name if it is not provided through the flag.
-	if c.Name == "" {
-		randomSuffix := common.RandomStr()
-		c.Name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
+	// Default the name to the package directory name if not provided through the flag,
+	// and validate that it is a valid Kubernetes resource name.
+	if c.Name != "" {
+		c.Name = strings.TrimSpace(c.Name)
+		if errs := validation.IsDNS1123Subdomain(c.Name); len(errs) > 0 {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("inventory name %q is not a valid Kubernetes resource name: %s",
+					c.Name, strings.Join(errs, "; ")))
+		}
+	} else {
+		dirName := filepath.Base(c.Pkg.UniquePath.String())
+		if errs := validation.IsDNS1123Subdomain(dirName); len(errs) > 0 {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("package directory name %q is not a valid Kubernetes resource name (%s); please provide a valid name using the --name flag",
+					dirName, strings.Join(errs, "; ")))
+		}
+		c.Name = dirName
 	}
 
-	// Autogenerate the inventory ID if not provided through the flag.
-	if c.InventoryID == "" {
-		c.InventoryID, err = generateID(namespace, c.Name, time.Now())
+	// Validate or autogenerate the inventory ID if not provided through the flag.
+	if c.InventoryID != "" {
+		c.InventoryID = strings.TrimSpace(c.InventoryID)
+		if c.InventoryID == "" {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("inventory-id must not be empty"))
+		}
+		if errs := validation.IsValidLabelValue(c.InventoryID); len(errs) > 0 {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("inventory-id %q is not a valid Kubernetes label value: %s",
+					c.InventoryID, strings.Join(errs, "; ")))
+		}
+	} else {
+		c.InventoryID, err = generateHash(namespace, c.Name)
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, err)
 		}
@@ -301,17 +321,10 @@ func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) 
 	return nil
 }
 
-// generateID returns the string which is a SHA1 hash of the passed namespace
-// and name, with the unix timestamp string concatenated. Returns an error
-// if either the namespace or name are empty.
-func generateID(namespace string, name string, t time.Time) (string, error) {
-	const op errors.Op = "cmdliveinit.generateID"
-	hashStr, err := generateHash(namespace, name)
-	if err != nil {
-		return "", errors.E(op, err)
-	}
-	timeStr := strconv.FormatInt(t.UTC().UnixNano(), 10)
-	return fmt.Sprintf("%s-%s", hashStr, timeStr), nil
+// generateID returns the string which is a deterministic SHA1 hash of the passed namespace
+// and name. Returns an error if either the namespace or name are empty.
+func generateID(namespace string, name string) (string, error) {
+	return generateHash(namespace, name)
 }
 
 // generateHash returns the SHA1 hash of the concatenated "namespace:name" string,
