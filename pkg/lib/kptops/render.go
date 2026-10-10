@@ -21,6 +21,7 @@ import (
 	"os"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
@@ -29,22 +30,28 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+// NewRenderer returns a new legacy fn.Renderer.
+//
+// Deprecated: use NewStatusRenderer instead.
+//
+//nolint:staticcheck // SA1019: fn.Renderer is deprecated, preserved for backward compatibility
 func NewRenderer(runnerOptions runneroptions.RunnerOptions) fn.Renderer {
-	return &renderer{runnerOptions: runnerOptions}
+	return &legacyRenderer{runnerOptions: runnerOptions}
 }
 
-type renderer struct {
+// NewStatusRenderer returns a new fn.StatusRenderer.
+func NewStatusRenderer(runnerOptions runneroptions.RunnerOptions) fn.StatusRenderer {
+	return &statusRenderer{runnerOptions: runnerOptions}
+}
+
+type legacyRenderer struct {
 	runnerOptions runneroptions.RunnerOptions
 }
 
-var _ fn.Renderer = &renderer{}
+//nolint:staticcheck // SA1019: fn.Renderer is deprecated, preserved for backward compatibility
+var _ fn.Renderer = &legacyRenderer{}
 
-func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresultv1.ResultList, error) {
-	// TODO: deal with this
-	// if opts.DisplayName != "" && r.runnerOptions.RootDisplayName == "" { //nolint:staticcheck // SA1019
-	//	 r.runnerOptions.RootDisplayName = opts.DisplayName //nolint:staticcheck // SA1019
-	// }
-
+func (r *legacyRenderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresultv1.ResultList, error) {
 	rr := Renderer{
 		PkgPath:       opts.PkgPath,
 		Runtime:       opts.Runtime,
@@ -52,6 +59,23 @@ func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.R
 		RunnerOptions: r.runnerOptions,
 	}
 	return rr.Execute(printer.WithContext(ctx, &packagePrinter{}))
+}
+
+type statusRenderer struct {
+	runnerOptions runneroptions.RunnerOptions
+}
+
+var _ fn.StatusRenderer = &statusRenderer{}
+
+func (r *statusRenderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*kptfilev1.RenderStatus, error) {
+	rr := Renderer{
+		PkgPath:       opts.PkgPath,
+		Runtime:       opts.Runtime,
+		FileSystem:    pkg,
+		RunnerOptions: r.runnerOptions,
+	}
+	_, err := rr.Execute(printer.WithContext(ctx, &packagePrinter{}))
+	return rr.RenderStatus, err
 }
 
 type packagePrinter struct{}
