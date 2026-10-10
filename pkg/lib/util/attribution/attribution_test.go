@@ -16,6 +16,7 @@ package attribution
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -229,6 +230,106 @@ metadata:
 				strings.TrimSpace(string(actualResources))) {
 				t.FailNow()
 			}
+		})
+	}
+}
+
+// TestProcessWritesOnlyChangedFiles checks that Process does not rewrite the
+// files it has nothing to add to, since rewriting a file changes its formatting.
+func TestProcessWritesOnlyChangedFiles(t *testing.T) {
+	// The formatting of the inputs is deliberately not the one of the kyaml
+	// writer, to detect that a file has been rewritten.
+	var tests = []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "non-cnrm.yaml",
+			input: `# a comment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name:   nginx-deployment
+    namespace: "my-space"
+spec:
+    replicas: 3
+`,
+		},
+		{
+			name: "sub/annotated-cnrm.yaml",
+			input: `apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeSubnetwork
+metadata:
+    name:   annotated-subnetwork
+    annotations:
+        cnrm.cloud.google.com/blueprint: "krm-live"
+`,
+		},
+		{
+			name: "json-patch.yaml",
+			input: `- op:   remove
+  path: /metadata/labels/foo
+`,
+		},
+		{
+			name:  "empty-json-patch.yaml",
+			input: "[]\n",
+		},
+		{
+			name: "sub/cnrm.yaml",
+			input: `apiVersion: v1
+kind: ConfigMap
+metadata:
+    name:   in-the-same-file
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeSubnetwork
+metadata:
+    name:   network-name-subnetwork
+`,
+			expected: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: in-the-same-file
+---
+apiVersion: compute.cnrm.cloud.google.com/v1beta1
+kind: ComputeSubnetwork
+metadata:
+  name: network-name-subnetwork
+  annotations:
+    cnrm.cloud.google.com/blueprint: 'krm-live'
+`,
+		},
+	}
+
+	t.Setenv(DisableKrmAttributionEnvVariable, "")
+
+	baseDir := t.TempDir()
+	for _, test := range tests {
+		path := filepath.Join(baseDir, test.name)
+		if !assert.NoError(t, os.MkdirAll(filepath.Dir(path), 0700)) {
+			t.FailNow()
+		}
+		if !assert.NoError(t, os.WriteFile(path, []byte(test.input), 0600)) {
+			t.FailNow()
+		}
+	}
+
+	a := Attributor{PackagePaths: []string{baseDir}, CmdGroup: "live"}
+	a.Process()
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			expected := test.expected
+			if expected == "" {
+				expected = test.input
+			}
+			actual, err := os.ReadFile(filepath.Join(baseDir, test.name))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			assert.Equal(t, expected, string(actual))
 		})
 	}
 }
