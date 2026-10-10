@@ -76,6 +76,58 @@ metadata:
   namespace: test-namespace
 `
 
+var configMap = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  namespace: test-namespace
+`
+
+var configMapInOtherNamespace = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-other
+  namespace: other-namespace
+`
+
+var configMapWithoutNamespace = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-no-namespace
+`
+
+var localConfig = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm-local
+  annotations:
+    config.kubernetes.io/local-config: "true"
+`
+
+var clusterScoped = `
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace
+`
+
+// jsonPatch is a JSON 6902 patch as used by kustomize. It is a YAML file,
+// but it is a sequence rather than a KRM resource.
+var jsonPatch = `
+- op: move
+  from: /metadata/labels/foo
+  path: /metadata/annotations/foo
+`
+
+// helmValues is a YAML mapping that is not a KRM resource.
+var helmValues = `
+replicaCount: 1
+`
+
 func TestCmd_generateHash(t *testing.T) {
 	testCases := map[string]struct {
 		namespace string
@@ -122,6 +174,7 @@ func TestCmd_generateHash(t *testing.T) {
 func TestCmd_Run(t *testing.T) {
 	testCases := map[string]struct {
 		kptfile           string
+		files             map[string]string
 		resourcegroup     string
 		rgfilename        string
 		name              string
@@ -246,6 +299,22 @@ func TestCmd_Run(t *testing.T) {
 				InventoryID: inventoryID,
 			},
 		},
+		"Namespace is taken from the resources in a package with non-KRM files": {
+			kptfile: kptFile,
+			files: map[string]string{
+				"cm.yaml":    configMap,
+				"patch.yaml": jsonPatch,
+			},
+			rgfilename:  "resourcegroup.yaml",
+			name:        inventoryName,
+			namespace:   "",
+			inventoryID: inventoryID,
+			expectedInventory: kptfilev1.Inventory{
+				Namespace:   inventoryNamespace,
+				Name:        inventoryName,
+				InventoryID: inventoryID,
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -261,6 +330,14 @@ func TestCmd_Run(t *testing.T) {
 				[]byte(tc.kptfile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
+			}
+
+			for name, content := range tc.files {
+				err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, name),
+					[]byte(content), 0600)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
 			}
 
 			// Create ResourceGroup file if testing the STDIN feature.
@@ -489,6 +566,122 @@ func TestCmd_Run_DifferentNameOrNamespace(t *testing.T) {
 	assert.NotEqual(t, idA, idC, "same name in different namespaces should produce different inventory IDs")
 }
 
+// fakeNamespaceLoader is a namespaceLoader that returns fixed values.
+type fakeNamespaceLoader struct {
+	namespace        string
+	enforceNamespace bool
+}
+
+func (l fakeNamespaceLoader) Namespace() (string, bool, error) {
+	return l.namespace, l.enforceNamespace, nil
+}
+
+func TestFindNamespace(t *testing.T) {
+	const contextNamespace = "context-namespace"
+
+	testCases := map[string]struct {
+		files            map[string]string
+		enforceNamespace bool
+		expected         string
+	}{
+		"Resources in the same namespace": {
+			files: map[string]string{
+				"cm.yaml":          configMap,
+				"sub/cm-copy.yaml": configMap,
+			},
+			expected: inventoryNamespace,
+		},
+		"Resources in different namespaces": {
+			files: map[string]string{
+				"cm.yaml":       configMap,
+				"cm-other.yaml": configMapInOtherNamespace,
+			},
+			expected: contextNamespace,
+		},
+		"Resource without a namespace": {
+			files: map[string]string{
+				"cm.yaml":              configMap,
+				"cm-no-namespace.yaml": configMapWithoutNamespace,
+			},
+			expected: contextNamespace,
+		},
+		"No resources": {
+			expected: contextNamespace,
+		},
+		"Cluster-scoped resources are skipped": {
+			files: map[string]string{
+				"cm.yaml":        configMap,
+				"namespace.yaml": clusterScoped,
+			},
+			expected: inventoryNamespace,
+		},
+		"Local config resources are skipped": {
+			files: map[string]string{
+				"cm.yaml":       configMap,
+				"cm-local.yaml": localConfig,
+			},
+			expected: inventoryNamespace,
+		},
+		"Bare sequence files are skipped": {
+			files: map[string]string{
+				"cm.yaml":    configMap,
+				"patch.yaml": jsonPatch,
+			},
+			expected: inventoryNamespace,
+		},
+		"Bare sequence documents are skipped": {
+			files: map[string]string{
+				"cm.yaml": configMap + "---" + jsonPatch,
+			},
+			expected: inventoryNamespace,
+		},
+		"Only bare sequence files": {
+			files: map[string]string{
+				"patch.yaml": jsonPatch,
+			},
+			expected: contextNamespace,
+		},
+		"Non-KRM mapping files are not skipped": {
+			files: map[string]string{
+				"cm.yaml":     configMap,
+				"values.yaml": helmValues,
+			},
+			expected: contextNamespace,
+		},
+		"Enforced namespace takes precedence over the resources": {
+			files: map[string]string{
+				"cm.yaml": configMap,
+			},
+			enforceNamespace: true,
+			expected:         contextNamespace,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			dir := t.TempDir()
+			for name, content := range tc.files {
+				path := filepath.Join(dir, name)
+				if !assert.NoError(t, os.MkdirAll(filepath.Dir(path), 0700)) {
+					t.FailNow()
+				}
+				if !assert.NoError(t, os.WriteFile(path, []byte(content), 0600)) {
+					t.FailNow()
+				}
+			}
+
+			actual, err := findNamespace(fakeNamespaceLoader{
+				namespace:        contextNamespace,
+				enforceNamespace: tc.enforceNamespace,
+			}, dir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
 func assertGenInvID(t *testing.T, name, namespace, actual string) bool {
 	expected, err := generateHash(namespace, name)
 	if !assert.NoError(t, err) {
@@ -508,8 +701,8 @@ func TestCmd_Run_FindNamespaceError(t *testing.T) {
 	err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(kptFile), 0600)
 	assert.NoError(t, err)
 
-	// Create a non-KRM YAML file in the package that causes kio reader to fail
-	err = os.WriteFile(filepath.Join(w.WorkspaceDirectory, "non-krm.yaml"), []byte("- foo\n"), 0600)
+	// Bare sequences are skipped, so use YAML that fails to parse
+	err = os.WriteFile(filepath.Join(w.WorkspaceDirectory, "invalid.yaml"), []byte("kind: [\n"), 0600)
 	assert.NoError(t, err)
 
 	revert := testutil.Chdir(t, w.WorkspaceDirectory)
