@@ -36,10 +36,14 @@ import (
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/klog/v2"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -183,7 +187,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	const op errors.Op = "cmdliveinit.Run"
 	pr := printer.FromContextOrDie(ctx)
 
-	namespace, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
+	namespace, err := findNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
@@ -227,6 +231,93 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	at := attribution.Attributor{PackagePaths: []string{c.Pkg.UniquePath.String()}, CmdGroup: "live"}
 	at.Process()
 	return nil
+}
+
+// namespaceLoader provides the namespace set by the --namespace flag or,
+// failing that, the namespace of the current kubeconfig context.
+type namespaceLoader interface {
+	Namespace() (string, bool, error)
+}
+
+// findNamespace returns the namespace for the inventory object. The namespace
+// set by the --namespace flag takes precedence. Otherwise, if all the resources
+// in the package are in the same namespace, that namespace is returned. If
+// they are not, the namespace of the current kubeconfig context is returned.
+//
+// This is config.FindNamespace of cli-utils, except that it does not fail if
+// the package contains YAML that is a bare sequence instead of a KRM resource.
+func findNamespace(loader namespaceLoader, dir string) (string, error) {
+	namespace, enforceNamespace, err := loader.Namespace()
+	if err != nil {
+		return "", err
+	}
+	if enforceNamespace {
+		klog.V(6).Infof("enforcing namespace: %s", namespace)
+		return namespace, nil
+	}
+
+	ns, allInSameNs, err := allInSameNamespace(dir)
+	if err != nil {
+		return "", err
+	}
+	if allInSameNs {
+		klog.V(6).Infof("all in same namespace: %s", ns)
+		return ns, nil
+	}
+	klog.V(6).Infof("returning namespace: %s", namespace)
+	return namespace, nil
+}
+
+// allInSameNamespace goes through all the resources in the package and checks
+// their namespace. If they all have the namespace set and it has the same
+// value for all of them, that namespace is returned and the second return
+// value is true. Otherwise, no namespace is returned and the second return
+// value is false.
+func allInSameNamespace(dir string) (string, bool, error) {
+	nodes, err := (&kio.LocalPackageReader{
+		PackagePath:     dir,
+		WrapBareSeqNode: true,
+	}).Read()
+	if err != nil {
+		return "", false, err
+	}
+
+	// Filter out any resources with the LocalConfig annotation.
+	nodes, err = (&filters.IsLocalConfig{}).Filter(nodes)
+	if err != nil {
+		return "", false, err
+	}
+
+	var ns string
+	for _, node := range nodes {
+		// Skip bare sequences, such as the JSON 6902 patches used by
+		// kustomize. They are not resources, so they have no namespace.
+		if node.Field(yaml.BareSeqNodeWrappingKey) != nil {
+			continue
+		}
+		rm, err := node.GetMeta()
+		if err != nil {
+			return "", false, err
+		}
+		// Skip cluster-scoped resources. If the scope is not known, assume
+		// that the resource is namespaced.
+		namespaced, found := openapi.IsNamespaceScoped(rm.TypeMeta)
+		if found && !namespaced {
+			klog.V(6).Infof("cluster-scoped resource %s--skip namespace calc", rm.TypeMeta)
+			continue
+		}
+		if rm.Namespace == "" {
+			klog.V(6).Infof("one resource missing namespace (%s): return empty namespace", rm.Name)
+			return "", false, nil
+		}
+		if ns == "" {
+			ns = rm.Namespace
+		} else if rm.Namespace != ns {
+			klog.V(6).Infof("two namespaces not same: %s versus %s", rm.Namespace, ns)
+			return "", false, nil
+		}
+	}
+	return ns, ns != "", nil
 }
 
 // createRGFile fills in the inventory object values into the resourcegroup object and writes to file storage.
