@@ -27,6 +27,15 @@ import (
 	"github.com/kptdev/kpt/pkg/printer"
 )
 
+const (
+	// execWaitDelay is how long kpt waits for the output of an exec function
+	// to be closed after the function has exited or has been killed.
+	execWaitDelay = time.Second
+	// timeoutExitCode is the exit code reported for a function that timed out.
+	// It is the exit code of a process that was killed by a signal.
+	timeoutExitCode = -1
+)
+
 type ExecFn struct {
 	// Path is the os specific path to the executable
 	// file. It can be relative or absolute.
@@ -35,7 +44,7 @@ type ExecFn struct {
 	Args []string
 
 	Env map[string]string
-	// Container function will be killed after this timeour.
+	// Container function will be killed after this timeout.
 	// The default value is 5 minutes.
 	Timeout time.Duration
 	// FnResult is used to store the information about the result from
@@ -55,6 +64,9 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, f.Path, f.Args...)
+	// do not wait past the timeout for a child process of the function that
+	// still has the output open
+	cmd.WaitDelay = execWaitDelay
 
 	errSink := bytes.Buffer{}
 	cmd.Stdin = r
@@ -66,6 +78,15 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 	}
 
 	if err := runCmd(ctx, cmd); err != nil {
+		if goerrors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return &ExecError{
+				OriginalErr:    err,
+				ExitCode:       timeoutExitCode,
+				Stderr:         errSink.String(),
+				Timeout:        timeout,
+				TruncateOutput: printer.TruncateOutput,
+			}
+		}
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &fnresultv1.ExecError{
 				OriginalErr:    exitErr,

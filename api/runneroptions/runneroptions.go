@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -94,6 +95,11 @@ type RunnerOptions struct {
 	CelCostLimit uint64
 
 	ExtraTlsCerts [][]byte
+
+	// Timeout is the maximum time a single container or exec function is
+	// allowed to run before it is killed. When it is zero, the default timeout
+	// of the function runtime (5 minutes) is used.
+	Timeout time.Duration
 }
 
 type PackageIDType int8
@@ -165,6 +171,14 @@ func (opts *RunnerOptions) ResolveToImage(image string) string {
 		return fmt.Sprintf("%s/%s", prefix, image)
 	}
 	return image
+}
+
+// ValidateTimeout checks that Timeout is not negative.
+func (opts *RunnerOptions) ValidateTimeout() error {
+	if opts.Timeout < 0 {
+		return fmt.Errorf("invalid timeout %v: must not be negative", opts.Timeout)
+	}
+	return nil
 }
 
 // ValidatePrefix checks that ImagePrefix is a valid registry path.

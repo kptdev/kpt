@@ -24,6 +24,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/internal/testutil"
@@ -61,6 +62,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		fnConfigPath     string
 		network          bool
 		mount            []string
+		timeout          time.Duration
 	}{
 		{
 			name: "config map",
@@ -269,6 +271,17 @@ apiVersion: v1
 			err:  "must have keys and values separated by",
 		},
 		{
+			name:    "timeout",
+			args:    []string{"eval", dir, "--image", "foo:bar", "--timeout", "30s"},
+			path:    dir,
+			timeout: 30 * time.Second,
+		},
+		{
+			name: "negative timeout",
+			args: []string{"eval", dir, "--image", "foo:bar", "--timeout", "-1s"},
+			err:  "invalid timeout -1s: must not be negative",
+		},
+		{
 			name: "envs",
 			args: []string{"eval", dir, "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: dir,
@@ -415,6 +428,11 @@ apiVersion: v1
 			}
 
 			if !assert.Equal(t, tt.fnConfigPath, r.runFns.FnConfigPath) {
+				t.FailNow()
+			}
+
+			// check if the timeout was passed to the function runner
+			if !assert.Equal(t, tt.timeout, r.runFns.RunnerOptions.Timeout) {
 				t.FailNow()
 			}
 

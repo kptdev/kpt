@@ -144,6 +144,7 @@ func NewRunner(
 					cfn := &ContainerFn{
 						Image:           f.Image,
 						ImagePullPolicy: opts.ImagePullPolicy,
+						Timeout:         opts.Timeout,
 						Perm: ContainerFnPermission{
 							AllowNetwork: opts.AllowNetwork,
 							// mounts are disabled for render operations (currently)
@@ -180,6 +181,7 @@ func NewRunner(
 					eFn := &ExecFn{
 						Path:     execPath,
 						Args:     execArgs,
+						Timeout:  opts.Timeout,
 						FnResult: fnResult,
 					}
 					fltr.Run = eFn.Run
@@ -568,6 +570,9 @@ func printFnExecErr(ctx context.Context, fnErr *fnresultv1.ExecError) {
 	pr := printer.FromContextOrDie(ctx)
 	printFnStderr(ctx, fnErr.Stderr)
 	pr.Printf("  Exit code: %d\n", fnErr.ExitCode)
+	if fnErr.Timeout != 0 {
+		pr.Printf("  Timed out after: %v\n", fnErr.Timeout)
+	}
 }
 
 // printFnStderr prints given stdErr in a user friendly format on kpt CLI.
