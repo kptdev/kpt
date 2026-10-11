@@ -180,6 +180,11 @@ fn-args:
   b) the literal value of `--tag`, if it is not a semantic version constraint.
   See the constraints spec here: https://github.com/Masterminds/semver
 
+--timeout:
+  Maximum time the function is allowed to run, e.g. `30s` or `10m`.
+  If the function has not finished by then, the command fails. Default: `5m`.
+  Note that this is applicable to container and exec based functions only.
+
 --type, t;
   Specify the function type. Accept value `mutator` (default), `validator`. 
   If used with `--save`, this flag will save the evaluated function to the corresponding
