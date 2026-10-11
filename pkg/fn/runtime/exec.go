@@ -44,7 +44,7 @@ type ExecFn struct {
 	Args []string
 
 	Env map[string]string
-	// Container function will be killed after this timeout.
+	// Exec function will be killed after this timeout.
 	// The default value is 5 minutes.
 	Timeout time.Duration
 	// FnResult is used to store the information about the result from
