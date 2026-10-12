@@ -82,8 +82,11 @@ PKG_PATH:
   If not specified, no result files are written to the local filesystem.
 
 --timeout:
-  Maximum time each function in the pipeline is allowed to run, e.g. `30s` or `10m`.
-  If a function has not finished by then, the render fails. Default: `5m`.
+  Maximum time the whole pipeline is allowed to run, e.g. `30s` or `10m`.
+  This includes the functions of all subpackages. If the pipeline has not
+  finished by then, the function that is running is stopped and the render fails.
+  When this flag is not set, there is no limit for the whole pipeline, and each
+  function is allowed to run for 5 minutes.
   Note that this is applicable to container and exec based functions only.
 ```
 

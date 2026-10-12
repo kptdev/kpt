@@ -96,9 +96,12 @@ type RunnerOptions struct {
 
 	ExtraTlsCerts [][]byte
 
-	// Timeout is the maximum time a single container or exec function is
-	// allowed to run before it is killed. When it is zero, the default timeout
-	// of the function runtime (5 minutes) is used.
+	// Timeout is the maximum time the whole run is allowed to take: all the
+	// functions of the pipeline for `kpt fn render`, and the function for
+	// `kpt fn eval`. A container or exec function that is still running when
+	// it has passed is killed. When it is zero, there is no limit for the
+	// whole run, and each function is limited by the default timeout of the
+	// function runtime (5 minutes).
 	Timeout time.Duration
 }
 

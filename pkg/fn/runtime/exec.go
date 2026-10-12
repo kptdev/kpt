@@ -27,16 +27,15 @@ import (
 	"github.com/kptdev/kpt/pkg/printer"
 )
 
-const (
-	// execWaitDelay is how long kpt waits for the output of an exec function
-	// to be closed after the function has exited or has been killed.
-	execWaitDelay = time.Second
-	// timeoutExitCode is the exit code reported for a function that timed out.
-	// It is the exit code of a process that was killed by a signal.
-	timeoutExitCode = -1
-)
+// execWaitDelay is how long kpt waits for the output of an exec function
+// to be closed after the function has exited or has been killed.
+const execWaitDelay = time.Second
 
 type ExecFn struct {
+	// Ctx is the context of the run. If it has a time limit, the function is
+	// killed when that limit has passed.
+	Ctx context.Context
+
 	// Path is the os specific path to the executable
 	// file. It can be relative or absolute.
 	Path string
@@ -45,7 +44,7 @@ type ExecFn struct {
 
 	Env map[string]string
 	// Exec function will be killed after this timeout.
-	// The default value is 5 minutes.
+	// The default value is 5 minutes, or the time limit of Ctx if it has one.
 	Timeout time.Duration
 	// FnResult is used to store the information about the result from
 	// the function.
@@ -56,11 +55,7 @@ type ExecFn struct {
 // writes the output to w.
 func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 	// setup exec run timeout
-	timeout := defaultLongTimeout
-	if f.Timeout != 0 {
-		timeout = f.Timeout
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := fnContext(f.Ctx, f.Timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, f.Path, f.Args...)
@@ -79,13 +74,7 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 
 	if err := runCmd(ctx, cmd); err != nil {
 		if goerrors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return &ExecError{
-				OriginalErr:    err,
-				ExitCode:       timeoutExitCode,
-				Stderr:         errSink.String(),
-				Timeout:        timeout,
-				TruncateOutput: printer.TruncateOutput,
-			}
+			return newTimeoutExecError(ctx, err, errSink.String())
 		}
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &fnresultv1.ExecError{
