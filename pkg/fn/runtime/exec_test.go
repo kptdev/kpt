@@ -16,6 +16,7 @@ package runtime
 
 import (
 	"bytes"
+	"context"
 	"os/exec"
 	"testing"
 	"time"
@@ -32,21 +33,49 @@ func TestExecFn_Timeout(t *testing.T) {
 	}
 
 	testCases := map[string]struct {
-		script         string
-		timeout        time.Duration
-		expectTimeout  bool
-		expectedStderr string
+		script string
+		// timeout is the time limit of the function
+		timeout time.Duration
+		// runTimeout is the time limit of the whole run
+		runTimeout       time.Duration
+		expectedTimeout  time.Duration
+		expectRunTimeout bool
+		expectedStderr   string
 	}{
 		"function that outlives the timeout fails": {
-			script:         "echo stuck >&2; exec sleep 30",
-			timeout:        100 * time.Millisecond,
-			expectTimeout:  true,
-			expectedStderr: "stuck\n",
+			script:          "echo stuck >&2; exec sleep 30",
+			timeout:         100 * time.Millisecond,
+			expectedTimeout: 100 * time.Millisecond,
+			expectedStderr:  "stuck\n",
 		},
 		"child process of the function that keeps the output open is not waited for": {
-			script:        "sleep 30; true",
-			timeout:       100 * time.Millisecond,
-			expectTimeout: true,
+			script:          "sleep 30; true",
+			timeout:         100 * time.Millisecond,
+			expectedTimeout: 100 * time.Millisecond,
+		},
+		"function that outlives the timeout of the whole run fails": {
+			script:           "echo stuck >&2; exec sleep 30",
+			runTimeout:       100 * time.Millisecond,
+			expectedTimeout:  100 * time.Millisecond,
+			expectRunTimeout: true,
+			expectedStderr:   "stuck\n",
+		},
+		"shorter timeout of the function comes before the timeout of the whole run": {
+			script:          "exec sleep 30",
+			timeout:         100 * time.Millisecond,
+			runTimeout:      30 * time.Second,
+			expectedTimeout: 100 * time.Millisecond,
+		},
+		"shorter timeout of the whole run comes before the timeout of the function": {
+			script:           "exec sleep 30",
+			timeout:          30 * time.Second,
+			runTimeout:       100 * time.Millisecond,
+			expectedTimeout:  100 * time.Millisecond,
+			expectRunTimeout: true,
+		},
+		"function that finishes within the timeout of the whole run succeeds": {
+			script:     "true",
+			runTimeout: 30 * time.Second,
 		},
 		"function that finishes within the timeout succeeds": {
 			script:  "true",
@@ -60,7 +89,10 @@ func TestExecFn_Timeout(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
+			ctx, cancel := WithRunTimeout(context.Background(), tc.runTimeout)
+			defer cancel()
 			fn := &ExecFn{
+				Ctx:      ctx,
 				Path:     shBin,
 				Args:     []string{"-c", tc.script},
 				Timeout:  tc.timeout,
@@ -69,14 +101,15 @@ func TestExecFn_Timeout(t *testing.T) {
 
 			start := time.Now()
 			err := fn.Run(&bytes.Buffer{}, &bytes.Buffer{})
-			if !tc.expectTimeout {
+			if tc.expectedTimeout == 0 {
 				assert.NoError(t, err)
 				return
 			}
 
 			var execErr *ExecError
 			require.ErrorAs(t, err, &execErr)
-			assert.Equal(t, tc.timeout, execErr.Timeout)
+			assert.Equal(t, tc.expectedTimeout, execErr.Timeout)
+			assert.Equal(t, tc.expectRunTimeout, execErr.RunTimeout)
 			assert.Equal(t, timeoutExitCode, execErr.ExitCode)
 			assert.Equal(t, tc.expectedStderr, execErr.Stderr)
 			// kpt must not have waited for the function to finish

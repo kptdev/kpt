@@ -1126,6 +1126,30 @@ func TestPrintFnResult(t *testing.T) {
 	}
 }
 
+func TestNewRunner_RunTimeout(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	ctx, cancel := WithRunTimeout(
+		printer.WithContext(context.Background(), printer.New(out, out)), 100*time.Millisecond)
+	defer cancel()
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+
+	fnResults := fnresultv1.NewResultList()
+	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30"},
+		"", fnResults, opts, nil)
+	require.NoError(t, err)
+
+	_, err = fr.Filter(nil)
+	assert.Error(t, err)
+	assert.Contains(t, out.String(), "Timed out: the whole run took longer than 100ms")
+	require.Len(t, fnResults.Items, 1)
+	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
+}
+
 // TestFunctionRunner_do_AcceptsNamelessList: a nameless *List-kind
 // resource (e.g. ConfigMapList) must pass do()'s validation on both
 // the input and output side, matching krmvalidate.IsKRM's exemption
@@ -1156,27 +1180,4 @@ items: []
 
 	_, err = fr.do(nodes)
 	assert.NoError(t, err, "a nameless *List resource must not be rejected as non-KRM")
-}
-
-func TestNewRunner_ExecTimeout(t *testing.T) {
-	if _, err := exec.LookPath("sleep"); err != nil {
-		t.Skip("skipping exec timeout test: no sleep binary found")
-	}
-
-	out := &bytes.Buffer{}
-	ctx := printer.WithContext(context.Background(), printer.New(out, out))
-	opts := runneroptions.RunnerOptions{}
-	opts.InitDefaults(runneroptions.GHCRImagePrefix)
-	opts.Timeout = 100 * time.Millisecond
-
-	fnResults := fnresultv1.NewResultList()
-	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30"},
-		"", fnResults, opts, nil)
-	require.NoError(t, err)
-
-	_, err = fr.Filter(nil)
-	assert.Error(t, err)
-	assert.Contains(t, out.String(), "Timed out after: 100ms")
-	require.Len(t, fnResults.Items, 1)
-	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
 }
