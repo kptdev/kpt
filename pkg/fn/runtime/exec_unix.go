@@ -67,12 +67,16 @@ func runCmd(ctx context.Context, cmd *exec.Cmd) error {
 	forwarded := make(chan struct{})
 	go func() {
 		defer close(forwarded)
-		forwardSignal(signals, pgid, done)
+		forwardSignals(signals, pgid, done)
 	}()
 
 	err := cmd.Wait()
-	// Do not return while a signal is being forwarded. The signal is about to
-	// end kpt, and kpt must not go on with the result of the function first.
+	// A signal can arrive just as the function finishes. Stop listening first
+	// and close done after that, so that forwardSignals still finds a signal
+	// that is waiting. Do not return before it is forwarded: the signal is
+	// about to end kpt, and kpt must not go on with the result of the
+	// function first.
+	signal.Stop(signals)
 	close(done)
 	<-forwarded
 	return err
@@ -94,19 +98,35 @@ func notifyForwardedSignals(c chan<- os.Signal) {
 	}
 }
 
-// forwardSignal sends the first signal that arrives on signals to the process
-// group pgid, and then to kpt itself with the behavior that the signal has
-// when no function is running. For the forwardedSignals that ends kpt.
-func forwardSignal(signals chan os.Signal, pgid int, done <-chan struct{}) {
-	select {
-	case sig := <-signals:
-		s, ok := sig.(syscall.Signal)
-		if !ok {
+// forwardSignals forwards the signals that arrive on signals until done is
+// closed. The caller stops the signals before it closes done, so a signal
+// that is waiting at that point is the last one, and it is forwarded too.
+func forwardSignals(signals chan os.Signal, pgid int, done <-chan struct{}) {
+	for {
+		select {
+		case sig := <-signals:
+			forwardSignal(signals, sig, pgid)
+		case <-done:
+			select {
+			case sig := <-signals:
+				forwardSignal(signals, sig, pgid)
+			default:
+			}
 			return
 		}
-		_ = syscall.Kill(-pgid, s)
-		signal.Stop(signals)
-		raiseSignal(s)
-	case <-done:
 	}
+}
+
+// forwardSignal sends sig to the process group pgid, and then to kpt itself
+// with the behavior that the signal has when no function is running. For the
+// forwardedSignals that ends kpt.
+func forwardSignal(signals chan os.Signal, sig os.Signal, pgid int) {
+	s, ok := sig.(syscall.Signal)
+	if !ok {
+		return
+	}
+	_ = syscall.Kill(-pgid, s)
+	// kpt must not receive the signal on signals again
+	signal.Stop(signals)
+	raiseSignal(s)
 }

@@ -154,3 +154,41 @@ func TestExecFn_ForwardsSignal(t *testing.T) {
 		t.Fatal("the signal was not sent to kpt itself")
 	}
 }
+
+func TestForwardSignals_SignalThatWaitsWhenFunctionFinishes(t *testing.T) {
+	sleepBin, err := exec.LookPath("sleep")
+	if err != nil {
+		t.Skip("skipping signal test: no sleep binary found")
+	}
+	raised := make(chan syscall.Signal, 1)
+	origRaiseSignal := raiseSignal
+	raiseSignal = func(sig syscall.Signal) { raised <- sig }
+	t.Cleanup(func() { raiseSignal = origRaiseSignal })
+
+	// a process group to forward the signal to
+	cmd := exec.Command(sleepBin, "30")
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	require.NoError(t, cmd.Start())
+	t.Cleanup(func() {
+		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		_ = cmd.Wait()
+	})
+
+	// The function has finished and a signal is waiting. Both are ready, so
+	// either can be seen first, and the signal must be forwarded in both cases.
+	done := make(chan struct{})
+	close(done)
+	for range 100 {
+		signals := make(chan os.Signal, 1)
+		signals <- syscall.SIGINT
+
+		forwardSignals(signals, cmd.Process.Pid, done)
+
+		select {
+		case sig := <-raised:
+			require.Equal(t, syscall.SIGINT, sig)
+		default:
+			t.Fatal("the waiting signal was not forwarded")
+		}
+	}
+}
