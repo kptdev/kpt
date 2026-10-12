@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -355,6 +356,72 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 	}
 	assert.NotContains(t, string(b), "kind: StatefulSet")
 	assert.Contains(t, out.String(), "kind: StatefulSet")
+	assert.Equal(t, fnConfig.MustString(), outputFunctionConfig(t, out.String()))
+}
+
+// TestCmd_Execute_setOutputFnConfigPath tests that the functionConfig written
+// with the output is the one read from FnConfigPath, which the function received.
+func TestCmd_Execute_setOutputFnConfigPath(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	fnConfigPath := filepath.Join(t.TempDir(), "fn-config.yaml")
+	if !assert.NoError(t, os.WriteFile(fnConfigPath, []byte(ValueReplacerFnConfigYAMLData), 0600)) {
+		return
+	}
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "ghcr.io/example.com/image:version",
+		},
+	}
+
+	out := &bytes.Buffer{}
+	instance := RunFns{
+		Ctx:          fake.CtxWithDefaultPrinter(),
+		Output:       out,
+		FnConfigPath: fnConfigPath,
+		Path:         dir,
+		Function:     fn,
+		FnConfig:     fnConfig,
+		fnResults:    fnresultv1.NewResultList(),
+	}
+	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
+	assert.NoError(t, instance.init())
+
+	if !assert.NoError(t, instance.Execute()) {
+		return
+	}
+	assert.Contains(t, out.String(), "kind: ReplicaSet")
+	assert.Equal(t, ValueReplacerFnConfigYAMLData, outputFunctionConfig(t, out.String()))
+}
+
+// outputFunctionConfig returns the functionConfig of the ResourceList in out
+// without the package reader's annotations, or "" if it has none.
+func outputFunctionConfig(t *testing.T, out string) string {
+	t.Helper()
+	rl, err := yaml.Parse(out)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	fc := rl.Field("functionConfig")
+	if fc == nil {
+		return ""
+	}
+	// Drop the annotations the package reader adds, which kpt fn source also writes.
+	for _, a := range []kioutil.AnnotationKey{kioutil.IndexAnnotation, kioutil.PathAnnotation, kioutil.SeqIndentAnnotation,
+		kioutil.LegacyIndexAnnotation, kioutil.LegacyPathAnnotation} { // nolint:staticcheck
+		if !assert.NoError(t, fc.Value.PipeE(yaml.ClearAnnotation(string(a)))) {
+			t.FailNow()
+		}
+	}
+	if !assert.NoError(t, yaml.ClearEmptyAnnotations(fc.Value)) {
+		t.FailNow()
+	}
+	return fc.Value.MustString()
 }
 
 // TestCmd_Execute_setInput tests the execution of a filter using an io.Reader as input
