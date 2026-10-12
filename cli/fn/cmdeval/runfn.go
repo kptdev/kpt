@@ -119,6 +119,14 @@ func (r RunFns) Execute() error {
 	if err != nil {
 		return err
 	}
+	// Read the fn-config file once, so the function and the output's
+	// ResourceList.functionConfig get the same value.
+	if r.FnConfigPath != "" {
+		r.FnConfig, err = r.getFunctionConfig()
+		if err != nil {
+			return err
+		}
+	}
 	nodes, fltrs, output, err := r.getNodesAndFilters()
 	if err != nil {
 		return err
@@ -196,6 +204,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 			KeepReaderAnnotations: true,
 			WrappingKind:          kio.ResourceListKind,
 			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+			FunctionConfig:        r.FnConfig,
 		})
 	}
 
@@ -384,13 +393,6 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		return nil, fmt.Errorf("either image name or executable path need to be provided")
 	}
 
-	var err error
-	if r.FnConfigPath != "" {
-		fnConfig, err = r.getFunctionConfig()
-		if err != nil {
-			return nil, err
-		}
-	}
 	fltr := &runtimeutil.FunctionFilter{
 		FunctionConfig: fnConfig,
 		DeferFailure:   spec.DeferFailure,
