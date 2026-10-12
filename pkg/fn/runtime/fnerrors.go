@@ -43,9 +43,13 @@ type ExecError struct {
 	// ExitCode is the exit code returned from function
 	ExitCode int `yaml:"exitCode,omitempty"`
 
-	// Timeout is the time limit that the function exceeded. It is zero if the
+	// Timeout is the time limit that was exceeded. It is zero if the
 	// function did not time out.
 	Timeout time.Duration `yaml:"-"`
+
+	// RunTimeout is true if Timeout is the time limit of the whole run, and
+	// false if it is the time limit of this function.
+	RunTimeout bool `yaml:"-"`
 }
 
 // String returns string representation of the failure.
@@ -60,10 +64,23 @@ func (fe *ExecError) String() string {
 	}
 	b.WriteString(errLine.String())
 	fmt.Fprintf(&b, "  Exit Code: %d\n", fe.ExitCode)
-	if fe.Timeout != 0 {
-		fmt.Fprintf(&b, "  Timed Out After: %v\n", fe.Timeout)
+	if msg := fe.timeoutMessage(); msg != "" {
+		fmt.Fprintf(&b, "  Timed Out: %s\n", msg)
 	}
 	return b.String()
+}
+
+// timeoutMessage describes the time limit that was exceeded. It is empty if
+// the function did not time out.
+func (fe *ExecError) timeoutMessage() string {
+	switch {
+	case fe.Timeout == 0:
+		return ""
+	case fe.RunTimeout:
+		return fmt.Sprintf("the whole run took longer than %v", fe.Timeout)
+	default:
+		return fmt.Sprintf("the function took longer than %v", fe.Timeout)
+	}
 }
 
 func (fe *ExecError) Error() string {

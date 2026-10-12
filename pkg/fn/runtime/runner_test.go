@@ -1123,16 +1123,17 @@ func TestPrintFnResult(t *testing.T) {
 	}
 }
 
-func TestNewRunner_ExecTimeout(t *testing.T) {
+func TestNewRunner_RunTimeout(t *testing.T) {
 	if _, err := exec.LookPath("sleep"); err != nil {
 		t.Skip("skipping exec timeout test: no sleep binary found")
 	}
 
 	out := &bytes.Buffer{}
-	ctx := printer.WithContext(context.Background(), printer.New(out, out))
+	ctx, cancel := WithRunTimeout(
+		printer.WithContext(context.Background(), printer.New(out, out)), 100*time.Millisecond)
+	defer cancel()
 	opts := runneroptions.RunnerOptions{}
 	opts.InitDefaults(runneroptions.GHCRImagePrefix)
-	opts.Timeout = 100 * time.Millisecond
 
 	fnResults := fnresultv1.NewResultList()
 	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30"},
@@ -1141,7 +1142,7 @@ func TestNewRunner_ExecTimeout(t *testing.T) {
 
 	_, err = fr.Filter(nil)
 	assert.Error(t, err)
-	assert.Contains(t, out.String(), "Timed out after: 100ms")
+	assert.Contains(t, out.String(), "Timed out: the whole run took longer than 100ms")
 	require.Len(t, fnResults.Items, 1)
 	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
 }

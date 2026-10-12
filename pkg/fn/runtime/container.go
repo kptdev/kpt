@@ -83,7 +83,7 @@ type ContainerFn struct {
 	// ImagePullPolicy controls the image pulling behavior.
 	ImagePullPolicy runneroptions.ImagePullPolicy
 	// Container function will be killed after this timeout.
-	// The default value is 5 minutes.
+	// The default value is 5 minutes, or the time limit of Ctx if it has one.
 	Timeout time.Duration
 	Perm    ContainerFnPermission
 	// UIDGID is the os User ID and Group ID that will be
@@ -141,11 +141,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, filterCLIOutputFn func(io.Reader) string) error {
 	errSink := bytes.Buffer{}
 	// setup container run timeout
-	timeout := defaultLongTimeout
-	if f.Timeout != 0 {
-		timeout = f.Timeout
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := fnContext(f.Ctx, f.Timeout)
 	defer cancel()
 	cmd := f.getCmd(ctx, bin)
 	cmd.Stdin = reader
@@ -154,13 +150,7 @@ func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, fil
 
 	if err := cmd.Run(); err != nil {
 		if goerrors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return &ExecError{
-				OriginalErr:    err,
-				ExitCode:       timeoutExitCode,
-				Stderr:         filterCLIOutputFn(&errSink),
-				Timeout:        timeout,
-				TruncateOutput: printer.TruncateOutput,
-			}
+			return newTimeoutExecError(ctx, err, filterCLIOutputFn(&errSink))
 		}
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &ExecError{
