@@ -107,7 +107,10 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 		hydrateFn = hydrateBfsOrder
 	}
 
-	_, hydErr := hydrateFn(ctx, root, hctx)
+	// the timeout, if set, limits the run time of the whole pipeline
+	hydCtx, cancel := fnruntime.WithRunTimeout(ctx, e.RunnerOptions.Timeout)
+	_, hydErr := hydrateFn(hydCtx, root, hctx)
+	cancel()
 
 	if hydErr != nil && !hctx.saveOnRenderFailure {
 		if e.Output == nil {

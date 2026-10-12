@@ -55,7 +55,20 @@ error message1, error message2  Exit Code: 1
 			},
 			expected: `[Stderr]:
 error message  Exit Code: -1
-  Timed Out After: 30s
+  Timed Out: the function took longer than 30s
+`,
+		},
+		{
+			name: "no truncate - timeout of the whole run",
+			fnExecError: ExecError{
+				Stderr:     "error message",
+				ExitCode:   -1,
+				Timeout:    30 * time.Second,
+				RunTimeout: true,
+			},
+			expected: `[Stderr]:
+error message  Exit Code: -1
+  Timed Out: the whole run took longer than 30s
 `,
 		},
 		{
