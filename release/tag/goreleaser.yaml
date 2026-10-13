@@ -72,6 +72,8 @@ dockers_v2:
       - ghcr.io/kptdev/kpt
     tags:
       - "{{ .Tag }}"
+      # `stable` tracks the latest non-prerelease release
+      - "{{ if not .Prerelease }}stable{{ end }}"
     dockerfile: release/images/Dockerfile
     platforms:
       - linux/amd64
