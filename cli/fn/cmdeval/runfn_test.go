@@ -401,7 +401,7 @@ func TestCmd_Execute_setOutputFnConfigPath(t *testing.T) {
 		FnConfig:     fnConfig,
 		fnResults:    fnresultv1.NewResultList(),
 	}
-	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
+	instance.functionFilterProvider = getFilterProvider(t)
 	assert.NoError(t, instance.init())
 
 	if !assert.NoError(t, instance.Execute()) {
