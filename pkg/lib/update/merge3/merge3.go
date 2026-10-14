@@ -15,7 +15,7 @@
 package merge3
 
 import (
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	ko "github.com/kptdev/kpt/api/kubeobject"
 	pkgerrors "github.com/pkg/errors"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -23,7 +23,7 @@ import (
 )
 
 // Merge performs a 3-way merge of original, updated and destination resources.
-func Merge(original, updated, destination fn.KubeObjects, additionalSchemas []byte, preserveNulls bool) (fn.KubeObjects, error) {
+func Merge(original, updated, destination ko.KubeObjects, additionalSchemas []byte, preserveNulls bool) (ko.KubeObjects, error) {
 	if additionalSchemas != nil {
 		if err := openapi.AddSchema(additionalSchemas); err != nil {
 			return nil, pkgerrors.Wrap(err, "error adding schema")
@@ -51,7 +51,7 @@ func Merge(original, updated, destination fn.KubeObjects, additionalSchemas []by
 	if err != nil {
 		return nil, err
 	}
-	return fn.MoveToKubeObjects(merged), nil
+	return ko.MoveToKubeObjects(merged), nil
 }
 
 func MergeTuples(tl tuples) (kio.ResourceNodeSlice, error) {
