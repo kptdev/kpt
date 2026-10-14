@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mdtogo documentation/content/en/reference/cli/live internal/docs/generated/livedocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate mdtogo documentation/content/en/reference/cli/pkg internal/docs/generated/pkgdocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate mdtogo documentation/content/en/reference/cli/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate mdtogo documentation/content/en/reference/cli/alpha internal/docs/generated/alphadocs --license=none --recursive=false --strategy=cmdDocs
-//go:generate mdtogo documentation/content/en/reference/cli/alpha/sync internal/docs/generated/syncdocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate mdtogo documentation/content/en/reference/cli/alpha/wasm internal/docs/generated/wasmdocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate mdtogo documentation/content/en/reference/cli/_index.md internal/docs/generated/overview --license=none --strategy=cmdDocs
+//go:generate mdtogo ../documentation/content/en/reference/cli/live       ../internal/docs/generated/livedocs  --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/reference/cli/pkg        ../internal/docs/generated/pkgdocs   --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/reference/cli/fn         ../internal/docs/generated/fndocs    --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/reference/cli/alpha      ../internal/docs/generated/alphadocs --license=none --strategy=cmdDocs --recursive=false
+//go:generate mdtogo ../documentation/content/en/reference/cli/alpha/sync ../internal/docs/generated/syncdocs  --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/reference/cli/alpha/wasm ../internal/docs/generated/wasmdocs  --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/reference/cli/_index.md  ../internal/docs/generated/overview  --license=none --strategy=cmdDocs
 package main
 
 import (
@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kptdev/kpt/cli"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/errors/resolver"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
@@ -53,9 +52,9 @@ func runMain() int {
 	// logging will help in collecting debugging information from users
 	klog.InitFlags(nil)
 
-	cmd := cli.GetMain(ctx)
+	cmd := GetMain(ctx)
 
-	err = cli.RunNoErrOutput(cmd)
+	err = RunNoErrOutput(cmd)
 	if err != nil {
 		return handleErr(cmd, err)
 	}

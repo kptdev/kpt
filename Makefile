@@ -59,7 +59,7 @@ schema:
 generate: install-mdtogo generate-api
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
-	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./...
+	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./cli/...
 	go fmt ./internal/docs/generated/...
 	make schema
 
@@ -181,3 +181,11 @@ vet-api:
 
 api:
 	make -C api all
+
+.PHONY: work
+go.work go.work.sum work:
+	go work init . api cli mdtogo
+
+.PHONY: clean-work
+clean-work:
+	rm -f go.work go.work.sum

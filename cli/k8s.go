@@ -15,7 +15,7 @@
 
 // functions taken and modified from k8s.io/component-base@v0.36.1/cli/run.go and k8s.io/component-base@v0.36.1/cli/flag/flags.go
 
-package cli
+package main
 
 import (
 	"strings"
