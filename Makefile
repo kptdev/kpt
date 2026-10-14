@@ -17,6 +17,8 @@ SHELL := bash
 
 include ./make/info.mk
 include ./make/testing.mk
+include ./make/api.mk
+include ./make/cli.mk
 
 all: fix vet fmt lint test build tidy
 
@@ -47,34 +49,34 @@ install-swagger:
 install-mdtogo:
 	cd mdtogo && go install .
 
-fix: fix-api
+fix: api/fix cli/fix
 	go fix ./...
 
-fmt: fmt-api
+fmt: api/fmt cli/fix
 	go fmt ./...
 
 schema:
 	SWAGGER_VERSION=$(SWAGGER_VERSION) GOBIN=$(GOBIN) scripts/generate-schema.sh
 
-generate: install-mdtogo generate-api
+generate: install-mdtogo api/generate
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
-	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./cli/...
+	make -C cli generate
 	go fmt ./internal/docs/generated/...
 	make schema
 
-tidy: tidy-api
+tidy: api/tidy cli/tidy
 	go mod tidy
 
 # if the local version of golangci-lint matches the one we want, we can use that without overhead
-lint: lint-api
+lint: api/lint cli/lint
 	@if [[ `command -v golangci-lint` && `golangci-lint version --short` == $(GOLANGCI_LINT_VERSION) ]]; then \
 		golangci-lint run -v ./...; \
 	else \
 		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
 	fi
 
-test: test-api
+test: api/test cli/test
 	go test -cover ${LDFLAGS} ./...
 
 # This target is used to run Go tests that require docker runtime.
@@ -101,7 +103,7 @@ test-fn-eval: build
 test-live-apply: build
 	PATH="$(GOBIN):$(PATH)" go test -v ${LDFLAGS} -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
 
-vet: vet-api
+vet: api/vet cli/vet
 	go vet ./...
 
 docker:
@@ -155,32 +157,6 @@ release-ci:
 vulncheck: build
 	# Scan the source
 	GOFLAGS= go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-
-.PHONY: fix-api fmt-api generate-api tidy-api lint-api test-api vet-api api
-
-fix-api:
-	make -C api fix
-
-fmt-api:
-	make -C api fmt
-
-generate-api:
-	make -C api generate
-
-tidy-api:
-	make -C api tidy
-
-lint-api:
-	make -C api lint
-
-test-api:
-	make -C api test
-
-vet-api:
-	make -C api vet
-
-api:
-	make -C api all
 
 .PHONY: work
 go.work go.work.sum work:
