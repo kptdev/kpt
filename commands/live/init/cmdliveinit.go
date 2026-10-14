@@ -45,32 +45,6 @@ import (
 
 const defaultInventoryName = "inventory"
 
-// InvExistsError defines new error when the inventory
-// values have already been set on the Kptfile.
-type InvExistsError struct{}
-
-func (i *InvExistsError) Error() string {
-	return "inventory information already set for package"
-}
-
-// InvInRGExistsError defines new error when the inventory
-// values have already been set on the ResourceGroup file and we will warn
-// the user to migrate rather than init. This is part of kpt live STDIN work.
-type InvInRGExistsError struct{}
-
-func (i *InvInRGExistsError) Error() string {
-	return "inventory information already set for package"
-}
-
-// InvInKfExistsError defines new error when the inventory
-// values have already been set on the Kptfile and we will warn
-// the user to migrate rather than init. This is part of kpt live STDIN work.
-type InvInKfExistsError struct{}
-
-func (i *InvInKfExistsError) Error() string {
-	return "inventory information already set within Kptfile for package"
-}
-
 func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	ioStreams genericclioptions.IOStreams) *Runner {
 	r := &Runner{
@@ -250,7 +224,7 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	if kf != nil {
 		isEmpty = kptfileInventoryEmpty(kf.Inventory)
 		if !isEmpty && !force {
-			return errors.E(op, p.UniquePath, &InvInKfExistsError{})
+			return errors.E(op, p.UniquePath, &errors.InvInKfExistsError{})
 		}
 
 		// Set the Kptfile inventory to be nil if we force write to resourcegroup instead.
@@ -259,7 +233,7 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 
 	// Validate the inventory values don't already exist in Resourcegroup.
 	if rg != nil && !force {
-		return errors.E(op, p.UniquePath, &InvInRGExistsError{})
+		return errors.E(op, p.UniquePath, &errors.InvInRGExistsError{})
 	}
 	// Initialize new resourcegroup object, as rg should have been nil.
 	rg = &rgfilev1alpha1.ResourceGroup{ResourceMeta: rgfilev1alpha1.DefaultMeta}

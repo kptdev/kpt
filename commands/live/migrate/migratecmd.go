@@ -461,7 +461,7 @@ func (mr *Runner) createRGfile(ctx context.Context, args []string, prevID string
 		}).Run(ctx)
 
 		if err != nil {
-			var invExistsError *initialization.InvExistsError
+			var invExistsError *errors.InvExistsError
 			if errors.As(err, &invExistsError) {
 				fmt.Fprint(mr.ioStreams.ErrOut, "values already exist...")
 			} else {
