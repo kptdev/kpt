@@ -22,8 +22,7 @@ include ./make/cli.mk
 
 all: fix vet fmt lint test build tidy
 
-build:
-	go build ${LDFLAGS} -o $(GOBIN)/kpt -v .
+build: cli/build
 
 update-deps-to-head:
 	go get sigs.k8s.io/cli-utils@master

@@ -51,4 +51,9 @@ test:
 
 .PHONY: vet
 vet:
-	go vet ./...
+	go vet ./..
+
+.PHONY: build
+build:
+	go build ${LDFLAGS} -o $(GOBIN)/kpt -v .
+

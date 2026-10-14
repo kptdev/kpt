@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: cli/fix cli/fmt cli/generate cli/tidy cli/lint cli/test cli/vet cli
+.PHONY: cli/fix cli/fmt cli/generate cli/tidy cli/lint cli/test cli/vet cli cli/build
 
 cli/fix:
 	make -C cli fix
@@ -37,3 +37,6 @@ cli/vet:
 
 cli:
 	make -C cli all
+
+cli/build:
+	make -C cli build
