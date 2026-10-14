@@ -19,7 +19,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	ko "github.com/kptdev/kpt/api/kubeobject"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
@@ -133,17 +133,17 @@ func TestPreserveImplicitNull(t *testing.T) {
 	}
 }
 
-func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string) *fn.KubeObject {
+func mergeYamls(t *testing.T, originYAML, updatedYAML, destYAML string) *ko.KubeObject {
 	t.Helper()
-	var origin fn.KubeObjects
+	var origin ko.KubeObjects
 	var err error
 	if originYAML != "" {
-		origin, err = fn.ParseKubeObjects([]byte(originYAML))
+		origin, err = ko.ParseKubeObjects([]byte(originYAML))
 		require.NoError(t, err)
 	}
-	updated, err := fn.ParseKubeObjects([]byte(updatedYAML))
+	updated, err := ko.ParseKubeObjects([]byte(updatedYAML))
 	require.NoError(t, err)
-	dest, err := fn.ParseKubeObjects([]byte(destYAML))
+	dest, err := ko.ParseKubeObjects([]byte(destYAML))
 	require.NoError(t, err)
 
 	openapi.ResetOpenAPI()

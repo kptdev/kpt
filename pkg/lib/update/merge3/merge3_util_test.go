@@ -21,14 +21,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	ko "github.com/kptdev/kpt/api/kubeobject"
 	"k8s.io/kube-openapi/pkg/validation/spec"
 	"sigs.k8s.io/kustomize/kyaml/openapi"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
 
-func (t *Merge3TestSuite) findWithName(slice []*fn.SubObject, name string) *fn.SubObject {
+func (t *Merge3TestSuite) findWithName(slice []*ko.SubObject, name string) *ko.SubObject {
 	t.T().Helper()
 	for _, so := range slice {
 		n, found, err := so.NestedString("name")
@@ -43,7 +43,7 @@ func (t *Merge3TestSuite) findWithName(slice []*fn.SubObject, name string) *fn.S
 	return nil
 }
 
-func (t *Merge3TestSuite) getSlice(obj *fn.SubObject, path ...string) []*fn.SubObject {
+func (t *Merge3TestSuite) getSlice(obj *ko.SubObject, path ...string) []*ko.SubObject {
 	slice, found, err := obj.NestedSlice(path...)
 	t.Require().NoError(err)
 	t.Require().Truef(found, "%s should exist", strings.Join(path, "."))
@@ -51,7 +51,7 @@ func (t *Merge3TestSuite) getSlice(obj *fn.SubObject, path ...string) []*fn.SubO
 	return slice
 }
 
-func (t *Merge3TestSuite) assertVal(obj *fn.SubObject, expected any, path ...string) {
+func (t *Merge3TestSuite) assertVal(obj *ko.SubObject, expected any, path ...string) {
 	t.T().Helper()
 	var (
 		val   any
@@ -100,7 +100,7 @@ func (t *Merge3TestSuite) parseCrd(directory string, crd string) map[string]spec
 	return schemas
 }
 
-func (t *Merge3TestSuite) innerTest(original, updated, dest string, addSchemas []byte, checkFn func(*Merge3TestSuite, fn.KubeObjects)) {
+func (t *Merge3TestSuite) innerTest(original, updated, dest string, addSchemas []byte, checkFn func(*Merge3TestSuite, ko.KubeObjects)) {
 	o, u, d := t.parsePrrsToKubeObjects(original, updated, dest)
 
 	openapi.ResetOpenAPI()
@@ -110,14 +110,14 @@ func (t *Merge3TestSuite) innerTest(original, updated, dest string, addSchemas [
 	checkFn(t, result)
 }
 
-func (t *Merge3TestSuite) parsePrrsToKubeObjects(original, updated, dest string) (orig, upd, dst fn.KubeObjects) {
+func (t *Merge3TestSuite) parsePrrsToKubeObjects(original, updated, dest string) (orig, upd, dst ko.KubeObjects) {
 	t.T().Helper()
 	o, u, d := t.parsePrrs(original, updated, dest)
-	oko, _, err := fn.ReadKubeObjectsFromPackage(o)
+	oko, _, err := ko.ReadKubeObjectsFromPackage(o)
 	t.Require().NoError(err)
-	uko, _, err := fn.ReadKubeObjectsFromPackage(u)
+	uko, _, err := ko.ReadKubeObjectsFromPackage(u)
 	t.Require().NoError(err)
-	dko, _, err := fn.ReadKubeObjectsFromPackage(d)
+	dko, _, err := ko.ReadKubeObjectsFromPackage(d)
 	t.Require().NoError(err)
 	return oko, uko, dko
 }
@@ -140,13 +140,13 @@ func (t *Merge3TestSuite) parsePrr(path string) map[string]string {
 	return prr.Spec.Resources
 }
 
-func nameIs(name string) func(ko *fn.KubeObject) bool {
-	return func(ko *fn.KubeObject) bool {
+func nameIs(name string) func(ko *ko.KubeObject) bool {
+	return func(ko *ko.KubeObject) bool {
 		return ko.GetName() == name
 	}
 }
 
-func basicImageCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
+func basicImageCheck(t *Merge3TestSuite, kos ko.KubeObjects) {
 	deplObj, err := kos.Where(nameIs(testAppName)).EnsureSingleItem()
 	t.Require().NoError(err)
 
@@ -155,7 +155,7 @@ func basicImageCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
 	t.assertVal(containers[0], "test-image:updated", "image")
 }
 
-func assocListMergeCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
+func assocListMergeCheck(t *Merge3TestSuite, kos ko.KubeObjects) {
 	makeFruitCheckFunc(10, map[string]int{
 		"apple":  20,
 		"grape":  5,
@@ -164,7 +164,7 @@ func assocListMergeCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
 	})(t, kos)
 }
 
-func nonAssocListMergeCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
+func nonAssocListMergeCheck(t *Merge3TestSuite, kos ko.KubeObjects) {
 	makeFruitCheckFunc(10, map[string]int{
 		"apple": 20,
 		"grape": 5,
@@ -173,8 +173,8 @@ func nonAssocListMergeCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
 }
 
 //nolint:unparam
-func makeFruitCheckFunc(expectedTemp int, expectedFruits map[string]int) func(*Merge3TestSuite, fn.KubeObjects) {
-	return func(t *Merge3TestSuite, kos fn.KubeObjects) {
+func makeFruitCheckFunc(expectedTemp int, expectedFruits map[string]int) func(*Merge3TestSuite, ko.KubeObjects) {
+	return func(t *Merge3TestSuite, kos ko.KubeObjects) {
 		obj, err := kos.Where(nameIs(testCrName)).EnsureSingleItem()
 		t.Require().NoError(err)
 

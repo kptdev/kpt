@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	ko "github.com/kptdev/kpt/api/kubeobject"
 	pkgdiff "github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/lib/update/merge3"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
@@ -30,7 +31,6 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
-	"github.com/kptdev/krm-functions-sdk/go/fn"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -344,7 +344,7 @@ func compareFiles(src, dst string) (bool, error) {
 	return false, nil
 }
 
-func collectKubeObjectsFromPackages(localPath, updatedPath, originalPath string) (fn.KubeObjects, fn.KubeObjects, fn.KubeObjects, error) {
+func collectKubeObjectsFromPackages(localPath, updatedPath, originalPath string) (ko.KubeObjects, ko.KubeObjects, ko.KubeObjects, error) {
 	originalKos, err := loadResourcesFromDirectory(originalPath, "original")
 	if err != nil {
 		return nil, nil, nil, err
@@ -361,9 +361,9 @@ func collectKubeObjectsFromPackages(localPath, updatedPath, originalPath string)
 	return originalKos, updatedKos, destinationKos, nil
 }
 
-func getCrdSchemas(updated fn.KubeObjects, destination fn.KubeObjects) ([]byte, error) {
+func getCrdSchemas(updated ko.KubeObjects, destination ko.KubeObjects) ([]byte, error) {
 	// TODO: these should probably be merged, destination will always override updated this way
-	var kubeobjects fn.KubeObjects
+	var kubeobjects ko.KubeObjects
 	copy(kubeobjects, updated)
 	kubeobjects = append(kubeobjects, destination...)
 	_, crdObjects := merge3.FilterCrds(kubeobjects)
@@ -381,7 +381,7 @@ func getCrdSchemas(updated fn.KubeObjects, destination fn.KubeObjects) ([]byte, 
 	return marshalledSchemas, nil
 }
 
-func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation string) (fn.KubeObjects, error) {
+func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation string) (ko.KubeObjects, error) {
 	exclusions, err := findExclusions(directoryPath)
 	if err != nil {
 		return nil, err
@@ -401,10 +401,10 @@ func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation stri
 	if err != nil {
 		return nil, errors.E(kptfilev1.UniquePath(directoryPath), err)
 	}
-	return fn.MoveToKubeObjects(nodes), err
+	return ko.MoveToKubeObjects(nodes), err
 }
 
-func writeResourcesToDirectory(destPath string, kubeObjects fn.KubeObjects) error {
+func writeResourcesToDirectory(destPath string, kubeObjects ko.KubeObjects) error {
 	destWriter := &kio.LocalPackageReadWriter{
 		PackagePath:        destPath,
 		IncludeSubpackages: false,
