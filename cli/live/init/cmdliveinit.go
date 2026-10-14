@@ -35,7 +35,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/klog/v2"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -242,7 +241,6 @@ func findNamespace(loader namespaceLoader, dir string) (string, error) {
 		return "", err
 	}
 	if enforceNamespace {
-		klog.V(6).Infof("enforcing namespace: %s", namespace)
 		return namespace, nil
 	}
 
@@ -251,10 +249,8 @@ func findNamespace(loader namespaceLoader, dir string) (string, error) {
 		return "", err
 	}
 	if allInSameNs {
-		klog.V(6).Infof("all in same namespace: %s", ns)
 		return ns, nil
 	}
-	klog.V(6).Infof("returning namespace: %s", namespace)
 	return namespace, nil
 }
 
@@ -293,17 +289,14 @@ func allInSameNamespace(dir string) (string, bool, error) {
 		// that the resource is namespaced.
 		namespaced, found := openapi.IsNamespaceScoped(rm.TypeMeta)
 		if found && !namespaced {
-			klog.V(6).Infof("cluster-scoped resource %s--skip namespace calc", rm.TypeMeta)
 			continue
 		}
 		if rm.Namespace == "" {
-			klog.V(6).Infof("one resource missing namespace (%s): return empty namespace", rm.Name)
 			return "", false, nil
 		}
 		if ns == "" {
 			ns = rm.Namespace
 		} else if rm.Namespace != ns {
-			klog.V(6).Infof("two namespaces not same: %s versus %s", rm.Namespace, ns)
 			return "", false, nil
 		}
 	}
