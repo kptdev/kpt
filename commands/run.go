@@ -1,4 +1,4 @@
-// Copyright 2019,2026 The kpt Authors
+// Copyright 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package run
+package commands
 
 import (
 	"bytes"
@@ -27,7 +27,6 @@ import (
 
 	"golang.org/x/mod/module"
 
-	kptcommands "github.com/kptdev/kpt/commands"
 	"github.com/kptdev/kpt/internal/docs/generated/overview"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -143,7 +142,7 @@ func GetMain(ctx context.Context) *cobra.Command {
 
 	// help and documentation
 	cmd.InitDefaultHelpCmd()
-	cmd.AddCommand(kptcommands.GetKptCommands(ctx, "kpt", version)...)
+	cmd.AddCommand(GetKptCommands(ctx, "kpt", version)...)
 
 	// enable stack traces
 	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
