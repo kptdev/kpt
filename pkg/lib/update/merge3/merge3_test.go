@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	ko "github.com/kptdev/kpt/api/kubeobject"
 	"github.com/stretchr/testify/suite"
 )
 
