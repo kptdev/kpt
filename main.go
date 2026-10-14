@@ -26,13 +26,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kptdev/kpt/cli"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/errors/resolver"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
-	"github.com/kptdev/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/component-base/cli"
 	"k8s.io/klog/v2"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 )
@@ -54,7 +53,7 @@ func runMain() int {
 	// logging will help in collecting debugging information from users
 	klog.InitFlags(nil)
 
-	cmd := run.GetMain(ctx)
+	cmd := cli.GetMain(ctx)
 
 	err = cli.RunNoErrOutput(cmd)
 	if err != nil {
