@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/commands/pkg/cmdcat"
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -135,5 +135,5 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	}
 
 	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()
-	return runner.HandleError(r.Ctx, err)
+	return cmdcat.HandleError(r.Ctx, err)
 }

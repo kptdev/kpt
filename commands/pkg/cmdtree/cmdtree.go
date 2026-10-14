@@ -24,10 +24,10 @@ import (
 	"strings"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/commands/pkg/cmdcat"
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/printer"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -84,7 +84,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		IncludeLocalConfig: true,
 	}}
 
-	return runner.HandleError(r.Ctx, kio.Pipeline{
+	return cmdcat.HandleError(r.Ctx, kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: fltrs,
 		Outputs: []kio.Writer{TreeWriter{

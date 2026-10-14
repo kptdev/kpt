@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/shlex"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/commands/pkg/cmdcat"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
@@ -21,8 +22,6 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
-	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -165,7 +164,7 @@ type EvalFnRunner struct {
 
 	CelCondition string
 
-	runFns runfn.RunFns
+	runFns RunFns
 }
 
 func (r *EvalFnRunner) InitDefaults() {
@@ -179,7 +178,7 @@ func (r *EvalFnRunner) InitDefaults() {
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
-	err := runner.HandleError(r.Ctx, r.runFns.Execute())
+	err := cmdcat.HandleError(r.Ctx, r.runFns.Execute())
 	if err != nil {
 		return err
 	}
@@ -548,7 +547,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		}
 	}
 	r.parseSelectors()
-	r.runFns = runfn.RunFns{
+	r.runFns = RunFns{
 		Ctx:           r.Ctx,
 		Function:      fnSpec,
 		ExecArgs:      execArgs,

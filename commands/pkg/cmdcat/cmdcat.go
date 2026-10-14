@@ -28,7 +28,6 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
-	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -89,12 +88,12 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 	}
 
 	if err := r.Ctx.Err(); err != nil {
-		return runner.HandleError(r.Ctx, err)
+		return HandleError(r.Ctx, err)
 	}
 
 	resolvedPath, err := argsutil.ResolveSymlink(r.Ctx, args[0])
 	if err != nil {
-		return runner.HandleError(r.Ctx, err)
+		return HandleError(r.Ctx, err)
 	}
 
 	out := &bytes.Buffer{}
@@ -102,10 +101,10 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 	// Single file: process directly without package traversal.
 	if info, err := os.Stat(resolvedPath); err == nil && !info.IsDir() {
 		if err := r.ExecuteCmd(out, resolvedPath); err != nil {
-			return runner.HandleError(r.Ctx, err)
+			return HandleError(r.Ctx, err)
 		}
 	} else {
-		e := runner.ExecuteCmdOnPkgs{
+		e := ExecuteCmdOnPkgs{
 			Writer:             out,
 			NeedOpenAPI:        false,
 			RecurseSubPackages: r.RecurseSubPackages,
@@ -114,7 +113,7 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 			SkipPkgPathPrint:   true,
 		}
 		if err := e.Execute(); err != nil {
-			return runner.HandleError(r.Ctx, err)
+			return HandleError(r.Ctx, err)
 		}
 	}
 

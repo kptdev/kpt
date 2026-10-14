@@ -16,7 +16,6 @@ import (
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer/fake"
-	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -41,7 +40,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 		args             []string
 		expectedFnConfig string
 		expectedFn       *runtimeutil.FunctionSpec
-		expectedStruct   *runfn.RunFns
+		expectedStruct   *RunFns
 		expectedExecArgs []string
 		err              string
 		path             string
@@ -217,7 +216,7 @@ apiVersion: v1
 			name: "results_dir",
 			args: []string{"eval", dir, "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: dir,
-			expectedStruct: &runfn.RunFns{
+			expectedStruct: &RunFns{
 				Path:       dir,
 				ResultsDir: "foo/",
 				RunnerOptions: runneroptions.RunnerOptions{
@@ -261,7 +260,7 @@ apiVersion: v1
 			name: "envs",
 			args: []string{"eval", dir, "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: dir,
-			expectedStruct: &runfn.RunFns{
+			expectedStruct: &RunFns{
 				Path: dir,
 				RunnerOptions: runneroptions.RunnerOptions{
 					ImagePullPolicy: runneroptions.IfNotPresentPull,
@@ -289,7 +288,7 @@ apiVersion: v1
 			name: "as current user",
 			args: []string{"eval", dir, "--as-current-user", "--image", "foo:bar"},
 			path: dir,
-			expectedStruct: &runfn.RunFns{
+			expectedStruct: &RunFns{
 				Path:          dir,
 				AsCurrentUser: true,
 				RunnerOptions: runneroptions.RunnerOptions{

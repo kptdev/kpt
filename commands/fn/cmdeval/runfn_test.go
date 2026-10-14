@@ -1,7 +1,7 @@
 // Copyright 2019, 2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package runfn
+package cmdeval
 
 import (
 	"bytes"
