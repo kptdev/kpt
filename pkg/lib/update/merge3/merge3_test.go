@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	ko "github.com/kptdev/kpt/api/kubeobject"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -43,7 +43,7 @@ func TestMerge3(t *testing.T) {
 type testCase struct {
 	dir        string
 	crds       []string
-	checkFn    func(*Merge3TestSuite, fn.KubeObjects)
+	checkFn    func(*Merge3TestSuite, ko.KubeObjects)
 	skipReason string
 }
 

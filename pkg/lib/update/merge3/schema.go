@@ -18,7 +18,7 @@ import (
 	"maps"
 	"strings"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	ko "github.com/kptdev/kpt/api/kubeobject"
 	pkgerrors "github.com/pkg/errors"
 	"k8s.io/klog/v2"
 	"k8s.io/kube-openapi/pkg/validation/spec"
@@ -34,17 +34,17 @@ const (
 )
 
 // FilterCrds splits the input between non-CRD and CRD KubeObjects.
-func FilterCrds(kos fn.KubeObjects) (filtered fn.KubeObjects, crds fn.KubeObjects) {
+func FilterCrds(kos ko.KubeObjects) (filtered ko.KubeObjects, crds ko.KubeObjects) {
 	crds, filtered = kos.Split(IsCrd)
 	return
 }
 
-func IsCrd(ko *fn.KubeObject) bool {
+func IsCrd(ko *ko.KubeObject) bool {
 	return ko.GetKind() == crdKind
 }
 
 // SchemasFromCrdKubeObjects extracts the Kustomize OpenApi definitions keyed with their GVK from multiple CRD KubeObjects
-func SchemasFromCrdKubeObjects(kos fn.KubeObjects) (map[string]spec.Schema, error) {
+func SchemasFromCrdKubeObjects(kos ko.KubeObjects) (map[string]spec.Schema, error) {
 	definitions := map[string]spec.Schema{}
 	for _, ko := range kos {
 		defs, err := SchemasFromCrdKubeObject(ko)
@@ -66,7 +66,7 @@ func SchemasFromCrdKubeObjects(kos fn.KubeObjects) (map[string]spec.Schema, erro
 }
 
 // SchemasFromCrdKubeObject extracts the Kustomize OpenApi definitions keyed with their GVK from a single CRD KubeObject
-func SchemasFromCrdKubeObject(ko *fn.KubeObject) (map[string]spec.Schema, error) {
+func SchemasFromCrdKubeObject(ko *ko.KubeObject) (map[string]spec.Schema, error) {
 	if !IsCrd(ko) {
 		return nil, pkgerrors.Errorf("expected kind to be %q, but is %q", crdKind, ko.GetKind())
 	}
@@ -122,15 +122,15 @@ func SchemasFromCrdKubeObject(ko *fn.KubeObject) (map[string]spec.Schema, error)
 
 // SchemasFromCrdRNode extracts all the Kustomize OpenApi definitions keyed with their GVK from a single CRD RNode
 func SchemasFromCrdRNode(node *kyaml.RNode) (map[string]spec.Schema, error) {
-	return SchemasFromCrdKubeObject(fn.CopyToKubeObject(node))
+	return SchemasFromCrdKubeObject(ko.CopyToKubeObject(node))
 }
 
 // SchemasFromCrdRNodes extracts all the Kustomize OpenApi definitions keyed with their GVK from multiple CRD RNodes
 func SchemasFromCrdRNodes(nodes []*kyaml.RNode) (map[string]spec.Schema, error) {
-	return SchemasFromCrdKubeObjects(fn.MoveToKubeObjects(nodes))
+	return SchemasFromCrdKubeObjects(ko.MoveToKubeObjects(nodes))
 }
 
-func extractSchema(version *fn.SubObject) (*spec.Schema, error) {
+func extractSchema(version *ko.SubObject) (*spec.Schema, error) {
 	schemaSO, found, err := version.NestedSubObject("schema", "openAPIV3Schema")
 	if err != nil {
 		return nil, pkgerrors.Wrap(err, "error getting spec.versions[#].schema.openAPIV3Schema")
