@@ -46,7 +46,9 @@ func (e *timeoutError) Error() string {
 // returned as it is.
 func WithRunTimeout(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
 	if timeout == 0 {
-		return ctx, func() {}
+		return ctx, func() {
+			// Nothing to cancel: ctx is returned as it is.
+		}
 	}
 	return context.WithTimeoutCause(ctx, timeout, &timeoutError{timeout: timeout, wholeRun: true})
 }
