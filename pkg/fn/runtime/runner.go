@@ -177,12 +177,13 @@ func NewRunner(
 						execArgs = s[1:]
 					}
 					eFn := &ExecFn{
-						Ctx:      ctx,
 						Path:     execPath,
 						Args:     execArgs,
 						FnResult: fnResult,
 					}
-					fltr.Run = eFn.Run
+					fltr.Run = func(r io.Reader, w io.Writer) error {
+						return eFn.RunContext(ctx, r, w)
+					}
 				}
 			default:
 				return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
