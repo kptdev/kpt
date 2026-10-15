@@ -29,7 +29,7 @@ MODULE_COVERAGE_FUNC_FILES = $(addsuffix /$(TEST_MODULE_COVERAGE_FUNC_FILE), $(M
 
 ## Generate per-module and aggregated coverage reports
 .PHONY: test-coverage
-test-coverage: $(MODULE_COVERAGE_FILES) $(MODULE_COVERAGE_HTML_FILES) $(MODULE_COVERAGE_FUNC_FILES) $(TEST_COVERAGE_FILE)
+test-coverage: $(MODULE_COVERAGE_FILES) $(MODULE_COVERAGE_HTML_FILES) $(MODULE_COVERAGE_FUNC_FILES) $(TEST_COVERAGE_FILE) ## Generate coverage reports (runs tests with coverage instrumentation)
 
 .PHONY: FORCE
 FORCE:
