@@ -92,7 +92,6 @@ func TestExecFn_Timeout(t *testing.T) {
 			ctx, cancel := WithRunTimeout(context.Background(), tc.runTimeout)
 			defer cancel()
 			fn := &ExecFn{
-				Ctx:      ctx,
 				Path:     shBin,
 				Args:     []string{"-c", tc.script},
 				Timeout:  tc.timeout,
@@ -100,7 +99,7 @@ func TestExecFn_Timeout(t *testing.T) {
 			}
 
 			start := time.Now()
-			err := fn.Run(&bytes.Buffer{}, &bytes.Buffer{})
+			err := fn.RunContext(ctx, &bytes.Buffer{}, &bytes.Buffer{})
 			if tc.expectedTimeout == 0 {
 				assert.NoError(t, err)
 				return
