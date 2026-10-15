@@ -22,8 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kptdev/kpt/e2e/framework/runner"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
-	"github.com/kptdev/kpt/pkg/test/runner"
 )
 
 func TestFnRender(t *testing.T) {

@@ -42,6 +42,7 @@ jobs:
               - 'api/**'
               - 'commands/live/**'
               - 'commands/pkg/**'
+              - 'e2e/framework/**'
               - 'e2e/live/**'
               - 'pkg/**'
               - 'go.mod'
