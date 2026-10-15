@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/pkg/test/runner"
+	"github.com/kptdev/kpt/e2e/framework/runner"
 )
 
 // TestPackageExamples runs e2e tests against the package-examples directory.
