@@ -32,10 +32,6 @@ import (
 const execWaitDelay = time.Second
 
 type ExecFn struct {
-	// Ctx is the context of the run. If it has a time limit, the function is
-	// killed when that limit has passed.
-	Ctx context.Context
-
 	// Path is the os specific path to the executable
 	// file. It can be relative or absolute.
 	Path string
@@ -44,7 +40,8 @@ type ExecFn struct {
 
 	Env map[string]string
 	// Exec function will be killed after this timeout.
-	// The default value is 5 minutes, or the time limit of Ctx if it has one.
+	// The default value is 5 minutes, or the time limit of the context passed
+	// to RunContext if it has one.
 	Timeout time.Duration
 	// FnResult is used to store the information about the result from
 	// the function.
@@ -54,8 +51,14 @@ type ExecFn struct {
 // Run runs the executable file which reads the input from r and
 // writes the output to w.
 func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
+	return f.RunContext(context.Background(), r, w)
+}
+
+// RunContext is like Run, but the function is also killed when the time
+// limit of ctx has passed.
+func (f *ExecFn) RunContext(ctx context.Context, r io.Reader, w io.Writer) error {
 	// setup exec run timeout
-	ctx, cancel := fnContext(f.Ctx, f.Timeout)
+	ctx, cancel := fnContext(ctx, f.Timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, f.Path, f.Args...)
