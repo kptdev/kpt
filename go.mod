@@ -13,7 +13,6 @@ require (
 	github.com/google/cel-go v0.29.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.21.6
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/kptdev/kpt/api v1.1.1-pre.1
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f

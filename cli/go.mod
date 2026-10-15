@@ -5,10 +5,8 @@ go 1.26.8
 //replace github.com/kptdev/kpt/api => ../api
 replace github.com/kptdev/kpt => ..
 
-
 require (
 	github.com/go-errors/errors v1.5.1
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // TODO: remove
 	github.com/kptdev/kpt v1.0.2-pre.2
 	github.com/kptdev/kpt/api v1.1.1-pre.1
 	github.com/spf13/cobra v1.10.2
@@ -75,7 +73,6 @@ require (
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
-	github.com/kptdev/krm-functions-sdk/go/fn v1.1.1 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/moby/term v0.5.2 // indirect

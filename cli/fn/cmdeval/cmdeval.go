@@ -32,6 +32,7 @@ import (
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
+	"github.com/kptdev/kpt/pkg/lib/util/shlex"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/comments"
