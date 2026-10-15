@@ -32,7 +32,8 @@ builds:
       - darwin
     goarch:
       - amd64
-    ldflags: -s -w -X main.version={{.Version}}
+    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}}
+    dir: cli
 
   - id: darwin-arm64
     env:
@@ -42,7 +43,8 @@ builds:
       - darwin
     goarch:
       - arm64
-    ldflags: -s -w -X main.version={{.Version}}
+    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}}
+    dir: cli
 
   - id: linux-amd64
     env:
@@ -52,7 +54,8 @@ builds:
       - linux
     goarch:
       - amd64
-    ldflags: -s -w -X main.version={{.Version}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    dir: cli
 
   - id: linux-arm64
     env:
@@ -62,7 +65,8 @@ builds:
       - linux
     goarch:
       - arm64
-    ldflags: -s -w -X main.version={{.Version}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    dir: cli
 
 dockers_v2:
   - ids:
