@@ -51,7 +51,7 @@ install-mdtogo:
 fix: api/fix cli/fix
 	go fix ./...
 
-fmt: api/fmt cli/fix
+fmt: api/fmt cli/fmt
 	go fmt ./...
 
 schema:
