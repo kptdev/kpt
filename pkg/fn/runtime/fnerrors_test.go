@@ -56,7 +56,7 @@ error message1, error message2  Exit Code: 1
 			},
 			expected: `[Stderr]:
 error message  Exit Code: -1
-  Timed Out: the function took longer than 30s
+  Timed Out: function execution timeout of 30s exceeded
 `,
 		},
 		{
@@ -69,7 +69,7 @@ error message  Exit Code: -1
 			},
 			expected: `[Stderr]:
 error message  Exit Code: -1
-  Timed Out: the whole run took longer than 30s
+  Timed Out: pipeline execution timeout of 30s exceeded
 `,
 		},
 		{

@@ -77,9 +77,9 @@ func (fe *ExecError) timeoutMessage() string {
 	case fe.Timeout == 0:
 		return ""
 	case fe.RunTimeout:
-		return fmt.Sprintf("the whole run took longer than %v", fe.Timeout)
+		return fmt.Sprintf("pipeline execution timeout of %v exceeded", fe.Timeout)
 	default:
-		return fmt.Sprintf("the function took longer than %v", fe.Timeout)
+		return fmt.Sprintf("function execution timeout of %v exceeded", fe.Timeout)
 	}
 }
 
