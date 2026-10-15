@@ -775,7 +775,7 @@ func TestDefaultFnFilterProvider_execTimeout(t *testing.T) {
 
 	_, err = fltr.Filter(nil)
 	assert.Error(t, err)
-	assert.Contains(t, out.String(), "Timed out: the function took longer than 100ms")
+	assert.Contains(t, out.String(), "Timed out: function execution timeout of 100ms exceeded")
 	require.Len(t, r.fnResults.Items, 1)
 	assert.Equal(t, -1, r.fnResults.Items[0].ExitCode)
 }

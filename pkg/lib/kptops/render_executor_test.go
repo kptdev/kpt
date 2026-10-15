@@ -437,7 +437,7 @@ metadata:
 	start := time.Now()
 	_, err := renderer.Execute(ctx)
 	assert.Error(t, err)
-	assert.Contains(t, outputBuffer.String(), "Timed out: the whole run took longer than 100ms")
+	assert.Contains(t, outputBuffer.String(), "Timed out: pipeline execution timeout of 100ms exceeded")
 	// kpt must not have waited for the function to finish
 	assert.Less(t, time.Since(start), 10*time.Second)
 }

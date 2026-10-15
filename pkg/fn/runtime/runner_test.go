@@ -1143,7 +1143,7 @@ func TestNewRunner_RunTimeout(t *testing.T) {
 
 	_, err = fr.Filter(nil)
 	assert.Error(t, err)
-	assert.Contains(t, out.String(), "Timed out: the whole run took longer than 100ms")
+	assert.Contains(t, out.String(), "Timed out: pipeline execution timeout of 100ms exceeded")
 	require.Len(t, fnResults.Items, 1)
 	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
 }
