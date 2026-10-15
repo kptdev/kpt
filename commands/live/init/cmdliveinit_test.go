@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,7 @@ package init
 import (
 	"os"
 	"path/filepath"
-	"regexp"
 	"testing"
-	"time"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
@@ -70,8 +68,6 @@ inventory:
     namespace: test-namespace
     inventoryID: ` + testInventoryID + "\n"
 
-var testTime = time.Unix(5555555, 66666666)
-
 var resourceGroupInventory = `
 apiVersion: kpt.dev/v1alpha1
 kind: ResourceGroup
@@ -84,34 +80,30 @@ func TestCmd_generateID(t *testing.T) {
 	testCases := map[string]struct {
 		namespace string
 		name      string
-		t         time.Time
 		expected  string
 		isError   bool
 	}{
 		"Empty inventory namespace is an error": {
 			name:      inventoryName,
 			namespace: "",
-			t:         testTime,
 			isError:   true,
 		},
 		"Empty inventory name is an error": {
 			name:      "",
 			namespace: inventoryNamespace,
-			t:         testTime,
 			isError:   true,
 		},
 		"Namespace/name hash is valid": {
 			name:      inventoryName,
 			namespace: inventoryNamespace,
-			t:         testTime,
-			expected:  "fa6dc0d39b0465b90f101c2ad50d50e9b4022f23-5555555066666666",
+			expected:  "fa6dc0d39b0465b90f101c2ad50d50e9b4022f23",
 			isError:   false,
 		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			actual, err := generateID(tc.namespace, tc.name, tc.t)
+			actual, err := generateID(tc.namespace, tc.name)
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
@@ -149,7 +141,6 @@ func TestCmd_Run(t *testing.T) {
 			expectAutoGenID: true,
 			expectedInventory: kptfilev1.Inventory{
 				Namespace: "testns",
-				Name:      "inventory-*",
 			},
 		},
 		"Provided values are used": {
@@ -175,6 +166,29 @@ func TestCmd_Run(t *testing.T) {
 				Name:        "my-pkg",
 				InventoryID: "my-inv-id",
 			},
+		},
+		"Invalid custom name is an error": {
+			kptfile:          kptFile,
+			name:             "INVALID_NAME!",
+			rgfilename:       "resourcegroup.yaml",
+			namespace:        "testns",
+			expectedErrorMsg: "inventory name \"INVALID_NAME!\" is not a valid Kubernetes resource name",
+		},
+		"Invalid custom inventory-id is an error": {
+			kptfile:          kptFile,
+			name:             "my-pkg",
+			inventoryID:      "-invalid-label-",
+			rgfilename:       "resourcegroup.yaml",
+			namespace:        "testns",
+			expectedErrorMsg: "inventory-id \"-invalid-label-\" is not a valid Kubernetes label value",
+		},
+		"Whitespace inventory-id is an error": {
+			kptfile:          kptFile,
+			name:             "my-pkg",
+			inventoryID:      "   ",
+			rgfilename:       "resourcegroup.yaml",
+			namespace:        "testns",
+			expectedErrorMsg: "inventory-id must not be empty",
 		},
 		"Kptfile with inventory already set is error": {
 			kptfile:          kptFileWithInventory,
@@ -263,9 +277,12 @@ func TestCmd_Run(t *testing.T) {
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.RGFileName = tc.rgfilename
-			args := []string{
-				"--name", tc.name,
-				"--inventory-id", tc.inventoryID,
+			args := []string{}
+			if tc.name != "" {
+				args = append(args, "--name", tc.name)
+			}
+			if tc.inventoryID != "" {
+				args = append(args, "--inventory-id", tc.inventoryID)
 			}
 			if tc.force {
 				args = append(args, "--force")
@@ -313,7 +330,11 @@ func TestCmd_Run(t *testing.T) {
 			}
 
 			expectedInv := tc.expectedInventory
-			assertInventoryName(t, expectedInv.Name, actualInv.Name)
+			expectedName := expectedInv.Name
+			if expectedName == "" {
+				expectedName = filepath.Base(w.WorkspaceDirectory)
+			}
+			assert.Equal(t, expectedName, actualInv.Name)
 			assert.Equal(t, expectedInv.Namespace, actualInv.Namespace)
 			if tc.expectAutoGenID {
 				assertGenInvID(t, actualInv.Name, actualInv.Namespace, actualInv.InventoryID)
@@ -324,31 +345,154 @@ func TestCmd_Run(t *testing.T) {
 	}
 }
 
-func assertInventoryName(t *testing.T, expected, actual string) bool {
-	re := regexp.MustCompile(`^inventory-[0-9]+$`)
-	if expected == "inventory-*" {
-		if re.MatchString(actual) {
-			return true
-		}
-		t.Errorf("expected value on the format 'inventory-[0-9]+', but found %q", actual)
+func TestCmd_Run_InvalidDirectoryName(t *testing.T) {
+	tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	tempDir := t.TempDir()
+	invalidDir := filepath.Join(tempDir, "Invalid_Dir_Name")
+	err := os.MkdirAll(invalidDir, 0700)
+	assert.NoError(t, err)
+
+	err = os.WriteFile(filepath.Join(invalidDir, kptfilev1.KptFileName), []byte(kptFile), 0600)
+	assert.NoError(t, err)
+
+	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner.Command.SetArgs([]string{invalidDir})
+	err = runner.Command.Execute()
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "package directory name \"Invalid_Dir_Name\" is not a valid Kubernetes resource name")
+		assert.Contains(t, err.Error(), "please provide a valid name using the --name flag")
 	}
-	return assert.Equal(t, expected, actual)
+}
+
+func TestCmd_Run_Deterministic(t *testing.T) {
+	tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	w, clean := testutil.SetupWorkspace(t)
+	defer clean()
+
+	err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(kptFile), 0600)
+	assert.NoError(t, err)
+
+	revert := testutil.Chdir(t, w.WorkspaceDirectory)
+	defer revert()
+
+	// First init
+	runner1 := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner1.Command.SetArgs([]string{})
+	err = runner1.Command.Execute()
+	assert.NoError(t, err)
+
+	rg1, err := pkg.ReadRGFile(w.WorkspaceDirectory, rgfilev1alpha1.RGFileName)
+	assert.NoError(t, err)
+	expectedName := filepath.Base(w.WorkspaceDirectory)
+	assert.Equal(t, expectedName, rg1.Name)
+	expectedID, err := generateHash("testns", expectedName)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedID, rg1.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+
+	// Second init with --force simulates re-initializing the package after changes or deletion
+	runner2 := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner2.Command.SetArgs([]string{"--force"})
+	err = runner2.Command.Execute()
+	assert.NoError(t, err)
+
+	rg2, err := pkg.ReadRGFile(w.WorkspaceDirectory, rgfilev1alpha1.RGFileName)
+	assert.NoError(t, err)
+	assert.Equal(t, rg1.Name, rg2.Name)
+	assert.Equal(t, rg1.Labels[rgfilev1alpha1.RGInventoryIDLabel], rg2.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+}
+
+func TestCmd_Run_DeterministicAcrossFreshDirectories(t *testing.T) {
+	tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	tempBase := t.TempDir()
+	dir1 := filepath.Join(tempBase, "fresh-pkg-1")
+	dir2 := filepath.Join(tempBase, "fresh-pkg-2")
+	assert.NoError(t, os.MkdirAll(dir1, 0700))
+	assert.NoError(t, os.MkdirAll(dir2, 0700))
+	assert.NoError(t, os.WriteFile(filepath.Join(dir1, kptfilev1.KptFileName), []byte(kptFile), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(dir2, kptfilev1.KptFileName), []byte(kptFile), 0600))
+
+	// Init dir1 with explicit name "shared-package"
+	runner1 := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner1.Command.SetArgs([]string{dir1, "--name", "shared-package"})
+	assert.NoError(t, runner1.Command.Execute())
+
+	// Init dir2 with the same name "shared-package"
+	runner2 := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner2.Command.SetArgs([]string{dir2, "--name", "shared-package"})
+	assert.NoError(t, runner2.Command.Execute())
+
+	rg1, err := pkg.ReadRGFile(dir1, rgfilev1alpha1.RGFileName)
+	assert.NoError(t, err)
+	rg2, err := pkg.ReadRGFile(dir2, rgfilev1alpha1.RGFileName)
+	assert.NoError(t, err)
+
+	assert.Equal(t, rg1.Name, rg2.Name)
+	assert.NotEmpty(t, rg1.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+	assert.Equal(t, rg1.Labels[rgfilev1alpha1.RGInventoryIDLabel], rg2.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+}
+
+func TestCmd_Run_DifferentNameOrNamespace(t *testing.T) {
+	tf1 := cmdtesting.NewTestFactory().WithNamespace("ns-one")
+	defer tf1.Cleanup()
+	tf2 := cmdtesting.NewTestFactory().WithNamespace("ns-two")
+	defer tf2.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	tempBase := t.TempDir()
+	pkgA := filepath.Join(tempBase, "pkg-a")
+	pkgB := filepath.Join(tempBase, "pkg-b")
+	pkgC := filepath.Join(tempBase, "pkg-c")
+	assert.NoError(t, os.MkdirAll(pkgA, 0700))
+	assert.NoError(t, os.MkdirAll(pkgB, 0700))
+	assert.NoError(t, os.MkdirAll(pkgC, 0700))
+	assert.NoError(t, os.WriteFile(filepath.Join(pkgA, kptfilev1.KptFileName), []byte(kptFile), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(pkgB, kptfilev1.KptFileName), []byte(kptFile), 0600))
+	assert.NoError(t, os.WriteFile(filepath.Join(pkgC, kptfilev1.KptFileName), []byte(kptFile), 0600))
+
+	// pkgA: name "package-a", namespace "ns-one"
+	rA := NewRunner(fake.CtxWithDefaultPrinter(), tf1, ioStreams)
+	rA.Command.SetArgs([]string{pkgA, "--name", "package-a"})
+	assert.NoError(t, rA.Command.Execute())
+
+	// pkgB: different name "package-b", same namespace "ns-one"
+	rB := NewRunner(fake.CtxWithDefaultPrinter(), tf1, ioStreams)
+	rB.Command.SetArgs([]string{pkgB, "--name", "package-b"})
+	assert.NoError(t, rB.Command.Execute())
+
+	// pkgC: same name "package-a", different namespace "ns-two"
+	rC := NewRunner(fake.CtxWithDefaultPrinter(), tf2, ioStreams)
+	rC.Command.SetArgs([]string{pkgC, "--name", "package-a"})
+	assert.NoError(t, rC.Command.Execute())
+
+	rgA, err := pkg.ReadRGFile(pkgA, rgfilev1alpha1.RGFileName)
+	assert.NoError(t, err)
+	rgB, err := pkg.ReadRGFile(pkgB, rgfilev1alpha1.RGFileName)
+	assert.NoError(t, err)
+	rgC, err := pkg.ReadRGFile(pkgC, rgfilev1alpha1.RGFileName)
+	assert.NoError(t, err)
+
+	idA := rgA.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+	idB := rgB.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+	idC := rgC.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+
+	assert.NotEqual(t, idA, idB, "different names in same namespace should produce different inventory IDs")
+	assert.NotEqual(t, idA, idC, "same name in different namespaces should produce different inventory IDs")
 }
 
 func assertGenInvID(t *testing.T, name, namespace, actual string) bool {
-	re := regexp.MustCompile(`^([a-z0-9]+)-[0-9]+$`)
-	match := re.FindStringSubmatch(actual)
-	if len(match) != 2 {
-		t.Errorf("unexpected format for autogenerated inventoryID")
+	expected, err := generateHash(namespace, name)
+	if !assert.NoError(t, err) {
 		return false
 	}
-	prefix, err := generateHash(namespace, name)
-	if err != nil {
-		panic(err)
-	}
-	if got, want := match[1], prefix; got != want {
-		t.Errorf("expected prefix %q, but found %q", want, got)
-		return false
-	}
-	return true
+	return assert.Equal(t, expected, actual)
 }
