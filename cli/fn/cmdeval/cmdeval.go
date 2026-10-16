@@ -25,10 +25,12 @@ import (
 	"strings"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
+	"github.com/kptdev/kpt/cli/fn/imagepullpolicy"
 	"github.com/kptdev/kpt/cli/pkg/cmdcat"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/celenv"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
@@ -93,10 +95,11 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
 
-	r.Command.Flags().Var(&r.RunnerOptions.ImagePullPolicy, "image-pull-policy",
-		"pull image before running the container "+r.RunnerOptions.ImagePullPolicy.HelpAllowedValues())
+	imagePullPolicy := imagepullpolicy.NewFlag(&r.RunnerOptions.ImagePullPolicy)
+	r.Command.Flags().Var(imagePullPolicy, "image-pull-policy",
+		"pull image before running the container "+imagePullPolicy.HelpAllowedValues())
 	_ = r.Command.RegisterFlagCompletionFunc("image-pull-policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return r.RunnerOptions.ImagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
+		return imagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
 	})
 
 	r.Command.Flags().BoolVar(
@@ -185,7 +188,7 @@ func (r *EvalFnRunner) InitDefaults() {
 	// Initialize CEL environment for condition evaluation
 	// Fail early if initialization does not succeed because we might
 	// need CEL to evaluate conditions
-	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+	if err := celenv.InitCELEnvironment(&r.RunnerOptions); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize CEL environment: %v\n", err)
 	}
 }

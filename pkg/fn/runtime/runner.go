@@ -28,11 +28,12 @@ import (
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
+	apiutils "github.com/kptdev/kpt/api/utils"
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/lib/builtins"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/shlex"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/regclient/regclient"
@@ -248,12 +249,12 @@ type FunctionRunner struct {
 	fnResult         *fnresultv1.Result
 	fnResults        *fnresultv1.ResultList
 	opts             runneroptions.RunnerOptions
-	celCondition     string                        // CEL condition expression
-	celEnv           *runneroptions.CELEnvironment // shared CEL environment for condition evaluation
-	skipped          bool                          // true if function execution was skipped due to condition
+	celCondition     string                           // CEL condition expression
+	celEnv           runneroptions.ConditionEvaluator // shared condition evaluator
+	skipped          bool                             // true if function execution was skipped due to condition
 }
 
-func (fr *FunctionRunner) SetCelCondition(celCondition string, celEnv *runneroptions.CELEnvironment) {
+func (fr *FunctionRunner) SetCelCondition(celCondition string, celEnv runneroptions.ConditionEvaluator) {
 	fr.celCondition = celCondition
 	fr.celEnv = celEnv
 }
@@ -549,7 +550,7 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, separator s
 		if separator == "" {
 			separator = "\n"
 		}
-		ri := &runneroptions.SingleLineFormatter{
+		ri := &apiutils.SingleLineFormatter{
 			Title:      "[Results]",
 			Lines:      lines,
 			UseQuote:   false,
@@ -573,7 +574,7 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 func printFnStderr(ctx context.Context, stdErr string) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(stdErr) > 0 {
-		errLine := &runneroptions.SingleLineFormatter{
+		errLine := &apiutils.SingleLineFormatter{
 			Title:     "Stderr",
 			Lines:     strings.Split(stdErr, "\n"),
 			UseQuote:  false,
