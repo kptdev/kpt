@@ -151,7 +151,6 @@ changelog:
       - Merge pull request
       - Merge branch
 release:
-  name_template: "{{ if .Env.KPT_TAG }}{{ .Env.KPT_TAG }}{{ else }}{{ .Tag }}{{ end }}" # TODO: check if this is needed
   github:
     owner: kptdev
     name: kpt
