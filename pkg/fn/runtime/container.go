@@ -30,7 +30,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )

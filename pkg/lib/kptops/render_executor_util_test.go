@@ -19,8 +19,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/stretchr/testify/require"
 )
 
