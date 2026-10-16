@@ -41,12 +41,17 @@ func TestSplitExecArgs(t *testing.T) {
 		{
 			name:     "empty string",
 			input:    "",
-			expected: nil,
+			expected: []string{},
 		},
 		{
 			name:     "whitespace only",
 			input:    "   ",
-			expected: nil,
+			expected: []string{},
+		},
+		{
+			name:     "newlines and carriage returns only",
+			input:    "\n\r\t",
+			expected: []string{},
 		},
 		{
 			name:     "tabs and spaces",
@@ -121,14 +126,37 @@ func TestSplitExecArgs(t *testing.T) {
 		{
 			name:      "unterminated double quote",
 			input:     `"foo bar`,
+			expected:  []string{},
 			wantError: true,
-			errorMsg:  "unterminated double quote",
+			errorMsg:  "EOF found when expecting closing quote",
 		},
 		{
 			name:      "unterminated single quote",
 			input:     `'foo bar`,
+			expected:  []string{},
 			wantError: true,
-			errorMsg:  "unterminated single quote",
+			errorMsg:  "EOF found when expecting closing quote",
+		},
+		{
+			name:      "words before an unterminated quote are returned",
+			input:     `ok "bad`,
+			expected:  []string{"ok"},
+			wantError: true,
+			errorMsg:  "EOF found when expecting closing quote",
+		},
+		{
+			name:      "trailing backslash",
+			input:     `foo\`,
+			expected:  []string{},
+			wantError: true,
+			errorMsg:  "EOF found after escape character",
+		},
+		{
+			name:      "words before a trailing backslash are returned",
+			input:     `pre foo\`,
+			expected:  []string{"pre"},
+			wantError: true,
+			errorMsg:  "EOF found after escape character",
 		},
 		{
 			name:     "mixed nested quotes (single in double)",
@@ -141,9 +169,52 @@ func TestSplitExecArgs(t *testing.T) {
 			expected: []string{`he said "hello"`},
 		},
 		{
-			name:     "backslash only in unquoted context",
+			name:     "escaped space joins unquoted arguments",
 			input:    `foo\ bar baz`,
-			expected: []string{`foo\`, "bar", "baz"},
+			expected: []string{"foo bar", "baz"},
+		},
+		{
+			name:     "escaped quote in an unquoted argument",
+			input:    `foo\"bar`,
+			expected: []string{`foo"bar`},
+		},
+		{
+			name:     "hash inside a word is literal",
+			input:    "foo#bar",
+			expected: []string{"foo#bar"},
+		},
+		{
+			name:     "comment is omitted",
+			input:    "foo # comment",
+			expected: []string{"foo"},
+		},
+		{
+			name:     "comment ends at newline",
+			input:    "foo # comment\nbar",
+			expected: []string{"foo", "bar"},
+		},
+		{
+			name:     "newline and carriage return separate arguments",
+			input:    "foo\nbar\rbaz",
+			expected: []string{"foo", "bar", "baz"},
+		},
+		{
+			name:     "newline inside double quotes is preserved",
+			input:    "\"foo\nbar\"",
+			expected: []string{"foo\nbar"},
+		},
+		{
+			name:     "backslash escapes the next character inside double quotes",
+			input:    `"foo\nbar"`,
+			expected: []string{"foonbar"},
+		},
+		{
+			name:  "google shlex example",
+			input: "one two \"three four\" \"five \\\"six\\\"\" seven#eight # nine # ten\n eleven 'twelve\\' thirteen=13 fourteen/14",
+			expected: []string{
+				"one", "two", "three four", "five \"six\"", "seven#eight",
+				"eleven", "twelve\\", "thirteen=13", "fourteen/14",
+			},
 		},
 		{
 			name:     "complex real-world command",
@@ -156,10 +227,11 @@ func TestSplitExecArgs(t *testing.T) {
 			expected: []string{`a"b\c`},
 		},
 		{
-			name:      "single trailing backslash in double quote",
+			name:      "escaped closing quote leaves the double quote unterminated",
 			input:     `"foo\"`,
+			expected:  []string{},
 			wantError: true,
-			errorMsg:  "unterminated double quote",
+			errorMsg:  "EOF found when expecting closing quote",
 		},
 	}
 
@@ -167,15 +239,12 @@ func TestSplitExecArgs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := Split(tt.input)
 
+			assert.Equal(t, tt.expected, result)
 			if tt.wantError {
-				assert.Error(t, err)
-				if tt.errorMsg != "" {
-					assert.Contains(t, err.Error(), tt.errorMsg)
-				}
-			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, result)
+				assert.ErrorContains(t, err, tt.errorMsg)
+				return
 			}
+			assert.NoError(t, err)
 		})
 	}
 }

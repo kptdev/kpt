@@ -19,56 +19,58 @@ import (
 	"strings"
 )
 
-// Split splits an exec command string into individual arguments,
-// respecting shell quoting and escape sequences.
-// It handles:
-//   - Single quotes (literal strings, no escapes)
-//   - Double quotes (allows escapes for \, ", $, `, and newline)
-//   - Unquoted arguments with space separation
-//   - Escape sequences within quoted strings
+// Split splits an exec command string into arguments.
+// It follows the quoting, escaping, and comment rules of github.com/google/shlex:
+// single quotes are literal, a backslash outside single quotes escapes the next
+// character, and an unquoted # comments out the rest of the line.
+// Unquoted spaces, tabs, carriage returns, and newlines separate arguments.
 func Split(s string) ([]string, error) {
-	var args []string
+	args := make([]string, 0)
 	var current strings.Builder
 	inSingleQuote := false
 	inDoubleQuote := false
+	escaped := false
 	wasQuoted := false
+	inComment := false
 
-	for i := 0; i < len(s); i++ {
-		ch := s[i]
-
+	for _, r := range s {
 		switch {
-		case ch == '\'' && !inDoubleQuote:
+		case inComment:
+			if r == '\n' {
+				inComment = false
+			}
+		case escaped:
+			current.WriteRune(r)
+			escaped = false
+		case r == '\\' && !inSingleQuote:
+			escaped = true
+		case r == '\'' && !inDoubleQuote:
 			inSingleQuote = !inSingleQuote
 			wasQuoted = true
-		case ch == '"' && !inSingleQuote:
+		case r == '"' && !inSingleQuote:
 			inDoubleQuote = !inDoubleQuote
 			wasQuoted = true
-		case ch == '\\' && i+1 < len(s) && inDoubleQuote:
-			// Handle escape sequences inside double quotes
-			i++
-			current.WriteByte(s[i])
-		case (ch == ' ' || ch == '\t') && !inSingleQuote && !inDoubleQuote:
-			// Whitespace outside quotes ends current argument
+		case r == '#' && !inSingleQuote && !inDoubleQuote && current.Len() == 0 && !wasQuoted:
+			inComment = true
+		case strings.ContainsRune(" \t\n\r", r) && !inSingleQuote && !inDoubleQuote:
 			if current.Len() > 0 || wasQuoted {
 				args = append(args, current.String())
 				current.Reset()
 				wasQuoted = false
 			}
 		default:
-			current.WriteByte(ch)
+			current.WriteRune(r)
 		}
 	}
 
-	if inSingleQuote {
-		return nil, fmt.Errorf("unterminated single quote in command: %q", s)
+	if escaped {
+		return args, fmt.Errorf("EOF found after escape character")
 	}
-	if inDoubleQuote {
-		return nil, fmt.Errorf("unterminated double quote in command: %q", s)
+	if inSingleQuote || inDoubleQuote {
+		return args, fmt.Errorf("EOF found when expecting closing quote")
 	}
-
-	if current.Len() > 0 || wasQuoted {
+	if !inComment && (current.Len() > 0 || wasQuoted) {
 		args = append(args, current.String())
 	}
-
 	return args, nil
 }
