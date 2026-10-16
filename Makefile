@@ -137,7 +137,9 @@ vulncheck: build
 
 .PHONY: work
 go.work go.work.sum work:
-	go work init . api cli mdtogo
+	@if [ ! -f go.work ]; then \
+	   go work init . api cli mdtogo; \
+	fi
 
 .PHONY: clean-work
 clean-work:
