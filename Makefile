@@ -19,22 +19,9 @@ include ./make/info.mk
 include ./make/testing.mk
 include ./make/api.mk
 include ./make/cli.mk
+include ./make/checks.mk
 
 all: fix vet fmt lint test build tidy
-
-.PHONY: lib
-# Root module only. The vX.Y.Z tag workflow runs this; it does not build the CLI.
-lib:
-	go fix ./...
-	go vet ./...
-	go fmt ./...
-	@if [[ `command -v golangci-lint` && `golangci-lint version --short` == $(GOLANGCI_LINT_VERSION) ]]; then \
-		golangci-lint run -v ./...; \
-	else \
-		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
-	fi
-	go test -cover ./...
-	go mod tidy
 
 build: cli/build
 
@@ -62,35 +49,15 @@ install-swagger:
 install-mdtogo:
 	cd mdtogo && go install .
 
-fix: api/fix cli/fix
-	go fix ./...
-
-fmt: api/fmt cli/fmt
-	go fmt ./...
-
 schema:
 	SWAGGER_VERSION=$(SWAGGER_VERSION) GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate: install-mdtogo api/generate
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
-	make -C cli generate
+	$(MAKE) cli/generate
 	go fmt ./internal/docs/generated/...
-	make schema
-
-tidy: api/tidy cli/tidy
-	go mod tidy
-
-# if the local version of golangci-lint matches the one we want, we can use that without overhead
-lint: api/lint cli/lint
-	@if [[ `command -v golangci-lint` && `golangci-lint version --short` == $(GOLANGCI_LINT_VERSION) ]]; then \
-		golangci-lint run -v ./...; \
-	else \
-		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
-	fi
-
-test: api/test cli/test
-	go test -cover ${LDFLAGS} ./...
+	$(MAKE) schema
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
@@ -115,9 +82,6 @@ test-fn-eval: build
 # target to run e2e tests for "kpt live apply" command
 test-live-apply: build
 	PATH="$(GOBIN):$(PATH)" go test -v ${LDFLAGS} -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
-
-vet: api/vet cli/vet
-	go vet ./...
 
 docker:
 	docker build .

@@ -12,28 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: api/fix api/fmt api/generate api/tidy api/lint api/test api/vet api
-
-api/fix:
-	make -C api fix
-
-api/fmt:
-	make -C api fmt
+# fix/fmt/vet/lint/test/tidy/api are generated in make/checks.mk.
+.PHONY: api/generate
 
 api/generate:
-	make -C api generate
-
-api/tidy:
-	make -C api tidy
-
-api/lint:
-	make -C api lint
-
-api/test:
-	make -C api test
-
-api/vet:
-	make -C api vet
-
-api:
-	make -C api all
+	$(MAKE) -C api generate

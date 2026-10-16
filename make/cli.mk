@@ -12,31 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: cli/fix cli/fmt cli/generate cli/tidy cli/lint cli/test cli/vet cli cli/build
-
-cli/fix:
-	make -C cli fix
-
-cli/fmt:
-	make -C cli fmt
+# fix/fmt/vet/lint/test/tidy/cli are generated in make/checks.mk.
+.PHONY: cli/generate cli/build
 
 cli/generate:
-	make -C cli generate
-
-cli/tidy:
-	make -C cli tidy
-
-cli/lint:
-	make -C cli lint
-
-cli/test:
-	make -C cli test
-
-cli/vet:
-	make -C cli vet
-
-cli:
-	make -C cli all
+	$(MAKE) -C cli generate
 
 cli/build:
-	make -C cli build
+	$(MAKE) -C cli build
