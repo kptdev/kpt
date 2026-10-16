@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runtime
+package v1
 
 import (
 	"fmt"
@@ -29,6 +29,8 @@ const (
 )
 
 // ExecError implements an error type that stores information about function failure.
+// +kubebuilder:object:generate=false
+// +kubebuilder:ac:generate=false
 type ExecError struct {
 	// OriginalErr is the original error returned from function runtime
 	OriginalErr error

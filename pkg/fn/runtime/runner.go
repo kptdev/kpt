@@ -330,7 +330,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	if err != nil {
 		pr.Printf("[FAIL] %q in %v\n", fnName, time.Since(t0).Truncate(time.Millisecond)) // TODO: use OptPrintf
 		printFnResult(fr.ctx, fr.fnResult, fr.opts.LogOptions.ResultSeparator)
-		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
+		if fnErr, ok := goerrors.AsType[*fnresultv1.ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
 		}
@@ -408,7 +408,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		// a default is important.
 		fnResult.ExitCode = 1
 		fr.fnResults.ExitCode = 1
-		if execErr, ok := goerrors.AsType[*ExecError](err); ok {
+		if execErr, ok := goerrors.AsType[*fnresultv1.ExecError](err); ok {
 			fnResult.ExitCode = execErr.ExitCode
 			fnResult.Stderr = execErr.Stderr
 		}
@@ -564,7 +564,7 @@ func printFnResult(ctx context.Context, fnResult *fnresultv1.Result, separator s
 
 // printFnExecErr prints given ExecError in a user friendly format
 // on kpt CLI.
-func printFnExecErr(ctx context.Context, fnErr *ExecError) {
+func printFnExecErr(ctx context.Context, fnErr *fnresultv1.ExecError) {
 	pr := printer.FromContextOrDie(ctx)
 	printFnStderr(ctx, fnErr.Stderr)
 	pr.Printf("  Exit code: %d\n", fnErr.ExitCode)

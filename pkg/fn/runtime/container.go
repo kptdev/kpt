@@ -148,7 +148,7 @@ func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, fil
 
 	if err := cmd.Run(); err != nil {
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
-			return &ExecError{
+			return &fnresultv1.ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
 				Stderr:         filterCLIOutputFn(&errSink),
