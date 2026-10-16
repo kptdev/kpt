@@ -9,22 +9,22 @@ Download pre-compiled binaries:
 {{< tabpane text=true >}}
 {{% tab header="Linux amd64" %}}
 ```shell
-curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_amd64-{{< kpt_version >}}.tar.gz
+curl -LO https://github.com/kptdev/kpt/releases/download/cli/v{{< kpt_version >}}/kpt_linux_amd64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}
 {{% tab header="Linux arm64" %}}
 ```shell
-curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_linux_arm64-{{< kpt_version >}}.tar.gz
+curl -LO https://github.com/kptdev/kpt/releases/download/cli/v{{< kpt_version >}}/kpt_linux_arm64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}
 {{% tab header="macOS amd64" %}}
 ```shell
-curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
+curl -LO https://github.com/kptdev/kpt/releases/download/cli/v{{< kpt_version >}}/kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}
 {{% tab header="macOS arm64" %}}
 ```shell
-curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
+curl -LO https://github.com/kptdev/kpt/releases/download/cli/v{{< kpt_version >}}/kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}
 {{< /tabpane >}}
@@ -37,7 +37,7 @@ process. To verify a release archive:
 2. Download the signature file:
 
 ```shell
-curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/multiple.intoto.jsonl
+curl -LO https://github.com/kptdev/kpt/releases/download/cli/v{{< kpt_version >}}/multiple.intoto.jsonl
 ```
 3. Run the verifier:
 
@@ -47,7 +47,7 @@ curl -LO https://github.com/kptdev/kpt/releases/download/v{{< kpt_version >}}/mu
 slsa-verifier verify-artifact \
   --provenance-path multiple.intoto.jsonl \
   --source-uri github.com/kptdev/kpt \
-  --source-versioned-tag v{{< kpt_version >}} \
+  --source-versioned-tag cli/v{{< kpt_version >}} \
   kpt_linux_amd64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}
@@ -56,7 +56,7 @@ slsa-verifier verify-artifact \
 slsa-verifier verify-artifact \
   --provenance-path multiple.intoto.jsonl \
   --source-uri github.com/kptdev/kpt \
-  --source-versioned-tag v{{< kpt_version >}} \
+  --source-versioned-tag cli/v{{< kpt_version >}} \
   kpt_linux_arm64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}
@@ -65,7 +65,7 @@ slsa-verifier verify-artifact \
 slsa-verifier verify-artifact \
   --provenance-path multiple.intoto.jsonl \
   --source-uri github.com/kptdev/kpt \
-  --source-versioned-tag v{{< kpt_version >}} \
+  --source-versioned-tag cli/v{{< kpt_version >}} \
   kpt_darwin_amd64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}
@@ -74,7 +74,7 @@ slsa-verifier verify-artifact \
 slsa-verifier verify-artifact \
   --provenance-path multiple.intoto.jsonl \
   --source-uri github.com/kptdev/kpt \
-  --source-versioned-tag v{{< kpt_version >}} \
+  --source-versioned-tag cli/v{{< kpt_version >}} \
   kpt_darwin_arm64-{{< kpt_version >}}.tar.gz
 ```
 {{% /tab %}}

@@ -22,6 +22,20 @@ include ./make/cli.mk
 
 all: fix vet fmt lint test build tidy
 
+.PHONY: lib
+# Root module only. The vX.Y.Z tag workflow runs this; it does not build the CLI.
+lib:
+	go fix ./...
+	go vet ./...
+	go fmt ./...
+	@if [[ `command -v golangci-lint` && `golangci-lint version --short` == $(GOLANGCI_LINT_VERSION) ]]; then \
+		golangci-lint run -v ./...; \
+	else \
+		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
+	fi
+	go test -cover ./...
+	go mod tidy
+
 build: cli/build
 
 update-deps-to-head:

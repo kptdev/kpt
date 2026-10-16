@@ -20,9 +20,18 @@
 # steps for each targetted OS and ARCH. This is because we need to specify the
 # platform specific C std library (libc) and cross-compiler to be used.
 version: 2
+# The CLI is released from tags like cli/v1.2.3. GoReleaser's monorepo.tag_prefix
+# setting is not available in the open-source build, and it would treat that tag
+# as the version string. The CLI workflow sets KPT_VERSION (1.2.3) and KPT_TAG
+# (v1.2.3); snapshots leave them unset and fall back to GoReleaser's own values.
 env:
   - CGO_ENABLED=0
   - GO111MODULE=on
+# Library tags (v*) and API tags must not be treated as the previous CLI release.
+git:
+  ignore_tags:
+    - "v*"
+    - "api/*"
 builds:
   - id: darwin-amd64
     env:
@@ -32,7 +41,7 @@ builds:
       - darwin
     goarch:
       - amd64
-    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}}
+    ldflags: -s -w -X main.version={{ if .Env.KPT_VERSION }}{{ .Env.KPT_VERSION }}{{ else }}{{ .Version }}{{ end }} -X main.gitCommit={{.FullCommit}}
     dir: cli
 
   - id: darwin-arm64
@@ -43,7 +52,7 @@ builds:
       - darwin
     goarch:
       - arm64
-    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}}
+    ldflags: -s -w -X main.version={{ if .Env.KPT_VERSION }}{{ .Env.KPT_VERSION }}{{ else }}{{ .Version }}{{ end }} -X main.gitCommit={{.FullCommit}}
     dir: cli
 
   - id: linux-amd64
@@ -54,7 +63,7 @@ builds:
       - linux
     goarch:
       - amd64
-    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ if .Env.KPT_VERSION }}{{ .Env.KPT_VERSION }}{{ else }}{{ .Version }}{{ end }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
     dir: cli
 
   - id: linux-arm64
@@ -65,7 +74,7 @@ builds:
       - linux
     goarch:
       - arm64
-    ldflags: -s -w -X main.version={{.Version}} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ if .Env.KPT_VERSION }}{{ .Env.KPT_VERSION }}{{ else }}{{ .Version }}{{ end }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
     dir: cli
 
 dockers_v2:
@@ -75,7 +84,7 @@ dockers_v2:
     images:
       - ghcr.io/kptdev/kpt
     tags:
-      - "{{ .Tag }}"
+      - "{{ if .Env.KPT_TAG }}{{ .Env.KPT_TAG }}{{ else }}{{ .Tag }}{{ end }}"
       # `stable` tracks the latest non-prerelease release
       - "{{ if not .Prerelease }}stable{{ end }}"
     dockerfile: release/images/Dockerfile
@@ -87,7 +96,7 @@ dockers_v2:
       org.opencontainers.image.description: "kpt - Automate Kubernetes Configuration Editing"
       org.opencontainers.image.url: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
       org.opencontainers.image.source: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
-      org.opencontainers.image.version: "{{ .Tag }}"
+      org.opencontainers.image.version: "{{ if .Env.KPT_TAG }}{{ .Env.KPT_TAG }}{{ else }}{{ .Tag }}{{ end }}"
       org.opencontainers.image.revision: "{{ .FullCommit }}"
       org.opencontainers.image.created: "{{ .Date }}"
 archives:
@@ -100,7 +109,7 @@ archives:
     files:
       - LICENSES*
       - lib.zip*
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ if .Env.KPT_VERSION }}{{ .Env.KPT_VERSION }}{{ else }}{{ .Version }}{{ end }}"
   - id: bin-only
     formats: binary
     ids:
@@ -129,7 +138,7 @@ nfpms:
     contents:
       - src: LICENSE
         dst: /usr/share/doc/kpt/LICENSE
-    file_name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
+    file_name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ if .Env.KPT_VERSION }}{{ .Env.KPT_VERSION }}{{ else }}{{ .Version }}{{ end }}"
 checksum:
   name_template: "checksums.txt"
 changelog:
@@ -142,6 +151,7 @@ changelog:
       - Merge pull request
       - Merge branch
 release:
+  name_template: "{{ if .Env.KPT_TAG }}{{ .Env.KPT_TAG }}{{ else }}{{ .Tag }}{{ end }}" # TODO: check if this is needed
   github:
     owner: kptdev
     name: kpt
