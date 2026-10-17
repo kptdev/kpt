@@ -121,6 +121,13 @@ definitions:
                     Can be a semver constraint satisfying this spec: https://github.com/Masterminds/semver?tab=readme-ov-file#checking-version-constraints
                 type: string
                 x-go-name: Tag
+            timeout:
+                description: |-
+                    `Timeout` is an optional field for specifying the maximum time the function is allowed to run,
+                    e.g. '30s' or '10m'. If omitted, the function is limited by the pipeline run timeout (if set)
+                    or defaults to 5 minutes. Applicable to container and exec based functions only.
+                type: string
+                x-go-name: Timeout
             when:
                 description: |-
                     CelCondition is an optional CEL expression (exposed as 'when' in YAML) that determines whether this
