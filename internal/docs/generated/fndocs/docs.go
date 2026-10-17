@@ -349,7 +349,8 @@ Flags:
     This includes the functions of all subpackages. If the pipeline has not
     finished by then, the function that is running is stopped and the render fails.
     When this flag is not set, there is no limit for the whole pipeline, and each
-    function is allowed to run for 5 minutes.
+    function is allowed to run for 5 minutes, or for its ` + "`" + `timeout` + "`" + ` from the
+    Kptfile if it sets one.
     Note that this is applicable to container and exec based functions only.
 
 Kptfile Annotations:

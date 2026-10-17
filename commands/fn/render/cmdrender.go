@@ -68,7 +68,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"allow wasm to be used during pipeline execution.")
 	c.Flags().DurationVar(&r.RunnerOptions.Timeout, "timeout", 0,
 		"maximum time the whole pipeline is allowed to run, e.g. 30s or 10m. "+
-			"When it is not set, each function is allowed to run for 5m.")
+			"When it is not set, each function is allowed to run for 5m, or for its timeout from the Kptfile if it sets one.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r

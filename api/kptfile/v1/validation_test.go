@@ -148,6 +148,76 @@ func TestKptfileValidate(t *testing.T) {
 			},
 			valid: false,
 		},
+		{
+			name: "pipeline: valid mutator step timeout",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:   "image",
+							Timeout: "30s",
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "pipeline: valid validator step timeout",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Validators: []Function{
+						{
+							Image:   "image",
+							Timeout: "1m",
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "pipeline: invalid step timeout syntax",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:   "image",
+							Timeout: "not-a-duration",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: non-positive zero step timeout",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:   "image",
+							Timeout: "0s",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: negative step timeout",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Validators: []Function{
+						{
+							Image:   "image",
+							Timeout: "-10s",
+						},
+					},
+				},
+			},
+			valid: false,
+		},
 	}
 
 	for _, c := range cases {
