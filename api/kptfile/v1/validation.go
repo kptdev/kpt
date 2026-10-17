@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/distribution/reference"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -232,8 +233,31 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 			}
 		}
 	}
-	if err := f.validateExecutor(fnType, idx); err != nil {
+	if err := f.validateTimeout(fnType, idx); err != nil {
 		return err
+	}
+	return nil
+}
+
+// validateTimeout checks that the optional timeout string is a valid positive duration.
+func (f *Function) validateTimeout(fnType string, idx int) error {
+	if f.Timeout == "" {
+		return nil
+	}
+	d, err := time.ParseDuration(f.Timeout)
+	if err != nil {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].timeout", fnType, idx),
+			Value:  f.Timeout,
+			Reason: fmt.Sprintf("invalid duration %q: %v", f.Timeout, err),
+		}
+	}
+	if d <= 0 {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d].timeout", fnType, idx),
+			Value:  f.Timeout,
+			Reason: fmt.Sprintf("timeout %q must be greater than zero", f.Timeout),
+		}
 	}
 	return nil
 }

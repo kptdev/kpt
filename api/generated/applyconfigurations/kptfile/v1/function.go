@@ -77,6 +77,10 @@ type FunctionApplyConfiguration struct {
 	// - Check resource count among the selected resources:
 	// `when: "resources.filter(r, r.kind == 'Deployment').size() > 0"`
 	CelCondition *string `json:"when,omitempty"`
+	// Timeout specifies the maximum execution time for this function step
+	// (e.g. "30s", "1m", "5m"). If omitted, the pipeline timeout or default
+	// function timeout (5m) is used.
+	Timeout *string `json:"timeout,omitempty"`
 }
 
 // FunctionApplyConfiguration constructs a declarative configuration of the Function type for use with
@@ -180,3 +184,12 @@ func (b *FunctionApplyConfiguration) WithCelCondition(value string) *FunctionApp
 	b.CelCondition = &value
 	return b
 }
+
+// WithTimeout sets the Timeout field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Timeout field is set to the value of the last call.
+func (b *FunctionApplyConfiguration) WithTimeout(value string) *FunctionApplyConfiguration {
+	b.Timeout = &value
+	return b
+}
+
