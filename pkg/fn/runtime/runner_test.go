@@ -1146,3 +1146,83 @@ func TestNewRunner_RunTimeout(t *testing.T) {
 	require.Len(t, fnResults.Items, 1)
 	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
 }
+
+func TestNewRunner_StepTimeout(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	ctx := printer.WithContext(context.Background(), printer.New(out, out))
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+
+	fnResults := fnresultv1.NewResultList()
+	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30", Timeout: "100ms"},
+		"", fnResults, opts, nil)
+	require.NoError(t, err)
+
+	_, err = fr.Filter(nil)
+	assert.Error(t, err)
+	assert.Contains(t, out.String(), "Timed out: function execution timeout of 100ms exceeded")
+	require.Len(t, fnResults.Items, 1)
+	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
+}
+
+func TestNewRunner_InvalidTimeout(t *testing.T) {
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+	fnResults := fnresultv1.NewResultList()
+	_, err := NewRunner(context.Background(), filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30", Timeout: "not-a-duration"},
+		"", fnResults, opts, nil)
+	assert.ErrorContains(t, err, "invalid function timeout \"not-a-duration\"")
+}
+
+func TestNewRunner_StepTimeout_Precedence_RunTimeoutFirst(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	ctx, cancel := WithRunTimeout(
+		printer.WithContext(context.Background(), printer.New(out, out)), 100*time.Millisecond)
+	defer cancel()
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+
+	fnResults := fnresultv1.NewResultList()
+	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30", Timeout: "10s"},
+		"", fnResults, opts, nil)
+	require.NoError(t, err)
+
+	_, err = fr.Filter(nil)
+	assert.Error(t, err)
+	assert.Contains(t, out.String(), "Timed out: pipeline execution timeout of 100ms exceeded")
+	require.Len(t, fnResults.Items, 1)
+	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
+}
+
+func TestNewRunner_StepTimeout_Precedence_StepTimeoutFirst(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	ctx, cancel := WithRunTimeout(
+		printer.WithContext(context.Background(), printer.New(out, out)), 10*time.Second)
+	defer cancel()
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+
+	fnResults := fnresultv1.NewResultList()
+	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30", Timeout: "100ms"},
+		"", fnResults, opts, nil)
+	require.NoError(t, err)
+
+	_, err = fr.Filter(nil)
+	assert.Error(t, err)
+	assert.Contains(t, out.String(), "Timed out: function execution timeout of 100ms exceeded")
+	require.Len(t, fnResults.Items, 1)
+	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
+}
+
