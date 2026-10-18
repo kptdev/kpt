@@ -85,6 +85,9 @@ type RunnerOptions struct {
 	CelCostLimit uint64
 
 	ExtraTlsCerts [][]byte
+
+	// RegistryCredentials contains credentials and configuration for accessing private container registries.
+	RegistryCredentials RegistryCredentials
 }
 
 type PackageIDType int8

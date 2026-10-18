@@ -62,13 +62,9 @@ func NewRunner(
 		img := opts.ResolveToImage(f.Image)
 		f.Image = img
 
-		rcOpts := []regclient.Opt{
-			regclient.WithUserAgent(UserAgent),
-			regclient.WithDockerCreds(),
-		}
-
-		if len(opts.ExtraTlsCerts) != 0 {
-			rcOpts = append(rcOpts, regclient.WithRegOpts(regclientreg.WithCerts(opts.ExtraTlsCerts)))
+		rcOpts, err := buildRegClientOpts(opts)
+		if err != nil {
+			return nil, err
 		}
 
 		listers := []TagLister{
@@ -208,6 +204,37 @@ func NewRunner(
 	}
 
 	return fr, nil
+}
+
+func buildRegClientOpts(opts runneroptions.RunnerOptions) ([]regclient.Opt, error) {
+	rcOpts := []regclient.Opt{
+		regclient.WithUserAgent(UserAgent),
+	}
+
+	if !opts.RegistryCredentials.DisableDefaultDockerCreds {
+		rcOpts = append(rcOpts, regclient.WithDockerCreds())
+	}
+
+	if opts.RegistryCredentials.DockerConfigFile != "" {
+		if _, err := os.Stat(opts.RegistryCredentials.DockerConfigFile); err != nil {
+			return nil, fmt.Errorf("registry credentials file not found: %w", err)
+		}
+		rcOpts = append(rcOpts, regclient.WithDockerCredsFile(opts.RegistryCredentials.DockerConfigFile))
+	}
+
+	hosts, err := opts.RegistryCredentials.ToRegClientHosts()
+	if err != nil {
+		return nil, fmt.Errorf("failed to process registry credentials: %w", err)
+	}
+	if len(hosts) > 0 {
+		rcOpts = append(rcOpts, regclient.WithConfigHost(hosts...))
+	}
+
+	if len(opts.ExtraTlsCerts) != 0 {
+		rcOpts = append(rcOpts, regclient.WithRegOpts(regclientreg.WithCerts(opts.ExtraTlsCerts)))
+	}
+
+	return rcOpts, nil
 }
 
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
