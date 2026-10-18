@@ -67,6 +67,14 @@ The kpt toolchain includes the following components:
   configuration easy to create and transform, via reusable functions. Because they are expected to be used for in-place
   transformation, the functions need to be idempotent.
 
+- [**Porch (Package Orchestration)**](https://docs.porch.nephio.org/): A Kubernetes-native control plane ("kpt-as-a-service") that exposes package operations as declarative Kubernetes resources (`PackageRevision`). Porch automates package cloning, server-side function evaluation, and multi-stage lifecycle governance (`Draft` ➔ `Proposed` ➔ `Published`) across enterprise fleets. Separate GitOps reconcilers such as Config Sync, Flux, or Argo CD synchronize published configuration to workload clusters.
+
+### The 10,000 m View: kpt and Porch
+
+While the **kpt CLI** provides an agile client-side developer experience on local filesystems and Git repositories, **Porch** provides a centralized, server-side package orchestration engine running inside Kubernetes. Together, they form an end-to-end Configuration as Data platform.
+
+For a detailed architectural comparison, end-to-end workflows, and guidance on when to use each, see the [10,000 m View of kpt and Porch]({{% relref "/guides/10000-m-view" %}}) guide.
+
 ## Packages
   
 kpt manages KRM resources in bundles called **packages**.
