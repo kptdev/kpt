@@ -216,10 +216,21 @@ func buildRegClientOpts(ctx context.Context, opts runneroptions.RunnerOptions) (
 	}
 
 	if opts.RegistryCredentials.DockerConfigFile != "" {
-		if _, err := os.Stat(opts.RegistryCredentials.DockerConfigFile); err != nil {
+		data, err := os.ReadFile(opts.RegistryCredentials.DockerConfigFile)
+		if err != nil {
 			return nil, fmt.Errorf("registry credentials file not found: %w", err)
 		}
-		rcOpts = append(rcOpts, regclient.WithDockerCredsFile(opts.RegistryCredentials.DockerConfigFile))
+		fileCredentials := runneroptions.RegistryCredentials{
+			DockerConfigJSON:       data,
+			AllowCredentialHelpers: opts.RegistryCredentials.AllowCredentialHelpers,
+		}
+		fileHosts, err := fileCredentials.ToRegClientHosts(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to process registry credentials file: %w", err)
+		}
+		if len(fileHosts) > 0 {
+			rcOpts = append(rcOpts, regclient.WithConfigHost(fileHosts...))
+		}
 	}
 
 	hosts, err := opts.RegistryCredentials.ToRegClientHosts(ctx)
