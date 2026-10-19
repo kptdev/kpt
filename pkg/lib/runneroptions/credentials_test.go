@@ -15,13 +15,14 @@
 package runneroptions
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+	"time"
 
 	"github.com/regclient/regclient/config"
 	"github.com/stretchr/testify/assert"
@@ -156,7 +157,7 @@ func TestParseDockerConfigJSON_Standard(t *testing.T) {
 		}
 	}`, authStr)
 
-	hosts, err := parseDockerConfigJSON([]byte(dockerJSON), true)
+	hosts, err := parseDockerConfigJSON(t.Context(), []byte(dockerJSON), true)
 	require.NoError(t, err)
 	require.Len(t, hosts, 4)
 
@@ -193,7 +194,7 @@ func TestParseDockerConfigJSON_LegacyDockercfg(t *testing.T) {
 		}
 	}`, authStr)
 
-	hosts, err := parseDockerConfigJSON([]byte(dockercfg), false)
+	hosts, err := parseDockerConfigJSON(t.Context(), []byte(dockercfg), false)
 	require.NoError(t, err)
 	require.Len(t, hosts, 1)
 
@@ -203,50 +204,94 @@ func TestParseDockerConfigJSON_LegacyDockercfg(t *testing.T) {
 }
 
 func TestParseDockerConfigJSON_EmptyAndInvalid(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+
 	// Empty or whitespace
-	hosts, err := parseDockerConfigJSON([]byte(""), false)
+	hosts, err := parseDockerConfigJSON(t.Context(), []byte(""), false)
 	require.NoError(t, err)
 	assert.Nil(t, hosts)
 
-	hosts, err = parseDockerConfigJSON([]byte("   \n\t  "), false)
+	hosts, err = parseDockerConfigJSON(t.Context(), []byte("   \n\t  "), false)
 	require.NoError(t, err)
 	assert.Nil(t, hosts)
 
-	hosts, err = parseDockerConfigJSON([]byte("{}"), false)
+	hosts, err = parseDockerConfigJSON(t.Context(), []byte("{}"), false)
 	require.NoError(t, err)
 	assert.Nil(t, hosts)
+
+	for _, emptyObj := range []string{"{ }", "{\n}", "{\n\t  \n}"} {
+		hosts, err = parseDockerConfigJSON(t.Context(), []byte(emptyObj), false)
+		require.NoError(t, err)
+		assert.Nil(t, hosts)
+	}
 
 	// Present-but-empty auths map (common default Docker configs)
-	hosts, err = parseDockerConfigJSON([]byte(`{"auths":{}}`), false)
+	hosts, err = parseDockerConfigJSON(t.Context(), []byte(`{"auths":{}}`), false)
 	require.NoError(t, err)
 	assert.Nil(t, hosts)
 
-	hosts, err = parseDockerConfigJSON([]byte(`{"auths":{},"currentContext":"default"}`), false)
+	hosts, err = parseDockerConfigJSON(t.Context(), []byte(`{"auths":{},"currentContext":"default"}`), false)
 	require.NoError(t, err)
 	assert.Nil(t, hosts)
 
-	// Store-only config without specific registry hosts but AllowCredentialHelpers enabled
-	hosts, err = parseDockerConfigJSON([]byte(`{"credsStore":"pass"}`), true)
-	require.NoError(t, err)
-	assert.Nil(t, hosts)
+	// Store-only config with unavailable helper returns error during discovery
+	_, err = parseDockerConfigJSON(t.Context(), []byte(`{"credsStore":"pass"}`), true)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed during discovery")
+
+	// Metadata-only modern Docker configs without credentials are treated as empty
+	for _, metaJSON := range []string{
+		`{"currentContext":"default"}`,
+		`{"currentContext":"default","detachKeys":"ctrl-e,e"}`,
+		`{"plugins":{}}`,
+		`{"proxies":{"default":{"httpProxy":"http://proxy:8080"}}}`,
+	} {
+		hosts, err = parseDockerConfigJSON(t.Context(), []byte(metaJSON), false)
+		require.NoError(t, err)
+		assert.Nil(t, hosts)
+	}
+
+	// Malformed legacy configs are still rejected
+	_, err = parseDockerConfigJSON(t.Context(), []byte(`{"someRegistry":{"unknownField":"notAnAuthConfig"}}`), false)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid or unrecognized docker config JSON format")
 
 	// Invalid JSON
-	_, err = parseDockerConfigJSON([]byte("not valid json"), false)
+	_, err = parseDockerConfigJSON(t.Context(), []byte("not valid json"), false)
 	require.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "invalid docker config JSON format"))
+}
+
+func TestParseDockerConfigJSON_MalformedAuths(t *testing.T) {
+	t.Run("rejects invalid base64 in auth", func(t *testing.T) {
+		jsonStr := `{"auths":{"broken.example.com":{"auth":"invalid-base64%%%"}}}`
+		_, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), false)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `failed to decode base64 auth for registry "broken.example.com"`)
+		assert.NotContains(t, err.Error(), "invalid-base64%%%")
+	})
+
+	t.Run("rejects base64 auth without colon", func(t *testing.T) {
+		noColon := base64.StdEncoding.EncodeToString([]byte("justusername"))
+		jsonStr := fmt.Sprintf(`{"auths":{"broken.example.com":{"auth":"%s"}}}`, noColon)
+		_, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), false)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), `invalid auth format for registry "broken.example.com": expected 'username:password'`)
+		assert.NotContains(t, err.Error(), "justusername")
+		assert.NotContains(t, err.Error(), noColon)
+	})
 }
 
 func TestParseDockerConfigJSON_SecurityHelperDirectives(t *testing.T) {
 	t.Run("rejects credHelpers in raw JSON by default", func(t *testing.T) {
 		jsonStr := `{"credHelpers":{"gcr.io":"gcr"}}`
-		_, err := parseDockerConfigJSON([]byte(jsonStr), false)
+		_, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), false)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "credential helper directives (credHelpers/credsStore) in DockerConfigJSON are not allowed by default")
 	})
 
 	t.Run("rejects credsStore in raw JSON by default", func(t *testing.T) {
 		jsonStr := `{"auths":{"private.example.com":{}},"credsStore":"pass"}`
-		_, err := parseDockerConfigJSON([]byte(jsonStr), false)
+		_, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), false)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "credential helper directives (credHelpers/credsStore) in DockerConfigJSON are not allowed by default")
 	})
@@ -277,13 +322,44 @@ func TestParseDockerConfigJSON_SecurityHelperDirectives(t *testing.T) {
 }
 
 func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
+	tempDir := t.TempDir()
+	mockHelperScript := filepath.Join(tempDir, "docker-credential-mockhelper")
+	scriptContent := "#!/bin/sh\n" +
+		"if [ \"$1\" = \"list\" ]; then\n" +
+		"  echo '{\"https://store.example.com\": \"storeuser\", \"index.docker.io\": \"dockeruser\"}'\n" +
+		"  exit 0\n" +
+		"fi\n" +
+		"if [ \"$1\" = \"get\" ]; then\n" +
+		"  read srv\n" +
+		"  echo '{\"ServerURL\": \"'\"$srv\"'\", \"Username\": \"helperuser\", \"Secret\": \"helpersecret\"}'\n" +
+		"  exit 0\n" +
+		"fi\n" +
+		"exit 1\n"
+	err := os.WriteFile(mockHelperScript, []byte(scriptContent), 0o755)
+	require.NoError(t, err)
+
+	for _, name := range []string{"pass", "custom", "desktop", "ecr-login", "gcr", "mockstore"} {
+		link := filepath.Join(tempDir, "docker-credential-"+name)
+		err = os.WriteFile(link, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+	}
+
+	origPath := os.Getenv("PATH")
+	t.Setenv("PATH", fmt.Sprintf("%s%c%s", tempDir, os.PathListSeparator, origPath))
+
 	t.Run("credsStore fallback when registry has no explicit credentials", func(t *testing.T) {
 		jsonStr := `{"auths":{"private.example.com":{}},"credsStore":"pass"}`
-		hosts, err := parseDockerConfigJSON([]byte(jsonStr), true)
+		hosts, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), true)
 		require.NoError(t, err)
 		require.Len(t, hosts, 1)
 		assert.Equal(t, "private.example.com", hosts[0].Name)
 		assert.Equal(t, "docker-credential-pass", hosts[0].CredHelper)
+
+		resolved, err := ResolveHelperCredentials(t.Context(), hosts, true)
+		require.NoError(t, err)
+		assert.Equal(t, "helperuser", resolved[0].User)
+		assert.Equal(t, "helpersecret", resolved[0].Pass)
+		assert.Empty(t, resolved[0].CredHelper)
 	})
 
 	t.Run("per-registry credHelpers takes precedence over credsStore", func(t *testing.T) {
@@ -297,7 +373,7 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 			},
 			"credsStore": "pass"
 		}`
-		hosts, err := parseDockerConfigJSON([]byte(jsonStr), true)
+		hosts, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), true)
 		require.NoError(t, err)
 		require.Len(t, hosts, 2)
 
@@ -308,6 +384,15 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 
 		assert.Equal(t, "docker-credential-pass", hostMap["private.example.com"].CredHelper)
 		assert.Equal(t, "docker-credential-custom", hostMap["custom.example.com"].CredHelper)
+
+		resolved, err := ResolveHelperCredentials(t.Context(), hosts, true)
+		require.NoError(t, err)
+		require.Len(t, resolved, 2)
+		for _, h := range resolved {
+			assert.Equal(t, "helperuser", h.User)
+			assert.Equal(t, "helpersecret", h.Pass)
+			assert.Empty(t, h.CredHelper)
+		}
 	})
 
 	t.Run("both auths and credHelpers contain index.docker.io", func(t *testing.T) {
@@ -319,7 +404,7 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 				"index.docker.io": "desktop"
 			}
 		}`
-		hosts, err := parseDockerConfigJSON([]byte(jsonStr), true)
+		hosts, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), true)
 		require.NoError(t, err)
 		require.Len(t, hosts, 1)
 		assert.Equal(t, config.DockerRegistry, hosts[0].Name)
@@ -338,7 +423,7 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 				"standalone.example.com": "ecr-login"
 			}
 		}`
-		hosts, err := parseDockerConfigJSON([]byte(jsonStr), true)
+		hosts, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), true)
 		require.NoError(t, err)
 		require.Len(t, hosts, 2)
 
@@ -361,7 +446,7 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 				"index.docker.io": "desktop"
 			}
 		}`
-		hosts, err := parseDockerConfigJSON([]byte(jsonStr), true)
+		hosts, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), true)
 		require.NoError(t, err)
 		require.Len(t, hosts, 1)
 		assert.Equal(t, config.DockerRegistry, hosts[0].Name)
@@ -374,7 +459,7 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 				"gcr.io": "docker-credential-gcr"
 			}
 		}`
-		hosts, err := parseDockerConfigJSON([]byte(jsonStr), true)
+		hosts, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), true)
 		require.NoError(t, err)
 		require.Len(t, hosts, 1)
 		assert.Equal(t, "gcr.io", hosts[0].Name)
@@ -382,22 +467,8 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 	})
 
 	t.Run("store-only Docker config discovers credentials via helper list", func(t *testing.T) {
-		tempDir := t.TempDir()
-		helperScript := filepath.Join(tempDir, "docker-credential-mockstore")
-		scriptContent := "#!/bin/sh\n" +
-			"if [ \"$1\" = \"list\" ]; then\n" +
-			"  echo '{\"https://store.example.com\": \"storeuser\", \"index.docker.io\": \"dockeruser\"}'\n" +
-			"  exit 0\n" +
-			"fi\n" +
-			"exit 1\n"
-		err := os.WriteFile(helperScript, []byte(scriptContent), 0o755)
-		require.NoError(t, err)
-
-		origPath := os.Getenv("PATH")
-		t.Setenv("PATH", fmt.Sprintf("%s%c%s", tempDir, os.PathListSeparator, origPath))
-
 		jsonStr := `{"credsStore": "mockstore"}`
-		hosts, err := parseDockerConfigJSON([]byte(jsonStr), true)
+		hosts, err := parseDockerConfigJSON(t.Context(), []byte(jsonStr), true)
 		require.NoError(t, err)
 		require.Len(t, hosts, 2)
 
@@ -410,6 +481,15 @@ func TestParseDockerConfigJSON_CredsStoreAndHelpers(t *testing.T) {
 		assert.Equal(t, "docker-credential-mockstore", hostMap["store.example.com"].CredHelper)
 		assert.Equal(t, "dockeruser", hostMap[config.DockerRegistry].User)
 		assert.Equal(t, "docker-credential-mockstore", hostMap[config.DockerRegistry].CredHelper)
+
+		resolved, err := ResolveHelperCredentials(t.Context(), hosts, true)
+		require.NoError(t, err)
+		require.Len(t, resolved, 2)
+		for _, h := range resolved {
+			assert.NotEmpty(t, h.User)
+			assert.Equal(t, "helpersecret", h.Pass)
+			assert.Empty(t, h.CredHelper)
+		}
 	})
 }
 
@@ -440,4 +520,154 @@ func TestRegistryCredentials_ToRegClientHosts(t *testing.T) {
 	assert.Contains(t, names, "quay.io")
 	assert.Contains(t, names, "custom.registry.com")
 	assert.Contains(t, names, "advanced.registry.com")
+}
+
+func TestRegistryCredentials_ContextCancellationAndTimeout(t *testing.T) {
+	tempDir := t.TempDir()
+	helperScript := filepath.Join(tempDir, "docker-credential-hangstore")
+	scriptContent := "#!/bin/sh\nexec sleep 10\n"
+	err := os.WriteFile(helperScript, []byte(scriptContent), 0o755)
+	require.NoError(t, err)
+
+	t.Setenv("PATH", fmt.Sprintf("%s%c%s", tempDir, os.PathListSeparator, os.Getenv("PATH")))
+
+	t.Run("propagates cancelled context error", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		creds := RegistryCredentials{
+			DockerConfigJSON:       []byte(`{"credsStore":"hangstore"}`),
+			AllowCredentialHelpers: true,
+		}
+
+		_, err := creds.ToRegClientHosts(ctx)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "context canceled")
+	})
+
+	t.Run("propagates timeout error", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
+		defer cancel()
+
+		creds := RegistryCredentials{
+			DockerConfigJSON:       []byte(`{"credsStore":"hangstore"}`),
+			AllowCredentialHelpers: true,
+		}
+
+		_, err := creds.ToRegClientHosts(ctx)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "context deadline exceeded")
+	})
+
+	t.Run("child retaining output pipes does not block beyond wait delay", func(t *testing.T) {
+		pipeScript := filepath.Join(tempDir, "docker-credential-pipehang")
+		pipeContent := "#!/bin/sh\nsleep 10 >&1 &\nexit 0\n"
+		err := os.WriteFile(pipeScript, []byte(pipeContent), 0o755)
+		require.NoError(t, err)
+
+		start := time.Now()
+		creds := RegistryCredentials{
+			DockerConfigJSON:       []byte(`{"credsStore":"pipehang"}`),
+			AllowCredentialHelpers: true,
+		}
+
+		_, _ = creds.ToRegClientHosts(t.Context())
+		elapsed := time.Since(start)
+		assert.Less(t, elapsed, 4*time.Second)
+	})
+
+	t.Run("helper get hanging times out and cancels", func(t *testing.T) {
+		hangScript := filepath.Join(tempDir, "docker-credential-hangget")
+		hangContent := "#!/bin/sh\nif [ \"$1\" = \"get\" ]; then\n  exec sleep 10\nfi\nexit 0\n"
+		err := os.WriteFile(hangScript, []byte(hangContent), 0o755)
+		require.NoError(t, err)
+
+		t.Run("propagates cancelled context error on get", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			cancel()
+
+			creds := RegistryCredentials{
+				DockerConfigJSON:       []byte(`{"credHelpers":{"hang.example.com":"hangget"}}`),
+				AllowCredentialHelpers: true,
+			}
+
+			_, err := creds.ToRegClientHosts(ctx)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "context canceled")
+		})
+
+		t.Run("propagates timeout error on get", func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
+			defer cancel()
+
+			creds := RegistryCredentials{
+				DockerConfigJSON:       []byte(`{"credHelpers":{"hang.example.com":"hangget"}}`),
+				AllowCredentialHelpers: true,
+			}
+
+			_, err := creds.ToRegClientHosts(ctx)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "context deadline exceeded")
+		})
+	})
+}
+
+func TestRegistryCredentials_HelperErrorPropagation(t *testing.T) {
+	tempDir := t.TempDir()
+	t.Setenv("PATH", tempDir)
+
+	t.Run("propagates list execution error when helper unavailable", func(t *testing.T) {
+		creds := RegistryCredentials{
+			DockerConfigJSON:       []byte(`{"credsStore":"missinghelper"}`),
+			AllowCredentialHelpers: true,
+		}
+		_, err := creds.ToRegClientHosts(t.Context())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed during discovery")
+	})
+
+	t.Run("propagates list json decoding error", func(t *testing.T) {
+		badScript := filepath.Join(tempDir, "docker-credential-badlist")
+		scriptContent := "#!/bin/sh\necho 'not-json'\nexit 0\n"
+		err := os.WriteFile(badScript, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+
+		creds := RegistryCredentials{
+			DockerConfigJSON:       []byte(`{"credsStore":"badlist"}`),
+			AllowCredentialHelpers: true,
+		}
+		_, err = creds.ToRegClientHosts(t.Context())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to decode credential helper")
+	})
+
+	t.Run("propagates get execution error when helper fails", func(t *testing.T) {
+		failScript := filepath.Join(tempDir, "docker-credential-failget")
+		scriptContent := "#!/bin/sh\nexit 1\n"
+		err := os.WriteFile(failScript, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+
+		creds := RegistryCredentials{
+			DockerConfigJSON:       []byte(`{"credHelpers":{"fail.example.com":"failget"}}`),
+			AllowCredentialHelpers: true,
+		}
+		_, err = creds.ToRegClientHosts(t.Context())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "get failed")
+	})
+
+	t.Run("propagates get json decoding error", func(t *testing.T) {
+		badScript := filepath.Join(tempDir, "docker-credential-badget")
+		scriptContent := "#!/bin/sh\necho 'not-json'\nexit 0\n"
+		err := os.WriteFile(badScript, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+
+		creds := RegistryCredentials{
+			DockerConfigJSON:       []byte(`{"credHelpers":{"badget.example.com":"badget"}}`),
+			AllowCredentialHelpers: true,
+		}
+		_, err = creds.ToRegClientHosts(t.Context())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to decode credential helper")
+	})
 }

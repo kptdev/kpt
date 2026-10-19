@@ -15,18 +15,23 @@
 package runneroptions
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/regclient/regclient/config"
 )
 
 const (
-	redacted           = "[REDACTED]"
-	dockerHelperPrefix = "docker-credential-"
+	redacted               = "[REDACTED]"
+	dockerHelperPrefix     = "docker-credential-"
+	defaultHelperTimeout   = 10 * time.Second
+	defaultHelperWaitDelay = 1 * time.Second
 )
 
 // RegistryHost defines authentication and connection configuration for a single OCI registry host.
@@ -214,11 +219,17 @@ func (rc RegistryCredentials) MarshalJSON() ([]byte, error) {
 
 // ToRegClientHosts parses and converts all in-memory credentials (Hosts, DockerConfigJSON, and RegClientHosts)
 // into a slice of regclient config.Host entries ready to be registered with regclient.WithConfigHost.
-func (rc RegistryCredentials) ToRegClientHosts() ([]config.Host, error) {
+// An optional context can be provided for timeout and cancellation of external credential helper commands.
+func (rc RegistryCredentials) ToRegClientHosts(ctx ...context.Context) ([]config.Host, error) {
+	c := context.Background()
+	if len(ctx) > 0 && ctx[0] != nil {
+		c = ctx[0]
+	}
+
 	var result []config.Host
 
 	if len(rc.DockerConfigJSON) > 0 {
-		parsedHosts, err := parseDockerConfigJSON(rc.DockerConfigJSON, rc.AllowCredentialHelpers)
+		parsedHosts, err := parseDockerConfigJSON(c, rc.DockerConfigJSON, rc.AllowCredentialHelpers)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse DockerConfigJSON: %w", err)
 		}
@@ -226,12 +237,23 @@ func (rc RegistryCredentials) ToRegClientHosts() ([]config.Host, error) {
 	}
 
 	for _, h := range rc.Hosts {
+		if h.CredHelper != "" && !rc.AllowCredentialHelpers {
+			return nil, fmt.Errorf(
+				"credential helper %q specified for host %q is not allowed by default; set AllowCredentialHelpers to true to permit them",
+				h.CredHelper, h.Name,
+			)
+		}
 		result = append(result, h.ToConfigHost())
 	}
 
 	result = append(result, rc.RegClientHosts...)
 
-	return result, nil
+	resolved, err := ResolveHelperCredentials(c, result, rc.AllowCredentialHelpers)
+	if err != nil {
+		return nil, err
+	}
+
+	return resolved, nil
 }
 
 type dockerConfigFile struct {
@@ -248,7 +270,7 @@ type dockerAuthConfig struct {
 	RegistryToken string `json:"registrytoken,omitempty"`
 }
 
-func parseDockerConfigJSON(data []byte, allowCredentialHelpers bool) ([]config.Host, error) {
+func parseDockerConfigJSON(ctx context.Context, data []byte, allowCredentialHelpers bool) ([]config.Host, error) {
 	trimmed := strings.TrimSpace(string(data))
 	if trimmed == "" || trimmed == "{}" {
 		return nil, nil
@@ -257,6 +279,9 @@ func parseDockerConfigJSON(data []byte, allowCredentialHelpers bool) ([]config.H
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal([]byte(trimmed), &raw); err != nil {
 		return nil, fmt.Errorf("invalid docker config JSON format: %w", err)
+	}
+	if raw != nil && len(raw) == 0 {
+		return nil, nil
 	}
 
 	// Standard docker config.json contains "auths", "credHelpers", or "credsStore".
@@ -281,16 +306,55 @@ func parseDockerConfigJSON(data []byte, allowCredentialHelpers bool) ([]config.H
 			// Present-but-empty auths/credHelpers maps without specific hosts or store
 			return nil, nil
 		}
-		return hostsFromDockerConfig(dcf, allowCredentialHelpers)
+		return hostsFromDockerConfig(ctx, dcf, allowCredentialHelpers)
+	}
+
+	// Recognize metadata-only modern Docker configs without credentials
+	// (e.g. {"currentContext":"default"}, {"detachKeys":"..."}, {"plugins":{}})
+	if isModernMetadataOnlyDockerConfig(raw) {
+		return nil, nil
 	}
 
 	// Try legacy .dockercfg format (top-level map of registry to auth config)
 	var legacyAuths map[string]dockerAuthConfig
 	if err := json.Unmarshal([]byte(trimmed), &legacyAuths); err == nil && len(legacyAuths) > 0 {
-		return hostsFromDockerConfig(dockerConfigFile{Auths: legacyAuths}, false)
+		if isLegacyDockercfg(legacyAuths) {
+			return hostsFromDockerConfig(ctx, dockerConfigFile{Auths: legacyAuths}, false)
+		}
 	}
 
 	return nil, fmt.Errorf("invalid or unrecognized docker config JSON format")
+}
+
+var modernDockerConfigKeys = map[string]bool{
+	"currentContext":    true,
+	"detachKeys":        true,
+	"plugins":           true,
+	"proxies":           true,
+	"httpHeaders":       true,
+	"psFormat":          true,
+	"imagesFormat":      true,
+	"experimental":      true,
+	"stackOrchestrator": true,
+	"aliases":           true,
+}
+
+func isModernMetadataOnlyDockerConfig(raw map[string]json.RawMessage) bool {
+	for k := range raw {
+		if modernDockerConfigKeys[k] {
+			return true
+		}
+	}
+	return false
+}
+
+func isLegacyDockercfg(auths map[string]dockerAuthConfig) bool {
+	for _, a := range auths {
+		if a.Auth != "" || a.Username != "" || a.Password != "" || a.IdentityToken != "" || a.RegistryToken != "" {
+			return true
+		}
+	}
+	return false
 }
 
 func normalizeRegistryName(name string) string {
@@ -299,6 +363,14 @@ func normalizeRegistryName(name string) string {
 		return config.DockerRegistry
 	}
 	return cleanName
+}
+
+func helperServerURL(name string) string {
+	clean := strings.TrimSpace(name)
+	if clean == config.DockerRegistry || clean == "index.docker.io" {
+		return "https://index.docker.io/v1/"
+	}
+	return clean
 }
 
 func formatHelper(helper string) string {
@@ -334,7 +406,41 @@ func findHelper(dcf dockerConfigFile, name, cleanName string) string {
 	return ""
 }
 
-func hostsFromDockerConfig(dcf dockerConfigFile, allowCredentialHelpers bool) ([]config.Host, error) {
+type helperCredentials struct {
+	ServerURL string `json:"ServerURL"`
+	Username  string `json:"Username"`
+	Secret    string `json:"Secret"`
+}
+
+func getCredentialsFromHelper(ctx context.Context, helper, serverURL string) (*helperCredentials, error) {
+	if ctx.Err() != nil {
+		return nil, fmt.Errorf("credential helper context cancelled before execution: %w", ctx.Err())
+	}
+	cmdCtx, cancel := context.WithTimeout(ctx, defaultHelperTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(cmdCtx, helper, "get")
+	cmd.Stdin = strings.NewReader(serverURL + "\n")
+	cmd.WaitDelay = defaultHelperWaitDelay
+	out, err := cmd.Output()
+	if err != nil {
+		if cmdCtx.Err() != nil {
+			return nil, fmt.Errorf("credential helper %q get timed out or was cancelled: %w", helper, cmdCtx.Err())
+		}
+		if errors.Is(err, exec.ErrWaitDelay) {
+			return nil, fmt.Errorf("credential helper %q get output closed after wait delay: %w", helper, err)
+		}
+		return nil, fmt.Errorf("credential helper %q get failed: %w", helper, err)
+	}
+
+	var cred helperCredentials
+	if err := json.Unmarshal(out, &cred); err != nil {
+		return nil, fmt.Errorf("failed to decode credential helper %q get output: %w", helper, err)
+	}
+	return &cred, nil
+}
+
+func hostsFromDockerConfig(ctx context.Context, dcf dockerConfigFile, allowCredentialHelpers bool) ([]config.Host, error) {
 	var hosts []config.Host
 	seenHosts := make(map[string]bool)
 
@@ -358,20 +464,24 @@ func hostsFromDockerConfig(dcf dockerConfigFile, allowCredentialHelpers bool) ([
 			if err != nil {
 				decoded, err = base64.RawStdEncoding.DecodeString(auth.Auth)
 			}
-			if err == nil {
-				parts := strings.SplitN(string(decoded), ":", 2)
-				user = parts[0]
-				if len(parts) > 1 {
-					pass = parts[1]
-				}
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode base64 auth for registry %q", cleanName)
 			}
+			parts := strings.SplitN(string(decoded), ":", 2)
+			if len(parts) != 2 {
+				return nil, fmt.Errorf("invalid auth format for registry %q: expected 'username:password'", cleanName)
+			}
+			user = parts[0]
+			pass = parts[1]
 		}
 
 		h := config.HostNewName(cleanName)
 		h.User = user
 		h.Pass = pass
 		h.Token = token
-		h.CredHelper = findHelper(dcf, name, cleanName)
+		if allowCredentialHelpers {
+			h.CredHelper = findHelper(dcf, name, cleanName)
+		}
 
 		hosts = append(hosts, *h)
 	}
@@ -392,32 +502,82 @@ func hostsFromDockerConfig(dcf dockerConfigFile, allowCredentialHelpers bool) ([
 		hosts = append(hosts, *h)
 	}
 
-	if dcf.CredentialsStore != "" && allowCredentialHelpers {
+	if dcf.CredentialsStore != "" && allowCredentialHelpers && len(dcf.Auths) == 0 {
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("credential helper context cancelled before execution: %w", ctx.Err())
+		}
 		helper := formatHelper(dcf.CredentialsStore)
-		cmd := exec.Command(helper, "list")
+		cmdCtx, cancel := context.WithTimeout(ctx, defaultHelperTimeout)
+		defer cancel()
+
+		cmd := exec.CommandContext(cmdCtx, helper, "list")
 		cmd.Stdin = strings.NewReader("")
-		if out, err := cmd.Output(); err == nil {
-			var credList map[string]string
-			if err := json.Unmarshal(out, &credList); err == nil {
-				for reg, user := range credList {
-					cleanName := normalizeRegistryName(reg)
-					if cleanName == "" || seenHosts[reg] || seenHosts[cleanName] {
-						continue
-					}
-					h := config.HostNewName(cleanName)
-					if seenHosts[h.Name] {
-						continue
-					}
-					seenHosts[reg] = true
-					seenHosts[cleanName] = true
-					seenHosts[h.Name] = true
-					h.User = user
-					h.CredHelper = helper
-					hosts = append(hosts, *h)
-				}
+		cmd.WaitDelay = defaultHelperWaitDelay
+		out, err := cmd.Output()
+		if err != nil {
+			if cmdCtx.Err() != nil {
+				return nil, fmt.Errorf("credential helper %q execution timed out or was cancelled: %w", helper, cmdCtx.Err())
 			}
+			if errors.Is(err, exec.ErrWaitDelay) {
+				return nil, fmt.Errorf("credential helper %q output closed after wait delay: %w", helper, err)
+			}
+			return nil, fmt.Errorf("credential helper %q failed during discovery: %w", helper, err)
+		}
+
+		var credList map[string]string
+		if err := json.Unmarshal(out, &credList); err != nil {
+			return nil, fmt.Errorf("failed to decode credential helper %q output: %w", helper, err)
+		}
+
+		for reg, user := range credList {
+			cleanName := normalizeRegistryName(reg)
+			if cleanName == "" || seenHosts[reg] || seenHosts[cleanName] {
+				continue
+			}
+			h := config.HostNewName(cleanName)
+			if seenHosts[h.Name] {
+				continue
+			}
+			seenHosts[reg] = true
+			seenHosts[cleanName] = true
+			seenHosts[h.Name] = true
+			h.User = user
+			h.CredHelper = helper
+			hosts = append(hosts, *h)
 		}
 	}
 
 	return hosts, nil
+}
+
+// ResolveHelperCredentials iterates through hosts that specify a CredHelper and retrieves
+// their credentials via helper get using bounded execution (context timeout, cancellation, and WaitDelay).
+// The retrieved credentials are set on the Host and CredHelper is cleared to prevent regclient from
+// executing unmanaged, unbounded helper subprocesses.
+func ResolveHelperCredentials(ctx context.Context, hosts []config.Host, allowCredentialHelpers bool) ([]config.Host, error) {
+	result := make([]config.Host, 0, len(hosts))
+	for _, h := range hosts {
+		if h.CredHelper != "" {
+			if !allowCredentialHelpers {
+				return nil, fmt.Errorf(
+					"credential helper %q specified for host %q is not allowed by default; set AllowCredentialHelpers to true to permit them",
+					h.CredHelper, h.Name,
+				)
+			}
+			if h.User == "" || h.Pass == "" {
+				serverURL := helperServerURL(h.Name)
+				cred, err := getCredentialsFromHelper(ctx, h.CredHelper, serverURL)
+				if err != nil {
+					return nil, err
+				}
+				if h.User == "" {
+					h.User = cred.Username
+				}
+				h.Pass = cred.Secret
+			}
+			h.CredHelper = ""
+		}
+		result = append(result, h)
+	}
+	return result, nil
 }

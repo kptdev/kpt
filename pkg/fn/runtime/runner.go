@@ -62,7 +62,7 @@ func NewRunner(
 		img := opts.ResolveToImage(f.Image)
 		f.Image = img
 
-		rcOpts, err := buildRegClientOpts(opts)
+		rcOpts, err := buildRegClientOpts(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +206,7 @@ func NewRunner(
 	return fr, nil
 }
 
-func buildRegClientOpts(opts runneroptions.RunnerOptions) ([]regclient.Opt, error) {
+func buildRegClientOpts(ctx context.Context, opts runneroptions.RunnerOptions) ([]regclient.Opt, error) {
 	rcOpts := []regclient.Opt{
 		regclient.WithUserAgent(UserAgent),
 	}
@@ -222,10 +222,11 @@ func buildRegClientOpts(opts runneroptions.RunnerOptions) ([]regclient.Opt, erro
 		rcOpts = append(rcOpts, regclient.WithDockerCredsFile(opts.RegistryCredentials.DockerConfigFile))
 	}
 
-	hosts, err := opts.RegistryCredentials.ToRegClientHosts()
+	hosts, err := opts.RegistryCredentials.ToRegClientHosts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process registry credentials: %w", err)
 	}
+
 	if len(hosts) > 0 {
 		rcOpts = append(rcOpts, regclient.WithConfigHost(hosts...))
 	}

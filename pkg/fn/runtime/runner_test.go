@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -1357,5 +1358,72 @@ func TestNewRunner_RegistryCredentials(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, runner)
 		assert.Equal(t, host+"/myorg/myfn:v1.2.0", fnAuth.Image)
+	})
+
+	t.Run("cancelled context propagates error during helper execution", func(t *testing.T) {
+		tempDir := t.TempDir()
+		helperScript := filepath.Join(tempDir, "docker-credential-slowstore")
+		scriptContent := "#!/bin/sh\nsleep 5\nexit 0\n"
+		err := os.WriteFile(helperScript, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+
+		t.Setenv("PATH", fmt.Sprintf("%s%c%s", tempDir, os.PathListSeparator, os.Getenv("PATH")))
+
+		cancellingCtx, cancel := context.WithCancel(ctx)
+		cancel() // already cancelled
+
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigJSON:       []byte(`{"credsStore":"slowstore"}`),
+				AllowCredentialHelpers: true,
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "private.registry.example.com/org/fn:v1",
+		}
+
+		_, err = NewRunner(cancellingCtx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "context canceled")
+	})
+
+	t.Run("resolve tag with helper whose get hangs times out or is cancelled", func(t *testing.T) {
+		tempDir := t.TempDir()
+		helperScript := filepath.Join(tempDir, "docker-credential-hangget")
+		scriptContent := "#!/bin/sh\nif [ \"$1\" = \"get\" ]; then\n  exec sleep 10\nfi\nexit 0\n"
+		err := os.WriteFile(helperScript, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+
+		t.Setenv("PATH", fmt.Sprintf("%s%c%s", tempDir, os.PathListSeparator, os.Getenv("PATH")))
+
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigJSON:       []byte(`{"credHelpers":{"hangreg.example.com":"hangget"}}`),
+				AllowCredentialHelpers: true,
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "hangreg.example.com/org/fn:v1",
+		}
+
+		t.Run("cancelled context propagates error", func(t *testing.T) {
+			cancellingCtx, cancel := context.WithCancel(ctx)
+			cancel()
+
+			_, err = NewRunner(cancellingCtx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "context canceled")
+		})
+
+		t.Run("timeout propagates error", func(t *testing.T) {
+			timeoutCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
+			defer cancel()
+
+			_, err = NewRunner(timeoutCtx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "context deadline exceeded")
+		})
 	})
 }
