@@ -220,7 +220,7 @@ The SDK's `testhelpers.RunGoldenTests` tests function logic in isolation — no
 container, no kpt CLI. For full integration testing (container execution,
 `kpt fn eval`/`kpt fn render` pipelines), the kpt repo provides a separate e2e
 test runner at
-[`pkg/test/runner`](https://github.com/kptdev/kpt/tree/main/pkg/test/runner).
+[`e2e/framework/runner`](https://github.com/kptdev/kpt/tree/main/e2e/framework/runner).
 
 The e2e runner uses a different test structure (`.expected/` directories with
 `config.yaml`, `diff.patch`, `results.yaml`) and is used by the
