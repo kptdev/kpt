@@ -53,21 +53,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set CLI release version
-        run: |
-          ref="${GITHUB_REF_NAME}"
-          tag="${ref#cli/}"
-          if [[ "$ref" == "$tag" || "$tag" != v* ]]; then
-            echo "expected a cli/v* tag, got ${ref}" >&2
-            exit 1
-          fi
-          echo "KPT_TAG=${tag}" >> "$GITHUB_ENV"
-          echo "KPT_VERSION=${tag#v}" >> "$GITHUB_ENV"
-          # GoReleaser cannot parse cli/v1.2.3 as semver, and --skip=validate
-          # skips that parse, so mark prereleases here.
-          if [[ "${tag#v}" == *-* ]]; then
-            sed -i 's/prerelease: auto/prerelease: "true"/' release/tag/goreleaser.yaml
-          fi
       - name: Run GoReleaser
         id: run-goreleaser
         uses: goreleaser/goreleaser-action@v6
@@ -77,8 +62,6 @@ jobs:
           args: release --skip=validate --verbose -f release/tag/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          KPT_TAG: ${{ env.KPT_TAG }}
-          KPT_VERSION: ${{ env.KPT_VERSION }}
       - name: Generate SLSA subjects for provenance
         id: hash
         run: |

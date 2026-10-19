@@ -19,20 +19,21 @@
 # matrix of GOOS and GOARCH combinations, but instead, we'd need to define separate
 # steps for each targetted OS and ARCH. This is because we need to specify the
 # platform specific C std library (libc) and cross-compiler to be used.
-version: 2
+
 # The CLI is released from tags like cli/v1.2.3. GoReleaser's monorepo.tag_prefix
 # setting is not available in the open-source build, and it would treat that tag
-# as the version string. The CLI workflow sets KPT_VERSION (1.2.3) and KPT_TAG
-# (v1.2.3). Templates must use envOrDefault: .Env.KPT_VERSION errors with
-# missingkey when the variable is unset, which is the snapshot case.
+# as the version string.
+version: 2
 env:
   - CGO_ENABLED=0
   - GO111MODULE=on
-# Library tags (v*) and API tags must not be treated as the previous CLI release.
+# All other tags besides cli/* must not be treated as the previous CLI release.
 git:
   ignore_tags:
     - "v*"
     - "api/*"
+    - "porch/*"
+    - "package-examples/*"
 builds:
   - id: darwin-amd64
     env:
@@ -42,7 +43,7 @@ builds:
       - darwin
     goarch:
       - amd64
-    ldflags: -s -w -X main.version={{ envOrDefault "KPT_VERSION" .Version }} -X main.gitCommit={{.FullCommit}}
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}}
     dir: cli
 
   - id: darwin-arm64
@@ -53,7 +54,7 @@ builds:
       - darwin
     goarch:
       - arm64
-    ldflags: -s -w -X main.version={{ envOrDefault "KPT_VERSION" .Version }} -X main.gitCommit={{.FullCommit}}
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}}
     dir: cli
 
   - id: linux-amd64
@@ -64,7 +65,7 @@ builds:
       - linux
     goarch:
       - amd64
-    ldflags: -s -w -X main.version={{ envOrDefault "KPT_VERSION" .Version }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
     dir: cli
 
   - id: linux-arm64
@@ -75,7 +76,7 @@ builds:
       - linux
     goarch:
       - arm64
-    ldflags: -s -w -X main.version={{ envOrDefault "KPT_VERSION" .Version }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
     dir: cli
 
 dockers_v2:
@@ -85,9 +86,9 @@ dockers_v2:
     images:
       - ghcr.io/kptdev/kpt
     tags:
-      - "{{ envOrDefault \"KPT_TAG\" .Tag }}"
+      - '{{ base .Tag }}'
       # `stable` tracks the latest non-prerelease release
-      - "{{ if not .Prerelease }}stable{{ end }}"
+      - '{{ if not (contains (base .Tag) "-") }}stable{{ end }}'
     dockerfile: release/images/Dockerfile
     platforms:
       - linux/amd64
@@ -95,9 +96,9 @@ dockers_v2:
     labels:
       org.opencontainers.image.title: "{{ .ProjectName }}"
       org.opencontainers.image.description: "kpt - Automate Kubernetes Configuration Editing"
-      org.opencontainers.image.url: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
-      org.opencontainers.image.source: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
-      org.opencontainers.image.version: "{{ envOrDefault \"KPT_TAG\" .Tag }}"
+      org.opencontainers.image.url: 'https://github.com/{{ envOrDefault "GITHUB_REPOSITORY" "kptdev/kpt" }}'
+      org.opencontainers.image.source: 'https://github.com/{{ envOrDefault "GITHUB_REPOSITORY" "kptdev/kpt" }}'
+      org.opencontainers.image.version: '{{ base .Tag }}'
       org.opencontainers.image.revision: "{{ .FullCommit }}"
       org.opencontainers.image.created: "{{ .Date }}"
 archives:
@@ -110,7 +111,7 @@ archives:
     files:
       - LICENSES*
       - lib.zip*
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ envOrDefault \"KPT_VERSION\" .Version }}"
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ trimprefix (base .Tag) "v" }}'
   - id: bin-only
     formats: binary
     ids:
@@ -139,7 +140,7 @@ nfpms:
     contents:
       - src: LICENSE
         dst: /usr/share/doc/kpt/LICENSE
-    file_name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ envOrDefault \"KPT_VERSION\" .Version }}"
+    file_name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ trimprefix (base .Tag) "v" }}'
 checksum:
   name_template: "checksums.txt"
 changelog:
