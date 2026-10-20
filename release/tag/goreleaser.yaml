@@ -64,28 +64,6 @@ builds:
       - arm64
     ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
 
-dockers_v2:
-  - ids:
-      - linux-amd64
-      - linux-arm64
-    images:
-      - ghcr.io/kptdev/kpt
-    tags:
-      - "{{ .Tag }}"
-      # `stable` tracks the latest non-prerelease release
-      - "{{ if not .Prerelease }}stable{{ end }}"
-    dockerfile: release/images/Dockerfile
-    platforms:
-      - linux/amd64
-      - linux/arm64
-    labels:
-      org.opencontainers.image.title: "{{ .ProjectName }}"
-      org.opencontainers.image.description: "kpt - Automate Kubernetes Configuration Editing"
-      org.opencontainers.image.url: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
-      org.opencontainers.image.source: "https://github.com/{{ envOrDefault \"GITHUB_REPOSITORY\" \"kptdev/kpt\" }}"
-      org.opencontainers.image.version: "{{ .Tag }}"
-      org.opencontainers.image.revision: "{{ .FullCommit }}"
-      org.opencontainers.image.created: "{{ .Date }}"
 archives:
   - id: archived
     ids:

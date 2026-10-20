@@ -43,7 +43,6 @@ jobs:
           filters: |
             release:
               - 'release/tag/**'
-              - 'release/images/**'
               - '.github/workflows/release-snapshot.yml'
 
   goreleaser-check:
