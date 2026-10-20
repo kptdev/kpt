@@ -40,7 +40,7 @@ Flags:
   
   --install-resource-group:
     Install the ResourceGroup CRD into the cluster if it isn't already
-    available. Default is false.
+    available. Default is true, or false when --dry-run is specified.
   
   --inventory-policy:
     Determines how to handle overlaps between the package being currently applied
