@@ -83,9 +83,6 @@ test-fn-eval: build
 test-live-apply: build
 	PATH="$(GOBIN):$(PATH)" go test -v ${LDFLAGS} -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
 
-docker:
-	docker build .
-
 release-dry-run:
 	@docker run \
 		--rm \

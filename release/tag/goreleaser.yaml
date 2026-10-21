@@ -65,7 +65,7 @@ builds:
       - linux
     goarch:
       - amd64
-    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
     dir: cli
 
   - id: linux-arm64
@@ -76,31 +76,9 @@ builds:
       - linux
     goarch:
       - arm64
-    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
     dir: cli
 
-dockers_v2:
-  - ids:
-      - linux-amd64
-      - linux-arm64
-    images:
-      - ghcr.io/kptdev/kpt
-    tags:
-      - '{{ base .Tag }}'
-      # `stable` tracks the latest non-prerelease release
-      - '{{ if not (contains (base .Tag) "-") }}stable{{ end }}'
-    dockerfile: release/images/Dockerfile
-    platforms:
-      - linux/amd64
-      - linux/arm64
-    labels:
-      org.opencontainers.image.title: "{{ .ProjectName }}"
-      org.opencontainers.image.description: "kpt - Automate Kubernetes Configuration Editing"
-      org.opencontainers.image.url: 'https://github.com/{{ envOrDefault "GITHUB_REPOSITORY" "kptdev/kpt" }}'
-      org.opencontainers.image.source: 'https://github.com/{{ envOrDefault "GITHUB_REPOSITORY" "kptdev/kpt" }}'
-      org.opencontainers.image.version: '{{ base .Tag }}'
-      org.opencontainers.image.revision: "{{ .FullCommit }}"
-      org.opencontainers.image.created: "{{ .Date }}"
 archives:
   - id: archived
     ids:
