@@ -104,9 +104,6 @@ test-live-apply: build
 vet: vet-api
 	go vet ./...
 
-docker:
-	docker build .
-
 release-dry-run:
 	@docker run \
 		--rm \

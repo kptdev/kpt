@@ -163,34 +163,11 @@ brew install --HEAD kpt
 
 ## Docker
 
-Use one of the kpt docker images.
+The `kpt` container image (`ghcr.io/kptdev/kpt`) is deprecated and is no longer published for releases after v1.0.1.
+Image tags up to and including v1.0.1 remain available but will not receive further updates.
+Install `kpt` using one of the methods above instead.
 
-Running kpt via Docker does not install kpt on your machine. Each `docker run ...` invocation starts a temporary container, runs the command inside that container, prints output, and then exits.
-
-### `kpt`
-
-```shell
-docker run ghcr.io/kptdev/kpt:v{{< kpt_version >}} version
-```
-
-To use kpt with files on your host, mount your current directory into the container and set a working directory:
-
-```shell
-docker run --rm -v "$PWD":/workdir -w /workdir ghcr.io/kptdev/kpt:v{{< kpt_version >}} pkg tree
-docker run --rm -v "$PWD":/workdir -w /workdir ghcr.io/kptdev/kpt:v{{< kpt_version >}} fn render
-```
-
-On Windows PowerShell, use `${PWD}.Path` for the current directory:
-
-```shell
-docker run --rm -v "${PWD}.Path:/workdir" -w /workdir ghcr.io/kptdev/kpt:v{{< kpt_version >}} pkg tree
-```
-
-This pattern ensures kpt reads and writes files under `/workdir`, which maps to your current directory on the host.
-
-### `kpt-gcloud`
-
-The `kpt-gcloud` images are deprecated. 
+The `kpt-gcloud` images are also deprecated.
 
 ## Source
 
