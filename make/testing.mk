@@ -21,7 +21,7 @@ TEST_MODULE_COVERAGE_FUNC_FILE = module_func_coverage.out
 
 ##@ Testing
 
-MODULES = $(CURDIR) $(CURDIR)/api $(CURDIR)/mdtogo
+MODULES = $(CURDIR) $(CURDIR)/api $(CURDIR)/cli $(CURDIR)/mdtogo
 
 MODULE_COVERAGE_FILES      = $(addsuffix /$(TEST_MODULE_COVERAGE_FILE),      $(MODULES))
 MODULE_COVERAGE_HTML_FILES = $(addsuffix /$(TEST_MODULE_COVERAGE_HTML_FILE), $(MODULES))

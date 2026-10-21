@@ -25,11 +25,12 @@ import (
 	"strings"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/celenv"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	"github.com/kptdev/kpt/pkg/lib/util/fetch"
@@ -183,7 +184,7 @@ func (c Command) Run(ctx context.Context) error {
 		// Initialize CEL environment for condition evaluation.
 		// Fail early if initialization does not succeed because hook execution
 		// may require CEL to evaluate conditions.
-		if err := hookCmd.RunnerOptions.InitCELEnvironment(); err != nil {
+		if err := celenv.InitCELEnvironment(&hookCmd.RunnerOptions); err != nil {
 			return fmt.Errorf("initializing CEL environment for deployment hooks: %w", err)
 		}
 		hookCmd.PkgPath = c.Destination
