@@ -130,11 +130,10 @@ url_latest_version = "/"
 
 params.search.algolia = false
 
-#Enable offline search with Lunr.js
-
-offlineSearch = true
-offlineSearchSummaryLength = 70
-offlineSearchMaxResults = 10
+# Search configuration: kpt uses Pagefind for site search.
+# Set offlineSearch to false to prevent loading unused Lunr.js and allow Docsy
+# to bundle kpt's assets/js/search.js into js/main.js.
+offlineSearch = false
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = false
