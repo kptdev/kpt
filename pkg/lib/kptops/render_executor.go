@@ -98,7 +98,9 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	// Non-KRM pre-scan, before any pipeline starts. See autoignore.go.
 	preScanResult, preScanErr := PreScanNonKRM(e.FileSystem, e.PkgPath, pr.Printf)
 	if preScanErr != nil {
-		updateRenderStatus(hctx, preScanErr)
+		if e.Output == nil {
+			updateRenderStatus(hctx, preScanErr)
+		}
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, preScanErr)
 	}
 	hctx.preScannedResources = preScanResult.AllResources
