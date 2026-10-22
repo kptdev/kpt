@@ -439,6 +439,9 @@ func writeResourcesToDirectory(destPath string, kubeObjects ko.KubeObjects) erro
 		SetAnnotations:     map[string]string{"config.kubernetes.io/merge-source": "dest"},
 		PreserveSeqIndent:  true,
 		WrapBareSeqNode:    true,
+		// Skip non-KRM files so Write never deletes them as
+		// "read but not in the output"; ReplaceNonKRMFiles owns them.
+		FileSkipFunc: skipNonKrmFileFunc(destPath),
 	}
 	_, err := destWriter.Read()
 	if err != nil {
@@ -449,4 +452,13 @@ func writeResourcesToDirectory(destPath string, kubeObjects ko.KubeObjects) erro
 		return err
 	}
 	return nil
+}
+
+// skipNonKrmFileFunc returns a FileSkipFunc matching isKrmFile's
+// classification, for readers that need to leave non-KRM files alone.
+func skipNonKrmFileFunc(root string) func(relPath string) bool {
+	return func(relPath string) bool {
+		isKrm, err := isKrmFile(filepath.Join(root, relPath))
+		return err != nil || !isKrm
+	}
 }

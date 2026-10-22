@@ -18,9 +18,9 @@ before running `update`.
 
 A `.yaml`/`.yml`/`Kptfile`-named file whose content is not a valid KRM resource (e.g. a Helm
 `values.yaml`) is never merged field-by-field, regardless of its filename. It is classified by its
-content, the same way `.krmignore`-aware commands do, and handled like any other non-KRM file: if it
-changed on only one side (local or upstream) since the last fetch, that side's version is kept; if it
-changed on both sides, upstream's version is kept.
+content, the same way `.krmignore`-aware commands do, and handled like any other non-KRM file: upstream's
+version is synced in only if the local file is unmodified; a locally modified or local-only file is
+always kept as-is, even if upstream also changed it.
 
 > **Want to understand 3-way merge in detail?** See the [3-Way Merge Guide]({{% relref "/guides/3-way-merge" %}}) for comprehensive documentation on how kpt merges packages, merge strategies, conflict resolution, and best practices.
 
