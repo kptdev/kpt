@@ -56,7 +56,7 @@ func (l *IOLogger) PrintM(msg string, args map[string]any) {
 	if l.Writer == nil {
 		l.Writer = os.Stdout
 	}
-	_, _ = fmt.Fprintf(l.Writer, msg)
+	_, _ = fmt.Fprint(l.Writer, msg)
 
 	for _, k := range slices.Sorted(maps.Keys(args)) {
 		_, _ = fmt.Fprintf(l.Writer, " %s=%v", k, args[k])
