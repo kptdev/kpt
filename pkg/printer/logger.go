@@ -16,8 +16,11 @@ package printer
 
 import (
 	"fmt"
+	"io"
 	"log/slog"
-	"strings"
+	"maps"
+	"os"
+	"slices"
 
 	"k8s.io/klog/v2"
 )
@@ -44,17 +47,20 @@ func FromStructured(p StructuredPrinter) MapPrinter {
 	return &adapter{p}
 }
 
-type StdLogger struct{}
+// IOLogger writes to Writer if set and os.Stdout if not
+type IOLogger struct {
+	Writer io.Writer
+}
 
-func (*StdLogger) PrintM(msg string, args map[string]any) {
-	sb := strings.Builder{}
-	sb.WriteString(msg)
-
-	for k, v := range args {
-		_, _ = fmt.Fprintf(&sb, " %s=%v", k, v)
+func (l *IOLogger) PrintM(msg string, args map[string]any) {
+	if l.Writer == nil {
+		l.Writer = os.Stdout
 	}
+	_, _ = fmt.Fprintf(l.Writer, msg)
 
-	fmt.Println(sb.String())
+	for _, k := range slices.Sorted(maps.Keys(args)) {
+		_, _ = fmt.Fprintf(l.Writer, " %s=%v", k, args[k])
+	}
 }
 
 type KlogLogger struct{}
@@ -69,10 +75,11 @@ func (sl *SlogLogger) PrintM(msg string, args map[string]any) {
 	slog.Info(msg, fromMap(args)...)
 }
 
+// fromMap returns a sorted, structured-log-compatible array for a map of arguments
 func fromMap(args map[string]any) []any {
 	output := make([]any, 0, len(args))
-	for k, v := range args {
-		output = append(output, k, v)
+	for _, k := range slices.Sorted(maps.Keys(args)) {
+		output = append(output, k, args[k])
 	}
 	return output
 }

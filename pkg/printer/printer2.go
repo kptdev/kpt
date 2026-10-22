@@ -23,48 +23,59 @@ import (
 
 //region Builder
 
-type Builder struct {
+type builder struct {
+	// Logger is used to print the actual logs
 	Logger MapPrinter
-	Args   map[string]any
+	// Args are the key-value pairs that will be printed after each log message
+	Args map[string]any
+	// TruncateOutput defines if output should be truncated
+	TruncateOutput bool
 }
 
-func NewBuilder() *Builder {
-	b := &Builder{}
+func NewBuilder() *builder {
+	b := &builder{}
 	b.EnsureDefaults()
 	return b
 }
 
-func (p *Builder) EnsureDefaults() {
-	if p.Logger == nil {
-		p.Logger = &StdLogger{}
+func (b *builder) EnsureDefaults() {
+	if b.Logger == nil {
+		b.Logger = &IOLogger{}
 	}
 
-	if p.Args == nil {
-		p.Args = map[string]any{}
+	if b.Args == nil {
+		b.Args = map[string]any{}
 	}
 }
 
-func (p *Builder) WithArg(name string, value any) *Builder {
-	p.Args[name] = value
-	return p
+func (b *builder) WithArg(name string, value any) *builder {
+	b.Args[name] = value
+	return b
 }
 
-func (p *Builder) WithArgMap(args map[string]any) *Builder {
-	maps.Copy(p.Args, args)
-	return p
+func (b *builder) WithArgMap(args map[string]any) *builder {
+	maps.Copy(b.Args, args)
+	return b
 }
 
-func (p *Builder) WithLogger(logger MapPrinter) *Builder {
-	p.Logger = logger
-	return p
+func (b *builder) WithLogger(logger MapPrinter) *builder {
+	b.Logger = logger
+	return b
 }
 
-func (p *Builder) Build() *Printer2 {
-	p.EnsureDefaults()
+func (b *builder) WithTruncateOutput(v bool) *builder {
+	b.TruncateOutput = v
+	return b
+}
+
+func (b *builder) Build() *Printer2 {
+	b.EnsureDefaults()
 
 	return &Printer2{
-		l:    p.Logger,
-		args: p.Args,
+		l:    b.Logger,
+		args: b.Args,
+
+		truncate: b.TruncateOutput,
 	}
 }
 
@@ -73,15 +84,18 @@ func (p *Builder) Build() *Printer2 {
 //region Printer
 
 type Printer2 struct {
-	l MapPrinter
-
+	l    MapPrinter
 	args map[string]any
+
+	truncate bool
 }
 
-func (p *Printer2) Clone() *Builder {
-	return &Builder{
+func (p *Printer2) Clone() *builder {
+	return &builder{
 		Logger: p.l,
 		Args:   maps.Clone(p.args),
+
+		TruncateOutput: p.truncate,
 	}
 }
 
@@ -150,7 +164,7 @@ func FromContext2OrDie(ctx context.Context) *Printer2 {
 func stringifyAnySlice(a []any) []string {
 	output := make([]string, 0, len(a))
 	for _, v := range a {
-		output = append(output, fmt.Sprintf("%s", v))
+		output = append(output, fmt.Sprint(v))
 	}
 	return output
 }
