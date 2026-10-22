@@ -57,12 +57,33 @@ func (p PruningLocalPackageReader) Read() ([]*yaml.RNode, error) {
 		if p.isExcluded(path) {
 			continue
 		}
-		if p.ExcludeNonKRM && krmvalidate.IsKRM(node) != nil {
-			continue
-		}
 		filteredNodes = append(filteredNodes, node)
 	}
-	return filteredNodes, nil
+	if !p.ExcludeNonKRM {
+		return filteredNodes, nil
+	}
+
+	nonKRMPaths := make(map[string]bool)
+	for _, node := range filteredNodes {
+		if krmvalidate.IsKRM(node) != nil {
+			path, _, err := kioutil.GetFileAnnotations(node)
+			if err != nil {
+				return nil, err
+			}
+			nonKRMPaths[path] = true
+		}
+	}
+	var validNodes []*yaml.RNode
+	for _, node := range filteredNodes {
+		path, _, err := kioutil.GetFileAnnotations(node)
+		if err != nil {
+			return nil, err
+		}
+		if !nonKRMPaths[path] {
+			validNodes = append(validNodes, node)
+		}
+	}
+	return validNodes, nil
 }
 
 func (p PruningLocalPackageReader) isExcluded(path string) bool {
