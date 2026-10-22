@@ -178,8 +178,12 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, opte
 			// its real reader read every file regardless. Read the
 			// same way here so nothing is silently skipped.
 			resources, resErr = (&kio.LocalPackageReader{
-				PackagePath:     dir,
-				WrapBareSeqNode: true,
+				PackagePath:        dir,
+				PackageFileName:    kptfilev1.KptFileName,
+				IncludeSubpackages: false,
+				MatchFilesGlob:     pkg.MatchAllKRM,
+				WrapBareSeqNode:    true,
+				FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: fsys},
 			}).Read()
 		} else {
 			resources, resErr = p.LocalResources()
