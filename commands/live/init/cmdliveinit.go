@@ -30,6 +30,7 @@ import (
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
@@ -182,6 +183,11 @@ type ConfigureInventoryInfo struct {
 func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	const op errors.Op = "cmdliveinit.Run"
 	pr := printer.FromContextOrDie(ctx)
+
+	// Pre-scan for non-KRM files before config.FindNamespace() reads them.
+	if _, err := krmvalidate.ScanFlatAndDecide(filesys.FileSystemOrOnDisk{}, c.Pkg.UniquePath.String(), pr.Printf); err != nil {
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
 
 	namespace, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
 	if err != nil {
