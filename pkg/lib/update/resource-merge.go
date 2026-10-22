@@ -340,6 +340,11 @@ func isKrmFile(path string) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
+	for _, name := range krmvalidate.RecognizedKustomizationFileNames() {
+		if filepath.Base(path) == name {
+			return true, nil
+		}
+	}
 	for _, n := range nodes {
 		if krmvalidate.IsKRM(n) != nil {
 			return false, nil
