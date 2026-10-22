@@ -46,10 +46,10 @@ func writeKptfile(t *testing.T, fsys filesys.FileSystem, dir, name string, opted
 	assert.NoError(t, fsys.WriteFile(filepath.Join(dir, "Kptfile"), []byte(content)))
 }
 
-func writeValidKRM(t *testing.T, fsys filesys.FileSystem, dir, fileName, resourceName string) {
+func writeValidKRM(t *testing.T, fsys filesys.FileSystem, dir, resourceName string) {
 	t.Helper()
 	content := "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: " + resourceName + "\n"
-	assert.NoError(t, fsys.WriteFile(filepath.Join(dir, fileName), []byte(content)))
+	assert.NoError(t, fsys.WriteFile(filepath.Join(dir, "cm.yaml"), []byte(content)))
 }
 
 // writeNonKRM writes a YAML file with no apiVersion/kind/metadata.name.
@@ -58,11 +58,13 @@ func writeNonKRM(t *testing.T, fsys filesys.FileSystem, dir, fileName string) {
 	assert.NoError(t, fsys.WriteFile(filepath.Join(dir, fileName), []byte("not: krm\njust: [a, plain, map]\nwithout: apiVersion-or-kind\n")))
 }
 
-func newAutoignoreTestRenderer(fsys filesys.FileSystem, pkgPath string, outBuf *bytes.Buffer, mock *mockFnRuntime) *Renderer {
+// newAutoignoreTestRenderer builds a Renderer rooted at "/root", the
+// path every test in this file uses.
+func newAutoignoreTestRenderer(fsys filesys.FileSystem, outBuf *bytes.Buffer, mock *mockFnRuntime) *Renderer {
 	opts := runneroptions.RunnerOptions{}
 	opts.InitDefaults(runneroptions.GHCRImagePrefix)
 	return &Renderer{
-		PkgPath:       pkgPath,
+		PkgPath:       "/root",
 		FileSystem:    fsys,
 		Output:        outBuf,
 		Runtime:       mock,
@@ -78,13 +80,13 @@ func TestNonKRM_NoAnnotation_BlocksEntireRender(t *testing.T) {
 	root := "/root"
 	assert.NoError(t, fsys.Mkdir(root))
 	writeKptfile(t, fsys, root, "root-pkg", false, true)
-	writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+	writeValidKRM(t, fsys, root, "root-cm")
 	writeNonKRM(t, fsys, root, "notes.yaml")
 
 	var out bytes.Buffer
 	mock := &mockFnRuntime{}
 	ctx := printer.WithContext(context.Background(), printer.New(&out, &out))
-	r := newAutoignoreTestRenderer(fsys, root, &out, mock)
+	r := newAutoignoreTestRenderer(fsys, &out, mock)
 
 	_, err := r.Execute(ctx)
 
@@ -104,16 +106,16 @@ func TestNonKRM_ConsolidatedError_ListsEveryFile(t *testing.T) {
 	assert.NoError(t, fsys.Mkdir(root))
 	assert.NoError(t, fsys.Mkdir(sub))
 	writeKptfile(t, fsys, root, "root-pkg", false, false)
-	writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+	writeValidKRM(t, fsys, root, "root-cm")
 	writeNonKRM(t, fsys, root, "root-notes.yaml")
 	writeKptfile(t, fsys, sub, "sub-pkg", false, false)
-	writeValidKRM(t, fsys, sub, "cm.yaml", "sub-cm")
+	writeValidKRM(t, fsys, sub, "sub-cm")
 	writeNonKRM(t, fsys, sub, "sub-notes.yaml")
 
 	var out bytes.Buffer
 	mock := &mockFnRuntime{}
 	ctx := printer.WithContext(context.Background(), printer.New(&out, &out))
-	r := newAutoignoreTestRenderer(fsys, root, &out, mock)
+	r := newAutoignoreTestRenderer(fsys, &out, mock)
 
 	_, err := r.Execute(ctx)
 
@@ -131,13 +133,13 @@ func TestNonKRM_AnnotatedPackage_SkipsInMemory_NoDiskWrite(t *testing.T) {
 	root := "/root"
 	assert.NoError(t, fsys.Mkdir(root))
 	writeKptfile(t, fsys, root, "root-pkg", true, true)
-	writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+	writeValidKRM(t, fsys, root, "root-cm")
 	writeNonKRM(t, fsys, root, "notes.yaml")
 
 	var out bytes.Buffer
 	mock := &mockFnRuntime{}
 	ctx := printer.WithContext(context.Background(), printer.New(&out, &out))
-	r := newAutoignoreTestRenderer(fsys, root, &out, mock)
+	r := newAutoignoreTestRenderer(fsys, &out, mock)
 
 	_, err := r.Execute(ctx)
 
@@ -172,15 +174,15 @@ func TestNonKRM_AnnotationNotInherited(t *testing.T) {
 		assert.NoError(t, fsys.Mkdir(root))
 		assert.NoError(t, fsys.Mkdir(sub))
 		writeKptfile(t, fsys, root, "root-pkg", true, false) // opted in
-		writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+		writeValidKRM(t, fsys, root, "root-cm")
 		writeKptfile(t, fsys, sub, "sub-pkg", false, false) // NOT opted in
-		writeValidKRM(t, fsys, sub, "cm.yaml", "sub-cm")
+		writeValidKRM(t, fsys, sub, "sub-cm")
 		writeNonKRM(t, fsys, sub, "sub-notes.yaml")
 
 		var out bytes.Buffer
 		mock := &mockFnRuntime{}
 		ctx := printer.WithContext(context.Background(), printer.New(&out, &out))
-		r := newAutoignoreTestRenderer(fsys, root, &out, mock)
+		r := newAutoignoreTestRenderer(fsys, &out, mock)
 
 		_, err := r.Execute(ctx)
 
@@ -195,15 +197,15 @@ func TestNonKRM_AnnotationNotInherited(t *testing.T) {
 		assert.NoError(t, fsys.Mkdir(root))
 		assert.NoError(t, fsys.Mkdir(sub))
 		writeKptfile(t, fsys, root, "root-pkg", false, false) // NOT opted in
-		writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+		writeValidKRM(t, fsys, root, "root-cm")
 		writeNonKRM(t, fsys, root, "root-notes.yaml")
 		writeKptfile(t, fsys, sub, "sub-pkg", true, false) // opted in
-		writeValidKRM(t, fsys, sub, "cm.yaml", "sub-cm")
+		writeValidKRM(t, fsys, sub, "sub-cm")
 
 		var out bytes.Buffer
 		mock := &mockFnRuntime{}
 		ctx := printer.WithContext(context.Background(), printer.New(&out, &out))
-		r := newAutoignoreTestRenderer(fsys, root, &out, mock)
+		r := newAutoignoreTestRenderer(fsys, &out, mock)
 
 		_, err := r.Execute(ctx)
 
@@ -218,16 +220,16 @@ func TestNonKRM_AnnotationNotInherited(t *testing.T) {
 		assert.NoError(t, fsys.Mkdir(root))
 		assert.NoError(t, fsys.Mkdir(sub))
 		writeKptfile(t, fsys, root, "root-pkg", false, false) // NOT opted in
-		writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+		writeValidKRM(t, fsys, root, "root-cm")
 		writeNonKRM(t, fsys, root, "root-notes.yaml")
 		writeKptfile(t, fsys, sub, "sub-pkg", true, false) // opted in
-		writeValidKRM(t, fsys, sub, "cm.yaml", "sub-cm")
+		writeValidKRM(t, fsys, sub, "sub-cm")
 		writeNonKRM(t, fsys, sub, "sub-notes.yaml")
 
 		var out bytes.Buffer
 		mock := &mockFnRuntime{}
 		ctx := printer.WithContext(context.Background(), printer.New(&out, &out))
-		r := newAutoignoreTestRenderer(fsys, root, &out, mock)
+		r := newAutoignoreTestRenderer(fsys, &out, mock)
 
 		_, err := r.Execute(ctx)
 
@@ -245,12 +247,12 @@ func TestNonKRM_CleanTree_NoOverheadOnOutcome(t *testing.T) {
 	root := "/root"
 	assert.NoError(t, fsys.Mkdir(root))
 	writeKptfile(t, fsys, root, "root-pkg", false, true)
-	writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+	writeValidKRM(t, fsys, root, "root-cm")
 
 	var out bytes.Buffer
 	mock := &mockFnRuntime{}
 	ctx := printer.WithContext(context.Background(), printer.New(&out, &out))
-	r := newAutoignoreTestRenderer(fsys, root, &out, mock)
+	r := newAutoignoreTestRenderer(fsys, &out, mock)
 
 	_, err := r.Execute(ctx)
 
@@ -268,7 +270,7 @@ func TestNonKRM_AnnotatedPackage_RecordsSkipInKptfileCondition(t *testing.T) {
 	root := "/root"
 	assert.NoError(t, fsys.Mkdir(root))
 	writeKptfile(t, fsys, root, "root-pkg", true, true)
-	writeValidKRM(t, fsys, root, "cm.yaml", "root-cm")
+	writeValidKRM(t, fsys, root, "root-cm")
 	writeNonKRM(t, fsys, root, "notes.yaml")
 
 	var out bytes.Buffer
