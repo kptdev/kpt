@@ -352,3 +352,31 @@ func assertGenInvID(t *testing.T, name, namespace, actual string) bool {
 	}
 	return true
 }
+
+func TestCmd_Run_FindNamespaceError(t *testing.T) {
+	tf := cmdtesting.NewTestFactory()
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	w, clean := testutil.SetupWorkspace(t)
+	defer clean()
+
+	err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(kptFile), 0600)
+	assert.NoError(t, err)
+
+	// Create a non-KRM YAML file in the package that causes kio reader to fail
+	err = os.WriteFile(filepath.Join(w.WorkspaceDirectory, "non-krm.yaml"), []byte("- foo\n"), 0600)
+	assert.NoError(t, err)
+
+	revert := testutil.Chdir(t, w.WorkspaceDirectory)
+	defer revert()
+
+	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner.Command.SetArgs([]string{})
+	err = runner.Command.Execute()
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "failed to determine inventory namespace from package resources")
+		assert.Contains(t, err.Error(), "please provide the namespace using the --namespace flag")
+	}
+}

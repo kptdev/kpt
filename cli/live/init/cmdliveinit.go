@@ -159,7 +159,8 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 
 	namespace, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
 	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
+		return errors.E(op, c.Pkg.UniquePath,
+			fmt.Errorf("failed to determine inventory namespace from package resources: %w; please provide the namespace using the --namespace flag", err))
 	}
 	namespace = strings.TrimSpace(namespace)
 	if !c.Quiet {
