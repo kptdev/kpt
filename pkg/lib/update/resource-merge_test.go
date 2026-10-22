@@ -305,6 +305,57 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 	}
 }
 
+// TestUpdate_NonKRMFileNotMergedByContent verifies a .yaml file whose
+// content isn't valid KRM is raw-copied/diffed, never merged.
+func TestUpdate_NonKRMFileNotMergedByContent(t *testing.T) {
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n")
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n# local edit\n")
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 5\ntotallyDifferentField: yes\n")
+	// Changed on both sides: upstream wins wholesale, no merged hybrid.
+	expected := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 5\ntotallyDifferentField: yes\n")
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "values.yaml"))
+	require.NoError(t, err)
+	assert.Equal(t, "replicaCount: 5\ntotallyDifferentField: yes\n", string(gotContent),
+		"non-KRM file must be raw-copied from upstream wholesale, not merged field-by-field")
+
+	expectedPath := expected.ExpandPkg(t, repos)
+	testutil.KptfileAwarePkgEqual(t, localPath, expectedPath, false)
+}
+
 func TestKeepTaggedNull(t *testing.T) {
 	updater := update.ResourceMergeUpdater{}
 

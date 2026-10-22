@@ -17,6 +17,7 @@ package update
 import (
 	"strings"
 
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -27,6 +28,12 @@ import (
 type PruningLocalPackageReader struct {
 	LocalPackageReader kio.LocalPackageReader
 	Exclusions         []string
+
+	// ExcludeNonKRM, if true, also drops any node failing
+	// krmvalidate.IsKRM() (e.g. a Helm values.yaml), so it's handled
+	// by ReplaceNonKRMFiles's raw-copy path instead of the 3-way
+	// merge. Must agree with getSubDirsAndNonKrmFiles's classification.
+	ExcludeNonKRM bool
 }
 
 func (p PruningLocalPackageReader) Read() ([]*yaml.RNode, error) {
@@ -48,6 +55,9 @@ func (p PruningLocalPackageReader) Read() ([]*yaml.RNode, error) {
 		}
 		path := n.YNode().Value
 		if p.isExcluded(path) {
+			continue
+		}
+		if p.ExcludeNonKRM && krmvalidate.IsKRM(node) != nil {
 			continue
 		}
 		filteredNodes = append(filteredNodes, node)
