@@ -26,6 +26,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -765,6 +766,51 @@ metadata:
 	assert.Equal(t, kptfilev1.ConditionTypeRendered, rootKf.Status.Conditions[0].Type)
 	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderSuccess, rootKf.Status.Conditions[0].Reason)
+}
+
+// TestUpdateRenderStatus_SkippedNonKRMFiles verifies a successful
+// render names its annotation-skipped files in the condition message.
+func TestUpdateRenderStatus_SkippedNonKRMFiles(t *testing.T) {
+	mockFS := filesys.MakeFsInMemory()
+	rootPath := rootString
+	assert.NoError(t, mockFS.Mkdir(rootPath))
+
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+`)))
+
+	rootPkg, err := pkg.New(mockFS, rootPath)
+	assert.NoError(t, err)
+
+	hctx := &hydrationContext{
+		root:       &pkgNode{pkg: rootPkg},
+		pkgs:       map[kptfilev1.UniquePath]*pkgNode{},
+		fileSystem: mockFS,
+		skippedNonKRMFiles: []krmvalidate.NonKRMFile{
+			{PkgPath: rootPath, RelPath: "values.yaml", Reason: "resource must have `apiVersion`"},
+			{PkgPath: rootPath, RelPath: "defaults.yaml", Reason: "resource must have `apiVersion`"},
+		},
+	}
+	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
+
+	updateRenderStatus(hctx, nil)
+
+	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
+	assert.NoError(t, err)
+	assert.NotNil(t, rootKf.Status)
+	assert.Len(t, rootKf.Status.Conditions, 1)
+	cond := rootKf.Status.Conditions[0]
+	assert.Equal(t, kptfilev1.ConditionTrue, cond.Status)
+	assert.Equal(t, kptfilev1.ReasonRenderSuccess, cond.Reason)
+	assert.Contains(t, cond.Message, "defaults.yaml")
+	assert.Contains(t, cond.Message, "values.yaml")
+	assert.Contains(t, cond.Message, krmvalidate.AutoIgnoreNonKRMAnnotation)
+	assert.Less(t, strings.Index(cond.Message, "defaults.yaml"), strings.Index(cond.Message, "values.yaml"))
 }
 
 func TestUpdateRenderStatus_Failure(t *testing.T) {

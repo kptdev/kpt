@@ -29,6 +29,7 @@ import (
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
@@ -93,6 +94,15 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to read Kptfile: %w", err)
 	}
+
+	// Non-KRM pre-scan, before any pipeline starts. See autoignore.go.
+	preScanResult, preScanErr := PreScanNonKRM(e.FileSystem, e.PkgPath, pr.Printf)
+	if preScanErr != nil {
+		updateRenderStatus(hctx, preScanErr)
+		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, preScanErr)
+	}
+	hctx.preScannedResources = preScanResult.AllResources
+	hctx.skippedNonKRMFiles = preScanResult.SkippedFiles()
 
 	// Read save-on-render-failure behavior from Kptfile annotation
 	if value, exists := kptfile.Annotations[kptfilev1.SaveOnRenderFailureAnnotation]; exists && kptfilev1.ToCondition(value) == kptfilev1.ConditionTrue {
@@ -213,7 +223,8 @@ func (e *Renderer) printPipelineExecutionSummary(pr printer.Printer, hctx hydrat
 }
 
 // updateRenderStatus writes a Rendered status condition and RenderStatus to the root Kptfile.
-// On success, the root package gets a True condition.
+// On success, the root package gets a True condition, naming any files
+// skipped via AutoIgnoreNonKRMAnnotation.
 // On failure, the root package gets a False condition with the error message.
 func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 	if hctx.fileSystem == nil {
@@ -228,9 +239,27 @@ func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 		conditionStatus = kptfilev1.ConditionFalse
 		reason = kptfilev1.ReasonRenderFailed
 		message = strings.ReplaceAll(hydErr.Error(), rootPath, ".")
+	} else if skippedMsg := buildSkippedNonKRMMessage(hctx.skippedNonKRMFiles); skippedMsg != "" {
+		message = skippedMsg
 	}
 	renderStatus := buildRenderStatus(hctx, hydErr)
 	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
+}
+
+// buildSkippedNonKRMMessage names every file skipped via the
+// annotation, or "" if none were.
+func buildSkippedNonKRMMessage(skipped []krmvalidate.NonKRMFile) string {
+	if len(skipped) == 0 {
+		return ""
+	}
+	names := make([]string, 0, len(skipped))
+	for _, f := range skipped {
+		names = append(names, f.RelPath)
+	}
+	slices.Sort(names)
+	return fmt.Sprintf(
+		"These non-KRM resources were ignored during render due to the %s annotation being present on this package's Kptfile: %s",
+		krmvalidate.AutoIgnoreNonKRMAnnotation, strings.Join(names, ", "))
 }
 
 // buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
@@ -337,6 +366,14 @@ type hydrationContext struct {
 	// should be saved when rendering fails. Read from the root Kptfile annotation.
 	saveOnRenderFailure bool
 
+	// preScannedResources caches each package's resource list from the
+	// pre-scan (see autoignore.go), avoiding a second disk read.
+	preScannedResources map[string][]*yaml.RNode
+
+	// skippedNonKRMFiles is every non-KRM file excused via
+	// AutoIgnoreNonKRMAnnotation, surfaced in updateRenderStatus.
+	skippedNonKRMFiles []krmvalidate.NonKRMFile
+
 	// mutationSteps and validationSteps track per-function results for RenderStatus.
 	mutationSteps   []kptfilev1.PipelineStepResult
 	validationSteps []kptfilev1.PipelineStepResult
@@ -440,7 +477,15 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	var input []*yaml.RNode
 
 	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources()
+	currPkgResources, err := krmvalidate.CachedLocalResources(curr.pkg, hctx.preScannedResources)
+	if err != nil {
+		return output, errors.E(op, curr.pkg.UniquePath, err)
+	}
+
+	// No-op unless this package opted in via the annotation; the
+	// pre-scan in Execute() already decided whether it's safe to be
+	// here at all.
+	currPkgResources, _, err = krmvalidate.Split(curr.pkg.UniquePath.String(), currPkgResources)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
@@ -572,10 +617,16 @@ func validatePackageState(current *pkgNode, hctx *hydrationContext) error {
 
 // loadPackageResources loads local resources for the package and tracks input files
 func loadPackageResources(current *pkgNode, hctx *hydrationContext) error {
-	localResources, err := current.pkg.LocalResources()
+	localResources, err := krmvalidate.CachedLocalResources(current.pkg, hctx.preScannedResources)
 	if err != nil {
 		return err
 	}
+
+	localResources, _, err = krmvalidate.Split(current.pkg.UniquePath.String(), localResources)
+	if err != nil {
+		return err
+	}
+
 	current.resources = localResources
 
 	relPath, err := current.pkg.RelativePathTo(hctx.root.pkg)
@@ -714,7 +765,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	}
 
 	if pl.IsEmpty() {
-		if err := kptfilev1.AreKRM(input); err != nil {
+		if err := krmvalidate.AreKRM(input); err != nil {
 			return nil, fmt.Errorf("input resource list must contain only KRM resources: %w", err)
 		}
 		return input, nil
