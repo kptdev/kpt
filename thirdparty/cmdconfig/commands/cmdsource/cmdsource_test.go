@@ -22,6 +22,7 @@ func TestSourceCommand(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -32,6 +33,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -83,7 +85,8 @@ spec:
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
-- kind: Deployment
+- apiVersion: apps/v1
+  kind: Deployment
   metadata:
     labels:
       app: nginx2
@@ -97,7 +100,8 @@ items:
       internal.config.kubernetes.io/seqindent: 'compact'
   spec:
     replicas: 1
-- kind: Service
+- apiVersion: v1
+  kind: Service
   metadata:
     name: foo
     annotations:
@@ -154,6 +158,7 @@ func TestSourceCommand_Unwrap(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -164,6 +169,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -207,7 +213,8 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `kind: Deployment
+	if !assert.Equal(t, `apiVersion: apps/v1
+kind: Deployment
 metadata:
   labels:
     app: nginx2
@@ -217,6 +224,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -290,6 +298,7 @@ func TestSourceCommand_DefaultDir(t *testing.T) {
 	defer os.RemoveAll(d)
 
 	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -300,6 +309,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -354,7 +364,8 @@ spec:
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
-- kind: Deployment
+- apiVersion: apps/v1
+  kind: Deployment
   metadata:
     labels:
       app: nginx2
@@ -368,7 +379,8 @@ items:
       internal.config.kubernetes.io/seqindent: 'compact'
   spec:
     replicas: 1
-- kind: Service
+- apiVersion: v1
+  kind: Service
   metadata:
     name: foo
     annotations:
@@ -501,6 +513,7 @@ func TestSourceCommand_Symlink(t *testing.T) {
 		return
 	}
 	err = os.WriteFile(filepath.Join(d, "foo", "f1.yaml"), []byte(`
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -511,6 +524,7 @@ metadata:
 spec:
   replicas: 1
 ---
+apiVersion: v1
 kind: Service
 metadata:
   name: foo
@@ -563,7 +577,8 @@ spec:
 	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
-- kind: Deployment
+- apiVersion: apps/v1
+  kind: Deployment
   metadata:
     labels:
       app: nginx2
@@ -577,7 +592,8 @@ items:
       internal.config.kubernetes.io/seqindent: 'compact'
   spec:
     replicas: 1
-- kind: Service
+- apiVersion: v1
+  kind: Service
   metadata:
     name: foo
     annotations:
@@ -625,4 +641,94 @@ items:
 		return
 	}
 	assert.Contains(t, stderr.String(), "please note that the symlinks within the package are ignored")
+}
+
+// TestSourceCommand_NonKRM covers the non-KRM pre-scan in SourceRunner.runE.
+func TestSourceCommand_NonKRM(t *testing.T) {
+	t.Run("non-KRM file with no annotation blocks source with a consolidated, file-naming error", func(t *testing.T) {
+		d := t.TempDir()
+		err := os.WriteFile(filepath.Join(d, "deployment.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+`), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(d, "values.yaml"), []byte("replicaCount: 3\n"), 0600)
+		assert.NoError(t, err)
+
+		b := &bytes.Buffer{}
+		r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
+		r.Command.SetArgs([]string{d})
+		err = r.Command.Execute()
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "values.yaml")
+		assert.Contains(t, err.Error(), "1 file(s)")
+	})
+
+	t.Run("annotated package skips the non-KRM file in memory, leaves it untouched on disk", func(t *testing.T) {
+		d := t.TempDir()
+		err := os.WriteFile(filepath.Join(d, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+`), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(d, "deployment.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+`), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(d, "values.yaml"), []byte("replicaCount: 3\n"), 0600)
+		assert.NoError(t, err)
+
+		b := &bytes.Buffer{}
+		r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
+		r.Command.SetArgs([]string{d})
+		err = r.Command.Execute()
+		assert.NoError(t, err)
+
+		assert.NotContains(t, b.String(), "replicaCount", "non-KRM file must not appear in the ResourceList output")
+		assert.Contains(t, b.String(), "kind: Deployment")
+
+		content, readErr := os.ReadFile(filepath.Join(d, "values.yaml"))
+		assert.NoError(t, readErr)
+		assert.Equal(t, "replicaCount: 3\n", string(content), "non-KRM file must be left completely untouched on disk")
+		assert.NoFileExists(t, filepath.Join(d, ".krmignore"), ".krmignore must never be written by the annotation path")
+	})
+
+	t.Run(".krmignore still works independently of the annotation, no non-KRM-file error at all", func(t *testing.T) {
+		d := t.TempDir()
+		err := os.WriteFile(filepath.Join(d, "deployment.yaml"), []byte(`
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+`), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(d, "values.yaml"), []byte("replicaCount: 3\n"), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(d, ".krmignore"), []byte("values.yaml\n"), 0600)
+		assert.NoError(t, err)
+
+		b := &bytes.Buffer{}
+		r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
+		r.Command.SetArgs([]string{d})
+		err = r.Command.Execute()
+		assert.NoError(t, err)
+
+		assert.NotContains(t, b.String(), "replicaCount")
+		assert.Contains(t, b.String(), "kind: Deployment")
+	})
 }

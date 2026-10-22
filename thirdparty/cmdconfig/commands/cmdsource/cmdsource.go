@@ -10,12 +10,14 @@ import (
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -106,6 +108,13 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		// Non-KRM pre-scan, same as `fn render`/`fn eval`'s.
+		scanResult, err := krmvalidate.Scan(filesys.FileSystemOrOnDisk{}, resolvedPath, printer.FromContextOrDie(r.Ctx).Printf)
+		if err != nil {
+			return err
+		}
+
 		inputs = append(inputs, kio.LocalPackageReader{
 			PackagePath:        resolvedPath,
 			MatchFilesGlob:     pkg.MatchAllKRM,
@@ -113,6 +122,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
+			FileSkipFunc:       scanResult.SkipFunc(resolvedPath),
 		})
 	}
 
