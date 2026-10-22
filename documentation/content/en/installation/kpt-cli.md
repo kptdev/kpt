@@ -174,7 +174,7 @@ The `kpt-gcloud` images are also deprecated.
 Install by compiling the source code. This requires having Go version 1.26+:
 
 ```shell
-go install -v github.com/kptdev/kpt@main
+go install -v github.com/kptdev/kpt/cli@main
 ```
 
 ### Post-installation notes and troubleshooting
