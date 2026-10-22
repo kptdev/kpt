@@ -256,7 +256,7 @@ func (mr *Runner) migrateObjs(rgInvClient inventory.Client,
 		}
 	}
 
-	_, inv, err := live.Load(mr.factory, path, reader)
+	_, inv, err := live.Load(mr.ctx, mr.factory, path, reader)
 	if err != nil {
 		return err
 	}

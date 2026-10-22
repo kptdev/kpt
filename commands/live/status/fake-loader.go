@@ -62,7 +62,7 @@ func (r *FakeLoader) GetInvInfo(cmd *cobra.Command, args []string) (inventory.In
 		}
 	}
 
-	_, inv, err := live.Load(r.factory, path, cmd.InOrStdin())
+	_, inv, err := live.Load(r.ctx, r.factory, path, cmd.InOrStdin())
 	if err != nil {
 		return nil, err
 	}
