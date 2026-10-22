@@ -217,70 +217,57 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, opte
 	return found, optedIn, allResources, nil
 }
 
-// ScanFlat is a non-recursive variant of ScanTree for callers whose
-// real reader has no subpackage concept (e.g. the `live` family's
-// ResourceGroupPathManifestReader): one flat kio.LocalPackageReader
-// pass, annotation checked only against pkgPath's own root Kptfile.
+// ScanFlat wraps ScanTree for callers whose real reader has no
+// subpackage concept (e.g. the `live` family's flat reader), flattening
+// the per-package result while keeping per-file ownership for opt-in.
 func ScanFlat(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, optedIn bool, allResources []*yaml.RNode, err error) {
-	kf, kfErr := pkg.New(fsys, pkgPath)
-	if kfErr != nil {
-		return nil, false, nil, kfErr
+	treeFound, treeOptedIn, treeResources, scanErr := ScanTree(fsys, pkgPath)
+	if scanErr != nil {
+		return nil, false, nil, scanErr
 	}
-	rootKf, rootKfErr := kf.Kptfile()
-	if rootKfErr != nil && !errors.Is(rootKfErr, os.ErrNotExist) {
-		return nil, false, nil, rootKfErr
-	}
-	optedIn = PackageOptedIn(rootKf)
 
-	nodes, readErr := (&kio.LocalPackageReader{
-		PackagePath:     pkgPath,
-		WrapBareSeqNode: true,
-	}).Read()
-	if readErr != nil {
-		return nil, optedIn, nil, readErr
-	}
-	allResources = nodes
+	// optedIn is pkgPath's own root only; migrate (the one caller
+	// that still reads it) ignores it anyway.
+	optedIn = treeOptedIn[pkgPath]
 
-	_, nonKRM, splitErr := Split(pkgPath, nodes)
-	if splitErr != nil {
-		return nil, optedIn, allResources, splitErr
+	for _, pkgResources := range treeResources {
+		allResources = append(allResources, pkgResources...)
 	}
-	return nonKRM, optedIn, allResources, nil
+
+	found = treeFound
+	return found, optedIn, allResources, nil
 }
 
-// FlatScanResult mirrors ScanResult for ScanFlat's non-recursive model.
+// FlatScanResult mirrors ScanResult for ScanFlat's flat-reader model.
 type FlatScanResult struct {
 	AllResources []*yaml.RNode
 	skipped      []NonKRMFile
 }
 
-// ScanFlatAndDecide runs ScanFlat and the same decide-and-report
-// sequence Scan does, for callers using ScanFlat's flat model.
+// ScanFlatAndDecide is Scan for flat-reader callers: same per-package
+// opt-in via ScanTree, flattened into FlatScanResult's shape.
 func ScanFlatAndDecide(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*FlatScanResult, error) {
-	found, optedIn, allResources, err := ScanFlat(fsys, pkgPath)
+	found, treeOptedIn, treeResources, err := ScanTree(fsys, pkgPath)
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
-	if !optedIn && len(found) > 0 {
-		sort.Slice(found, func(i, j int) bool { return found[i].RelPath < found[j].RelPath })
-		var b strings.Builder
-		fmt.Fprintf(&b, "input resource list must contain only KRM resources (%d file(s)):", len(found))
-		for _, f := range found {
-			fmt.Fprintf(&b, "\n  %s: %s", f.RelPath, f.Reason)
-		}
-		fmt.Fprintf(&b, "\nTo resolve: either exclude these files via .krmignore (manually, or with a pattern rule), "+
-			"or add `%s: \"true\"` to this package's Kptfile to skip any non-KRM files automatically.", AutoIgnoreNonKRMAnnotation)
-		return nil, errors.New(b.String())
+	if scanErr := DecideOutcome(found, treeOptedIn); scanErr != nil {
+		return nil, scanErr
 	}
-	if optedIn && len(found) > 0 {
-		names := make([]string, 0, len(found))
-		for _, f := range found {
-			names = append(names, f.RelPath)
-		}
-		printf("[info] ignoring %d non-KRM file(s) in %q due to %s annotation: %s\n",
-			len(found), pkgPath, AutoIgnoreNonKRMAnnotation, strings.Join(names, ", "))
+	PrintSkippedSummary(printf, found, treeOptedIn)
+
+	var allResources []*yaml.RNode
+	for _, pkgResources := range treeResources {
+		allResources = append(allResources, pkgResources...)
 	}
-	return &FlatScanResult{AllResources: allResources, skipped: found}, nil
+
+	var skipped []NonKRMFile
+	for _, f := range found {
+		if treeOptedIn[f.PkgPath] {
+			skipped = append(skipped, f)
+		}
+	}
+	return &FlatScanResult{AllResources: allResources, skipped: skipped}, nil
 }
 
 // SkippedFiles mirrors ScanResult.SkippedFiles for FlatScanResult.
@@ -291,14 +278,20 @@ func (res *FlatScanResult) SkippedFiles() []NonKRMFile {
 	return res.skipped
 }
 
-// SkipFunc mirrors ScanResult.SkipFunc for FlatScanResult.
+// SkipFunc mirrors ScanResult.SkipFunc, re-rooting each file's path
+// (relative to its own, possibly-sub, package) against pkgRootPath.
 func (res *FlatScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
 	if res == nil || len(res.skipped) == 0 {
 		return nil
 	}
 	skip := make(map[string]bool, len(res.skipped))
 	for _, f := range res.skipped {
-		skip[filepath.ToSlash(f.RelPath)] = true
+		abs := filepath.Join(f.PkgPath, f.RelPath)
+		rel, err := filepath.Rel(pkgRootPath, abs)
+		if err != nil {
+			continue
+		}
+		skip[filepath.ToSlash(rel)] = true
 	}
 	return func(relPath string) bool {
 		return skip[filepath.ToSlash(relPath)]
