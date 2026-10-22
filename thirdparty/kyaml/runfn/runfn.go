@@ -16,6 +16,7 @@ import (
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
+	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
@@ -124,6 +125,13 @@ func (r RunFns) getNodesAndFilters() (
 	var outputPkg *kio.LocalPackageReadWriter
 
 	if r.Path != "" {
+		// Non-KRM pre-scan, same as `kpt fn render`'s.
+		pr := printer.FromContextOrDie(r.Ctx)
+		scanResult, err := kptops.PreScanNonKRM(filesys.FileSystemOrOnDisk{}, string(r.uniquePath), pr.Printf)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
 		outputPkg = &kio.LocalPackageReadWriter{
 			PackagePath:        string(r.uniquePath),
 			MatchFilesGlob:     pkg.MatchAllKRM,
@@ -131,6 +139,7 @@ func (r RunFns) getNodesAndFilters() (
 			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
+			FileSkipFunc:       scanResult.SkipFunc(string(r.uniquePath)),
 		}
 	}
 
