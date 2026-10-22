@@ -45,18 +45,27 @@ type NonKRMFile struct {
 	Reason  string // the IsKRM() validation error
 }
 
-// Split partitions nodes into valid KRM resources and non-KRM ones.
+// Split partitions files into valid KRM resources and non-KRM files.
+// A file containing any non-KRM document is excluded in its entirety.
 func Split(pkgDir string, nodes []*yaml.RNode) (valid []*yaml.RNode, nonKRM []NonKRMFile, err error) {
+	nonKRMPaths := make(map[string]bool)
 	for _, n := range nodes {
 		if krmErr := IsKRM(n); krmErr != nil {
 			relPath, _, pathErr := kioutil.GetFileAnnotations(n)
 			if pathErr != nil {
 				return nil, nil, fmt.Errorf("non-krm-detection: resource in %s missing path annotation: %w", pkgDir, pathErr)
 			}
-			nonKRM = append(nonKRM, NonKRMFile{PkgPath: pkgDir, RelPath: relPath, Reason: krmErr.Error()})
-			continue
+			if !nonKRMPaths[relPath] {
+				nonKRM = append(nonKRM, NonKRMFile{PkgPath: pkgDir, RelPath: relPath, Reason: krmErr.Error()})
+				nonKRMPaths[relPath] = true
+			}
 		}
-		valid = append(valid, n)
+	}
+	for _, n := range nodes {
+		relPath, _, _ := kioutil.GetFileAnnotations(n)
+		if !nonKRMPaths[relPath] {
+			valid = append(valid, n)
+		}
 	}
 	return valid, nonKRM, nil
 }
