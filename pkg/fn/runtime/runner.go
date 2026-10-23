@@ -181,7 +181,9 @@ func NewRunner(
 						Args:     execArgs,
 						FnResult: fnResult,
 					}
-					fltr.Run = eFn.Run
+					fltr.Run = func(r io.Reader, w io.Writer) error {
+						return eFn.RunContext(ctx, r, w)
+					}
 				}
 			default:
 				return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
@@ -567,6 +569,9 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
 	printFnStderr(ctx, fnErr.Stderr)
 	pr.Printf("  Exit code: %d\n", fnErr.ExitCode)
+	if msg := fnErr.timeoutMessage(); msg != "" {
+		pr.Printf("  Timed out: %s\n", msg)
+	}
 }
 
 // printFnStderr prints given stdErr in a user friendly format on kpt CLI.

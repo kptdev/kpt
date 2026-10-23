@@ -410,6 +410,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			c := &fnruntime.ContainerFn{
 				Image:           resolvedImage,
 				ImagePullPolicy: r.RunnerOptions.ImagePullPolicy,
+				Timeout:         r.RunnerOptions.Timeout,
 				UIDGID:          uidgid,
 				StorageMounts:   r.StorageMounts,
 				Env:             spec.Container.Env,
@@ -438,6 +439,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			e := &fnruntime.ExecFn{
 				Path:     spec.Exec.Path,
 				Args:     r.ExecArgs,
+				Timeout:  r.RunnerOptions.Timeout,
 				FnResult: fnResult,
 			}
 			fltr.Run = e.Run
