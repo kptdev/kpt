@@ -25,20 +25,23 @@
 	<div id="search"></div>
 	<script>
 	window.addEventListener("DOMContentLoaded", (event) => {
-		pagefind = new PagefindUI({ element: "#search", showSubResults: true, showImages: false, resetStyles: false });
+		const pagefind = new PagefindUI({ element: "#search", showSubResults: true, showImages: false, resetStyles: false });
 
 		const urlParams = new URLSearchParams(window.location.search);
 		const q = urlParams.get('q');
-		if(q){
-        setTimeout(function(){
-            pagefind.triggerSearch(q);
-			}, 1000);
+		if (q) {
+			const trigger = function() {
+				if (pagefind && typeof pagefind.triggerSearch === 'function') {
+					pagefind.triggerSearch(q);
+				}
+			};
+			trigger();
+			setTimeout(trigger, 250);
 		}
 
-		$("#search input").on("input", function() {
+		$(document).on("input", "#search input", function() {
 			var inputValue = $(this).val();
-			var queryStringVar = "q";
-			updateQueryString(queryStringVar, inputValue);
+			updateQueryString("q", inputValue);
 		});
 	});
 
@@ -47,15 +50,14 @@
 		var queryString = window.location.search.slice(1);
 		var urlParams = new URLSearchParams(queryString);
 
-		if (urlParams.has(key)) {
+		if (value) {
 			urlParams.set(key, value);
 		} else {
-			urlParams.append(key, value);
+			urlParams.delete(key);
 		}
 
-		var newUrl = baseUrl + "?" + urlParams.toString();
-		// Update the browser history (optional)
-		window.history.pushState({}, null, newUrl);
+		var newUrl = urlParams.toString() ? baseUrl + "?" + urlParams.toString() : baseUrl;
+		window.history.replaceState({}, null, newUrl);
 	}
 	</script>
 	

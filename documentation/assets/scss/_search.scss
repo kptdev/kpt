@@ -1,6 +1,105 @@
-// Search form.
-.td-sidebar__search {
+// Search form in top navbar and sidebar
+.td-sidebar__search,
+.td-navbar__search {
 	background-color: transparent;
+
+	.td-search-form {
+		width: 100%;
+		margin: 0;
+	}
+
+	.add-search-icon {
+		position: relative;
+		width: 100%;
+
+		.td-search-icon-btn {
+			position: absolute;
+			top: 50%;
+			left: 0;
+			transform: translateY(-50%);
+			background: transparent;
+			border: none;
+			padding: 0;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 20px;
+			width: 20px;
+			z-index: 2;
+
+			svg {
+				position: static;
+				transform: none;
+				pointer-events: none;
+				height: 18px;
+				width: 18px;
+			}
+		}
+
+		svg {
+			position: absolute;
+			top: 50%;
+			left: 0;
+			transform: translateY(-50%);
+			pointer-events: none;
+			height: 20px;
+		}
+
+		.td-search-input {
+			border: none;
+			border-bottom: $black 2px solid;
+			border-radius: 0;
+			background-color: transparent;
+			box-shadow: none;
+			line-height: 1.5;
+			color: $black;
+			font-weight: 400;
+			font-size: 15px;
+			padding-top: 4px;
+			padding-bottom: 4px;
+			padding-right: 0;
+			padding-left: 28px;
+			width: 100%;
+
+			&::placeholder {
+				color: rgba(0, 0, 0, 0.6);
+				font-size: 14px;
+			}
+
+			&:focus {
+				background-color: transparent;
+				border-bottom: $black 2px solid;
+				outline: none;
+				box-shadow: none;
+			}
+		}
+	}
+}
+
+.td-navbar__search {
+	display: flex;
+	align-items: center;
+
+	@media (max-width: 991px) {
+		width: 100%;
+		padding: 0.5rem 1.25rem 0.75rem;
+		.add-search-icon {
+			width: 100%;
+		}
+	}
+
+	@media (min-width: 992px) {
+		width: 200px;
+		margin-left: 0.5rem;
+	}
+
+	@media (min-width: 1200px) {
+		width: 240px;
+	}
+}
+
+.td-sidebar__search {
 	@media (max-width: 767px) {
 		margin-top: 1rem;
 	}
@@ -14,65 +113,11 @@
 		padding-left: 2.5rem;
 	}
 	.add-search-icon {
-		position: relative;
-		width: 100%;
 		@media (max-width: 767px) {
 			margin-bottom: 10px;
 		}
 		@media (min-width: 768px) {
 			width: calc(100% - 20px);
-		}
-		svg {
-			position: absolute;
-			top: 50%;
-			left: 0;
-			transform: translateY(-50%);
-			pointer-events: none;
-			height: 21px;
-			@media (min-width: 992px) {
-				height: 24px;
-				transform: translateY(-60%);
-			}
-		}
-		.td-search-input {
-			border: none;
-			border-bottom: $black 2px solid;
-			border-radius: 0;
-			background-color: transparent;
-			box-shadow: none;
-			line-height: 1;
-			color: $black;
-			font-weight: 300;
-			font-size: 16px;
-			padding-top: 5px;
-			padding-bottom: 5px;
-			padding-right: 0;
-			padding-left: calc(20px + 20px);
-			@media (min-width: 768px) {
-				padding-left: 30px;
-				font-size: 20px;
-			}
-			@media (min-width: 992px) {
-				padding-left: 35px;
-			}
-			@media (min-width: 1100px) {
-				padding-left: calc(20px + 20px);
-				font-size: 20px;
-			}
-
-			&::placeholder {
-				@media (min-width: 768px) {
-					line-height: 1;
-					color: $black;
-				}
-				@media (min-width: 1100px) {
-					font-size: 20px;
-				}
-			}
-			&:focus {
-				background-color: transparent;
-				border-bottom: $black 2px solid;
-			}
 		}
 	}
 }
