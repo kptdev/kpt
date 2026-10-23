@@ -19,10 +19,21 @@
 # matrix of GOOS and GOARCH combinations, but instead, we'd need to define separate
 # steps for each targetted OS and ARCH. This is because we need to specify the
 # platform specific C std library (libc) and cross-compiler to be used.
+
+# The CLI is released from tags like cli/v1.2.3. GoReleaser's monorepo.tag_prefix
+# setting is not available in the open-source build, and it would treat that tag
+# as the version string.
 version: 2
 env:
   - CGO_ENABLED=0
   - GO111MODULE=on
+# All other tags besides cli/* must not be treated as the previous CLI release.
+git:
+  ignore_tags:
+    - "v*"
+    - "api/*"
+    - "porch/*"
+    - "package-examples/*"
 builds:
   - id: darwin-amd64
     env:
@@ -32,7 +43,8 @@ builds:
       - darwin
     goarch:
       - amd64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}}
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}}
+    dir: cli
 
   - id: darwin-arm64
     env:
@@ -42,7 +54,8 @@ builds:
       - darwin
     goarch:
       - arm64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}}
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}}
+    dir: cli
 
   - id: linux-amd64
     env:
@@ -52,7 +65,8 @@ builds:
       - linux
     goarch:
       - amd64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    dir: cli
 
   - id: linux-arm64
     env:
@@ -62,7 +76,8 @@ builds:
       - linux
     goarch:
       - arm64
-    ldflags: -s -w -X github.com/kptdev/kpt/run.version={{.Version}} -X github.com/kptdev/kpt/run.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    ldflags: -s -w -X main.version={{ trimprefix (base .Tag) "v" }} -X main.gitCommit={{.FullCommit}} -X main.gitCommit={{.FullCommit}} -extldflags "-z noexecstack"
+    dir: cli
 
 archives:
   - id: archived
@@ -74,7 +89,7 @@ archives:
     files:
       - LICENSES*
       - lib.zip*
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ trimprefix (base .Tag) "v" }}'
   - id: bin-only
     formats: binary
     ids:
@@ -103,7 +118,7 @@ nfpms:
     contents:
       - src: LICENSE
         dst: /usr/share/doc/kpt/LICENSE
-    file_name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
+    file_name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ trimprefix (base .Tag) "v" }}'
 checksum:
   name_template: "checksums.txt"
 changelog:

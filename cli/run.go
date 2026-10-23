@@ -1,0 +1,348 @@
+// Copyright 2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package main
+
+import (
+	"bytes"
+	"context"
+	"flag"
+	"fmt"
+	"os"
+	"os/exec"
+	"runtime/debug"
+	"strconv"
+	"strings"
+
+	"golang.org/x/mod/module"
+
+	"github.com/kptdev/kpt/internal/docs/generated/overview"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/commandutil"
+)
+
+var pgr []string
+
+// usageTemplate is a custom Cobra usage template that suppresses the
+// auto-generated local Flags section for commands whose Long description
+// already documents all flags (detected by the presence of "Flags:" in the
+// Long text). Commands without a "Flags:" section in their Long description
+// (e.g. group commands, commands with no flags) continue to show the default
+// Cobra flag table.
+//
+// This template is based on cobra.Command's defaultUsageTemplate from:
+// https://github.com/spf13/cobra/blob/main/command.go
+//
+// The only difference from the Cobra default is that the local Flags section
+// is conditionally rendered: it is suppressed when the Long description
+// already contains a "Flags:" section, avoiding duplicate flag documentation.
+const usageTemplate = `Usage:{{if .Runnable}}
+  {{.UseLine}}{{end}}{{if .HasAvailableSubCommands}}
+  {{.CommandPath}} [command]{{end}}{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+{{.Example}}{{end}}{{if .HasAvailableSubCommands}}{{$cmds := .Commands}}{{if eq (len .Groups) 0}}
+
+Available Commands:{{range $cmds}}{{if (or .IsAvailableCommand (eq .Name "help"))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{else}}{{range $group := .Groups}}
+
+{{.Title}}{{range $cmds}}{{if (and (eq .GroupID $group.ID) (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{if not .AllChildCommandsHaveGroup}}
+
+Additional Commands:{{range $cmds}}{{if (and (eq .GroupID "") (or .IsAvailableCommand (eq .Name "help")))}}
+  {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if not (contains .Long "Flags:")}}{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
+
+func GetMain(ctx context.Context) *cobra.Command {
+	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
+	cmd := &cobra.Command{
+		Use:          "kpt",
+		Short:        overview.CliShort,
+		Long:         overview.CliLong,
+		SilenceUsage: true,
+		// We handle all errors in main after return from cobra so we can
+		// adjust the error message coming from libraries
+		SilenceErrors: true,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			h, err := cmd.Flags().GetBool("help")
+			if err != nil {
+				return err
+			}
+			if h {
+				return cmd.Help()
+			}
+			return cmd.Usage()
+		},
+	}
+
+	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
+
+	// Register a "contains" template function for use in the custom usage
+	// template below.
+	cobra.AddTemplateFunc("contains", strings.Contains)
+	cmd.SetUsageTemplate(usageTemplate)
+
+	cmd.PersistentFlags().BoolVar(&printer.TruncateOutput, "truncate-output", true,
+		"Enable the truncation for output")
+	// wire the global printer
+	pr := printer.New(cmd.OutOrStdout(), cmd.ErrOrStderr())
+
+	// create context with associated printer
+	ctx = printer.WithContext(ctx, pr)
+
+	// find the pager if one exists
+	func() {
+		if val, found := os.LookupEnv("KPT_NO_PAGER_HELP"); !found || val != "1" {
+			// use a pager for printing tutorials
+			e, found := os.LookupEnv("PAGER")
+			var err error
+			if found {
+				pgr = []string{e}
+				return
+			}
+			e, err = exec.LookPath("pager")
+			if err == nil {
+				pgr = []string{e}
+				return
+			}
+			e, err = exec.LookPath("less")
+			if err == nil {
+				pgr = []string{e, "-R"}
+				return
+			}
+		}
+	}()
+
+	// help and documentation
+	cmd.InitDefaultHelpCmd()
+	cmd.AddCommand(GetKptCommands(ctx, "kpt", version)...)
+
+	// enable stack traces
+	cmd.PersistentFlags().BoolVar(&cmdutil.StackOnError, "stack-trace", false,
+		"Print a stack-trace on failure")
+
+	if _, err := exec.LookPath("git"); err != nil {
+		fmt.Fprintf(os.Stderr, "kpt requires that `git` is installed and on the PATH")
+		os.Exit(1)
+	}
+
+	replace(cmd)
+
+	if versionCmd.Flags().Lookup("short") == nil {
+		versionCmd.Flags().Bool("short", false, "Print only the concise version identifier")
+	}
+	cmd.AddCommand(versionCmd)
+	hideFlags(cmd)
+	return cmd
+}
+
+func replace(c *cobra.Command) {
+	for i := range c.Commands() {
+		replace(c.Commands()[i])
+	}
+	c.SetHelpFunc(newHelp(pgr, c))
+}
+
+func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings []string) {
+	if len(pgr) == 0 {
+		return c.HelpFunc()
+	}
+
+	fn := c.HelpFunc()
+	return func(command *cobra.Command, args []string) {
+		stty := exec.Command("stty", "size")
+		stty.Stdin = os.Stdin
+		out, err := stty.Output()
+		if err == nil {
+			terminalHeight, err := strconv.Atoi(strings.Split(string(out), " ")[0])
+			helpHeight := strings.Count(command.Long, "\n") +
+				strings.Count(command.UsageString(), "\n")
+			if err == nil && terminalHeight > helpHeight {
+				// don't use a pager if the help is shorter than the console
+				fn(command, args)
+				return
+			}
+		}
+
+		b := &bytes.Buffer{}
+		pager := exec.Command(e[0])
+		if len(e) > 1 {
+			pager.Args = append(pager.Args, e[1:]...)
+		}
+		pager.Stdin = b
+		pager.Stdout = c.OutOrStdout()
+		c.SetOut(b)
+		fn(command, args)
+		if err := pager.Run(); err != nil {
+			fmt.Fprintf(c.ErrOrStderr(), "%v", err)
+			os.Exit(1)
+		}
+	}
+}
+
+const unknown = "unknown"
+
+var version = unknown
+
+// gitCommit is set via -ldflags; authoritative when non-empty.
+var gitCommit = ""
+
+var readBuildInfo = debug.ReadBuildInfo
+
+func extractVCSSettings(settings []debug.BuildSetting) (string, bool) {
+	var hash string
+	var dirty bool
+	for _, setting := range settings {
+		switch setting.Key {
+		case "vcs.revision":
+			hash = setting.Value
+		case "vcs.modified":
+			dirty = strings.EqualFold(setting.Value, "true")
+		}
+	}
+	return hash, dirty
+}
+
+func extractPseudoVersionCommit(ver string) string {
+	if ver == "" {
+		return ""
+	}
+	if !strings.HasPrefix(ver, "v") {
+		ver = "v" + ver
+	}
+	if !module.IsPseudoVersion(ver) {
+		return ""
+	}
+	rev, err := module.PseudoVersionRev(ver)
+	if err != nil {
+		return ""
+	}
+	return rev
+}
+
+func fallbackUnknown(val string) string {
+	if val == "" {
+		return unknown
+	}
+	return val
+}
+
+// resolveVersion resolves the version, git commit hash, and dirty status.
+// If v is "unknown" or empty, it attempts to fall back to info.Main.Version
+// from debug.ReadBuildInfo(). If commitOverride is non-empty, it takes precedence for the commit.
+func resolveVersion(v string, commitOverride string, info *debug.BuildInfo) (string, string, bool) {
+	var hash string
+	var dirty bool
+
+	if info != nil {
+		if (v == unknown || v == "") && info.Main.Version != "" && info.Main.Version != "(devel)" {
+			v = strings.TrimPrefix(info.Main.Version, "v")
+		}
+		hash, dirty = extractVCSSettings(info.Settings)
+		if hash == "" {
+			hash = extractPseudoVersionCommit(info.Main.Version)
+		}
+	}
+
+	if commitOverride != "" {
+		hash = commitOverride
+		dirty = false
+	}
+
+	return fallbackUnknown(v), fallbackUnknown(hash), dirty
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number of kpt",
+	Run: func(cmd *cobra.Command, _ []string) {
+		var info *debug.BuildInfo
+		if bi, ok := readBuildInfo(); ok {
+			info = bi
+		}
+		resolvedVer, hash, dirty := resolveVersion(version, gitCommit, info)
+
+		short, _ := cmd.Flags().GetBool("short")
+		if short {
+			if resolvedVer == unknown && len(hash) >= 7 && hash != unknown {
+				fmt.Printf("%s\n", hash[:7])
+			} else {
+				fmt.Printf("%s\n", resolvedVer)
+			}
+			return
+		}
+		fmt.Printf("Version: %s\n", resolvedVer)
+		dirtySuffix := ""
+		if dirty {
+			dirtySuffix = " (dirty)"
+		}
+		fmt.Printf("Git commit: %s%s\n", hash, dirtySuffix)
+	},
+}
+
+// hideFlags hides any cobra flags that are unlikely to be used by
+// customers.
+func hideFlags(cmd *cobra.Command) {
+	flags := []string{
+		// Flags related to logging
+		"add_dir_header",
+		"alsologtostderr",
+		"log_backtrace_at",
+		"log_dir",
+		"log_file",
+		"log_file_max_size",
+		"logtostderr",
+		"one_output",
+		"skip_headers",
+		"skip_log_headers",
+		"stack-trace",
+		"stderrthreshold",
+		"vmodule",
+
+		// Flags related to apiserver
+		"cache-dir",
+		"certificate-authority",
+		"client-certificate",
+		"client-key",
+		"insecure-skip-tls-verify",
+		"match-server-version",
+		"password",
+		"token",
+		"username",
+	}
+	for _, f := range flags {
+		_ = cmd.PersistentFlags().MarkHidden(f)
+	}
+
+	// We need to recurse into subcommands otherwise flags aren't hidden on leaf commands
+	for _, child := range cmd.Commands() {
+		hideFlags(child)
+	}
+}

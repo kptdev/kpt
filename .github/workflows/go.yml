@@ -41,17 +41,15 @@ jobs:
           filters: |
             code:
               - 'api/**'
-              - 'commands/**'
+              - 'cli/**'
               - 'e2e/**'
               - 'internal/**'
               - 'pkg/**'
-              - 'run/**'
               - 'mdtogo/**'
               - 'scripts/**'
               - 'Makefile'
               - 'go.mod'
               - 'go.sum'
-              - 'main.go'
               - '.github/workflows/go.yml'
 
   build-test:
