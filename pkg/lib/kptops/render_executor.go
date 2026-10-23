@@ -66,13 +66,34 @@ type Renderer struct {
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
+
+	// RenderStatus is the status of the rendering pipeline execution
+	RenderStatus *kptfilev1.RenderStatus
 }
 
 // Execute runs a pipeline.
-func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) {
+func (e *Renderer) Execute(ctx context.Context) (res *fnresultv1.ResultList, retErr error) {
 	const op errors.Op = "fn.render"
 
 	pr := printer.FromContextOrDie(ctx)
+
+	var hctx *hydrationContext
+	e.RenderStatus = nil
+	defer func() {
+		if retErr != nil && e.RenderStatus == nil {
+			if hctx != nil {
+				if e.Output == nil {
+					e.RenderStatus = updateRenderStatus(hctx, retErr)
+				} else {
+					e.RenderStatus = buildRenderStatus(hctx, retErr)
+				}
+			} else {
+				e.RenderStatus = &kptfilev1.RenderStatus{
+					ErrorSummary: retErr.Error(),
+				}
+			}
+		}
+	}()
 
 	root, err := newPkgNode(e.FileSystem, e.PkgPath, nil)
 	if err != nil {
@@ -80,7 +101,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	}
 
 	// initialize hydration context
-	hctx := &hydrationContext{
+	hctx = &hydrationContext{
 		root:          root,
 		pkgs:          map[kptfilev1.UniquePath]*pkgNode{},
 		fnResults:     fnresultv1.NewResultList(),
@@ -111,7 +132,9 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 
 	if hydErr != nil && !hctx.saveOnRenderFailure {
 		if e.Output == nil {
-			updateRenderStatus(hctx, hydErr)
+			e.RenderStatus = updateRenderStatus(hctx, hydErr)
+		} else {
+			e.RenderStatus = buildRenderStatus(hctx, hydErr)
 		}
 		_ = e.saveFnResults(ctx, hctx.fnResults)
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
@@ -121,14 +144,18 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	err = adjustRelPath(hctx)
 	if err != nil {
 		if e.Output == nil {
-			updateRenderStatus(hctx, err)
+			e.RenderStatus = updateRenderStatus(hctx, err)
+		} else {
+			e.RenderStatus = buildRenderStatus(hctx, err)
 		}
 		return nil, err
 	}
 
 	if err = trackOutputFiles(hctx); err != nil {
 		if e.Output == nil {
-			updateRenderStatus(hctx, err)
+			e.RenderStatus = updateRenderStatus(hctx, err)
+		} else {
+			e.RenderStatus = buildRenderStatus(hctx, err)
 		}
 		return nil, err
 	}
@@ -162,7 +189,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 
 			if hydErr == nil {
 				if err = pruneResources(e.FileSystem, hctx); err != nil {
-					updateRenderStatus(hctx, err)
+					e.RenderStatus = updateRenderStatus(hctx, err)
 					return nil, err
 				}
 			}
@@ -185,7 +212,9 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 
 	if hydErr != nil {
 		if e.Output == nil {
-			updateRenderStatus(hctx, hydErr)
+			e.RenderStatus = updateRenderStatus(hctx, hydErr)
+		} else {
+			e.RenderStatus = buildRenderStatus(hctx, hydErr)
 		}
 		_ = e.saveFnResults(ctx, hctx.fnResults) // Ignore save error to avoid masking hydration error
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
@@ -194,7 +223,9 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	saveErr := e.saveFnResults(ctx, hctx.fnResults)
 
 	if e.Output == nil {
-		updateRenderStatus(hctx, saveErr)
+		e.RenderStatus = updateRenderStatus(hctx, saveErr)
+	} else {
+		e.RenderStatus = buildRenderStatus(hctx, saveErr)
 	}
 
 	return hctx.fnResults, saveErr
@@ -215,9 +246,10 @@ func (e *Renderer) printPipelineExecutionSummary(pr printer.Printer, hctx hydrat
 // updateRenderStatus writes a Rendered status condition and RenderStatus to the root Kptfile.
 // On success, the root package gets a True condition.
 // On failure, the root package gets a False condition with the error message.
-func updateRenderStatus(hctx *hydrationContext, hydErr error) {
-	if hctx.fileSystem == nil {
-		return
+func updateRenderStatus(hctx *hydrationContext, hydErr error) *kptfilev1.RenderStatus {
+	renderStatus := buildRenderStatus(hctx, hydErr)
+	if hctx == nil || hctx.fileSystem == nil || hctx.root == nil {
+		return renderStatus
 	}
 
 	rootPath := hctx.root.pkg.UniquePath.String()
@@ -229,13 +261,18 @@ func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 		reason = kptfilev1.ReasonRenderFailed
 		message = strings.ReplaceAll(hydErr.Error(), rootPath, ".")
 	}
-	renderStatus := buildRenderStatus(hctx, hydErr)
 	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
+	return renderStatus
 }
 
 // buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
 func buildRenderStatus(hctx *hydrationContext, hydErr error) *kptfilev1.RenderStatus {
-	if len(hctx.mutationSteps) == 0 && len(hctx.validationSteps) == 0 {
+	if hctx == nil || (len(hctx.mutationSteps) == 0 && len(hctx.validationSteps) == 0) {
+		if hydErr != nil {
+			return &kptfilev1.RenderStatus{
+				ErrorSummary: hydErr.Error(),
+			}
+		}
 		return nil
 	}
 	rs := &kptfilev1.RenderStatus{
@@ -258,7 +295,11 @@ func buildRenderStatus(hctx *hydrationContext, hydErr error) *kptfilev1.RenderSt
 				errLines = append(errLines, fmt.Sprintf("%s: exit code %d", stepName(s), s.ExitCode))
 			}
 		}
-		rs.ErrorSummary = strings.Join(errLines, "\n")
+		if len(errLines) == 0 {
+			rs.ErrorSummary = hydErr.Error()
+		} else {
+			rs.ErrorSummary = strings.Join(errLines, "\n")
+		}
 	}
 	return rs
 }
