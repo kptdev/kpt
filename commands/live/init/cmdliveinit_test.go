@@ -324,6 +324,148 @@ func TestCmd_Run(t *testing.T) {
 	}
 }
 
+// TestCmd_Run_NonKRM covers the non-KRM pre-scan in ConfigureInventoryInfo.Run.
+func TestCmd_Run_NonKRM(t *testing.T) {
+	t.Run("non-KRM file with no annotation blocks init with a consolidated, file-naming error", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		w, clean := testutil.SetupWorkspace(t)
+		defer clean()
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(kptFile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"), []byte("- foo\n"), 0600))
+
+		revert := testutil.Chdir(t, w.WorkspaceDirectory)
+		defer revert()
+
+		runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+		runner.Command.SetArgs([]string{})
+		err := runner.Command.Execute()
+
+		if assert.Error(t, err) {
+			assert.Contains(t, err.Error(), "foo.yaml")
+			assert.Contains(t, err.Error(), "1 file(s)")
+			assert.NotContains(t, err.Error(), "wrong node kind")
+			assert.NotContains(t, err.Error(), "wrong Node Kind")
+		}
+	})
+
+	t.Run("annotated package skips the non-KRM file in memory, leaves it untouched on disk, no .krmignore written", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		w, clean := testutil.SetupWorkspace(t)
+		defer clean()
+		annotatedKptfile := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test1
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+`
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(annotatedKptfile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"), []byte("- foo\n"), 0600))
+
+		revert := testutil.Chdir(t, w.WorkspaceDirectory)
+		defer revert()
+
+		runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+		runner.Command.SetArgs([]string{})
+		err := runner.Command.Execute()
+		assert.NoError(t, err)
+
+		content, readErr := os.ReadFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"))
+		assert.NoError(t, readErr)
+		assert.Equal(t, "- foo\n", string(content), "non-KRM file must be left completely untouched on disk")
+
+		assert.NoFileExists(t, filepath.Join(w.WorkspaceDirectory, ".krmignore"), ".krmignore must never be written by the annotation path")
+
+		rg, err := pkg.ReadRGFile(w.WorkspaceDirectory, "resourcegroup.yaml")
+		assert.NoError(t, err)
+		assert.NotNil(t, rg, "init must have succeeded and written the ResourceGroup file despite the non-KRM file")
+	})
+
+	t.Run("annotated package with no --namespace falls back cleanly instead of re-reading the excused file", func(t *testing.T) {
+		// Deliberately no .WithNamespace(...): this exercises
+		// FindNamespace's real auto-detection path, which the other
+		// subtests above bypass by forcing enforceNamespace=true.
+		tf := cmdtesting.NewTestFactory()
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		w, clean := testutil.SetupWorkspace(t)
+		defer clean()
+		annotatedKptfile := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test1
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+`
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(annotatedKptfile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"), []byte("- foo\n"), 0600))
+
+		revert := testutil.Chdir(t, w.WorkspaceDirectory)
+		defer revert()
+
+		runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+		runner.Command.SetArgs([]string{})
+		err := runner.Command.Execute()
+
+		// Must not resurface the original crash this PR exists to fix.
+		if assert.NoError(t, err) {
+			content, readErr := os.ReadFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"))
+			assert.NoError(t, readErr)
+			assert.Equal(t, "- foo\n", string(content), "non-KRM file must be left untouched")
+		}
+	})
+
+	t.Run("bare directory with no Kptfile at all is still pre-scanned", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		w, clean := testutil.SetupWorkspace(t)
+		defer clean()
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"), []byte("- foo\n"), 0600))
+
+		revert := testutil.Chdir(t, w.WorkspaceDirectory)
+		defer revert()
+
+		runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+		runner.Command.SetArgs([]string{})
+		err := runner.Command.Execute()
+
+		if assert.Error(t, err) {
+			assert.Contains(t, err.Error(), "foo.yaml")
+		}
+	})
+
+	t.Run(".krmignore still works independently of the annotation", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		w, clean := testutil.SetupWorkspace(t)
+		defer clean()
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(kptFile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"), []byte("- foo\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, ".krmignore"), []byte("foo.yaml\n"), 0600))
+
+		revert := testutil.Chdir(t, w.WorkspaceDirectory)
+		defer revert()
+
+		runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+		runner.Command.SetArgs([]string{})
+		err := runner.Command.Execute()
+		assert.NoError(t, err)
+	})
+}
+
 func assertInventoryName(t *testing.T, expected, actual string) bool {
 	re := regexp.MustCompile(`^inventory-[0-9]+$`)
 	if expected == "inventory-*" {
@@ -353,30 +495,6 @@ func assertGenInvID(t *testing.T, name, namespace, actual string) bool {
 	return true
 }
 
-func TestCmd_Run_FindNamespaceError(t *testing.T) {
-	tf := cmdtesting.NewTestFactory()
-	defer tf.Cleanup()
-	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-
-	w, clean := testutil.SetupWorkspace(t)
-	defer clean()
-
-	err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(kptFile), 0600)
-	assert.NoError(t, err)
-
-	// Create a non-KRM YAML file in the package that causes kio reader to fail
-	err = os.WriteFile(filepath.Join(w.WorkspaceDirectory, "non-krm.yaml"), []byte("- foo\n"), 0600)
-	assert.NoError(t, err)
-
-	revert := testutil.Chdir(t, w.WorkspaceDirectory)
-	defer revert()
-
-	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
-	runner.Command.SetArgs([]string{})
-	err = runner.Command.Execute()
-
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "failed to determine inventory namespace from package resources")
-		assert.Contains(t, err.Error(), "please provide the namespace using the --namespace flag")
-	}
-}
+// Note: TestCmd_Run_FindNamespaceError (added in #4812) is removed:
+// its non-KRM fixture is now caught by the pre-scan before
+// FindNamespace runs. See TestCmd_Run_NonKRM for that path.

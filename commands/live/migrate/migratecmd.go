@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
@@ -29,6 +30,7 @@ import (
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
@@ -140,6 +142,33 @@ func (mr *Runner) Run(reader io.Reader, args []string) error {
 		}
 		if len(stdinBytes) == 0 {
 			return fmt.Errorf("no arguments means stdin has data; missing bytes on stdin")
+		}
+	}
+
+	// Non-KRM pre-scan (directory mode only). The auto-ignore
+	// annotation is deliberately NOT honored here, unlike every other
+	// `live` command: the legacy ConfigMap-inventory reader this
+	// command depends on has no way to skip a file in memory, so
+	// .krmignore is the only real remediation.
+	if mr.dir != "" {
+		found, _, _, err := krmvalidate.ScanFlat(filesys.FileSystemOrOnDisk{}, mr.dir)
+		if err != nil {
+			return fmt.Errorf("non-krm pre-scan: %w", err)
+		}
+		if len(found) > 0 {
+			// Not krmvalidate.DecideOutcome: its message recommends
+			// the annotation as a fix, which wouldn't work here.
+			sort.Slice(found, func(i, j int) bool { return found[i].RelPath < found[j].RelPath })
+			var b bytes.Buffer
+			fmt.Fprintf(&b, "input resource list must contain only KRM resources (%d file(s)):", len(found))
+			for _, f := range found {
+				fmt.Fprintf(&b, "\n  %s: %s", f.RelPath, f.Reason)
+			}
+			fmt.Fprint(&b, "\nTo resolve: exclude these files via .krmignore (manually, or with a pattern rule). "+
+				"Note: `kpt.dev/auto-ignore-non-krm` does not apply to `migrate` -- the legacy ConfigMap "+
+				"inventory reader this command uses has no way to skip a file in memory, so it must be "+
+				"excluded via .krmignore instead.")
+			return goerrors.New(b.String())
 		}
 	}
 
@@ -256,7 +285,7 @@ func (mr *Runner) migrateObjs(rgInvClient inventory.Client,
 		}
 	}
 
-	_, inv, err := live.Load(mr.factory, path, reader)
+	_, inv, err := live.Load(mr.ctx, mr.factory, path, reader)
 	if err != nil {
 		return err
 	}

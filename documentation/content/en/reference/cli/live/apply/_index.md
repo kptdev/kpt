@@ -13,6 +13,12 @@ description: |
 `apply` creates, updates and deletes resources in the cluster to make the remote
 cluster resources match the local package configuration.
 
+If the package contains a non-KRM file (not excluded by
+[`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `apply` fails before
+making any cluster changes, listing every such file found. See the
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation to
+skip these files automatically instead.
+
 ### Synopsis
 
 <!--mdtogo:Long-->

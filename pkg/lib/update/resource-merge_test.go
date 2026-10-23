@@ -305,6 +305,96 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 	}
 }
 
+// TestUpdate_NonKRMFileNotMergedByContent verifies a .yaml file whose
+// content isn't valid KRM is raw-copied/diffed, never merged.
+func TestUpdate_NonKRMFileNotMergedByContent(t *testing.T) {
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n")
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n# local edit\n")
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 5\ntotallyDifferentField: yes\n")
+	// Locally modified: local's edit is kept untouched, same as
+	// ReplaceNonKRMFiles already does for any other non-KRM file.
+	expected := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n# local edit\n")
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "values.yaml"))
+	require.NoError(t, err)
+	assert.Equal(t, "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n# local edit\n", string(gotContent),
+		"non-KRM file must never be field-merged, and a locally modified file is kept, not overwritten")
+
+	expectedPath := expected.ExpandPkg(t, repos)
+	testutil.KptfileAwarePkgEqual(t, localPath, expectedPath, false)
+}
+
+// TestUpdate_NonKRMFile_LocalOnlySurvives: a non-KRM file that exists
+// only locally (absent from both origin and upstream) must survive an
+// update untouched, not be deleted by the merge-destination writer
+// before ReplaceNonKRMFiles runs.
+func TestUpdate_NonKRMFile_LocalOnlySurvives(t *testing.T) {
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource)
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\n")
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource)
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "values.yaml"))
+	require.NoError(t, err, "local-only non-KRM file must not be deleted during update")
+	assert.Equal(t, "replicaCount: 3\n", string(gotContent))
+}
+
 func TestKeepTaggedNull(t *testing.T) {
 	updater := update.ResourceMergeUpdater{}
 

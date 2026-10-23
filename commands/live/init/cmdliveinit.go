@@ -30,6 +30,7 @@ import (
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
@@ -183,10 +184,28 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	const op errors.Op = "cmdliveinit.Run"
 	pr := printer.FromContextOrDie(ctx)
 
-	namespace, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
+	// Pre-scan for non-KRM files before config.FindNamespace() reads them.
+	scanResult, err := krmvalidate.ScanFlatAndDecide(filesys.FileSystemOrOnDisk{}, c.Pkg.UniquePath.String(), pr.Printf)
 	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath,
-			fmt.Errorf("failed to determine inventory namespace from package resources: %w; please provide the namespace using the --namespace flag", err))
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+
+	var namespace string
+	if len(scanResult.SkippedFiles()) > 0 {
+		// FindNamespace re-reads the package itself with no skip hook,
+		// so it would hit the files we just excused. Use the loader's
+		// namespace directly instead, same as FindNamespace's own fallback.
+		namespace, _, err = c.Factory.ToRawKubeConfigLoader().Namespace()
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("failed to determine inventory namespace: %w; please provide the namespace using the --namespace flag", err))
+		}
+	} else {
+		namespace, err = config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("failed to determine inventory namespace from package resources: %w; please provide the namespace using the --namespace flag", err))
+		}
 	}
 	namespace = strings.TrimSpace(namespace)
 	if !c.Quiet {
