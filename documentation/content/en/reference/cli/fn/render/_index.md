@@ -80,6 +80,15 @@ PKG_PATH:
   it doesn't exist. Structured results emitted by the functions are aggregated and saved
   to `results.yaml` file in the specified directory.
   If not specified, no result files are written to the local filesystem.
+
+--timeout:
+  Maximum time the whole pipeline is allowed to run, e.g. `30s` or `10m`.
+  This includes the functions of all subpackages. If the pipeline has not
+  finished by then, the function that is running is stopped and the render fails.
+  When this flag is not set, there is no limit for the whole pipeline, and each
+  function is allowed to run for 5 minutes, or for its `timeout` from the
+  Kptfile if it sets one.
+  Note that this is applicable to container and exec based functions only.
 ```
 
 #### Kptfile Annotations

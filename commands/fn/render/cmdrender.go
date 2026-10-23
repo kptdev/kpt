@@ -66,6 +66,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"allow functions to access network during pipeline execution.")
 	c.Flags().BoolVar(&r.RunnerOptions.AllowWasm, "allow-alpha-wasm", r.RunnerOptions.AllowWasm,
 		"allow wasm to be used during pipeline execution.")
+	c.Flags().DurationVar(&r.RunnerOptions.Timeout, "timeout", 0,
+		"maximum time the whole pipeline is allowed to run, e.g. 30s or 10m. "+
+			"When it is not set, each function is allowed to run for 5m, or for its timeout from the Kptfile if it sets one.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -97,6 +100,9 @@ func (r *Runner) InitDefaults() {
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
+	if err := r.RunnerOptions.ValidateTimeout(); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()

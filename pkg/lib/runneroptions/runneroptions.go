@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -85,6 +86,14 @@ type RunnerOptions struct {
 	CelCostLimit uint64
 
 	ExtraTlsCerts [][]byte
+
+	// Timeout is the maximum time the whole run is allowed to take: all the
+	// functions of the pipeline for `kpt fn render`, and the function for
+	// `kpt fn eval`. A container or exec function that is still running when
+	// it has passed is killed. When it is zero, there is no limit for the
+	// whole run, and each function is limited by the default timeout of the
+	// function runtime (5 minutes).
+	Timeout time.Duration
 }
 
 type PackageIDType int8
@@ -168,6 +177,14 @@ func (opts *RunnerOptions) ResolveToImage(image string) string {
 		return fmt.Sprintf("%s/%s", prefix, image)
 	}
 	return image
+}
+
+// ValidateTimeout checks that Timeout is not negative.
+func (opts *RunnerOptions) ValidateTimeout() error {
+	if opts.Timeout < 0 {
+		return fmt.Errorf("invalid timeout %v: must not be negative", opts.Timeout)
+	}
+	return nil
 }
 
 // ValidatePrefix checks that ImagePrefix is a valid registry path.

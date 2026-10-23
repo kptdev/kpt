@@ -391,6 +391,12 @@ type Function struct {
 	// - Check resource count among the selected resources:
 	//     `when: "resources.filter(r, r.kind == 'Deployment').size() > 0"`
 	CelCondition string `yaml:"when,omitempty" json:"when,omitempty"`
+
+	// Timeout specifies the maximum execution time for this function step
+	// (e.g. "30s", "1m", "5m"). If omitted, the pipeline timeout or default
+	// function timeout (5m) is used. Applicable to container and exec based
+	// functions only.
+	Timeout string `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 // ResourceReference identifies a resource within the package by its API identity.
