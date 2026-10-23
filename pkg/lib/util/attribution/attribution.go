@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -52,13 +53,7 @@ func (a *Attributor) Process() {
 	}
 
 	for _, path := range a.PackagePaths {
-		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}
-		err := kio.Pipeline{
-			Inputs:  []kio.Reader{inout},
-			Filters: []kio.Filter{kio.FilterAll(a)},
-			Outputs: []kio.Writer{inout},
-		}.Execute()
-		if err != nil {
+		if err := a.processPackage(path); err != nil {
 			// this should be a best effort, do not error if this step fails
 			// https://github.com/kptdev/kpt/issues/2559
 			return
@@ -68,6 +63,47 @@ func (a *Attributor) Process() {
 	for _, resource := range a.Resources {
 		_, _ = a.Filter(resource)
 	}
+}
+
+// processPackage invokes Attribution kyaml filter on the resources in the
+// package path. Only the files with a resource changed by the filter are
+// written back. The other files in the package are left untouched.
+func (a *Attributor) processPackage(path string) error {
+	changedFiles := map[string]bool{}
+	return kio.Pipeline{
+		Inputs: []kio.Reader{kio.LocalPackageReader{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}},
+		Filters: []kio.Filter{kio.FilterAll(kyaml.FilterFunc(func(node *kyaml.RNode) (*kyaml.RNode, error) {
+			prevAnnoVal := node.GetAnnotations()[CNRMMetricsAnnotation]
+			if _, err := a.Filter(node); err != nil {
+				return nil, err
+			}
+			if node.GetAnnotations()[CNRMMetricsAnnotation] != prevAnnoVal {
+				file, _, err := kioutil.GetFileAnnotations(node)
+				if err != nil {
+					return nil, err
+				}
+				changedFiles[file] = true
+			}
+			return node, nil
+		}))},
+		Outputs: []kio.Writer{kio.WriterFunc(func(nodes []*kyaml.RNode) error {
+			// a file has to be written with all its resources, not just the changed ones
+			var changedNodes []*kyaml.RNode
+			for _, node := range nodes {
+				file, _, err := kioutil.GetFileAnnotations(node)
+				if err != nil {
+					return err
+				}
+				if changedFiles[file] {
+					changedNodes = append(changedNodes, node)
+				}
+			}
+			if len(changedNodes) == 0 {
+				return nil
+			}
+			return kio.LocalPackageWriter{PackagePath: path}.Write(changedNodes)
+		})},
+	}.Execute()
 }
 
 // Filter implements kyaml.Filter
