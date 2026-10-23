@@ -19,15 +19,21 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/regclient/regclient/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -1119,4 +1125,305 @@ func TestPrintFnResult(t *testing.T) {
 			assert.Equal(t, "", out.String())
 		})
 	}
+}
+
+func TestNewRunner_RegistryCredentials(t *testing.T) {
+	ctx := context.Background()
+	fsys := filesys.MakeFsInMemory()
+
+	t.Run("valid hosts credentials", func(t *testing.T) {
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				Hosts: []runneroptions.RegistryHost{
+					{
+						Name:     "private.registry.example.com",
+						Username: "user",
+						Password: "password",
+					},
+				},
+				DisableDefaultDockerCreds: true,
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "private.registry.example.com/org/fn:v1",
+		}
+
+		runner, err := NewRunner(ctx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, runner)
+	})
+
+	t.Run("valid DockerConfigJSON", func(t *testing.T) {
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigJSON: []byte(`{"auths":{"myreg.io":{"username":"admin","password":"secret"}}}`),
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "myreg.io/repo/fn:latest",
+		}
+
+		runner, err := NewRunner(ctx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, runner)
+	})
+
+	t.Run("malformed DockerConfigJSON returns error", func(t *testing.T) {
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigJSON: []byte(`{invalid-json`),
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "myreg.io/repo/fn:latest",
+		}
+
+		_, err := NewRunner(ctx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to process registry credentials")
+	})
+
+	t.Run("non-existent DockerConfigFile returns error", func(t *testing.T) {
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigFile: "/non/existent/path/to/docker/config.json",
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "myreg.io/repo/fn:latest",
+		}
+
+		_, err := NewRunner(ctx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "registry credentials file not found")
+	})
+
+	t.Run("valid DockerConfigFile succeeds", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		configFile := filepath.Join(tmpDir, "config.json")
+		err := os.WriteFile(configFile, []byte(`{"auths":{"myreg.io":{"username":"admin","password":"secret"}}}`), 0600)
+		require.NoError(t, err)
+
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigFile: configFile,
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "myreg.io/repo/fn:latest",
+		}
+
+		runner, err := NewRunner(ctx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, runner)
+	})
+
+	t.Run("resolve tag with credentials against private registry", func(t *testing.T) {
+		const expectedUser = "testuser"
+		const expectedPass = "testsecret"
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			u, p, ok := r.BasicAuth()
+			if !ok || u != expectedUser || p != expectedPass {
+				w.Header().Set("WWW-Authenticate", `Basic realm="test"`)
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			if r.URL.Path == "/v2/" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			if r.URL.Path == "/v2/myorg/myfn/tags/list" {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"name":"myorg/myfn","tags":["v1.0.0","v1.1.0","v2.0.0"]}`))
+				return
+			}
+
+			http.NotFound(w, r)
+		}))
+		defer ts.Close()
+
+		u, err := url.Parse(ts.URL)
+		require.NoError(t, err)
+		host := u.Host
+
+		// 1. Without credentials -> Tag resolution fails
+		optsNoAuth := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DisableDefaultDockerCreds: true,
+				RegClientHosts: []config.Host{
+					{
+						Name: host,
+						TLS:  config.TLSDisabled,
+					},
+				},
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: host + "/myorg/myfn",
+			Tag:   "^1.0",
+		}
+
+		_, err = NewRunner(ctx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), optsNoAuth, nil)
+		require.Error(t, err, "expected tag resolution to fail without credentials")
+
+		// 2. With credentials -> Tag resolution succeeds and resolves to v1.1.0
+		optsAuth := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DisableDefaultDockerCreds: true,
+				RegClientHosts: []config.Host{
+					{
+						Name: host,
+						User: expectedUser,
+						Pass: expectedPass,
+						TLS:  config.TLSDisabled,
+					},
+				},
+			},
+		}
+
+		fnAuth := &kptfilev1.Function{
+			Image: host + "/myorg/myfn",
+			Tag:   "^1.0",
+		}
+
+		runner, err := NewRunner(ctx, fsys, fnAuth, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), optsAuth, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, runner)
+		assert.Equal(t, host+"/myorg/myfn:v1.1.0", fnAuth.Image)
+	})
+
+	t.Run("resolve tag with DockerConfigJSON against private registry", func(t *testing.T) {
+		const expectedUser = "dockuser"
+		const expectedPass = "docksecret"
+
+		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			u, p, ok := r.BasicAuth()
+			if !ok || u != expectedUser || p != expectedPass {
+				w.Header().Set("WWW-Authenticate", `Basic realm="test"`)
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			if r.URL.Path == "/v2/" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			if r.URL.Path == "/v2/myorg/myfn/tags/list" {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"name":"myorg/myfn","tags":["v1.0.0","v1.2.0","v2.0.0"]}`))
+				return
+			}
+
+			http.NotFound(w, r)
+		}))
+		defer ts.Close()
+
+		u, err := url.Parse(ts.URL)
+		require.NoError(t, err)
+		host := u.Host
+
+		// DockerConfigJSON with http scheme for test server
+		dockerJSON := fmt.Sprintf(`{
+			"auths": {
+				"http://%s": {
+					"username": "%s",
+					"password": "%s"
+				}
+			}
+		}`, host, expectedUser, expectedPass)
+
+		optsAuth := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DisableDefaultDockerCreds: true,
+				DockerConfigJSON:          []byte(dockerJSON),
+			},
+		}
+
+		fnAuth := &kptfilev1.Function{
+			Image: host + "/myorg/myfn",
+			Tag:   "^1.0",
+		}
+
+		runner, err := NewRunner(ctx, fsys, fnAuth, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), optsAuth, nil)
+		require.NoError(t, err)
+		assert.NotNil(t, runner)
+		assert.Equal(t, host+"/myorg/myfn:v1.2.0", fnAuth.Image)
+	})
+
+	t.Run("cancelled context propagates error during helper execution", func(t *testing.T) {
+		tempDir := t.TempDir()
+		helperScript := filepath.Join(tempDir, "docker-credential-slowstore")
+		scriptContent := "#!/bin/sh\nsleep 5\nexit 0\n"
+		err := os.WriteFile(helperScript, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+
+		t.Setenv("PATH", fmt.Sprintf("%s%c%s", tempDir, os.PathListSeparator, os.Getenv("PATH")))
+
+		cancellingCtx, cancel := context.WithCancel(ctx)
+		cancel() // already cancelled
+
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigJSON:       []byte(`{"credsStore":"slowstore"}`),
+				AllowCredentialHelpers: true,
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "private.registry.example.com/org/fn:v1",
+		}
+
+		_, err = NewRunner(cancellingCtx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "context canceled")
+	})
+
+	t.Run("resolve tag with helper whose get hangs times out or is cancelled", func(t *testing.T) {
+		tempDir := t.TempDir()
+		helperScript := filepath.Join(tempDir, "docker-credential-hangget")
+		scriptContent := "#!/bin/sh\nif [ \"$1\" = \"get\" ]; then\n  exec sleep 10\nfi\nexit 0\n"
+		err := os.WriteFile(helperScript, []byte(scriptContent), 0o755)
+		require.NoError(t, err)
+
+		t.Setenv("PATH", fmt.Sprintf("%s%c%s", tempDir, os.PathListSeparator, os.Getenv("PATH")))
+
+		opts := runneroptions.RunnerOptions{
+			RegistryCredentials: runneroptions.RegistryCredentials{
+				DockerConfigJSON:       []byte(`{"credHelpers":{"hangreg.example.com":"hangget"}}`),
+				AllowCredentialHelpers: true,
+			},
+		}
+
+		fn := &kptfilev1.Function{
+			Image: "hangreg.example.com/org/fn:v1",
+		}
+
+		t.Run("cancelled context propagates error", func(t *testing.T) {
+			cancellingCtx, cancel := context.WithCancel(ctx)
+			cancel()
+
+			_, err = NewRunner(cancellingCtx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "context canceled")
+		})
+
+		t.Run("timeout propagates error", func(t *testing.T) {
+			timeoutCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
+			defer cancel()
+
+			_, err = NewRunner(timeoutCtx, fsys, fn, kptfilev1.UniquePath("."), fnresultv1.NewResultList(), opts, nil)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "context deadline exceeded")
+		})
+	})
 }
