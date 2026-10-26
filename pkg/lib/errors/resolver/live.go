@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	initialization "github.com/kptdev/kpt/commands/live/init"
+	kptliberrors "github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/live"
@@ -102,17 +102,17 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		return ResolvedResult{Message: msg}, true
 	}
 
-	if _, ok := errors.AsType[*initialization.InvExistsError](err); ok {
+	if _, ok := errors.AsType[*kptliberrors.InvExistsError](err); ok {
 		msg := invInfoAlreadyExistsMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	if _, ok := errors.AsType[*initialization.InvInRGExistsError](err); ok {
+	if _, ok := errors.AsType[*kptliberrors.InvInRGExistsError](err); ok {
 		msg := invInfoInRGAlreadyExistsMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	if _, ok := errors.AsType[*initialization.InvInKfExistsError](err); ok {
+	if _, ok := errors.AsType[*kptliberrors.InvInKfExistsError](err); ok {
 		msg := invInfoInKfAlreadyExistsMsg
 		return ResolvedResult{Message: msg}, true
 	}

@@ -40,8 +40,8 @@ jobs:
           filters: |
             live:
               - 'api/**'
-              - 'commands/live/**'
-              - 'commands/pkg/**'
+              - 'cli/live/**'
+              - 'cli/pkg/**'
               - 'e2e/framework/**'
               - 'e2e/live/**'
               - 'pkg/**'

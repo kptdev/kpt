@@ -166,7 +166,7 @@ function buildKpt {
 	echo "checking go version"
 	go version
 	echo "Building kpt locally..."
-	go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
+	(cd ./cli && go build -o "${BIN_DIR}"/kpt -v . > "${OUTPUT_DIR}"/kptbuild 2>&1)
 	echo -e "Building kpt locally...${GREEN}SUCCESS${NC}"
 
     else
@@ -199,7 +199,7 @@ function buildKpt {
 	# Build kpt using the cloned directories
 	export GOPATH=${TMP_DIR}
 	echo "Building kpt..."
-	(cd -- ${KPT_SRC_DIR} && go build -o $BIN_DIR -v . > ${OUTPUT_DIR}/kptbuild)
+	(cd "${KPT_SRC_DIR}"/cli && go build -o "$BIN_DIR"/kpt -v . > "${OUTPUT_DIR}"/kptbuild)
 	echo -e "Building kpt...${GREEN}SUCCESS${NC}"
 	echo
 	echo -e "Building kpt using dependencies at HEAD...${GREEN}SUCCESS${NC}"

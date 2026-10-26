@@ -26,7 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/shlex"
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
@@ -34,6 +33,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/util/shlex"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/regclient/regclient"
 	regclientreg "github.com/regclient/regclient/scheme/reg"

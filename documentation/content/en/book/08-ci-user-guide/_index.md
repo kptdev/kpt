@@ -211,7 +211,7 @@ steps:
     args:
       - -c
       - |
-        curl -L https://github.com/kptdev/kpt/releases/download/${_KPT_VERSION}/kpt_linux_amd64 -o /usr/local/bin/kpt
+        curl -L https://github.com/kptdev/kpt/releases/download/cli/${_KPT_VERSION}/kpt_linux_amd64 -o /usr/local/bin/kpt
         chmod +x /usr/local/bin/kpt
 
   # Render step: execute declared pipeline
@@ -241,7 +241,7 @@ steps:
     args:
       - -c
       - |
-        curl -L https://github.com/kptdev/kpt/releases/download/${_KPT_VERSION}/kpt_linux_amd64 -o /usr/local/bin/kpt
+        curl -L https://github.com/kptdev/kpt/releases/download/cli/${_KPT_VERSION}/kpt_linux_amd64 -o /usr/local/bin/kpt
         chmod +x /usr/local/bin/kpt
 
   # Render step
