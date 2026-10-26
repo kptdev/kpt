@@ -1,24 +1,33 @@
 # Releasing
 
-This document covers releases of the **kpt CLI and library** (root Go module `github.com/kptdev/kpt`) and the separate **Go API module** [`github.com/kptdev/kpt/api`](../api/).
+This document covers releases of the **root library** (`github.com/kptdev/kpt`), the **CLI** (`github.com/kptdev/kpt/cli`), and the **API module** ([`github.com/kptdev/kpt/api`](../api/)).
 
-## Main kpt release
+The CLI module depends on the root library, so the library tag has to exist before the CLI module can require that version. A paired release is two commits and two tags. Version numbers can match (`v1.2.3` and `cli/v1.2.3`); they still point at different commits.
 
-To cut a new kpt release perform the following:
+When `api/` changed, tag that module first and bump the root `go.mod` before tagging the library.
 
-- Check that dependencies are up to date and that all required release content is in the main branch
-- Navigate to [the project release page](https://github.com/kptdev/kpt/releases) and select "draft new release"
-- Leave the target as "main", and create a new tag to match the release version
-  - Versioning follows [semantic versioning rules](http://semver.org/)
-  - Alpha and beta versions are used to make releases before content is fully stabilized
-  - Increment the number after "alpha" or "beta" by one when making this type of release - e.g. v1.0.0-beta.58 could come after v1.0.0-beta.57
-- Release title should be left blank - it will be auto-filled from the tag
-- Click "Generate release notes" to auto-generate the content of the release. Edit this as appropriate to add extra context
-- If the release is an alpha or beta release and there is already a stable version available, the "set as a pre-release" check-box should be checked. Otherwise, leave it checked as "set as the latest release"
-- Check the "create a discussion for this release" check-box
-- Click "publish" and then verify that the github action has run and the artefacts have been produced
+## Root library (`github.com/kptdev/kpt`)
 
-Pushing a root-level version tag (for example `v1.2.3`) runs the [kpt Release](../.github/workflows/release.yml) workflow (GoReleaser, container images, and provenance).
+Pushing a tag such as `v1.2.3` publishes the root module. Consumers pin it with `go get github.com/kptdev/kpt@v1.2.3`. That tag does not build CLI binaries.
+
+[.github/workflows/release.yml](../.github/workflows/release.yml) checks that the root `go.mod` has no `replace` directives and runs `make lib`.
+
+## CLI (`github.com/kptdev/kpt/cli`)
+
+After the root tag exists:
+
+1. In [`cli/go.mod`](../cli/go.mod), set `require github.com/kptdev/kpt` to that version (and the API module to the version this release should use).
+2. Remove any `replace` directives. The CLI workflow fails if one is still present.
+3. Run `go mod tidy` in `cli/`.
+4. Commit that change, then push a tag `cli/v1.2.3` (same version number as the library tag when this is a paired release). Pre-releases use the same suffix, for example `cli/v1.2.3-beta.1`.
+
+[.github/workflows/release-cli.yml](../.github/workflows/release-cli.yml) runs tests, GoReleaser, container images, and provenance. The workflow passes the tag with the `cli/` prefix removed, so image tags and archive filenames stay `v1.2.3` / `1.2.3`. The GitHub Release is attached to the git tag, so download URLs look like:
+
+```text
+https://github.com/kptdev/kpt/releases/download/cli/v1.2.3/kpt_linux_amd64-1.2.3.tar.gz
+```
+
+`go install github.com/kptdev/kpt/cli@v1.2.3` uses that `cli/v1.2.3` tag.
 
 ## kpt API module (`github.com/kptdev/kpt/api`)
 
@@ -50,7 +59,6 @@ Prerequisites: `gh` (authenticated to this repository) and a clone with tags fet
 
 When you push a tag that matches **`api/v[0-9]+.[0-9]+.[0-9]+*`** (for example `api/v1.2.3`), [.github/workflows/release-api.yml](../.github/workflows/release-api.yml) runs: it uses the Go version from [`api/go.mod`](../api/go.mod) and runs **`make api`**.
 
-### Monorepo and root `go.mod`
+### Monorepo
 
-The root module uses `replace github.com/kptdev/kpt/api => ./api` so local and CI builds use the workspace copy.
-A tagged archive for `github.com/kptdev/kpt@<version>` still includes `./api` at that commit.
+`api/` and `cli/` are nested modules, so a tag for one module does not publish the others. A module zip excludes nested modules. Local development can use a gitignored `go.work` (`make work`) so builds see the sibling modules without committed `replace` directives.
