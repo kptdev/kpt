@@ -2,7 +2,7 @@ module github.com/kptdev/kpt/cli
 
 go 1.26.8
 
-//replace github.com/kptdev/kpt/api => ../api
+replace github.com/kptdev/kpt/api => ../api
 replace github.com/kptdev/kpt => ..
 
 require (
