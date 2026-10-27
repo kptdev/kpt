@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runneroptions
+// Package celenv evaluates function celCondition expressions.
+package celenv
 
 import (
 	"context"
@@ -21,8 +22,24 @@ import (
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/ext"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// CELEnvironment implements runneroptions.ConditionEvaluator.
+var _ runneroptions.ConditionEvaluator = &CELEnvironment{}
+
+// InitCELEnvironment initializes the CEL environment for condition evaluation.
+// Call it after RunnerOptions.InitDefaults. A failure to create the environment
+// is returned so callers can decide how to surface it.
+func InitCELEnvironment(opts *runneroptions.RunnerOptions) error {
+	celEnv, err := NewCELEnvironment()
+	if err != nil {
+		return fmt.Errorf("failed to initialise CEL environment: %w", err)
+	}
+	opts.CELEnvironment = celEnv
+	return nil
+}
 
 // CELEnvironment holds a shared CEL environment for evaluating conditions.
 // The environment is created once and reused; programs are compiled per condition call.

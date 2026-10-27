@@ -18,15 +18,15 @@ import (
 	"context"
 	"testing"
 
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/celenv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func newTestEnv(t *testing.T) *runneroptions.CELEnvironment {
+func newTestEnv(t *testing.T) *celenv.CELEnvironment {
 	t.Helper()
-	env, err := runneroptions.NewCELEnvironment()
+	env, err := celenv.NewCELEnvironment()
 	require.NoError(t, err)
 	return env
 }

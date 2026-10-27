@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package runneroptions holds options for the function runtime
+// Package runneroptions holds options for the function runtime.
 package runneroptions
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"os"
 	"strings"
+
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -34,6 +37,11 @@ func DefaultImagePrefix() string {
 		return p
 	}
 	return GHCRImagePrefix
+}
+
+// ConditionEvaluator evaluates a function celCondition against the current resource list.
+type ConditionEvaluator interface {
+	EvaluateCondition(ctx context.Context, celCond string, resources []*yaml.RNode, checkFrequency uint, costLimit uint64) (bool, error)
 }
 
 type RunnerOptions struct {
@@ -73,10 +81,11 @@ type RunnerOptions struct {
 	// Meant for internal usage, like the render executor.
 	FullDisplayName string
 
-	// CELEnvironment is the shared CEL environment used to evaluate function conditions.
-	// It is initialized by InitCELEnvironment and reused across all function runners.
-	// It may be nil until InitCELEnvironment has been called successfully.
-	CELEnvironment *CELEnvironment
+	// CELEnvironment evaluates function conditions. It is nil until
+	// InitCELEnvironment in the root module has been called successfully.
+	// Assign only a non-nil implementation: a typed nil stored in this
+	// interface is not a nil interface.
+	CELEnvironment ConditionEvaluator
 
 	// CelCheckFrequency is the number of CEL evaluation steps before an interruption is checked.
 	CelCheckFrequency uint
@@ -144,18 +153,6 @@ func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.CelCostLimit = 1000000
 }
 
-// InitCELEnvironment initializes the CEL environment for condition evaluation.
-// This should be called separately after InitDefaults to allow proper error handling.
-// Returns an error if CEL environment creation fails.
-func (opts *RunnerOptions) InitCELEnvironment() error {
-	celEnv, err := NewCELEnvironment()
-	if err != nil {
-		return fmt.Errorf("failed to initialise CEL environment: %w", err)
-	}
-	opts.CELEnvironment = celEnv
-	return nil
-}
-
 // ResolveToImage converts the KRM function short path to the full image url.
 // If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
 // A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
@@ -190,38 +187,4 @@ func (opts *RunnerOptions) ValidatePrefix() error {
 		return fmt.Errorf("invalid image prefix %q: must be a valid registry path", opts.ImagePrefix)
 	}
 	return nil
-}
-
-type SingleLineFormatter struct {
-	Title     string   // Label for the output
-	Lines     []string // Lines to be joined
-	UseQuote  bool     // Whether to quote each line
-	Separator string   // Separator between lines (e.g., comma, space)
-
-	Indent     int // How many spaces to indent the whole text
-	LineIndent int // How many (extra) spaces to indent each line
-}
-
-func (sf *SingleLineFormatter) String() string {
-	mainIndent := strings.Repeat(" ", sf.Indent)
-
-	formatSb := strings.Builder{}
-
-	formatSb.WriteString(mainIndent)
-	formatSb.WriteString(strings.Repeat(" ", sf.LineIndent))
-
-	if sf.UseQuote {
-		formatSb.WriteString("%q")
-	} else {
-		formatSb.WriteString("%s")
-	}
-
-	var formattedLines []string
-	for _, line := range sf.Lines {
-		line = strings.ReplaceAll(line, "\n", " ")
-		line = strings.TrimSpace(line)
-		formattedLines = append(formattedLines, fmt.Sprintf(formatSb.String(), line))
-	}
-
-	return fmt.Sprintf("%s%s:\n%s", mainIndent, sf.Title, strings.Join(formattedLines, sf.Separator))
 }

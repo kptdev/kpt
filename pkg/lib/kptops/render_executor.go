@@ -25,12 +25,12 @@ import (
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/pkg/fn"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
@@ -1190,7 +1190,7 @@ func captureStepResult(
 		if !strings.Contains(execErr.Error(), "already handled error") {
 			step.ExecutionError = execErr.Error()
 		}
-		var execErrTyped *fnruntime.ExecError
+		var execErrTyped *fnresultv1.ExecError
 		if errors.As(execErr, &execErrTyped) {
 			step.ExitCode = execErrTyped.ExitCode
 		} else if step.ExitCode == 0 {
@@ -1212,7 +1212,7 @@ func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStep
 	if strings.Contains(err.Error(), "already handled error") {
 		step.ExecutionError = ""
 	}
-	var execErrTyped *fnruntime.ExecError
+	var execErrTyped *fnresultv1.ExecError
 	if errors.As(err, &execErrTyped) {
 		step.ExitCode = execErrTyped.ExitCode
 	}

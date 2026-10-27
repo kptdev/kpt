@@ -22,9 +22,11 @@ import (
 	"io"
 	"os"
 
+	"github.com/kptdev/kpt/api/runneroptions"
+	"github.com/kptdev/kpt/cli/fn/imagepullpolicy"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/pkg/lib/celenv"
 	"github.com/kptdev/kpt/pkg/lib/kptops"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
@@ -54,10 +56,11 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 
-	c.Flags().Var(&r.RunnerOptions.ImagePullPolicy, "image-pull-policy",
-		"pull image before running the container "+r.RunnerOptions.ImagePullPolicy.HelpAllowedValues())
+	imagePullPolicy := imagepullpolicy.NewFlag(&r.RunnerOptions.ImagePullPolicy)
+	c.Flags().Var(imagePullPolicy, "image-pull-policy",
+		"pull image before running the container "+imagePullPolicy.HelpAllowedValues())
 	_ = c.RegisterFlagCompletionFunc("image-pull-policy", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return r.RunnerOptions.ImagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
+		return imagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
 	})
 
 	c.Flags().BoolVar(&r.RunnerOptions.AllowExec, "allow-exec", r.RunnerOptions.AllowExec,
@@ -91,7 +94,7 @@ func (r *Runner) InitDefaults() {
 	// Initialize CEL environment for condition evaluation
 	// Fail early if initialization does not succeed because we might
 	// need CEL to evaluate conditions
-	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+	if err := celenv.InitCELEnvironment(&r.RunnerOptions); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to initialize CEL environment: %v\n", err)
 	}
 }
