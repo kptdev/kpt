@@ -12,16 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: kpt library release
+name: kpt multimodule release
 on:
-  push:
-    tags:
-    - "v[1-9].*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: 'The new version/tag to be released'
+        type: string
+      branch: # TODO: make this ref-compatible so you can give branches AND commits
+        required: false
+        default: 'main'
+        description: 'Branch to create the release on'
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: kpt-library-release
+    name: kpt-multimodule-release
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -33,8 +41,17 @@ jobs:
           go-version-file: go.mod
       - name: Check for replace directives in go.mod
         uses: ./.github/actions/check-go-mod-replace
-      - name: Build, test, lint (root module)
-        run: |
-          git config --global user.email you@example.com
-          git config --global user.name Your Name
-          make lib
+      - name: Create commits and tags
+        env:
+          BRANCH: ${{ inputs.branch }}
+          VERSION: ${{ inputs.version }}
+        run: ./scripts/multimodule-release.sh "$VERSION"
+      - name: Run GoReleaser
+        id: run-goreleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --skip=validate --verbose -f release/tag/goreleaser.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
