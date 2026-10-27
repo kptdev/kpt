@@ -125,21 +125,10 @@ func (res *ScanResult) SkippedFiles() []NonKRMFile {
 // callers wiring a reader's own skip hook (so those files are never
 // read at all, rather than filtered out after the fact).
 func (res *ScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
-	if res == nil || len(res.skipped) == 0 {
+	if res == nil {
 		return nil
 	}
-	skip := make(map[string]bool, len(res.skipped))
-	for _, f := range res.skipped {
-		abs := filepath.Join(f.PkgPath, f.RelPath)
-		rel, err := filepath.Rel(pkgRootPath, abs)
-		if err != nil {
-			continue
-		}
-		skip[filepath.ToSlash(rel)] = true
-	}
-	return func(relPath string) bool {
-		return skip[filepath.ToSlash(relPath)]
-	}
+	return skipFuncFor(res.skipped, pkgRootPath)
 }
 
 // ScanTree walks pkgPath and its subpackages read-only, returning
@@ -281,11 +270,21 @@ func (res *FlatScanResult) SkippedFiles() []NonKRMFile {
 // SkipFunc mirrors ScanResult.SkipFunc, re-rooting each file's path
 // (relative to its own, possibly-sub, package) against pkgRootPath.
 func (res *FlatScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
-	if res == nil || len(res.skipped) == 0 {
+	if res == nil {
 		return nil
 	}
-	skip := make(map[string]bool, len(res.skipped))
-	for _, f := range res.skipped {
+	return skipFuncFor(res.skipped, pkgRootPath)
+}
+
+// skipFuncFor builds a FileSkipFunc from a list of excused files,
+// re-rooting each one's path against pkgRootPath. Shared by
+// ScanResult.SkipFunc and FlatScanResult.SkipFunc.
+func skipFuncFor(skipped []NonKRMFile, pkgRootPath string) func(relPath string) bool {
+	if len(skipped) == 0 {
+		return nil
+	}
+	skip := make(map[string]bool, len(skipped))
+	for _, f := range skipped {
 		abs := filepath.Join(f.PkgPath, f.RelPath)
 		rel, err := filepath.Rel(pkgRootPath, abs)
 		if err != nil {
