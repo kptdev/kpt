@@ -107,7 +107,7 @@ func TestExecFn_TimeoutStopsChildProcesses(t *testing.T) {
 			err := fn.Run(&bytes.Buffer{}, &bytes.Buffer{})
 
 			if tc.expectError {
-				var execErr *ExecError
+				var execErr *fnresultv1.ExecError
 				require.ErrorAs(t, err, &execErr)
 				assert.Equal(t, -1, execErr.ExitCode)
 			}
