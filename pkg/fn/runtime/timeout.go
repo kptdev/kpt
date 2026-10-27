@@ -85,3 +85,17 @@ func newTimeoutExecError(ctx context.Context, err error, stderr string) *ExecErr
 	}
 	return execErr
 }
+
+// contextError returns the error for a function whose ctx has ended, or nil
+// if ctx has not ended. err is the error from running the function, which is
+// nil if only a child process of the function was killed. stderr is called
+// only if ctx has ended.
+func contextError(ctx context.Context, err error, stderr func() string) error {
+	switch {
+	case goerrors.Is(ctx.Err(), context.DeadlineExceeded):
+		return newTimeoutExecError(ctx, err, stderr())
+	case ctx.Err() != nil && err == nil:
+		return fmt.Errorf("function canceled: %w", context.Cause(ctx))
+	}
+	return nil
+}

@@ -148,10 +148,11 @@ func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, fil
 	cmd.Stdout = writer
 	cmd.Stderr = &errSink
 
-	if err := cmd.Run(); err != nil {
-		if goerrors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return newTimeoutExecError(ctx, err, filterCLIOutputFn(&errSink))
-		}
+	err := cmd.Run()
+	if ctxErr := contextError(ctx, err, func() string { return filterCLIOutputFn(&errSink) }); ctxErr != nil {
+		return ctxErr
+	}
+	if err != nil {
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &fnresultv1.ExecError{
 				OriginalErr:    exitErr,
