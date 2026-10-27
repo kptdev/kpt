@@ -27,10 +27,6 @@ import (
 	"github.com/kptdev/kpt/pkg/printer"
 )
 
-// execWaitDelay is how long kpt waits for the output of an exec function
-// to be closed after the function has exited or has been killed.
-const execWaitDelay = time.Second
-
 type ExecFn struct {
 	// Path is the os specific path to the executable
 	// file. It can be relative or absolute.
@@ -62,9 +58,6 @@ func (f *ExecFn) RunContext(ctx context.Context, r io.Reader, w io.Writer) error
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, f.Path, f.Args...)
-	// do not wait past the timeout for a child process of the function that
-	// still has the output open
-	cmd.WaitDelay = execWaitDelay
 
 	errSink := bytes.Buffer{}
 	cmd.Stdin = r
@@ -75,10 +68,13 @@ func (f *ExecFn) RunContext(ctx context.Context, r io.Reader, w io.Writer) error
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", k, v))
 	}
 
-	if err := runCmd(ctx, cmd); err != nil {
-		if goerrors.Is(ctx.Err(), context.DeadlineExceeded) {
-			return newTimeoutExecError(ctx, err, errSink.String())
-		}
+	// The function can exit successfully and leave a child process with its
+	// output open. Then the end of ctx kills only the child, and err is nil.
+	err := runCmd(ctx, cmd)
+	if ctxErr := contextError(ctx, err, errSink.String); ctxErr != nil {
+		return ctxErr
+	}
+	if err != nil {
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &fnresultv1.ExecError{
 				OriginalErr:    exitErr,

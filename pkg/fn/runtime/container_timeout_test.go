@@ -60,3 +60,32 @@ exec sleep 30
 	assert.Equal(t, "function is stuck", execErr.Stderr)
 	assert.Less(t, time.Since(start), 10*time.Second)
 }
+
+func TestContainerFn_TimeoutAfterCLIHasExited(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping container timeout test on Windows")
+	}
+
+	// A stand-in for the container CLI that exits successfully and leaves a
+	// child process with its output open past the timeout.
+	fakeCLI := filepath.Join(t.TempDir(), "fake-container-cli")
+	script := `#!/bin/sh
+echo "function is stuck" >&2
+sleep 1 &
+`
+	require.NoError(t, os.WriteFile(fakeCLI, []byte(script), 0700))
+
+	fn := &ContainerFn{
+		Image:    "example.com/fn:v1",
+		Timeout:  100 * time.Millisecond,
+		FnResult: &fnresultv1.Result{},
+	}
+
+	err := fn.runCLI(&bytes.Buffer{}, &bytes.Buffer{}, fakeCLI, filterDockerCLIOutput)
+
+	var execErr *ExecError
+	require.ErrorAs(t, err, &execErr)
+	assert.Equal(t, 100*time.Millisecond, execErr.Timeout)
+	assert.Equal(t, timeoutExitCode, execErr.ExitCode)
+	assert.Equal(t, "function is stuck", execErr.Stderr)
+}
