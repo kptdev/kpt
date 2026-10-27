@@ -18,6 +18,7 @@ package runtime
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -85,37 +86,60 @@ func assertHeartbeatStopped(t *testing.T, heartbeat string) {
 }
 
 func TestExecFn_TimeoutStopsChildProcesses(t *testing.T) {
-	testCases := map[string]struct {
-		script      string
-		expectError bool
-	}{
-		"function that waits for its child": {
-			script:      functionThatWaitsForChild,
-			expectError: true,
-		},
-		// the function is not running any more when the timeout passes
-		"function that has exited and left a child with its output open": {
-			script: functionThatLeavesChild,
-		},
+	testCases := map[string]string{
+		"function that waits for its child": functionThatWaitsForChild,
+		// The function is not running any more when the timeout passes. The
+		// timeout is longer than a second, so that kpt is seen to wait for the
+		// child until the timeout passes, and not to stop waiting earlier.
+		"function that has exited and left a child with its output open": functionThatLeavesChild,
 	}
 
-	for tn, tc := range testCases {
+	for tn, script := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			fn, heartbeat := newHeartbeatFn(t, tc.script, time.Second)
+			fn, heartbeat := newHeartbeatFn(t, script, 2*time.Second)
 
 			start := time.Now()
 			err := fn.Run(&bytes.Buffer{}, &bytes.Buffer{})
 
-			if tc.expectError {
-				var execErr *fnresultv1.ExecError
-				require.ErrorAs(t, err, &execErr)
-				assert.Equal(t, -1, execErr.ExitCode)
-			}
+			var execErr *fnresultv1.ExecError
+			require.ErrorAs(t, err, &execErr)
+			assert.Equal(t, timeoutExitCode, execErr.ExitCode)
+			assert.Equal(t, 2*time.Second, execErr.Timeout)
 			// kpt must not have waited for the child to finish
 			assert.Less(t, time.Since(start), 10*time.Second)
 			assertHeartbeatStopped(t, heartbeat)
 		})
 	}
+}
+
+func TestExecFn_CancelAfterFunctionHasExited(t *testing.T) {
+	// the child starts the heartbeatLoop only after the function has exited
+	script := `(trap '' TERM; while kill -0 $$ 2>/dev/null; do sleep 0.01; done; ` + heartbeatLoop + `) &`
+	fn, heartbeat := newHeartbeatFn(t, script, time.Minute)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		// cancel once the child runs; require must not be used here
+		defer cancel()
+		deadline := time.After(10 * time.Second)
+		for {
+			if info, err := os.Stat(heartbeat); err == nil && info.Size() > 0 {
+				return
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-deadline:
+				return
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+	}()
+
+	err := fn.RunContext(ctx, &bytes.Buffer{}, &bytes.Buffer{})
+
+	assert.ErrorIs(t, err, context.Canceled)
+	assertHeartbeatStopped(t, heartbeat)
 }
 
 func TestExecFn_ForwardsSignal(t *testing.T) {
