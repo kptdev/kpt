@@ -570,7 +570,7 @@ func printFnExecErr(ctx context.Context, fnErr *fnresultv1.ExecError) {
 	pr := printer.FromContextOrDie(ctx)
 	printFnStderr(ctx, fnErr.Stderr)
 	pr.Printf("  Exit code: %d\n", fnErr.ExitCode)
-	if msg := fnErr.timeoutMessage(); msg != "" {
+	if msg := fnErr.TimeoutMessage(); msg != "" {
 		pr.Printf("  Timed out: %s\n", msg)
 	}
 }

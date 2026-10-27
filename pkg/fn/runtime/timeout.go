@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"time"
 
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/printer"
 )
 
@@ -72,8 +73,8 @@ func fnContext(parent context.Context, timeout time.Duration) (context.Context, 
 
 // newTimeoutExecError returns the error for a function that was killed
 // because the time limit of ctx has passed.
-func newTimeoutExecError(ctx context.Context, err error, stderr string) *ExecError {
-	execErr := &ExecError{
+func newTimeoutExecError(ctx context.Context, err error, stderr string) *fnresultv1.ExecError {
+	execErr := &fnresultv1.ExecError{
 		OriginalErr:    err,
 		ExitCode:       timeoutExitCode,
 		Stderr:         stderr,

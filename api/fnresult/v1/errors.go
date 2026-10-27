@@ -66,15 +66,15 @@ func (fe *ExecError) String() string {
 	}
 	b.WriteString(errLine.String())
 	fmt.Fprintf(&b, "  Exit Code: %d\n", fe.ExitCode)
-	if msg := fe.timeoutMessage(); msg != "" {
+	if msg := fe.TimeoutMessage(); msg != "" {
 		fmt.Fprintf(&b, "  Timed Out: %s\n", msg)
 	}
 	return b.String()
 }
 
-// timeoutMessage describes the time limit that was exceeded. It is empty if
+// TimeoutMessage describes the time limit that was exceeded. It is empty if
 // the function did not time out.
-func (fe *ExecError) timeoutMessage() string {
+func (fe *ExecError) TimeoutMessage() string {
 	switch {
 	case fe.Timeout == 0:
 		return ""
