@@ -52,7 +52,7 @@ exec sleep 30
 	start := time.Now()
 	err := fn.runCLI(&bytes.Buffer{}, &bytes.Buffer{}, fakeCLI, filterDockerCLIOutput)
 
-	var execErr *ExecError
+	var execErr *fnresultv1.ExecError
 	require.ErrorAs(t, err, &execErr)
 	assert.Equal(t, 100*time.Millisecond, execErr.Timeout)
 	assert.Equal(t, timeoutExitCode, execErr.ExitCode)
@@ -83,7 +83,7 @@ sleep 1 &
 
 	err := fn.runCLI(&bytes.Buffer{}, &bytes.Buffer{}, fakeCLI, filterDockerCLIOutput)
 
-	var execErr *ExecError
+	var execErr *fnresultv1.ExecError
 	require.ErrorAs(t, err, &execErr)
 	assert.Equal(t, 100*time.Millisecond, execErr.Timeout)
 	assert.Equal(t, timeoutExitCode, execErr.ExitCode)
