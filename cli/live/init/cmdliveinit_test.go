@@ -76,7 +76,7 @@ metadata:
   namespace: test-namespace
 `
 
-func TestCmd_generateID(t *testing.T) {
+func TestCmd_generateHash(t *testing.T) {
 	testCases := map[string]struct {
 		namespace string
 		name      string
@@ -103,7 +103,7 @@ func TestCmd_generateID(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			actual, err := generateID(tc.namespace, tc.name)
+			actual, err := generateHash(tc.namespace, tc.name)
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {

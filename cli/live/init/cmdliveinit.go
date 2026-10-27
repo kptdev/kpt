@@ -41,7 +41,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-
 func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	ioStreams genericclioptions.IOStreams) *Runner {
 	r := &Runner{
@@ -166,22 +165,17 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 
 	// Default the name to the package directory name if not provided through the flag,
 	// and validate that it is a valid Kubernetes resource name.
-	if c.Name != "" {
-		c.Name = strings.TrimSpace(c.Name)
-		if errs := validation.IsDNS1123Subdomain(c.Name); len(errs) > 0 {
-			return errors.E(op, c.Pkg.UniquePath,
-				fmt.Errorf("inventory name %q is not a valid Kubernetes resource name: %s",
-					c.Name, strings.Join(errs, "; ")))
-		}
-	} else {
-		dirName := filepath.Base(c.Pkg.UniquePath.String())
-		if errs := validation.IsDNS1123Subdomain(dirName); len(errs) > 0 {
-			return errors.E(op, c.Pkg.UniquePath,
-				fmt.Errorf("package directory name %q is not a valid Kubernetes resource name (%s); please provide a valid name using the --name flag",
-					dirName, strings.Join(errs, "; ")))
-		}
-		c.Name = dirName
+	name, errMsg := c.Name, "inventory name %q is not a valid Kubernetes resource name: %s"
+	if name == "" {
+		name = filepath.Base(c.Pkg.UniquePath.String())
+		errMsg = "package directory name %q is not a valid Kubernetes resource name (%s); please provide a valid name using the --name flag"
 	}
+	name = strings.TrimSpace(name)
+	if errs := validation.IsDNS1123Subdomain(name); len(errs) > 0 {
+		return errors.E(op, c.Pkg.UniquePath,
+			fmt.Errorf(errMsg, name, strings.Join(errs, "; ")))
+	}
+	c.Name = name
 
 	// Validate or autogenerate the inventory ID if not provided through the flag.
 	if c.InventoryID != "" {
@@ -295,12 +289,6 @@ func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) 
 		return errors.E(op, errors.IO, kptfilev1.UniquePath(dir), err)
 	}
 	return nil
-}
-
-// generateID returns the string which is a deterministic SHA1 hash of the passed namespace
-// and name. Returns an error if either the namespace or name are empty.
-func generateID(namespace string, name string) (string, error) {
-	return generateHash(namespace, name)
 }
 
 // generateHash returns the SHA1 hash of the concatenated "namespace:name" string,
