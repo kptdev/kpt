@@ -21,7 +21,8 @@ import (
 
 	fnresult "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfile "github.com/kptdev/kpt/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/api/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/celenv"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 	ctx := context.Background()
 	ctx = printer.WithContext(ctx, printer.New(io.Discard, io.Discard))
 	fsys := filesys.MakeFsInMemory()
-	celEnv, err := runneroptions.NewCELEnvironment()
+	celEnv, err := celenv.NewCELEnvironment()
 	require.NoError(t, err)
 
 	inputNodes := []*yaml.RNode{

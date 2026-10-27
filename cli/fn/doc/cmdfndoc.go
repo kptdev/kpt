@@ -22,9 +22,9 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"

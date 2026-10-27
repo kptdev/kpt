@@ -17,7 +17,8 @@ package kptops
 import (
 	"testing"
 
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/api/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/celenv"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -106,7 +107,7 @@ spec:
 		Runtime:    &testRuntime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	_ = r.RunnerOptions.InitCELEnvironment()
+	_ = celenv.InitCELEnvironment(&r.RunnerOptions)
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -221,7 +222,7 @@ spec:
 		Runtime:    &testRuntime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	_ = r.RunnerOptions.InitCELEnvironment()
+	_ = celenv.InitCELEnvironment(&r.RunnerOptions)
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
