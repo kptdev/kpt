@@ -27,7 +27,8 @@ import (
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/api/runneroptions"
+	apiutils "github.com/kptdev/kpt/api/utils"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -103,13 +104,13 @@ data: {foo: bar}
 }
 func TestSingleLineFormatter(t *testing.T) {
 	type testcase struct {
-		sf       *runneroptions.SingleLineFormatter
+		sf       *apiutils.SingleLineFormatter
 		expected string
 	}
 
 	testcases := map[string]testcase{
 		"single line without quotes and comma separator": {
-			sf: &runneroptions.SingleLineFormatter{
+			sf: &apiutils.SingleLineFormatter{
 				Title:     "Summary",
 				Lines:     []string{"line1", "line2", "line3"},
 				UseQuote:  false,
@@ -118,7 +119,7 @@ func TestSingleLineFormatter(t *testing.T) {
 			expected: "Summary:\nline1, line2, line3",
 		},
 		"single line with quotes and space separator": {
-			sf: &runneroptions.SingleLineFormatter{
+			sf: &apiutils.SingleLineFormatter{
 				Title:     "Summary",
 				Lines:     []string{"line1", "line2", "line3"},
 				UseQuote:  true,
@@ -127,7 +128,7 @@ func TestSingleLineFormatter(t *testing.T) {
 			expected: "Summary:\n\"line1\" \"line2\" \"line3\"",
 		},
 		"single line with newline suppression": {
-			sf: &runneroptions.SingleLineFormatter{
+			sf: &apiutils.SingleLineFormatter{
 				Title:     "Summary",
 				Lines:     []string{"line1\n", "line2\nextra", "line3"},
 				UseQuote:  false,
@@ -136,7 +137,7 @@ func TestSingleLineFormatter(t *testing.T) {
 			expected: "Summary:\nline1, line2 extra, line3",
 		},
 		"empty lines": {
-			sf: &runneroptions.SingleLineFormatter{
+			sf: &apiutils.SingleLineFormatter{
 				Title:     "Empty",
 				Lines:     []string{},
 				UseQuote:  false,

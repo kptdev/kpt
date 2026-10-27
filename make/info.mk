@@ -26,7 +26,7 @@ KPT_VERSION := $(shell date '+development-%Y-%m-%dT%H:%M:%S')
 
 export KPT_FN_WASM_RUNTIME ?= nodejs
 
-LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${KPT_VERSION}
+LDFLAGS := -ldflags "-X main.version=${KPT_VERSION}
 ifeq ($(OS),Windows_NT)
 	# Do nothing
 else

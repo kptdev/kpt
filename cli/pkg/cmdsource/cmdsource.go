@@ -1,0 +1,161 @@
+// Copyright 2019 The Kubernetes Authors.
+// Copyright 2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package cmdsource
+
+import (
+	"context"
+	"fmt"
+	"path/filepath"
+
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/cli/pkg/cmdcat"
+	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+// GetSourceRunner returns a command for Source.
+func GetSourceRunner(ctx context.Context, name string) *SourceRunner {
+	r := &SourceRunner{
+		WrapKind:       kio.ResourceListKind,
+		WrapAPIVersion: kio.ResourceListAPIVersion,
+		Ctx:            ctx,
+	}
+	c := &cobra.Command{
+		Use:     "source [DIR] [flags]",
+		Short:   fndocs.SourceShort,
+		Long:    fndocs.SourceShort + "\n" + fndocs.SourceLong,
+		Example: fndocs.SourceExamples,
+		Args:    cobra.MaximumNArgs(1),
+		RunE:    r.runE,
+		PreRunE: r.preRunE,
+	}
+	c.Flags().StringVarP(&r.Output, "output", "o", cmdutil.Stdout,
+		fmt.Sprintf("output resources are written to stdout in provided format. Allowed values: %s|%s", cmdutil.Stdout, cmdutil.Unwrap))
+	c.Flags().StringVar(&r.FunctionConfig, "fn-config", "",
+		"path to function config file.")
+	c.Flags().BoolVar(&r.IncludeMetaResources,
+		"include-meta-resources", false, "include package meta resources in the command output")
+	if err := c.Flags().MarkHidden("include-meta-resources"); err != nil {
+		panic(err)
+	}
+	r.Command = c
+	if err := c.MarkFlagFilename("fn-config", "yaml", "json", "yml"); err != nil {
+		panic(err)
+	}
+	return r
+}
+
+func NewCommand(ctx context.Context, name string) *cobra.Command {
+	return GetSourceRunner(ctx, name).Command
+}
+
+// SourceRunner contains the run function
+type SourceRunner struct {
+	Output               string
+	WrapKind             string
+	WrapAPIVersion       string
+	FunctionConfig       string
+	Command              *cobra.Command
+	IncludeMetaResources bool
+	Ctx                  context.Context
+}
+
+func (r *SourceRunner) preRunE(c *cobra.Command, _ []string) error {
+	if r.IncludeMetaResources {
+		return fmt.Errorf("--include-meta-resources is no longer necessary because meta resources are now included by default")
+	}
+	return nil
+}
+
+func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
+	if r.Output != cmdutil.Stdout && r.Output != cmdutil.Unwrap {
+		return fmt.Errorf("invalid input for --output flag %q, must be %q or %q", r.Output, cmdutil.Stdout, cmdutil.Unwrap)
+	}
+	if len(args) == 0 {
+		// default to current working directory
+		args = append(args, ".")
+	}
+	// if there is a function-config specified, emit it
+	var functionConfig *yaml.RNode
+	if r.FunctionConfig != "" {
+		configs, err := kio.LocalPackageReader{PackagePath: r.FunctionConfig, PreserveSeqIndent: true, WrapBareSeqNode: true}.Read()
+		if err != nil {
+			return err
+		}
+		if len(configs) != 1 {
+			return fmt.Errorf("expected exactly 1 functionConfig, found %d", len(configs))
+		}
+		functionConfig = configs[0]
+	}
+
+	var inputs []kio.Reader
+	for _, a := range args {
+		pkgPath, err := filepath.Abs(a)
+		if err != nil {
+			return fmt.Errorf("cannot convert input path %q to absolute path: %w", a, err)
+		}
+		resolvedPath, err := argsutil.ResolveSymlink(r.Ctx, pkgPath)
+		if err != nil {
+			return err
+		}
+
+		// Non-KRM pre-scan, same as `fn render`/`fn eval`'s.
+		scanResult, err := krmvalidate.Scan(filesys.FileSystemOrOnDisk{}, resolvedPath, printer.FromContextOrDie(r.Ctx).Printf)
+		if err != nil {
+			return err
+		}
+
+		inputs = append(inputs, kio.LocalPackageReader{
+			PackagePath:        resolvedPath,
+			MatchFilesGlob:     pkg.MatchAllKRM,
+			PreserveSeqIndent:  true,
+			PackageFileName:    kptfilev1.KptFileName,
+			IncludeSubpackages: true,
+			WrapBareSeqNode:    true,
+			FileSkipFunc:       scanResult.SkipFunc(resolvedPath),
+		})
+	}
+
+	var outputs []kio.Writer
+	if r.Output == cmdutil.Stdout {
+		outputs = append(outputs, kio.ByteWriter{
+			Writer:                printer.FromContextOrDie(r.Ctx).OutStream(),
+			KeepReaderAnnotations: true,
+			WrappingKind:          r.WrapKind,
+			WrappingAPIVersion:    r.WrapAPIVersion,
+			FunctionConfig:        functionConfig,
+		})
+	} else {
+		outputs = append(outputs, kio.ByteWriter{
+			Writer:         printer.FromContextOrDie(r.Ctx).OutStream(),
+			FunctionConfig: functionConfig,
+			ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation,
+				kioutil.LegacyPathAnnotation, kioutil.LegacyIndexAnnotation}, // nolint:staticcheck
+		})
+	}
+
+	err := kio.Pipeline{Inputs: inputs, Outputs: outputs}.Execute()
+	return cmdcat.HandleError(r.Ctx, err)
+}

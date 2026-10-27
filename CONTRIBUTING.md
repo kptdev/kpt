@@ -165,7 +165,8 @@ The same checks run with `make -C api all`.
 
 For step-by-step maintainer instructions (CLI/library vs API, tag shapes, and CI), see [release/README.md](release/README.md).
 
-- **kpt CLI** (root module `github.com/kptdev/kpt`): release tags look like `v1.2.3`. Pushing them runs the [kpt Release](.github/workflows/release.yml) workflow (GoReleaser, images, provenance).
+- **kpt library** (root module `github.com/kptdev/kpt`): tags look like `v1.2.3`. Pushing one runs the [library release](.github/workflows/release.yml) workflow (`make lib` only).
+- **kpt CLI** (`github.com/kptdev/kpt/cli`): tags look like `cli/v1.2.3`, on a commit whose `cli/go.mod` requires the library tag. Pushing one runs the [CLI release](.github/workflows/release-cli.yml) workflow (GoReleaser, images, provenance).
 - **kpt API**: publish nested-module **git** tags such as `api/v1.2.3`; consumers pin with `go get github.com/kptdev/kpt/api@v1.2.3` (see [Go modules: VCS version](https://go.dev/ref/mod#vcs-version)).
 
 ### Function Catalog

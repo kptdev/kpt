@@ -65,9 +65,9 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", k, v))
 	}
 
-	if err := cmd.Run(); err != nil {
+	if err := runCmd(ctx, cmd); err != nil {
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
-			return &ExecError{
+			return &fnresultv1.ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
 				Stderr:         errSink.String(),

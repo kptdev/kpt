@@ -1,0 +1,486 @@
+// Copyright 2019 The Kubernetes Authors.
+// Copyright 2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package cmdeval
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"os"
+	"os/user"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
+	"github.com/kptdev/kpt/pkg/lib/kptops"
+	"github.com/kptdev/kpt/pkg/printer"
+	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+)
+
+// RunFns runs the set of configuration functions in a local directory against
+// the Resources in that directory
+type RunFns struct {
+	Ctx context.Context
+
+	StorageMounts []runtimeutil.StorageMount
+
+	// Path is the path to the directory containing functions
+	Path string
+
+	// uniquePath is the absolute version of Path
+	uniquePath kptfilev1.UniquePath
+
+	// FnConfigPath specifies a config file which contains the configs used in
+	// function input. It can be absolute or relative to kpt working directory.
+	// The exact format depends on the OS.
+	FnConfigPath string
+
+	// Function is an function to run against the input.
+	Function *runtimeutil.FunctionSpec
+
+	// FnConfig is the configurations passed from command line
+	FnConfig *yaml.RNode
+
+	// Input can be set to read the Resources from Input rather than from a directory
+	Input io.Reader
+
+	// Network enables network access for functions that declare it
+	Network bool
+
+	// Output can be set to write the result to Output rather than back to the directory
+	Output io.Writer
+
+	// ResultsDir is where to write each functions results
+	ResultsDir string
+
+	fnResults *fnresultv1.ResultList
+
+	// functionFilterProvider provides a filter to perform the function.
+	// this is a variable so it can be mocked in tests
+	functionFilterProvider func(
+		filter runtimeutil.FunctionSpec, fnConfig *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error)
+
+	// AsCurrentUser is a boolean to indicate whether docker container should use
+	// the uid and gid that run the command
+	AsCurrentUser bool
+
+	// Env contains environment variables that will be exported to container
+	Env []string
+
+	// ContinueOnEmptyResult configures what happens when the underlying pipeline
+	// returns an empty result.
+	// If it is false (default), subsequent functions will be skipped and the
+	// result will be returned immediately.
+	// If it is true, the empty result will be provided as input to the next
+	// function in the list.
+	ContinueOnEmptyResult bool
+
+	RunnerOptions runneroptions.RunnerOptions
+
+	// ExecArgs are the arguments for exec commands
+	ExecArgs []string
+
+	// OriginalExec is the original exec commands
+	OriginalExec string
+
+	Selector kptfilev1.Selector
+
+	Exclusion    kptfilev1.Selector
+	CelCondition string
+}
+
+// Execute runs the command
+func (r RunFns) Execute() error {
+	// default the containerFilterProvider if it hasn't been override.  Split out for testing.
+	err := (&r).init()
+	if err != nil {
+		return err
+	}
+	// Read the fn-config file once, so the function and the output's
+	// ResourceList.functionConfig get the same value.
+	if r.FnConfigPath != "" {
+		r.FnConfig, err = r.getFunctionConfig()
+		if err != nil {
+			return err
+		}
+	}
+	nodes, fltrs, output, err := r.getNodesAndFilters()
+	if err != nil {
+		return err
+	}
+	return r.runFunctions(nodes, output, fltrs)
+}
+
+func (r RunFns) getNodesAndFilters() (
+	*kio.PackageBuffer, []kio.Filter, *kio.LocalPackageReadWriter, error) {
+	// Read Resources from Directory or Input
+	buff := &kio.PackageBuffer{}
+	p := kio.Pipeline{Outputs: []kio.Writer{buff}}
+	// save the output dir because we will need it to write back
+	// the same one for reading must be used for writing if deleting Resources
+	var outputPkg *kio.LocalPackageReadWriter
+
+	if r.Path != "" {
+		// Non-KRM pre-scan, same as `kpt fn render`'s.
+		pr := printer.FromContextOrDie(r.Ctx)
+		scanResult, err := kptops.PreScanNonKRM(filesys.FileSystemOrOnDisk{}, string(r.uniquePath), pr.Printf)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		outputPkg = &kio.LocalPackageReadWriter{
+			PackagePath:        string(r.uniquePath),
+			MatchFilesGlob:     pkg.MatchAllKRM,
+			PreserveSeqIndent:  true,
+			PackageFileName:    kptfilev1.KptFileName,
+			IncludeSubpackages: true,
+			WrapBareSeqNode:    true,
+			FileSkipFunc:       scanResult.SkipFunc(string(r.uniquePath)),
+		}
+	}
+
+	if r.Input == nil {
+		p.Inputs = []kio.Reader{outputPkg}
+	} else {
+		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input, PreserveSeqIndent: true, WrapBareSeqNode: true}}
+	}
+	if err := p.Execute(); err != nil {
+		return nil, nil, outputPkg, err
+	}
+
+	fltrs, err := r.getFilters()
+	if err != nil {
+		return nil, nil, outputPkg, err
+	}
+	return buff, fltrs, outputPkg, nil
+}
+
+func (r RunFns) getFilters() ([]kio.Filter, error) {
+	spec := r.Function
+	if spec == nil {
+		return nil, nil
+	}
+	// merge envs from imperative and declarative
+	spec.Container.Env = r.mergeContainerEnv(spec.Container.Env)
+
+	c, err := r.functionFilterProvider(*spec, r.FnConfig, user.Current)
+	if err != nil {
+		return nil, err
+	}
+
+	if c == nil {
+		return nil, nil
+	}
+	return []kio.Filter{c}, nil
+}
+
+// runFunctions runs the fltrs against the input and writes to either r.Output or output
+func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Filter) error {
+	// use the previously read Resources as input
+	var outputs []kio.Writer
+	if r.Output == nil {
+		// write back to the package
+		outputs = append(outputs, output)
+	} else {
+		// write to the output instead of the directory if r.Output is specified or
+		// the output is nil (reading from Input)
+		outputs = append(outputs, kio.ByteWriter{
+			Writer:                r.Output,
+			KeepReaderAnnotations: true,
+			WrappingKind:          kio.ResourceListKind,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+			FunctionConfig:        r.FnConfig,
+		})
+	}
+
+	inputResources, err := input.Read()
+	if err != nil {
+		return err
+	}
+
+	// Exclude the fn-config file from processing when it resides inside the
+	// package. The fn-config is already passed separately via
+	// resourceList.functionConfig and should not be processed as a regular
+	// input resource. The excluded node is written back unmodified so the
+	// file is preserved on disk.
+	var fnConfigNode *yaml.RNode
+	if r.FnConfigPath != "" {
+		inputResources = slices.DeleteFunc(inputResources, func(node *yaml.RNode) bool {
+			p, _, _ := kioutil.GetFileAnnotations(node)
+			if p != "" && filepath.Join(string(r.uniquePath), p) == r.FnConfigPath {
+				fnConfigNode = node
+				return true
+			}
+			return false
+		})
+	}
+
+	selectedInput := inputResources
+
+	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
+		err = fnruntime.SetResourceIDs(inputResources)
+		if err != nil {
+			return err
+		}
+
+		// select the resources on which function should be applied
+		selectedInput, err = fnruntime.SelectInput(
+			inputResources,
+			[]kptfilev1.Selector{r.Selector},
+			[]kptfilev1.Selector{r.Exclusion},
+			&fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
+		if err != nil {
+			return err
+		}
+	}
+
+	pb := &kio.PackageBuffer{}
+	pipeline := kio.Pipeline{
+		Inputs:                []kio.Reader{&kio.PackageBuffer{Nodes: selectedInput}},
+		Filters:               fltrs,
+		Outputs:               []kio.Writer{pb},
+		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
+	}
+	err = pipeline.Execute()
+	outputResources := pb.Nodes
+
+	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
+		outputResources = fnruntime.MergeWithInput(pb.Nodes, selectedInput, inputResources)
+		deleteAnnoErr := fnruntime.DeleteResourceIDs(outputResources)
+		if deleteAnnoErr != nil {
+			return deleteAnnoErr
+		}
+	}
+
+	// Add fn-config resource back (unmodified) so the writer preserves the file.
+	if fnConfigNode != nil {
+		outputResources = append(outputResources, fnConfigNode)
+	}
+
+	if err == nil {
+		writeErr := outputs[0].Write(outputResources)
+		if writeErr != nil {
+			return writeErr
+		}
+	}
+	resultsFile, resultErr := fnruntime.SaveResults(filesys.FileSystemOrOnDisk{}, r.ResultsDir, r.fnResults)
+	if err != nil {
+		// function fails
+		if resultErr == nil {
+			r.printFnResultsStatus(resultsFile)
+		}
+		return err
+	}
+	if resultErr == nil {
+		r.printFnResultsStatus(resultsFile)
+	}
+	return nil
+}
+
+func (r RunFns) printFnResultsStatus(resultsFile string) {
+	printer.PrintFnResultInfo(r.Ctx, resultsFile, true)
+}
+
+// mergeContainerEnv will merge the envs specified by command line (imperative) and config
+// file (declarative). If they have same key, the imperative value will be respected.
+func (r RunFns) mergeContainerEnv(envs []string) []string {
+	imperative := fnruntime.NewContainerEnvFromStringSlice(r.Env)
+	declarative := fnruntime.NewContainerEnvFromStringSlice(envs)
+	for key, value := range imperative.EnvVars {
+		declarative.AddKeyValue(key, value)
+	}
+
+	for _, key := range imperative.VarsToExport {
+		declarative.AddKey(key)
+	}
+
+	return declarative.Raw()
+}
+
+// init initializes the RunFns with a containerFilterProvider.
+func (r *RunFns) init() error {
+	// if no path is specified, default reading from stdin and writing to stdout
+	if r.Path == "" {
+		if r.Output == nil {
+			r.Output = printer.FromContextOrDie(r.Ctx).OutStream()
+		}
+		if r.Input == nil {
+			r.Input = os.Stdin
+		}
+	} else {
+		// make the path absolute so it works on mac
+		var err error
+		absPath, err := filepath.Abs(r.Path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		// Resolve symlinks so path comparisons work correctly on macOS where
+		// os.Getwd() returns the /private/... resolved form of /var/... paths.
+		if resolved, err := filepath.EvalSymlinks(absPath); err == nil {
+			absPath = resolved
+		}
+		r.uniquePath = kptfilev1.UniquePath(absPath)
+	}
+
+	r.fnResults = fnresultv1.NewResultList()
+
+	// functionFilterProvider set the filter provider
+	if r.functionFilterProvider == nil {
+		r.functionFilterProvider = r.defaultFnFilterProvider
+	}
+
+	// fn config path should be absolute
+	if r.FnConfigPath != "" && !filepath.IsAbs(r.FnConfigPath) {
+		// if the FnConfigPath is relative, we should use the
+		// current directory to construct full path.
+		path, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get working directory: %w", err)
+		}
+		r.FnConfigPath = filepath.Join(path, r.FnConfigPath)
+	}
+	// Resolve symlinks so the path compares correctly against r.uniquePath
+	// (which comes from filepath.Abs). On macOS, os.Getwd() returns the
+	// /private/var/... resolved path while os.MkdirTemp paths use /var/...
+	if r.FnConfigPath != "" {
+		if resolved, err := filepath.EvalSymlinks(r.FnConfigPath); err == nil {
+			r.FnConfigPath = resolved
+		}
+	}
+	return nil
+}
+
+type currentUserFunc func() (*user.User, error)
+
+// getUIDGID will return "nobody" if asCurrentUser is false. Otherwise
+// return "uid:gid" according to the return from currentUser function.
+func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) {
+	if !asCurrentUser {
+		return "nobody", nil
+	}
+
+	u, err := currentUser()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
+}
+
+// getFunctionConfig returns yaml representation of functionConfig that can
+// be provided to a function as input.
+func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
+	return kptfilev1.GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, "", r.FnConfigPath)
+}
+
+// defaultFnFilterProvider provides function filters
+func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
+	if spec.Container.Image == "" && spec.Exec.Path == "" {
+		return nil, fmt.Errorf("either image name or executable path need to be provided")
+	}
+
+	fltr := &runtimeutil.FunctionFilter{
+		FunctionConfig: fnConfig,
+		DeferFailure:   spec.DeferFailure,
+	}
+	fnResult := &fnresultv1.Result{
+		// TODO(droot): This is required for making structured results subpackage aware.
+		// Enable this once test harness supports filepath based assertions.
+		// Pkg: string(r.uniquePath),
+	}
+	if spec.Container.Image != "" {
+		fnResult.Image = spec.Container.Image
+
+		resolvedImage := r.RunnerOptions.ResolveToImage(spec.Container.Image)
+		// If AllowWasm is true, we try to use the image field as a wasm image.
+		// TODO: we can be smarter here. If the image doesn't support wasm/js platform,
+		// it should fallback to run it as container fn.
+		if r.RunnerOptions.AllowWasm {
+			wFn, err := fnruntime.NewWasmFn(fnruntime.NewOciLoader(filepath.Join(os.TempDir(), "krm-fn-wasm"), resolvedImage))
+			if err != nil {
+				return nil, err
+			}
+			fltr.Run = wFn.Run
+		} else {
+			// TODO: Add a test for this behavior
+			uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
+			if err != nil {
+				return nil, err
+			}
+			c := &fnruntime.ContainerFn{
+				Image:           resolvedImage,
+				ImagePullPolicy: r.RunnerOptions.ImagePullPolicy,
+				UIDGID:          uidgid,
+				StorageMounts:   r.StorageMounts,
+				Env:             spec.Container.Env,
+				FnResult:        fnResult,
+				Perm: fnruntime.ContainerFnPermission{
+					AllowNetwork: r.Network,
+					// mounts are always from CLI flags so we allow
+					// them by default for eval
+					AllowMount: true,
+				},
+			}
+			fltr.Run = c.Run
+		}
+	}
+
+	if spec.Exec.Path != "" {
+		fnResult.ExecPath = r.OriginalExec
+
+		if r.RunnerOptions.AllowWasm && strings.HasSuffix(spec.Exec.Path, ".wasm") {
+			wFn, err := fnruntime.NewWasmFn(&fnruntime.FsLoader{Filename: spec.Exec.Path})
+			if err != nil {
+				return nil, err
+			}
+			fltr.Run = wFn.Run
+		} else {
+			e := &fnruntime.ExecFn{
+				Path:     spec.Exec.Path,
+				Args:     r.ExecArgs,
+				FnResult: fnResult,
+			}
+			fltr.Run = e.Run
+		}
+	}
+
+	opts := r.RunnerOptions
+	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
+		opts.DisplayResourceCount = true
+	}
+
+	runner, err := fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
+	if err != nil {
+		return nil, err
+	}
+	if r.CelCondition != "" {
+		if opts.CELEnvironment == nil {
+			return nil, fmt.Errorf("CelCondition specified for function %q but no CEL environment is configured in RunnerOptions", fnResult.Image)
+		}
+		runner.SetCelCondition(r.CelCondition, opts.CELEnvironment)
+	}
+	return runner, nil
+}

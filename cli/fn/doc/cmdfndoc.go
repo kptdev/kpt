@@ -1,0 +1,113 @@
+// Copyright 2019,2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package doc
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+
+	"github.com/kptdev/kpt/api/runneroptions"
+	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/spf13/cobra"
+)
+
+func NewRunner(ctx context.Context, parent string) *Runner {
+	r := &Runner{
+		Ctx:           ctx,
+		RunnerOptions: runneroptions.RunnerOptions{},
+	}
+	c := &cobra.Command{
+		Use:     "doc --image=IMAGE [--image-prefix=PREFIX]",
+		Args:    cobra.MaximumNArgs(0),
+		Short:   fndocs.DocShort,
+		Long:    fndocs.DocShort + "\n" + fndocs.DocLong,
+		Example: fndocs.DocExamples,
+		RunE:    r.runE,
+	}
+	r.Command = c
+	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
+	c.Flags().StringVar(&r.RunnerOptions.ImagePrefix, "image-prefix", runneroptions.DefaultImagePrefix(),
+		fmt.Sprintf("The prefix used when converting from short path to the full URL (defaults to $%s if set)", runneroptions.PrefixEnvVar))
+	cmdutil.FixDocs("kpt", parent, c)
+	return r
+}
+
+func NewCommand(ctx context.Context, parent string) *cobra.Command {
+	return NewRunner(ctx, parent).Command
+}
+
+type Runner struct {
+	Image         string
+	RunnerOptions runneroptions.RunnerOptions
+	Command       *cobra.Command
+	Ctx           context.Context
+}
+
+func (r *Runner) runE(_ *cobra.Command, _ []string) error {
+	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
+	if r.Image == "" {
+		return errors.New("image must be specified")
+	}
+
+	image := r.RunnerOptions.ResolveToImage(r.Image)
+	var out, errout bytes.Buffer
+	runArgs := []string{
+		"run",
+		"--rm", // delete the container afterward
+		"-i",   // interactive mode to accept stdin
+		image,
+		"--help",
+	}
+	// If the env var is empty, stringToContainerRuntime defaults it to docker.
+	runtime, err := fnruntime.StringToContainerRuntime(os.Getenv(fnruntime.ContainerRuntimeEnv))
+	if err != nil {
+		return err
+	}
+
+	err = fnruntime.ContainerRuntimeAvailable(runtime)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(runtime.GetBin(), runArgs...)
+	cmd.Stdout = &out
+	cmd.Stderr = &errout
+
+	// Provide an empty ResourceList as stdin for functions that expect input
+	// This prevents "expected exactly one object, got 0" errors
+	emptyResourceList := `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items: []
+`
+	cmd.Stdin = bytes.NewBufferString(emptyResourceList)
+
+	err = cmd.Run()
+	pr := printer.FromContextOrDie(r.Ctx)
+	if err != nil {
+		pr.Printf("%s", &errout)
+		return fmt.Errorf("please ensure the container has an entrypoint and it supports --help flag: %w", err)
+	}
+	fmt.Fprintln(pr.OutStream(), out.String())
+	return nil
+}

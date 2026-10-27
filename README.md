@@ -44,7 +44,7 @@ kpt installation instructions can be found on [kpt.dev/installation/kpt-cli](htt
 The kpt toolchain includes the following components:
 
 - [**kpt API**](./api) (`github.com/kptdev/kpt/api`): A separately versioned Go module with type definitions and
-  utilities for kpt schemas, including `Kptfile`, `ResourceGroup`, and function result types. Use it when building
+  utilities for kpt schemas, including `Kptfile`, `ResourceGroup`, function result types, and function runner options. Use it when building
   tools that read or write kpt package metadata without depending on the full CLI.
 
 - **kpt CLI**: The [kpt CLI](https://kpt.dev/reference/cli/) supports package and function operations, and also
@@ -62,7 +62,7 @@ The kpt toolchain includes the following components:
 ## Versioning
 
 kpt follows the [kpt project versioning guidelines](https://github.com/kptdev/governance/blob/main/VERSIONING.md).
-The CLI and API module are released independently; see [release/README.md](release/README.md) for release surfaces and tagging 
+The library, CLI, and API module are released independently; see [release/README.md](release/README.md) for release surfaces and tagging 
 details.
 
 ## Roadmap
