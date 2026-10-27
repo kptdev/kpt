@@ -31,8 +31,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -426,7 +426,7 @@ func outputFunctionConfig(t *testing.T, out string) string {
 	// Drop the annotations the package reader adds, which kpt fn source also writes.
 	for _, a := range []kioutil.AnnotationKey{kioutil.IndexAnnotation, kioutil.PathAnnotation, kioutil.SeqIndentAnnotation,
 		kioutil.LegacyIndexAnnotation, kioutil.LegacyPathAnnotation} { // nolint:staticcheck
-		if !assert.NoError(t, fc.Value.PipeE(yaml.ClearAnnotation(string(a)))) {
+		if !assert.NoError(t, fc.Value.PipeE(yaml.ClearAnnotation(a))) {
 			t.FailNow()
 		}
 	}
