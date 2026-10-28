@@ -22,8 +22,8 @@ name: Release Snapshot
 on:
   pull_request:
   push:
-    branches:
-    - '!dependabot/*'
+    branches-ignore:
+    - 'dependabot/**'
 
 permissions:
   contents: read
