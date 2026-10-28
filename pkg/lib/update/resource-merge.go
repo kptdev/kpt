@@ -317,6 +317,10 @@ var krmFilesGlob = append([]string{kptfilev1.KptFileName}, kio.DefaultMatch...)
 
 // isKrmFile reports whether path's filename matches krmFilesGlob AND
 // its content is valid KRM per krmvalidate.IsKRM().
+//
+// Parsed with DisableUnwrapping so a bare `kind: List` stays itself
+// instead of being unwrapped into its items, matching how the real merge
+// reader (kio.LocalPackageReader) classifies the same file.
 func isKrmFile(path string) (bool, error) {
 	const op errors.Op = "update.isKrmFile"
 	matchesGlob := false
@@ -336,7 +340,11 @@ func isKrmFile(path string) (bool, error) {
 	if err != nil {
 		return false, errors.E(op, errors.IO, err)
 	}
-	nodes, err := kio.FromBytes(content)
+	nodes, err := (&kio.ByteReader{
+		Reader:                bytes.NewReader(content),
+		OmitReaderAnnotations: true,
+		DisableUnwrapping:     true,
+	}).Read()
 	if err != nil {
 		return false, nil
 	}

@@ -395,6 +395,57 @@ func TestUpdate_NonKRMFile_LocalOnlySurvives(t *testing.T) {
 	assert.Equal(t, "replicaCount: 3\n", string(gotContent))
 }
 
+// TestUpdate_NonKRMListFileSurvives verifies a file with a bare `kind:
+// List` (no apiVersion of its own) wrapping a valid inner resource is
+// classified consistently by isKrmFile and the merge reader, so it's
+// preserved rather than silently deleted as "no longer in the merge output."
+func TestUpdate_NonKRMListFileSurvives(t *testing.T) {
+	const listFileContent = `kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm1
+  data:
+    key: value
+`
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("list.yaml", listFileContent)
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("list.yaml", listFileContent)
+	// Only the unrelated Deployment resource changes upstream; list.yaml
+	// itself is untouched between origin and updated.
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.ConfigMapResource).
+		WithFile("list.yaml", listFileContent)
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "list.yaml"))
+	require.NoError(t, err, "list.yaml must not be deleted during update")
+	assert.Equal(t, listFileContent, string(gotContent))
+}
+
 func TestKeepTaggedNull(t *testing.T) {
 	updater := update.ResourceMergeUpdater{}
 
