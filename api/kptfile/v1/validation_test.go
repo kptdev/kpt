@@ -1076,7 +1076,7 @@ func TestValidateGitDirectory(t *testing.T) {
 		{dir: "/package-examples/wordpress", valid: true},
 		{dir: "staging/cockroachdb", valid: true},
 		{dir: "java", valid: true},
-		{dir: "foo/../bar", valid: true},
+		{dir: "foo/../bar", valid: false},
 		{dir: "foo..bar", valid: true},
 		{dir: ".", valid: true},
 		{dir: "..", valid: false},
@@ -1086,6 +1086,7 @@ func TestValidateGitDirectory(t *testing.T) {
 		{dir: "foo/../../etc", valid: false},
 		{dir: `foo\..\..\etc`, valid: false},
 		{dir: "a\x00b", valid: false},
+		{dir: "foo\\bar/../../etc", valid: false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.dir, func(t *testing.T) {

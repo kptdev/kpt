@@ -145,18 +145,8 @@ func ValidateGitDirectory(dir string) error {
 	if strings.ContainsRune(dir, 0) {
 		return fmt.Errorf("must not contain a NUL byte")
 	}
-	depth := 0
-	for _, seg := range strings.FieldsFunc(dir, isRepoPathSeparator) {
-		switch seg {
-		case ".":
-		case "..":
-			if depth == 0 {
-				return fmt.Errorf("must not reference a path outside the repository")
-			}
-			depth--
-		default:
-			depth++
-		}
+	if slices.Contains(strings.FieldsFunc(dir, isRepoPathSeparator), "..") {
+		return fmt.Errorf("must not reference a path outside the repository")
 	}
 	return nil
 }
