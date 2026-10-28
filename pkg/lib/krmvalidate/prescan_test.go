@@ -47,10 +47,10 @@ func printfCollector() (func(format string, args ...any), *[]string) {
 	}, &lines
 }
 
-func writeValidKRMForTest(t *testing.T, fsys filesys.FileSystem, dir, fileName, resourceName string) {
+func writeValidKRMForTest(t *testing.T, fsys filesys.FileSystem, dir string) {
 	t.Helper()
-	content := "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: " + resourceName + "\n"
-	assert.NoError(t, fsys.WriteFile(filepath.Join(dir, fileName), []byte(content)))
+	content := "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: a\n"
+	assert.NoError(t, fsys.WriteFile(filepath.Join(dir, "a.yaml"), []byte(content)))
 }
 
 func writeNonKRMForTest(t *testing.T, fsys filesys.FileSystem, dir, fileName string) {
@@ -64,7 +64,7 @@ func TestSplit(t *testing.T) {
 	dir := "/pkg"
 	assert.NoError(t, fsys.Mkdir(dir))
 	writeKptfileForTest(t, fsys, dir, "p")
-	writeValidKRMForTest(t, fsys, dir, "a.yaml", "a")
+	writeValidKRMForTest(t, fsys, dir)
 	writeNonKRMForTest(t, fsys, dir, "b.yaml")
 
 	p, err := pkg.New(fsys, dir)
@@ -155,7 +155,7 @@ func TestScan(t *testing.T) {
 		dir := "/pkg"
 		assert.NoError(t, fsys.Mkdir(dir))
 		writeKptfileForTest(t, fsys, dir, "p")
-		writeValidKRMForTest(t, fsys, dir, "a.yaml", "a")
+		writeValidKRMForTest(t, fsys, dir)
 
 		printf, printed := printfCollector()
 		res, err := Scan(fsys, dir, printf)
@@ -222,7 +222,7 @@ func TestScanTree(t *testing.T) {
 		dir := "/pkg"
 		assert.NoError(t, fsys.Mkdir(dir))
 		writeKptfileForTest(t, fsys, dir, "p")
-		writeValidKRMForTest(t, fsys, dir, "a.yaml", "a")
+		writeValidKRMForTest(t, fsys, dir)
 		writeNonKRMForTest(t, fsys, dir, "bad.yaml")
 
 		found, optedIn, allResources, err := ScanTree(fsys, dir)
@@ -240,7 +240,7 @@ func TestScanTree(t *testing.T) {
 		sub := "/root/sub"
 		assert.NoError(t, fsys.MkdirAll(sub))
 		writeKptfileForTest(t, fsys, root, "root")
-		writeValidKRMForTest(t, fsys, root, "a.yaml", "a")
+		writeValidKRMForTest(t, fsys, root)
 		writeOptedInKptfileForTest(t, fsys, sub, "sub")
 		writeNonKRMForTest(t, fsys, sub, "bad.yaml")
 
@@ -313,7 +313,7 @@ func TestScanFlat(t *testing.T) {
 		dir := "/pkg"
 		assert.NoError(t, fsys.Mkdir(dir))
 		writeKptfileForTest(t, fsys, dir, "p")
-		writeValidKRMForTest(t, fsys, dir, "a.yaml", "a")
+		writeValidKRMForTest(t, fsys, dir)
 
 		found, optedIn, _, err := ScanFlat(fsys, dir)
 		assert.NoError(t, err)
@@ -361,7 +361,7 @@ func TestScanFlatAndDecide(t *testing.T) {
 		dir := "/pkg"
 		assert.NoError(t, fsys.Mkdir(dir))
 		writeKptfileForTest(t, fsys, dir, "p")
-		writeValidKRMForTest(t, fsys, dir, "a.yaml", "a")
+		writeValidKRMForTest(t, fsys, dir)
 
 		printf, printed := printfCollector()
 		res, err := ScanFlatAndDecide(fsys, dir, printf)
@@ -393,7 +393,7 @@ func TestCachedLocalResources(t *testing.T) {
 	dir := "/pkg"
 	assert.NoError(t, fsys.Mkdir(dir))
 	writeKptfileForTest(t, fsys, dir, "p")
-	writeValidKRMForTest(t, fsys, dir, "a.yaml", "a")
+	writeValidKRMForTest(t, fsys, dir)
 
 	p, err := pkg.New(fsys, dir)
 	assert.NoError(t, err)
