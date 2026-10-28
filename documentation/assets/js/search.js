@@ -18,26 +18,46 @@ limitations under the License.
 
     'use strict';
 
+    function executeSearch($input) {
+        var query = ($input.val() || '').trim();
+        if (!query) {
+            return;
+        }
+
+        var searchPage = $input.data('search-page') || '/search/';
+        var separator = searchPage.indexOf('?') === -1 ? '?' : '&';
+        window.location.href = searchPage + separator + 'q=' + encodeURIComponent(query);
+    }
+
     var Search = {
         init: function() {
             $(document).ready(function() {
-               $(document).on('keypress', '.td-search-input', function(e) {
-                    if (e.keyCode !== 13) {
-                        return
-                    }
-
-                    var query = $(this).val();
-                    var searchPage = $(this).data('search-page') + "?q=" + query;
-                    document.location = searchPage;
-
+                $(document).on('submit', '.td-search-form', function(e) {
+                    e.preventDefault();
+                    var $input = $(this).find('.td-search-input');
+                    executeSearch($input);
                     return false;
                 });
 
+                $(document).on('keydown', '.td-search-input', function(e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        executeSearch($(this));
+                        return false;
+                    }
+                });
+
+                $(document).on('click', '.td-search-icon-btn', function(e) {
+                    var $input = $(this).closest('.add-search-icon, .td-search-form').find('.td-search-input');
+                    if ($input.length && ($input.val() || '').trim()) {
+                        e.preventDefault();
+                        executeSearch($input);
+                    }
+                });
             });
         },
     };
 
     Search.init();
-
 
 }(jQuery));
