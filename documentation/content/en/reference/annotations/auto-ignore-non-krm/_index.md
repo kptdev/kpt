@@ -22,6 +22,23 @@ annotation is for when you'd rather not maintain that list manually:
 any non-KRM file found is skipped the same way, without needing to
 know its name or path ahead of time.
 
+### Malformed YAML is different, and isn't covered
+
+This annotation only applies to files that parse as valid YAML but
+aren't a valid KRM resource -- the definition above. A file that
+isn't valid YAML at all (invalid syntax) is a different failure
+neither this annotation nor `.krmignore` can excuse: parsing fails
+before kpt ever checks whether the content looks like a KRM resource,
+so there's no non-KRM classification to skip.
+
+In practice: the error looks different (a raw parse error, not
+`resource must have` apiVersion/kind/name), it doesn't mention this
+annotation as a fix, and if a package has multiple malformed files,
+only the first one encountered is reported, not the consolidated
+"every non-KRM file across the tree" report described below. The
+only way to work around a malformed file is to fix its syntax or
+remove it.
+
 ### Schema
 
 The annotation value accepts string values of `true` and `false`.

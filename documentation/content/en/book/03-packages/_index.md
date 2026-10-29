@@ -198,8 +198,11 @@ Each subpackage can have its own `.krmignore` that applies only within that subp
 
 If a package contains a non-KRM file (category 3 above) that isn't excluded by `.krmignore`, the commands
 listed above fail before doing any work, listing every such file found across the whole package tree in
-one error. If you'd rather these files be skipped automatically instead of maintaining a `.krmignore` list
-by hand, see the [`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}})
+one error. This applies to files that parse as YAML but aren't valid KRM; a file that isn't valid YAML at
+all fails differently and isn't covered by this consolidated reporting or by the annotation below -- see
+["Malformed YAML is different, and isn't covered"]({{% relref "/reference/annotations/auto-ignore-non-krm#malformed-yaml-is-different-and-isnt-covered" %}})
+for details. If you'd rather non-KRM files be skipped automatically instead of maintaining a `.krmignore`
+list by hand, see the [`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}})
 annotation.
 
 ## Editing a package
