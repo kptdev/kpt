@@ -93,7 +93,7 @@ func TestDecideOutcome_SortedDeterministicMessage(t *testing.T) {
 		{PkgPath: "/root/a", RelPath: "a.txt", Reason: "boom"},
 		{PkgPath: "/root/a", RelPath: "z.txt", Reason: "boom"},
 	}
-	err := DecideOutcome(found, map[string]bool{})
+	err := DecideOutcome(found, map[string]bool{}, "/root")
 	assert.Error(t, err)
 	msg := err.Error()
 	idxA1 := indexOf(msg, "a.txt")
@@ -113,7 +113,7 @@ func TestDecideOutcome_OptedInPackageExcused(t *testing.T) {
 		{PkgPath: "/root/sub", RelPath: "excused.yaml", Reason: "boom"},
 	}
 	optedIn := map[string]bool{"/root/sub": true}
-	err := DecideOutcome(found, optedIn)
+	err := DecideOutcome(found, optedIn, "/root")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "blocked.yaml")
 	assert.NotContains(t, err.Error(), "excused.yaml")
@@ -122,10 +122,27 @@ func TestDecideOutcome_OptedInPackageExcused(t *testing.T) {
 // TestDecideOutcome_NoBlockingFiles_ReturnsNil verifies an all-excused
 // or empty found list returns no error.
 func TestDecideOutcome_NoBlockingFiles_ReturnsNil(t *testing.T) {
-	assert.NoError(t, DecideOutcome(nil, nil))
+	assert.NoError(t, DecideOutcome(nil, nil, "/root"))
 
 	found := []NonKRMFile{{PkgPath: "/root", RelPath: "a.yaml", Reason: "boom"}}
-	assert.NoError(t, DecideOutcome(found, map[string]bool{"/root": true}))
+	assert.NoError(t, DecideOutcome(found, map[string]bool{"/root": true}, "/root"))
+}
+
+// TestDecideOutcome_DisambiguatesSameNamedFilesAcrossSubpackages
+// verifies the fix for the reviewer's ambiguity report: two
+// subpackages each with a same-named non-KRM file must print
+// distinguishable, root-relative paths, not both as just the bare
+// filename.
+func TestDecideOutcome_DisambiguatesSameNamedFilesAcrossSubpackages(t *testing.T) {
+	found := []NonKRMFile{
+		{PkgPath: "/root/apps/app1", RelPath: "values.yaml", Reason: "boom"},
+		{PkgPath: "/root/apps/app2", RelPath: "values.yaml", Reason: "boom"},
+	}
+	err := DecideOutcome(found, map[string]bool{}, "/root")
+	assert.Error(t, err)
+	msg := err.Error()
+	assert.Contains(t, msg, "apps/app1/values.yaml")
+	assert.Contains(t, msg, "apps/app2/values.yaml")
 }
 
 func TestPackageOptedIn(t *testing.T) {

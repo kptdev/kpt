@@ -466,6 +466,38 @@ upstreamLock:
 		assert.True(t, os.IsNotExist(statErr), ".krmignore should not have been written")
 	})
 
+	t.Run("same-named non-KRM files in different subpackages are disambiguated by path", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		dir := t.TempDir()
+		app1 := filepath.Join(dir, "apps", "app1")
+		app2 := filepath.Join(dir, "apps", "app2")
+		assert.NoError(t, os.MkdirAll(app1, 0700))
+		assert.NoError(t, os.MkdirAll(app2, 0700))
+		assert.NoError(t, os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(kptFile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app1, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: app1\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app2, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: app2\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app1, "values.yaml"), []byte("replicaCount: 1\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app2, "values.yaml"), []byte("replicaCount: 2\n"), 0600))
+
+		ctx := fake.CtxWithDefaultPrinter()
+		cmLoader := manifestreader.NewManifestLoader(tf)
+		migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+		migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
+			return inventory.NewFakeClient([]object.ObjMetadata{}), nil
+		}
+
+		err := migrateRunner.Run(strings.NewReader(""), []string{dir})
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+		assert.Contains(t, err.Error(), filepath.ToSlash(filepath.Join("apps", "app1", "values.yaml")))
+		assert.Contains(t, err.Error(), filepath.ToSlash(filepath.Join("apps", "app2", "values.yaml")))
+		assert.Contains(t, err.Error(), "2 file(s)")
+	})
+
 	t.Run(".krmignore still works independently of the annotation, no non-KRM-file error at all", func(t *testing.T) {
 		tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
 		defer tf.Cleanup()

@@ -45,6 +45,19 @@ type NonKRMFile struct {
 	Reason  string // the IsKRM() validation error
 }
 
+// DisplayPath returns f's path relative to rootPath, for display in
+// error messages. f.RelPath alone is relative only to f's own
+// (possibly sub) package, so two subpackages with same-named files
+// would otherwise print identically and look like the same file.
+func (f NonKRMFile) DisplayPath(rootPath string) string {
+	abs := filepath.Join(f.PkgPath, f.RelPath)
+	rel, err := filepath.Rel(rootPath, abs)
+	if err != nil {
+		return f.RelPath
+	}
+	return filepath.ToSlash(rel)
+}
+
 // Split partitions files into valid KRM resources and non-KRM files.
 // A file containing any non-KRM document is excluded in its entirety.
 func Split(pkgDir string, nodes []*yaml.RNode) (valid []*yaml.RNode, nonKRM []NonKRMFile, err error) {
@@ -98,7 +111,7 @@ func Scan(fsys filesys.FileSystem, pkgPath string, printf func(format string, ar
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
-	if scanErr := DecideOutcome(found, optedIn); scanErr != nil {
+	if scanErr := DecideOutcome(found, optedIn, pkgPath); scanErr != nil {
 		return nil, scanErr
 	}
 	PrintSkippedSummary(printf, found, optedIn)
@@ -278,7 +291,7 @@ func ScanFlatAndDecide(fsys filesys.FileSystem, pkgPath string, printf func(form
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
-	if scanErr := DecideOutcome(found, treeOptedIn); scanErr != nil {
+	if scanErr := DecideOutcome(found, treeOptedIn, pkgPath); scanErr != nil {
 		return nil, scanErr
 	}
 	PrintSkippedSummary(printf, found, treeOptedIn)
@@ -348,7 +361,9 @@ func CachedLocalResources(p *pkg.Pkg, cache map[string][]*yaml.RNode) ([]*yaml.R
 
 // DecideOutcome returns an error listing every file in found whose
 // owning package didn't opt in via optedIn, or nil if all were excused.
-func DecideOutcome(found []NonKRMFile, optedIn map[string]bool) error {
+// rootPath is the scan root the user actually targeted, used to
+// display each file's path unambiguously (see NonKRMFile.DisplayPath).
+func DecideOutcome(found []NonKRMFile, optedIn map[string]bool, rootPath string) error {
 	var blocking []NonKRMFile
 	for _, f := range found {
 		if !optedIn[f.PkgPath] {
@@ -360,16 +375,13 @@ func DecideOutcome(found []NonKRMFile, optedIn map[string]bool) error {
 	}
 
 	sort.Slice(blocking, func(i, j int) bool {
-		if blocking[i].PkgPath != blocking[j].PkgPath {
-			return blocking[i].PkgPath < blocking[j].PkgPath
-		}
-		return blocking[i].RelPath < blocking[j].RelPath
+		return blocking[i].DisplayPath(rootPath) < blocking[j].DisplayPath(rootPath)
 	})
 
 	var b strings.Builder
 	fmt.Fprintf(&b, "input resource list must contain only KRM resources (%d file(s)):", len(blocking))
 	for _, f := range blocking {
-		fmt.Fprintf(&b, "\n  %s: %s", f.RelPath, f.Reason)
+		fmt.Fprintf(&b, "\n  %s: %s", f.DisplayPath(rootPath), f.Reason)
 	}
 	fmt.Fprintf(&b, "\nTo resolve: either exclude these files via .krmignore (manually, or with a pattern rule), "+
 		"or add `%s: \"true\"` to this package's Kptfile to skip any non-KRM files automatically from this package.", AutoIgnoreNonKRMAnnotation)

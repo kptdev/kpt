@@ -158,11 +158,13 @@ func (mr *Runner) Run(reader io.Reader, args []string) error {
 		if len(found) > 0 {
 			// Not krmvalidate.DecideOutcome: its message recommends
 			// the annotation as a fix, which wouldn't work here.
-			sort.Slice(found, func(i, j int) bool { return found[i].RelPath < found[j].RelPath })
+			sort.Slice(found, func(i, j int) bool {
+				return found[i].DisplayPath(mr.dir) < found[j].DisplayPath(mr.dir)
+			})
 			var b bytes.Buffer
 			fmt.Fprintf(&b, "input resource list must contain only KRM resources (%d file(s)):", len(found))
 			for _, f := range found {
-				fmt.Fprintf(&b, "\n  %s: %s", f.RelPath, f.Reason)
+				fmt.Fprintf(&b, "\n  %s: %s", f.DisplayPath(mr.dir), f.Reason)
 			}
 			fmt.Fprint(&b, "\nTo resolve: exclude these files via .krmignore (manually, or with a pattern rule). "+
 				"Note: `kpt.dev/auto-ignore-non-krm` does not apply to `migrate` -- the legacy ConfigMap "+
