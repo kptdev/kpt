@@ -94,7 +94,7 @@ type ScanResult struct {
 // pkgPath: the single entry point most callers should use before
 // starting any KRM-assuming work.
 func Scan(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*ScanResult, error) {
-	found, optedIn, allResources, err := ScanTree(fsys, pkgPath)
+	found, optedIn, allResources, err := ScanTree(fsys, pkgPath, pkg.MatchAllKRM)
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
@@ -136,7 +136,14 @@ func (res *ScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
 // AutoIgnoreNonKRMAnnotation, and every package's resource list for
 // reuse. A missing Kptfile at the root is tolerated (bare-directory
 // targets like `fn eval`'s); any other read error propagates.
-func ScanTree(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, optedIn map[string]bool, allResources map[string][]*yaml.RNode, err error) {
+//
+// matchGlob scopes which files are considered; it should match the
+// caller's real reader (pkg.MatchAllKRM for fn render/eval,
+// kio.DefaultMatch for the live family), or a file the real operation
+// never touches can still block it.
+func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
+	found []NonKRMFile, optedIn map[string]bool, allResources map[string][]*yaml.RNode, err error,
+) {
 	optedIn = map[string]bool{}
 	allResources = map[string][]*yaml.RNode{}
 
@@ -170,12 +177,16 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, opte
 				PackagePath:        dir,
 				PackageFileName:    kptfilev1.KptFileName,
 				IncludeSubpackages: false,
-				MatchFilesGlob:     pkg.MatchAllKRM,
+				MatchFilesGlob:     matchGlob,
 				WrapBareSeqNode:    true,
 				FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: fsys},
 			}).Read()
 		} else {
+			// LocalResources() always reads with pkg.MatchAllKRM;
+			// narrow to matchGlob here for callers whose real
+			// reader is stricter (e.g. live's yaml/yml-only).
 			resources, resErr = p.LocalResources()
+			resources = filterByMatchGlob(resources, matchGlob)
 		}
 		if resErr != nil {
 			return resErr
@@ -206,11 +217,38 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, opte
 	return found, optedIn, allResources, nil
 }
 
+// liveReaderMatchGlob mirrors pkg/live's real reader (no MatchFilesGlob
+// override, so it defaults to kio.DefaultMatch): *.yaml/*.yml only, no
+// Kptfile, no .json. Used instead of pkg.MatchAllKRM so a file the live
+// reader never touches (e.g. a stray package.json) is never flagged.
+var liveReaderMatchGlob = kio.DefaultMatch
+
+// filterByMatchGlob drops nodes whose source file doesn't match
+// matchGlob, narrowing an already-MatchAllKRM-globbed read without a
+// second disk read.
+func filterByMatchGlob(nodes []*yaml.RNode, matchGlob []string) []*yaml.RNode {
+	var out []*yaml.RNode
+	for _, n := range nodes {
+		relPath, _, err := kioutil.GetFileAnnotations(n)
+		if err != nil {
+			continue
+		}
+		base := filepath.Base(relPath)
+		for _, g := range matchGlob {
+			if match, _ := filepath.Match(g, base); match {
+				out = append(out, n)
+				break
+			}
+		}
+	}
+	return out
+}
+
 // ScanFlat wraps ScanTree for callers whose real reader has no
 // subpackage concept (e.g. the `live` family's flat reader), flattening
 // the per-package result while keeping per-file ownership for opt-in.
 func ScanFlat(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, optedIn bool, allResources []*yaml.RNode, err error) {
-	treeFound, treeOptedIn, treeResources, scanErr := ScanTree(fsys, pkgPath)
+	treeFound, treeOptedIn, treeResources, scanErr := ScanTree(fsys, pkgPath, liveReaderMatchGlob)
 	if scanErr != nil {
 		return nil, false, nil, scanErr
 	}
@@ -236,7 +274,7 @@ type FlatScanResult struct {
 // ScanFlatAndDecide is Scan for flat-reader callers: same per-package
 // opt-in via ScanTree, flattened into FlatScanResult's shape.
 func ScanFlatAndDecide(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*FlatScanResult, error) {
-	found, treeOptedIn, treeResources, err := ScanTree(fsys, pkgPath)
+	found, treeOptedIn, treeResources, err := ScanTree(fsys, pkgPath, liveReaderMatchGlob)
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}

@@ -196,6 +196,20 @@ func TestScan(t *testing.T) {
 			assert.Contains(t, (*printed)[0], "bad.yaml")
 		}
 	})
+
+	t.Run("non-KRM .json file still blocks: render/eval's real reader does read .json", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		dir := "/pkg"
+		assert.NoError(t, fsys.Mkdir(dir))
+		writeKptfileForTest(t, fsys, dir, "p")
+		writeNonKRMForTest(t, fsys, dir, "bad.json")
+
+		printf, _ := printfCollector()
+		res, err := Scan(fsys, dir, printf)
+		assert.Error(t, err)
+		assert.Nil(t, res)
+		assert.Contains(t, err.Error(), "bad.json")
+	})
 }
 
 func TestScanResult_NilReceiver_IsSafe(t *testing.T) {
@@ -225,7 +239,7 @@ func TestScanTree(t *testing.T) {
 		writeValidKRMForTest(t, fsys, dir)
 		writeNonKRMForTest(t, fsys, dir, "bad.yaml")
 
-		found, optedIn, allResources, err := ScanTree(fsys, dir)
+		found, optedIn, allResources, err := ScanTree(fsys, dir, pkg.MatchAllKRM)
 		assert.NoError(t, err)
 		if assert.Len(t, found, 1) {
 			assert.Equal(t, "bad.yaml", found[0].RelPath)
@@ -244,7 +258,7 @@ func TestScanTree(t *testing.T) {
 		writeOptedInKptfileForTest(t, fsys, sub, "sub")
 		writeNonKRMForTest(t, fsys, sub, "bad.yaml")
 
-		found, optedIn, allResources, err := ScanTree(fsys, root)
+		found, optedIn, allResources, err := ScanTree(fsys, root, pkg.MatchAllKRM)
 		assert.NoError(t, err)
 		if assert.Len(t, found, 1) {
 			assert.Equal(t, sub, found[0].PkgPath)
@@ -261,7 +275,7 @@ func TestScanTree(t *testing.T) {
 		assert.NoError(t, fsys.Mkdir(dir))
 		writeNonKRMForTest(t, fsys, dir, "bad.yaml")
 
-		found, optedIn, _, err := ScanTree(fsys, dir)
+		found, optedIn, _, err := ScanTree(fsys, dir, pkg.MatchAllKRM)
 		assert.NoError(t, err)
 		assert.Len(t, found, 1)
 		assert.False(t, optedIn[dir])
@@ -269,7 +283,7 @@ func TestScanTree(t *testing.T) {
 
 	t.Run("nonexistent target directory propagates an error", func(t *testing.T) {
 		fsys := filesys.MakeFsInMemory()
-		_, _, _, err := ScanTree(fsys, "/does/not/exist")
+		_, _, _, err := ScanTree(fsys, "/does/not/exist", pkg.MatchAllKRM)
 		assert.Error(t, err)
 	})
 
@@ -281,7 +295,7 @@ func TestScanTree(t *testing.T) {
 		writeKptfileForTest(t, fsys, root, "root")
 		assert.NoError(t, fsys.WriteFile(filepath.Join(sub, "Kptfile"), []byte("not: [valid, kptfile\n")))
 
-		found, optedIn, allResources, err := ScanTree(fsys, root)
+		found, optedIn, allResources, err := ScanTree(fsys, root, pkg.MatchAllKRM)
 		assert.NoError(t, err)
 		assert.Empty(t, found)
 		assert.Contains(t, allResources, root)
@@ -314,6 +328,20 @@ func TestScanFlat(t *testing.T) {
 		assert.NoError(t, fsys.Mkdir(dir))
 		writeKptfileForTest(t, fsys, dir, "p")
 		writeValidKRMForTest(t, fsys, dir)
+
+		found, optedIn, _, err := ScanFlat(fsys, dir)
+		assert.NoError(t, err)
+		assert.False(t, optedIn)
+		assert.Empty(t, found)
+	})
+
+	t.Run("non-KRM .json file is never flagged: the live reader never reads .json", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		dir := "/pkg"
+		assert.NoError(t, fsys.Mkdir(dir))
+		writeKptfileForTest(t, fsys, dir, "p")
+		writeValidKRMForTest(t, fsys, dir)
+		writeNonKRMForTest(t, fsys, dir, "unrelated.json")
 
 		found, optedIn, _, err := ScanFlat(fsys, dir)
 		assert.NoError(t, err)
@@ -362,6 +390,20 @@ func TestScanFlatAndDecide(t *testing.T) {
 		assert.NoError(t, fsys.Mkdir(dir))
 		writeKptfileForTest(t, fsys, dir, "p")
 		writeValidKRMForTest(t, fsys, dir)
+
+		printf, printed := printfCollector()
+		res, err := ScanFlatAndDecide(fsys, dir, printf)
+		assert.NoError(t, err)
+		assert.Empty(t, res.SkippedFiles())
+		assert.Empty(t, *printed)
+	})
+
+	t.Run("non-KRM .json file does not block: the live reader never reads .json", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		dir := "/pkg"
+		assert.NoError(t, fsys.Mkdir(dir))
+		writeKptfileForTest(t, fsys, dir, "p")
+		writeNonKRMForTest(t, fsys, dir, "unrelated.json")
 
 		printf, printed := printfCollector()
 		res, err := ScanFlatAndDecide(fsys, dir, printf)
