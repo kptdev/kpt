@@ -21,6 +21,7 @@ import (
 
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -429,6 +430,24 @@ func TestScanFlatAndDecide(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Empty(t, res.SkippedFiles())
 		assert.Empty(t, *printed)
+	})
+
+	t.Run("RootResources excludes subpackage resources that AllResources includes", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		root := "/root"
+		sub := "/root/sub"
+		assert.NoError(t, fsys.MkdirAll(sub))
+		writeKptfileForTest(t, fsys, root, "root")
+		writeValidKRMForTest(t, fsys, root)
+		writeKptfileForTest(t, fsys, sub, "sub")
+		writeValidKRMForTest(t, fsys, sub)
+
+		printf, _ := printfCollector()
+		res, err := ScanFlatAndDecide(fsys, root, printf)
+		require.NoError(t, err)
+		assert.Len(t, res.RootResources, 1, "only root's own resource, not sub's")
+		assert.Greater(t, len(res.AllResources), len(res.RootResources),
+			"AllResources must still include sub's resource too")
 	})
 
 	t.Run("non-KRM .json file does not block: the live reader never reads .json", func(t *testing.T) {

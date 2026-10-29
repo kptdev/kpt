@@ -45,10 +45,9 @@ type NonKRMFile struct {
 	Reason  string // the IsKRM() validation error
 }
 
-// DisplayPath returns f's path relative to rootPath, for display in
-// error messages. f.RelPath alone is relative only to f's own
-// (possibly sub) package, so two subpackages with same-named files
-// would otherwise print identically and look like the same file.
+// DisplayPath returns f's path relative to rootPath, for display.
+// f.RelPath alone is relative to f's own (possibly sub) package, so
+// same-named files in different subpackages would look identical.
 func (f NonKRMFile) DisplayPath(rootPath string) string {
 	abs := filepath.Join(f.PkgPath, f.RelPath)
 	rel, err := filepath.Rel(rootPath, abs)
@@ -145,15 +144,8 @@ func (res *ScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
 }
 
 // ScanTree walks pkgPath and its subpackages read-only, returning
-// every non-KRM file found, which packages opted in via
-// AutoIgnoreNonKRMAnnotation, and every package's resource list for
-// reuse. A missing Kptfile at the root is tolerated (bare-directory
-// targets like `fn eval`'s); any other read error propagates.
-//
-// matchGlob scopes which files are considered; it should match the
-// caller's real reader (pkg.MatchAllKRM for fn render/eval,
-// kio.DefaultMatch for the live family), or a file the real operation
-// never touches can still block it.
+// every non-KRM file found, opted-in packages, and each package's
+// resources. matchGlob should match the caller's real reader.
 func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
 	found []NonKRMFile, optedIn map[string]bool, allResources map[string][]*yaml.RNode, err error,
 ) {
@@ -183,9 +175,8 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
 		var resErr error
 		if isRoot && kf == nil {
 			// LocalResources() returns empty for a Kptfile-less dir,
-			// but a bare-directory target (e.g. fn eval) still has
-			// its real reader read every file regardless. Read the
-			// same way here so nothing is silently skipped.
+			// but a bare-directory target still has its real reader
+			// read every file regardless; read the same way here.
 			resources, resErr = (&kio.LocalPackageReader{
 				PackagePath:        dir,
 				PackageFileName:    kptfilev1.KptFileName,
@@ -230,10 +221,9 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
 	return found, optedIn, allResources, nil
 }
 
-// liveReaderMatchGlob mirrors pkg/live's real reader (no MatchFilesGlob
-// override, so it defaults to kio.DefaultMatch): *.yaml/*.yml only, no
-// Kptfile, no .json. Used instead of pkg.MatchAllKRM so a file the live
-// reader never touches (e.g. a stray package.json) is never flagged.
+// liveReaderMatchGlob mirrors pkg/live's real reader (defaults to
+// kio.DefaultMatch: *.yaml/*.yml only). Used so a file the live
+// reader never touches, e.g. a stray package.json, is never flagged.
 var liveReaderMatchGlob = kio.DefaultMatch
 
 // filterByMatchGlob drops nodes whose source file doesn't match
@@ -281,7 +271,13 @@ func ScanFlat(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, opte
 // FlatScanResult mirrors ScanResult for ScanFlat's flat-reader model.
 type FlatScanResult struct {
 	AllResources []*yaml.RNode
-	skipped      []NonKRMFile
+
+	// RootResources is pkgPath's own resources only, excluding every
+	// subpackage's. For callers needing to replicate a flat reader
+	// that never descends into subpackages, e.g. namespace detection.
+	RootResources []*yaml.RNode
+
+	skipped []NonKRMFile
 }
 
 // ScanFlatAndDecide is Scan for flat-reader callers: same per-package
@@ -307,7 +303,11 @@ func ScanFlatAndDecide(fsys filesys.FileSystem, pkgPath string, printf func(form
 			skipped = append(skipped, f)
 		}
 	}
-	return &FlatScanResult{AllResources: allResources, skipped: skipped}, nil
+	return &FlatScanResult{
+		AllResources:  allResources,
+		RootResources: treeResources[pkgPath],
+		skipped:       skipped,
+	}, nil
 }
 
 // SkippedFiles mirrors ScanResult.SkippedFiles for FlatScanResult.
@@ -359,10 +359,9 @@ func CachedLocalResources(p *pkg.Pkg, cache map[string][]*yaml.RNode) ([]*yaml.R
 	return p.LocalResources()
 }
 
-// DecideOutcome returns an error listing every file in found whose
-// owning package didn't opt in via optedIn, or nil if all were excused.
-// rootPath is the scan root the user actually targeted, used to
-// display each file's path unambiguously (see NonKRMFile.DisplayPath).
+// DecideOutcome returns an error listing every blocking file found,
+// or nil if all were excused. rootPath displays each file's path
+// unambiguously (see NonKRMFile.DisplayPath).
 func DecideOutcome(found []NonKRMFile, optedIn map[string]bool, rootPath string) error {
 	var blocking []NonKRMFile
 	for _, f := range found {

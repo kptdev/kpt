@@ -41,6 +41,9 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -166,13 +169,27 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 
 	var namespace string
 	if len(scanResult.SkippedFiles()) > 0 {
-		// FindNamespace re-reads the package itself with no skip hook,
-		// so it would hit the files we just excused. Use the loader's
-		// namespace directly instead, same as FindNamespace's own fallback.
-		namespace, _, err = c.Factory.ToRawKubeConfigLoader().Namespace()
-		if err != nil {
+		// FindNamespace re-reads the package with no skip hook, so it
+		// would hit the excused files. Replicate its priority order
+		// instead: explicit --namespace wins, else check agreement.
+		loaderNamespace, enforceNamespace, nsErr := c.Factory.ToRawKubeConfigLoader().Namespace()
+		if nsErr != nil {
 			return errors.E(op, c.Pkg.UniquePath,
-				fmt.Errorf("failed to determine inventory namespace: %w; please provide the namespace using the --namespace flag", err))
+				fmt.Errorf("failed to determine inventory namespace: %w; please provide the namespace using the --namespace flag", nsErr))
+		}
+		namespace = loaderNamespace
+		if !enforceNamespace {
+			filtered, ferr := filterSkipped(scanResult.RootResources, scanResult.SkipFunc(c.Pkg.UniquePath.String()))
+			if ferr != nil {
+				return errors.E(op, c.Pkg.UniquePath, ferr)
+			}
+			ns, ok, aerr := allInSameNamespace(filtered)
+			if aerr != nil {
+				return errors.E(op, c.Pkg.UniquePath, aerr)
+			}
+			if ok {
+				namespace = ns
+			}
 		}
 	} else {
 		namespace, err = config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
@@ -225,6 +242,58 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	}
 	at.Process()
 	return nil
+}
+
+// allInSameNamespace is kpt's own copy of cli-utils's unexported
+// config.allInSameNamespace, operating on an already-filtered
+// resource list instead of re-reading the directory itself.
+func allInSameNamespace(nodes []*yaml.RNode) (string, bool, error) {
+	nodes, err := (&filters.IsLocalConfig{}).Filter(nodes)
+	if err != nil {
+		return "", false, err
+	}
+
+	var ns string
+	for _, node := range nodes {
+		rm, err := node.GetMeta()
+		if err != nil {
+			return "", false, err
+		}
+		if namespaced, found := openapi.IsNamespaceScoped(rm.TypeMeta); found && !namespaced {
+			continue
+		}
+		if rm.Namespace == "" {
+			return "", false, nil
+		}
+		if ns == "" {
+			ns = rm.Namespace
+		} else if rm.Namespace != ns {
+			return "", false, nil
+		}
+	}
+	if ns == "" {
+		return "", false, nil
+	}
+	return ns, true, nil
+}
+
+// filterSkipped drops any node skip reports true for, by its
+// kioutil.PathAnnotation. A nil skip leaves nodes unchanged.
+func filterSkipped(nodes []*yaml.RNode, skip func(relPath string) bool) ([]*yaml.RNode, error) {
+	if skip == nil {
+		return nodes, nil
+	}
+	var out []*yaml.RNode
+	for _, n := range nodes {
+		path, _, err := kioutil.GetFileAnnotations(n)
+		if err != nil {
+			return nil, err
+		}
+		if !skip(path) {
+			out = append(out, n)
+		}
+	}
+	return out, nil
 }
 
 // createRGFile fills in the inventory object values into the resourcegroup object and writes to file storage.

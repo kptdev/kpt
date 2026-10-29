@@ -28,9 +28,12 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var (
@@ -424,6 +427,52 @@ metadata:
 		}
 	})
 
+	t.Run("annotated package still auto-detects the real namespace, matching what .krmignore would give", func(t *testing.T) {
+		// Deliberately no .WithNamespace(...), same as the subtest
+		// above: exercises real auto-detection (enforceNamespace
+		// false), whose kubeconfig-default fallback is "default" --
+		// distinct from "foo" below, so a wrong answer is obvious.
+		tf := cmdtesting.NewTestFactory()
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		w, clean := testutil.SetupWorkspace(t)
+		defer clean()
+		annotatedKptfile := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test1
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+`
+		cm := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm1
+  namespace: foo
+`
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(annotatedKptfile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "cm.yaml"), []byte(cm), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "foo.yaml"), []byte("- foo\n"), 0600))
+
+		revert := testutil.Chdir(t, w.WorkspaceDirectory)
+		defer revert()
+
+		runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+		runner.Command.SetArgs([]string{})
+		err := runner.Command.Execute()
+		assert.NoError(t, err)
+
+		rg, readErr := pkg.ReadRGFile(w.WorkspaceDirectory, "resourcegroup.yaml")
+		assert.NoError(t, readErr)
+		if assert.NotNil(t, rg) {
+			assert.Equal(t, "foo", rg.Namespace,
+				"must match cm.yaml's actual namespace, not the kubeconfig default, the same as if foo.yaml had been excluded via .krmignore instead")
+		}
+	})
+
 	t.Run("excused mixed file is never read by attribution either, not just left unwritten", func(t *testing.T) {
 		tf := cmdtesting.NewTestFactory().WithNamespace("testns")
 		defer tf.Cleanup()
@@ -542,3 +591,98 @@ func assertGenInvID(t *testing.T, name, namespace, actual string) bool {
 // Note: TestCmd_Run_FindNamespaceError (added in #4812) is removed:
 // its non-KRM fixture is now caught by the pre-scan before
 // FindNamespace runs. See TestCmd_Run_NonKRM for that path.
+
+func mustParseNode(t *testing.T, s string) *yaml.RNode {
+	t.Helper()
+	n, err := yaml.Parse(s)
+	require.NoError(t, err)
+	return n
+}
+
+func TestAllInSameNamespace(t *testing.T) {
+	t.Run("all resources agree on one namespace", func(t *testing.T) {
+		a := mustParseNode(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: a\n  namespace: foo\n")
+		b := mustParseNode(t, "apiVersion: v1\nkind: Secret\nmetadata:\n  name: b\n  namespace: foo\n")
+		ns, ok, err := allInSameNamespace([]*yaml.RNode{a, b})
+		require.NoError(t, err)
+		assert.True(t, ok)
+		assert.Equal(t, "foo", ns)
+	})
+
+	t.Run("resources disagree on namespace", func(t *testing.T) {
+		a := mustParseNode(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: a\n  namespace: foo\n")
+		b := mustParseNode(t, "apiVersion: v1\nkind: Secret\nmetadata:\n  name: b\n  namespace: bar\n")
+		ns, ok, err := allInSameNamespace([]*yaml.RNode{a, b})
+		require.NoError(t, err)
+		assert.False(t, ok)
+		assert.Empty(t, ns)
+	})
+
+	t.Run("a resource missing a namespace blocks agreement", func(t *testing.T) {
+		a := mustParseNode(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: a\n  namespace: foo\n")
+		b := mustParseNode(t, "apiVersion: v1\nkind: Secret\nmetadata:\n  name: b\n")
+		ns, ok, err := allInSameNamespace([]*yaml.RNode{a, b})
+		require.NoError(t, err)
+		assert.False(t, ok)
+		assert.Empty(t, ns)
+	})
+
+	t.Run("empty input means no agreement", func(t *testing.T) {
+		ns, ok, err := allInSameNamespace(nil)
+		require.NoError(t, err)
+		assert.False(t, ok)
+		assert.Empty(t, ns)
+	})
+
+	t.Run("local-config resources are excluded from the check", func(t *testing.T) {
+		a := mustParseNode(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: a\n  namespace: foo\n")
+		// No namespace at all, but marked local-config: must not
+		// block agreement, same as cli-utils's allInSameNamespace.
+		local := mustParseNode(t, `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: marker
+  annotations:
+    config.kubernetes.io/local-config: "true"
+`)
+		ns, ok, err := allInSameNamespace([]*yaml.RNode{a, local})
+		require.NoError(t, err)
+		assert.True(t, ok)
+		assert.Equal(t, "foo", ns)
+	})
+
+	t.Run("cluster-scoped resources are excluded from the check", func(t *testing.T) {
+		a := mustParseNode(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: a\n  namespace: foo\n")
+		// Namespace itself is cluster-scoped and has no
+		// metadata.namespace: must not block agreement.
+		clusterScoped := mustParseNode(t, "apiVersion: v1\nkind: Namespace\nmetadata:\n  name: foo\n")
+		ns, ok, err := allInSameNamespace([]*yaml.RNode{a, clusterScoped})
+		require.NoError(t, err)
+		assert.True(t, ok)
+		assert.Equal(t, "foo", ns)
+	})
+}
+
+func TestFilterSkipped(t *testing.T) {
+	a := mustParseNode(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: a\n")
+	require.NoError(t, a.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, "a.yaml")))
+	b := mustParseNode(t, "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: b\n")
+	require.NoError(t, b.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, "values.yaml")))
+
+	t.Run("nil skip leaves nodes unchanged", func(t *testing.T) {
+		out, err := filterSkipped([]*yaml.RNode{a, b}, nil)
+		require.NoError(t, err)
+		assert.Len(t, out, 2)
+	})
+
+	t.Run("skip drops the matching node by path", func(t *testing.T) {
+		skip := func(relPath string) bool { return relPath == "values.yaml" }
+		out, err := filterSkipped([]*yaml.RNode{a, b}, skip)
+		require.NoError(t, err)
+		if assert.Len(t, out, 1) {
+			meta, err := out[0].GetMeta()
+			require.NoError(t, err)
+			assert.Equal(t, "a", meta.Name)
+		}
+	})
+}
