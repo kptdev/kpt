@@ -153,9 +153,11 @@ output. Golden tests verify *stability* (did the output change?), not
 For correctness guarantees, complement golden tests with property-based tests
 that assert invariants (e.g., "all resources have the expected label").
 
-Note: other kpt ecosystem projects use different env var names for the same
+{{% alert title="Note" color="primary" %}}
+Other kpt ecosystem projects use different env var names for the same
 purpose (`KPT_E2E_UPDATE_EXPECTED` in kpt, `UPDATE_GOLDEN_FILES` in porch).
 `WRITE_GOLDEN_OUTPUT` is the standard for the SDK and catalog functions.
+{{% /alert %}}
 
 ## Testing a ResourceListProcessor
 

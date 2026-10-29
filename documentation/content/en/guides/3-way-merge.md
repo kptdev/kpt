@@ -293,9 +293,11 @@ you need to retain a local value that upstream also changed, choose one of these
 - Use `--strategy force-delete-replace` to reset to upstream, then re-apply
   customizations deliberately
 
-> Note: the other strategies behave differently on the same clash — `copy-merge`
-> and `force-delete-replace` also take the upstream value (at the file level),
-> while `fast-forward` refuses to run at all if the local package was modified.
+{{% alert title="Note" color="primary" %}}
+The other strategies behave differently on the same clash - `copy-merge`
+and `force-delete-replace` also take the upstream value (at the file level),
+while `fast-forward` refuses to run at all if the local package was modified.
+{{% /alert %}}
 
 ### Tips for Avoiding Conflicts
 

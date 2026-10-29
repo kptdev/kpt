@@ -92,9 +92,11 @@ docker run --rm -i ghcr.io/kptdev/krm-functions-catalog/my-function:v0.1 < input
 docker run --rm -v $(pwd):/data ghcr.io/kptdev/krm-functions-catalog/my-function:v0.1 /data/deployment.yaml
 ```
 
-Note: file mode assembles the given files into a ResourceList with an **empty
+{{% alert title="Note" color="primary" %}}
+File mode assembles the given files into a ResourceList with an **empty
 functionConfig**. Functions that require configuration should be run via STDIN
 (or a `kpt` pipeline) so the functionConfig is provided.
+{{% /alert %}}
 
 ### Help and doc flags
 
@@ -124,9 +126,11 @@ pipeline:
         namespace: production
 ```
 
-Note: the image must be published and accessible from the machine running
+{{% alert title="Note" color="primary" %}}
+The image must be published and accessible from the machine running
 `kpt fn render`. For local development, build the image locally first. It
 will be used from the local Docker cache without pulling.
+{{% /alert %}}
 
 ## Tips
 
