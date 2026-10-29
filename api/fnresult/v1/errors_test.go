@@ -16,6 +16,7 @@ package v1
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -43,6 +44,31 @@ error message2`,
 			},
 			expected: `[Stderr]:
 error message1, error message2  Exit Code: 1
+`,
+		},
+		{
+			name: "no truncate - timeout",
+			fnExecError: ExecError{
+				Stderr:   "error message",
+				ExitCode: -1,
+				Timeout:  30 * time.Second,
+			},
+			expected: `[Stderr]:
+error message  Exit Code: -1
+  Timed Out: function execution timeout of 30s exceeded
+`,
+		},
+		{
+			name: "no truncate - timeout of the whole run",
+			fnExecError: ExecError{
+				Stderr:     "error message",
+				ExitCode:   -1,
+				Timeout:    30 * time.Second,
+				RunTimeout: true,
+			},
+			expected: `[Stderr]:
+error message  Exit Code: -1
+  Timed Out: pipeline execution timeout of 30s exceeded
 `,
 		},
 		{

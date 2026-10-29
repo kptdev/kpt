@@ -17,6 +17,7 @@ package v1
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	apiutils "github.com/kptdev/kpt/api/utils"
 )
@@ -43,6 +44,14 @@ type ExecError struct {
 
 	// ExitCode is the exit code returned from function
 	ExitCode int `yaml:"exitCode,omitempty"`
+
+	// Timeout is the time limit that was exceeded. It is zero if the
+	// function did not time out.
+	Timeout time.Duration `yaml:"-"`
+
+	// RunTimeout is true if Timeout is the time limit of the whole run, and
+	// false if it is the time limit of this function.
+	RunTimeout bool `yaml:"-"`
 }
 
 // String returns string representation of the failure.
@@ -57,7 +66,23 @@ func (fe *ExecError) String() string {
 	}
 	b.WriteString(errLine.String())
 	fmt.Fprintf(&b, "  Exit Code: %d\n", fe.ExitCode)
+	if msg := fe.TimeoutMessage(); msg != "" {
+		fmt.Fprintf(&b, "  Timed Out: %s\n", msg)
+	}
 	return b.String()
+}
+
+// TimeoutMessage describes the time limit that was exceeded. It is empty if
+// the function did not time out.
+func (fe *ExecError) TimeoutMessage() string {
+	switch {
+	case fe.Timeout == 0:
+		return ""
+	case fe.RunTimeout:
+		return fmt.Sprintf("pipeline execution timeout of %v exceeded", fe.Timeout)
+	default:
+		return fmt.Sprintf("function execution timeout of %v exceeded", fe.Timeout)
+	}
 }
 
 func (fe *ExecError) Error() string {

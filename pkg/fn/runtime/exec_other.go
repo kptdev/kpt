@@ -19,10 +19,18 @@ package runtime
 import (
 	"context"
 	"os/exec"
+	"time"
 )
+
+// execWaitDelay is how long kpt waits for the output of an exec function
+// to be closed after the function has exited or has been killed.
+const execWaitDelay = time.Second
 
 // runCmd runs cmd and waits for it to finish. When the context of cmd ends,
 // only the function is killed, not the processes that it started.
 func runCmd(_ context.Context, cmd *exec.Cmd) error {
+	// do not wait past the timeout for a child process of the function that
+	// still has the output open
+	cmd.WaitDelay = execWaitDelay
 	return cmd.Run()
 }

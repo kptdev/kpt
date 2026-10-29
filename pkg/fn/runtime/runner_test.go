@@ -20,9 +20,11 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -1120,4 +1122,28 @@ func TestPrintFnResult(t *testing.T) {
 			assert.Equal(t, "", out.String())
 		})
 	}
+}
+
+func TestNewRunner_RunTimeout(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	ctx, cancel := WithRunTimeout(
+		printer.WithContext(context.Background(), printer.New(out, out)), 100*time.Millisecond)
+	defer cancel()
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+
+	fnResults := fnresultv1.NewResultList()
+	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30"},
+		"", fnResults, opts, nil)
+	require.NoError(t, err)
+
+	_, err = fr.Filter(nil)
+	assert.Error(t, err)
+	assert.Contains(t, out.String(), "Timed out: pipeline execution timeout of 100ms exceeded")
+	require.Len(t, fnResults.Items, 1)
+	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
 }

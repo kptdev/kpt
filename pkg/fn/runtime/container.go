@@ -82,8 +82,8 @@ type ContainerFn struct {
 	Image string
 	// ImagePullPolicy controls the image pulling behavior.
 	ImagePullPolicy runneroptions.ImagePullPolicy
-	// Container function will be killed after this timeour.
-	// The default value is 5 minutes.
+	// Container function will be killed after this timeout.
+	// The default value is 5 minutes, or the time limit of Ctx if it has one.
 	Timeout time.Duration
 	Perm    ContainerFnPermission
 	// UIDGID is the os User ID and Group ID that will be
@@ -140,13 +140,19 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 
 func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, filterCLIOutputFn func(io.Reader) string) error {
 	errSink := bytes.Buffer{}
-	cmd, cancel := f.getCmd(bin)
+	// setup container run timeout
+	ctx, cancel := fnContext(f.Ctx, f.Timeout)
 	defer cancel()
+	cmd := f.getCmd(ctx, bin)
 	cmd.Stdin = reader
 	cmd.Stdout = writer
 	cmd.Stderr = &errSink
 
-	if err := cmd.Run(); err != nil {
+	err := cmd.Run()
+	if ctxErr := contextError(ctx, err, func() string { return filterCLIOutputFn(&errSink) }); ctxErr != nil {
+		return ctxErr
+	}
+	if err != nil {
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &fnresultv1.ExecError{
 				OriginalErr:    exitErr,
@@ -166,7 +172,7 @@ func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, fil
 
 // getCmd assembles a command for docker, podman or nerdctl. The input binName
 // is expected to be one of "docker", "podman" and "nerdctl".
-func (f *ContainerFn) getCmd(binName string) (*exec.Cmd, context.CancelFunc) {
+func (f *ContainerFn) getCmd(ctx context.Context, binName string) *exec.Cmd {
 	network := networkNameNone
 	if f.Perm.AllowNetwork {
 		network = networkNameHost
@@ -198,13 +204,7 @@ func (f *ContainerFn) getCmd(binName string) (*exec.Cmd, context.CancelFunc) {
 	}
 	args = append(args, NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
 	args = append(args, f.Image)
-	// setup container run timeout
-	timeout := defaultLongTimeout
-	if f.Timeout != 0 {
-		timeout = f.Timeout
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	return exec.CommandContext(ctx, binName, args...), cancel
+	return exec.CommandContext(ctx, binName, args...)
 }
 
 // NewContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing

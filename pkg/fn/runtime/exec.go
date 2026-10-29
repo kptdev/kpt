@@ -35,8 +35,9 @@ type ExecFn struct {
 	Args []string
 
 	Env map[string]string
-	// Container function will be killed after this timeour.
-	// The default value is 5 minutes.
+	// Exec function will be killed after this timeout.
+	// The default value is 5 minutes, or the time limit of the context passed
+	// to RunContext if it has one.
 	Timeout time.Duration
 	// FnResult is used to store the information about the result from
 	// the function.
@@ -46,12 +47,14 @@ type ExecFn struct {
 // Run runs the executable file which reads the input from r and
 // writes the output to w.
 func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
+	return f.RunContext(context.Background(), r, w)
+}
+
+// RunContext is like Run, but the function is also killed when the time
+// limit of ctx has passed.
+func (f *ExecFn) RunContext(ctx context.Context, r io.Reader, w io.Writer) error {
 	// setup exec run timeout
-	timeout := defaultLongTimeout
-	if f.Timeout != 0 {
-		timeout = f.Timeout
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := fnContext(ctx, f.Timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, f.Path, f.Args...)
@@ -65,7 +68,13 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", k, v))
 	}
 
-	if err := runCmd(ctx, cmd); err != nil {
+	// The function can exit successfully and leave a child process with its
+	// output open. Then the end of ctx kills only the child, and err is nil.
+	err := runCmd(ctx, cmd)
+	if ctxErr := contextError(ctx, err, errSink.String); ctxErr != nil {
+		return ctxErr
+	}
+	if err != nil {
 		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &fnresultv1.ExecError{
 				OriginalErr:    exitErr,
