@@ -398,6 +398,22 @@ func TestScanFlatAndDecide(t *testing.T) {
 		assert.Empty(t, *printed)
 	})
 
+	t.Run("nameless local-config resource does not block", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		dir := "/pkg"
+		assert.NoError(t, fsys.Mkdir(dir))
+		writeKptfileForTest(t, fsys, dir, "p")
+		content := "apiVersion: v1\nkind: ConfigMap\nmetadata:\n" +
+			"  annotations:\n    config.kubernetes.io/local-config: \"true\"\n"
+		assert.NoError(t, fsys.WriteFile(filepath.Join(dir, "lc.yaml"), []byte(content)))
+
+		printf, printed := printfCollector()
+		res, err := ScanFlatAndDecide(fsys, dir, printf)
+		assert.NoError(t, err)
+		assert.Empty(t, res.SkippedFiles())
+		assert.Empty(t, *printed)
+	})
+
 	t.Run("non-KRM .json file does not block: the live reader never reads .json", func(t *testing.T) {
 		fsys := filesys.MakeFsInMemory()
 		dir := "/pkg"

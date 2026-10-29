@@ -23,6 +23,7 @@ import (
 	"slices"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -42,9 +43,10 @@ func RecognizedKustomizationFileNames() []string {
 	}
 }
 
-// IsKRM reports whether n is a valid KRM resource: apiVersion, kind,
-// and metadata.name are all required, except kustomization files
-// (any shape) and "*List" kinds (no name required).
+// IsKRM reports whether n is a valid KRM resource: apiVersion and kind
+// are always required. metadata.name is required too, except for
+// kustomization files (any shape), "*List" kinds, resources using
+// metadata.generateName instead, and resources annotated local-config.
 func IsKRM(n *yaml.RNode) error {
 	if isKustomization(n) {
 		return nil
@@ -59,10 +61,27 @@ func IsKRM(n *yaml.RNode) error {
 	if meta.Kind == "" {
 		return fmt.Errorf("resource must have `kind`")
 	}
-	if meta.Name == "" && !strings.HasSuffix(meta.Kind, "List") {
+	if meta.Name == "" && !strings.HasSuffix(meta.Kind, "List") &&
+		!hasGenerateName(n) && !isLocalConfig(meta) {
 		return fmt.Errorf("resource must have `metadata.name`")
 	}
 	return nil
+}
+
+// hasGenerateName reports whether n sets metadata.generateName, a
+// legitimate alternative to metadata.name that kyaml's typed
+// ResourceMeta doesn't expose, so it needs raw node access.
+func hasGenerateName(n *yaml.RNode) bool {
+	v, _ := n.Pipe(yaml.Lookup("metadata", "generateName"))
+	return v != nil && v.YNode().Value != ""
+}
+
+// isLocalConfig reports whether meta carries the local-config
+// annotation with a non-"false" value, mirroring pkg/live's own
+// filterLocalConfig so both agree on what's exempt from needing a name.
+func isLocalConfig(meta yaml.ResourceMeta) bool {
+	v, ok := meta.Annotations[filters.LocalConfigAnnotation]
+	return ok && v != "false"
 }
 
 // AreKRM checks every node in nodes via IsKRM, stopping at the first

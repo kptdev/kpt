@@ -446,6 +446,88 @@ items:
 	assert.Equal(t, listFileContent, string(gotContent))
 }
 
+// TestUpdate_GenerateNameJobMerged verifies a Job using
+// metadata.generateName (no metadata.name) is classified as KRM and
+// goes through the real 3-way merge, so a local edit (added label) and
+// an upstream edit (changed image) both land in the result. Before the
+// fix, IsKRM required metadata.name unconditionally, so this file was
+// misclassified non-KRM and routed to ReplaceNonKRMFiles's raw-copy
+// path - which, for a locally modified file, keeps it untouched and
+// silently drops the upstream image change entirely.
+func TestUpdate_GenerateNameJobMerged(t *testing.T) {
+	const origJob = `apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: my-job-
+spec:
+  template:
+    spec:
+      containers:
+      - name: c
+        image: busybox:1.0
+`
+	const localJob = `apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: my-job-
+  labels:
+    local: "true"
+spec:
+  template:
+    spec:
+      containers:
+      - name: c
+        image: busybox:1.0
+`
+	const updatedJob = `apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: my-job-
+spec:
+  template:
+    spec:
+      containers:
+      - name: c
+        image: busybox:2.0
+`
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("job.yaml", origJob)
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("job.yaml", localJob)
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("job.yaml", updatedJob)
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "job.yaml"))
+	require.NoError(t, err)
+	got := string(gotContent)
+	assert.Contains(t, got, "local: \"true\"", "the local label must survive the merge")
+	assert.Contains(t, got, "busybox:2.0", "the upstream image change must not be silently dropped")
+	assert.NotContains(t, got, "busybox:1.0", "the stale local image must be replaced, not kept verbatim")
+}
+
 func TestKeepTaggedNull(t *testing.T) {
 	updater := update.ResourceMergeUpdater{}
 

@@ -119,6 +119,62 @@ items: []
 	})
 }
 
+// TestIsKRM_GenerateNameExemptsFromName verifies a resource using
+// metadata.generateName instead of metadata.name is valid KRM.
+func TestIsKRM_GenerateNameExemptsFromName(t *testing.T) {
+	n := mustParse(t, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: my-job-
+`)
+	assert.NoError(t, IsKRM(n))
+}
+
+// TestIsKRM_EmptyGenerateNameStillRequiresName verifies an explicitly
+// empty generateName doesn't count as having one.
+func TestIsKRM_EmptyGenerateNameStillRequiresName(t *testing.T) {
+	n := mustParse(t, `
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: ""
+`)
+	err := IsKRM(n)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "metadata.name")
+}
+
+// TestIsKRM_LocalConfigExemptsFromName verifies a nameless resource
+// annotated as local-config (kpt's "config.kubernetes.io/local-config"
+// convention) is valid KRM, matching pkg/live's own filterLocalConfig.
+func TestIsKRM_LocalConfigExemptsFromName(t *testing.T) {
+	n := mustParse(t, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/local-config: "true"
+`)
+	assert.NoError(t, IsKRM(n))
+}
+
+// TestIsKRM_LocalConfigFalseStillRequiresName verifies an explicit
+// "false" value (meaning "not local-config", per filterLocalConfig)
+// does not exempt the resource from needing a name.
+func TestIsKRM_LocalConfigFalseStillRequiresName(t *testing.T) {
+	n := mustParse(t, `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/local-config: "false"
+`)
+	err := IsKRM(n)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "metadata.name")
+}
+
 func TestIsKRM_KustomizationFileNameCarveOut(t *testing.T) {
 	n := mustParse(t, `
 resources:
