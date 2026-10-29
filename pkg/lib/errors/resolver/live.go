@@ -138,11 +138,12 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 	if unknownTypesError, ok := errors.AsType[*manifestreader.UnknownTypesError](err); ok {
 		var msg strings.Builder
-		fmt.Fprintf(&msg, "Error: %d resource types not found in the cluster or as CRDs among the applied resources.", len(unknownTypesError.GroupVersionKinds))
+		msg.WriteString("Error: The following resource types are not available in the cluster:")
 		msg.WriteString("\n\nResource types:\n")
 		for _, gvk := range unknownTypesError.GroupVersionKinds {
 			fmt.Fprintf(&msg, "%s\n", gvk)
 		}
+		msg.WriteString("\nPlease remove or update these resources, or install the required CRD(s) if they are custom resources.")
 
 		return ResolvedResult{Message: msg.String()}, true
 	}
