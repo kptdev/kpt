@@ -29,7 +29,7 @@ func TestLiveErrorResolver(t *testing.T) {
 		err      error
 		expected string
 	}{
-		"nested timeoutError": {
+		"nested unknown type": {
 			err: &errors.Error{
 				Err: &manifestreader.UnknownTypesError{
 					GroupVersionKinds: []schema.GroupVersionKind{
@@ -42,10 +42,39 @@ func TestLiveErrorResolver(t *testing.T) {
 				},
 			},
 			expected: `
-Error: 1 resource types not found in the cluster or as CRDs among the applied resources.
+Error: The following resource types are not available in the cluster:
 
 Resource types:
 apps/v1, Kind=Deployment
+
+Please remove or update these resources, or install the required CRD(s) if they are custom resources.
+`,
+		},
+		"multiple nested unknown types": {
+			err: &errors.Error{
+				Err: &manifestreader.UnknownTypesError{
+					GroupVersionKinds: []schema.GroupVersionKind{
+						{
+							Group:   "policy",
+							Version: "v1beta1",
+							Kind:    "PodSecurityPolicy",
+						},
+						{
+							Group:   "example.com",
+							Version: "v1",
+							Kind:    "Widget",
+						},
+					},
+				},
+			},
+			expected: `
+Error: The following resource types are not available in the cluster:
+
+Resource types:
+policy/v1beta1, Kind=PodSecurityPolicy
+example.com/v1, Kind=Widget
+
+Please remove or update these resources, or install the required CRD(s) if they are custom resources.
 `,
 		},
 	}
