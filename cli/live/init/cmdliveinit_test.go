@@ -424,6 +424,50 @@ metadata:
 		}
 	})
 
+	t.Run("excused mixed file is never read by attribution either, not just left unwritten", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("testns")
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		w, clean := testutil.SetupWorkspace(t)
+		defer clean()
+		annotatedKptfile := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test1
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+`
+		// A mixed file: one non-KRM document (which excludes the
+		// whole file per Split's "excluded in its entirety" rule)
+		// alongside a real CNRM resource that attribution would
+		// normally annotate.
+		mixedContent := `foo: bar
+baz: [1, 2, 3]
+---
+apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+kind: Project
+metadata:
+  name: my-project
+`
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName), []byte(annotatedKptfile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(w.WorkspaceDirectory, "mixed.yaml"), []byte(mixedContent), 0600))
+
+		revert := testutil.Chdir(t, w.WorkspaceDirectory)
+		defer revert()
+
+		runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+		runner.Command.SetArgs([]string{})
+		err := runner.Command.Execute()
+		assert.NoError(t, err)
+
+		content, readErr := os.ReadFile(filepath.Join(w.WorkspaceDirectory, "mixed.yaml"))
+		assert.NoError(t, readErr)
+		assert.Equal(t, mixedContent, string(content),
+			"attribution must not add its annotation to the Project resource; the whole excused file must be left byte-for-byte untouched")
+	})
+
 	t.Run("bare directory with no Kptfile at all is still pre-scanned", func(t *testing.T) {
 		tf := cmdtesting.NewTestFactory().WithNamespace("testns")
 		defer tf.Cleanup()
