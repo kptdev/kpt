@@ -68,10 +68,10 @@ $ kpt fn source DIR
 
 ```shell
 # read resources from DIR directory, execute my-fn on them and write the
-# output to DIR directory.
+# output to OTHER_DIR directory.
 $ kpt fn source DIR |
   kpt fn eval - --image ghcr.io/example.com/my-fn - |
-  kpt fn sink DIR
+  kpt fn sink OTHER_DIR
 ```
 
 <!--mdtogo-->
