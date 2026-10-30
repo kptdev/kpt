@@ -432,7 +432,42 @@ func TestScanFlatAndDecide(t *testing.T) {
 		assert.Empty(t, *printed)
 	})
 
-	t.Run("RootResources excludes subpackage resources that AllResources includes", func(t *testing.T) {
+	t.Run("root .krmignore reaches into a subpackage file, same as the real flat reader", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		root := "/root"
+		sub := "/root/sub"
+		assert.NoError(t, fsys.MkdirAll(sub))
+		writeKptfileForTest(t, fsys, root, "root")
+		assert.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("values.yaml\n")))
+		writeKptfileForTest(t, fsys, sub, "sub")
+		writeValidKRMForTest(t, fsys, sub)
+		writeNonKRMForTest(t, fsys, sub, "values.yaml")
+
+		printf, printed := printfCollector()
+		res, err := ScanFlatAndDecide(fsys, root, printf)
+		assert.NoError(t, err, "root's .krmignore must cover sub/values.yaml, same as the real reader")
+		assert.Empty(t, res.SkippedFiles())
+		assert.Empty(t, *printed)
+	})
+
+	t.Run("root .krmignore excludes a whole directory holding a fixture Kptfile", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		root := "/root"
+		testdata := "/root/testdata"
+		assert.NoError(t, fsys.MkdirAll(testdata))
+		writeKptfileForTest(t, fsys, root, "root")
+		assert.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("testdata/\n")))
+		writeKptfileForTest(t, fsys, testdata, "fixture")
+		writeNonKRMForTest(t, fsys, testdata, "values.yaml")
+
+		printf, printed := printfCollector()
+		res, err := ScanFlatAndDecide(fsys, root, printf)
+		assert.NoError(t, err, "the whole ignored directory must never be scanned, same as the real reader")
+		assert.Empty(t, res.SkippedFiles())
+		assert.Empty(t, *printed)
+	})
+
+	t.Run("AllResources includes subpackage resources too, matching the real reader's own flat read", func(t *testing.T) {
 		fsys := filesys.MakeFsInMemory()
 		root := "/root"
 		sub := "/root/sub"
@@ -445,9 +480,7 @@ func TestScanFlatAndDecide(t *testing.T) {
 		printf, _ := printfCollector()
 		res, err := ScanFlatAndDecide(fsys, root, printf)
 		require.NoError(t, err)
-		assert.Len(t, res.RootResources, 1, "only root's own resource, not sub's")
-		assert.Greater(t, len(res.AllResources), len(res.RootResources),
-			"AllResources must still include sub's resource too")
+		assert.Len(t, res.AllResources, 2, "both root's and sub's resource")
 	})
 
 	t.Run("non-KRM .json file does not block: the live reader never reads .json", func(t *testing.T) {

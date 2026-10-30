@@ -179,7 +179,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 		}
 		namespace = loaderNamespace
 		if !enforceNamespace {
-			filtered, ferr := filterSkipped(scanResult.RootResources, scanResult.SkipFunc(c.Pkg.UniquePath.String()))
+			filtered, ferr := filterSkipped(scanResult.AllResources, scanResult.SkipFunc(c.Pkg.UniquePath.String()))
 			if ferr != nil {
 				return errors.E(op, c.Pkg.UniquePath, ferr)
 			}

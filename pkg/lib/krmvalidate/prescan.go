@@ -247,11 +247,102 @@ func filterByMatchGlob(nodes []*yaml.RNode, matchGlob []string) []*yaml.RNode {
 	return out
 }
 
-// ScanFlat wraps ScanTree for callers whose real reader has no
-// subpackage concept (e.g. the `live` family's flat reader), flattening
-// the per-package result while keeping per-file ownership for opt-in.
+// collectOptedIn walks pkgPath and every subpackage read-only,
+// Kptfile only (no resource content), mirroring ScanTree's tree
+// structure. Used by scanFlatTree to attribute found files to their
+// owning package for opt-in purposes, without a second content read.
+func collectOptedIn(fsys filesys.FileSystem, pkgPath string) (optedIn map[string]bool, pkgPaths []string, err error) {
+	optedIn = map[string]bool{}
+
+	root, err := pkg.New(fsys, pkgPath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var walk func(p *pkg.Pkg) error
+	walk = func(p *pkg.Pkg) error {
+		dir := p.UniquePath.String()
+		kf, kfErr := p.Kptfile()
+		if kfErr != nil && !errors.Is(kfErr, os.ErrNotExist) {
+			return kfErr
+		}
+		optedIn[dir] = PackageOptedIn(kf)
+		pkgPaths = append(pkgPaths, dir)
+
+		subpkgs, subErr := p.DirectSubpackages()
+		if subErr != nil {
+			return subErr
+		}
+		for _, sub := range subpkgs {
+			if err := walk(sub); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if err := walk(root); err != nil {
+		return nil, nil, err
+	}
+	return optedIn, pkgPaths, nil
+}
+
+// reattributeToOwningPackage re-roots f, found via one flat read from
+// pkgPath, to whichever known package path most tightly contains it,
+// so per-package opt-in lookups work without a second content read.
+func reattributeToOwningPackage(f NonKRMFile, pkgPath string, pkgPaths []string) NonKRMFile {
+	abs := filepath.Join(pkgPath, f.RelPath)
+	owner := pkgPath
+	for _, p := range pkgPaths {
+		rel, err := filepath.Rel(p, abs)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			continue
+		}
+		if len(p) > len(owner) {
+			owner = p
+		}
+	}
+	rel, err := filepath.Rel(owner, abs)
+	if err != nil {
+		return f
+	}
+	return NonKRMFile{PkgPath: owner, RelPath: rel, Reason: f.Reason}
+}
+
+// scanFlatTree is ScanTree's counterpart for flat-reader callers (the
+// `live` family): one read matching the real reader's own setup (no
+// subpackage-boundary concept, so .krmignore cascades exactly like it
+// does for the real reader), plus a separate Kptfile-only walk to
+// attribute each found file to its owning package for opt-in.
+func scanFlatTree(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, optedIn map[string]bool, resources []*yaml.RNode, err error) {
+	optedIn, pkgPaths, err := collectOptedIn(fsys, pkgPath)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	resources, err = (&kio.LocalPackageReader{
+		PackagePath:     pkgPath,
+		MatchFilesGlob:  liveReaderMatchGlob,
+		WrapBareSeqNode: true,
+		FileSystem:      filesys.FileSystemOrOnDisk{FileSystem: fsys},
+	}).Read()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	_, nonKRM, splitErr := Split(pkgPath, resources)
+	if splitErr != nil {
+		return nil, nil, nil, splitErr
+	}
+	for i, f := range nonKRM {
+		nonKRM[i] = reattributeToOwningPackage(f, pkgPath, pkgPaths)
+	}
+	return nonKRM, optedIn, resources, nil
+}
+
+// ScanFlat wraps scanFlatTree for callers whose real reader has no
+// subpackage concept (e.g. the `live` family's flat reader).
 func ScanFlat(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, optedIn bool, allResources []*yaml.RNode, err error) {
-	treeFound, treeOptedIn, treeResources, scanErr := ScanTree(fsys, pkgPath, liveReaderMatchGlob)
+	treeFound, treeOptedIn, resources, scanErr := scanFlatTree(fsys, pkgPath)
 	if scanErr != nil {
 		return nil, false, nil, scanErr
 	}
@@ -259,12 +350,8 @@ func ScanFlat(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, opte
 	// optedIn is pkgPath's own root only; migrate (the one caller
 	// that still reads it) ignores it anyway.
 	optedIn = treeOptedIn[pkgPath]
-
-	for _, pkgResources := range treeResources {
-		allResources = append(allResources, pkgResources...)
-	}
-
 	found = treeFound
+	allResources = resources
 	return found, optedIn, allResources, nil
 }
 
@@ -272,42 +359,28 @@ func ScanFlat(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, opte
 type FlatScanResult struct {
 	AllResources []*yaml.RNode
 
-	// RootResources is pkgPath's own resources only, excluding every
-	// subpackage's. For callers needing to replicate a flat reader
-	// that never descends into subpackages, e.g. namespace detection.
-	RootResources []*yaml.RNode
-
 	skipped []NonKRMFile
 }
 
 // ScanFlatAndDecide is Scan for flat-reader callers: same per-package
-// opt-in via ScanTree, flattened into FlatScanResult's shape.
+// opt-in via scanFlatTree, flattened into FlatScanResult's shape.
 func ScanFlatAndDecide(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*FlatScanResult, error) {
-	found, treeOptedIn, treeResources, err := ScanTree(fsys, pkgPath, liveReaderMatchGlob)
+	found, optedIn, resources, err := scanFlatTree(fsys, pkgPath)
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
-	if scanErr := DecideOutcome(found, treeOptedIn, pkgPath); scanErr != nil {
+	if scanErr := DecideOutcome(found, optedIn, pkgPath); scanErr != nil {
 		return nil, scanErr
 	}
-	PrintSkippedSummary(printf, found, treeOptedIn)
-
-	var allResources []*yaml.RNode
-	for _, pkgResources := range treeResources {
-		allResources = append(allResources, pkgResources...)
-	}
+	PrintSkippedSummary(printf, found, optedIn)
 
 	var skipped []NonKRMFile
 	for _, f := range found {
-		if treeOptedIn[f.PkgPath] {
+		if optedIn[f.PkgPath] {
 			skipped = append(skipped, f)
 		}
 	}
-	return &FlatScanResult{
-		AllResources:  allResources,
-		RootResources: treeResources[pkgPath],
-		skipped:       skipped,
-	}, nil
+	return &FlatScanResult{AllResources: resources, skipped: skipped}, nil
 }
 
 // SkippedFiles mirrors ScanResult.SkippedFiles for FlatScanResult.
