@@ -190,7 +190,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	objs, inv, err := live.Load(r.factory, path, c.InOrStdin())
+	objs, inv, err := live.Load(r.ctx, r.factory, path, c.InOrStdin())
 	if err != nil {
 		return err
 	}

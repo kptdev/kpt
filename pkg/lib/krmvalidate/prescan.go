@@ -1,0 +1,488 @@
+// Copyright 2026 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// The non-KRM pre-scan: walk a package tree read-only, decide whether
+// any non-KRM file found is fatal or excused by annotation, and report
+// everything found in one pass, before any KRM-assuming command starts
+// doing real work.
+package krmvalidate
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+// AutoIgnoreNonKRMAnnotation is the per-package Kptfile annotation
+// that excuses non-KRM files instead of failing on them.
+const AutoIgnoreNonKRMAnnotation = "kpt.dev/auto-ignore-non-krm"
+
+// NonKRMFile records one non-KRM file found during a scan.
+type NonKRMFile struct {
+	PkgPath string // absolute path of the owning package
+	RelPath string // path relative to PkgPath
+	Reason  string // the IsKRM() validation error
+}
+
+// DisplayPath returns f's path relative to rootPath, for display.
+// f.RelPath alone is relative to f's own (possibly sub) package, so
+// same-named files in different subpackages would look identical.
+func (f NonKRMFile) DisplayPath(rootPath string) string {
+	abs := filepath.Join(f.PkgPath, f.RelPath)
+	rel, err := filepath.Rel(rootPath, abs)
+	if err != nil {
+		return f.RelPath
+	}
+	return filepath.ToSlash(rel)
+}
+
+// Split partitions files into valid KRM resources and non-KRM files.
+// A file containing any non-KRM document is excluded in its entirety.
+func Split(pkgDir string, nodes []*yaml.RNode) (valid []*yaml.RNode, nonKRM []NonKRMFile, err error) {
+	nonKRMPaths := make(map[string]bool)
+	for _, n := range nodes {
+		if krmErr := IsKRM(n); krmErr != nil {
+			relPath, _, pathErr := kioutil.GetFileAnnotations(n)
+			if pathErr != nil {
+				return nil, nil, fmt.Errorf("non-krm-detection: resource in %s missing path annotation: %w", pkgDir, pathErr)
+			}
+			if !nonKRMPaths[relPath] {
+				nonKRM = append(nonKRM, NonKRMFile{PkgPath: pkgDir, RelPath: relPath, Reason: krmErr.Error()})
+				nonKRMPaths[relPath] = true
+			}
+		}
+	}
+	for _, n := range nodes {
+		relPath, _, _ := kioutil.GetFileAnnotations(n)
+		if !nonKRMPaths[relPath] {
+			valid = append(valid, n)
+		}
+	}
+	return valid, nonKRM, nil
+}
+
+// PackageOptedIn reports whether kf's package carries
+// AutoIgnoreNonKRMAnnotation="true". False if kf is nil.
+func PackageOptedIn(kf *kptfilev1.KptFile) bool {
+	if kf == nil {
+		return false
+	}
+	return kptfilev1.ToCondition(kf.Annotations[AutoIgnoreNonKRMAnnotation]) == kptfilev1.ConditionTrue
+}
+
+// ScanResult is the outcome of a successful Scan: the caller is clear
+// to proceed.
+type ScanResult struct {
+	// AllResources is every (sub)package's resource list, keyed by
+	// absolute package path, reusable via CachedLocalResources to
+	// avoid a second disk read.
+	AllResources map[string][]*yaml.RNode
+
+	skipped []NonKRMFile
+}
+
+// Scan runs ScanTree, DecideOutcome, and PrintSkippedSummary for
+// pkgPath: the single entry point most callers should use before
+// starting any KRM-assuming work.
+func Scan(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*ScanResult, error) {
+	found, optedIn, allResources, err := ScanTree(fsys, pkgPath, pkg.MatchAllKRM)
+	if err != nil {
+		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
+	}
+	if scanErr := DecideOutcome(found, optedIn, pkgPath); scanErr != nil {
+		return nil, scanErr
+	}
+	PrintSkippedSummary(printf, found, optedIn)
+
+	var skipped []NonKRMFile
+	for _, f := range found {
+		if optedIn[f.PkgPath] {
+			skipped = append(skipped, f)
+		}
+	}
+	return &ScanResult{AllResources: allResources, skipped: skipped}, nil
+}
+
+// SkippedFiles returns every non-KRM file Scan excused via the
+// annotation. Safe to call on a nil receiver.
+func (res *ScanResult) SkippedFiles() []NonKRMFile {
+	if res == nil {
+		return nil
+	}
+	return res.skipped
+}
+
+// SkipFunc returns a FileSkipFunc for the files Scan excused, for
+// callers wiring a reader's own skip hook (so those files are never
+// read at all, rather than filtered out after the fact).
+func (res *ScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
+	if res == nil {
+		return nil
+	}
+	return skipFuncFor(res.skipped, pkgRootPath)
+}
+
+// ScanTree walks pkgPath and its subpackages read-only, returning
+// every non-KRM file found, opted-in packages, and each package's
+// resources. matchGlob should match the caller's real reader.
+func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
+	found []NonKRMFile, optedIn map[string]bool, allResources map[string][]*yaml.RNode, err error,
+) {
+	optedIn = map[string]bool{}
+	allResources = map[string][]*yaml.RNode{}
+
+	root, err := pkg.New(fsys, pkgPath)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	var walk func(p *pkg.Pkg, isRoot bool) error
+	walk = func(p *pkg.Pkg, isRoot bool) error {
+		dir := p.UniquePath.String()
+
+		kf, kfErr := p.Kptfile()
+		if kfErr != nil && !errors.Is(kfErr, os.ErrNotExist) {
+			return kfErr
+		}
+		// kf is nil here either because Kptfile() returned
+		// os.ErrNotExist (tolerated, see doc comment) or because kf
+		// itself is a genuinely nil *KptFile; PackageOptedIn handles
+		// nil already.
+		optedIn[dir] = PackageOptedIn(kf)
+
+		var resources []*yaml.RNode
+		var resErr error
+		if isRoot && kf == nil {
+			// LocalResources() returns empty for a Kptfile-less dir,
+			// but a bare-directory target still has its real reader
+			// read every file regardless; read the same way here.
+			resources, resErr = (&kio.LocalPackageReader{
+				PackagePath:        dir,
+				PackageFileName:    kptfilev1.KptFileName,
+				IncludeSubpackages: false,
+				MatchFilesGlob:     matchGlob,
+				WrapBareSeqNode:    true,
+				FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: fsys},
+			}).Read()
+		} else {
+			// LocalResources() always reads with pkg.MatchAllKRM;
+			// narrow to matchGlob here for callers whose real
+			// reader is stricter (e.g. live's yaml/yml-only).
+			resources, resErr = p.LocalResources()
+			resources = filterByMatchGlob(resources, matchGlob)
+		}
+		if resErr != nil {
+			return resErr
+		}
+		allResources[dir] = resources
+
+		_, nonKRM, splitErr := Split(dir, resources)
+		if splitErr != nil {
+			return splitErr
+		}
+		found = append(found, nonKRM...)
+
+		subpkgs, subErr := p.DirectSubpackages()
+		if subErr != nil {
+			return subErr
+		}
+		for _, sub := range subpkgs {
+			if err := walk(sub, false); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if err := walk(root, true); err != nil {
+		return nil, nil, nil, err
+	}
+	return found, optedIn, allResources, nil
+}
+
+// liveReaderMatchGlob mirrors pkg/live's real reader (defaults to
+// kio.DefaultMatch: *.yaml/*.yml only). Used so a file the live
+// reader never touches, e.g. a stray package.json, is never flagged.
+var liveReaderMatchGlob = kio.DefaultMatch
+
+// filterByMatchGlob drops nodes whose source file doesn't match
+// matchGlob, narrowing an already-MatchAllKRM-globbed read without a
+// second disk read.
+func filterByMatchGlob(nodes []*yaml.RNode, matchGlob []string) []*yaml.RNode {
+	var out []*yaml.RNode
+	for _, n := range nodes {
+		relPath, _, err := kioutil.GetFileAnnotations(n)
+		if err != nil {
+			continue
+		}
+		base := filepath.Base(relPath)
+		for _, g := range matchGlob {
+			if match, _ := filepath.Match(g, base); match {
+				out = append(out, n)
+				break
+			}
+		}
+	}
+	return out
+}
+
+// collectOptedIn walks pkgPath and every subpackage read-only,
+// Kptfile only (no resource content), mirroring ScanTree's tree
+// structure. Used by scanFlatTree to attribute found files to their
+// owning package for opt-in purposes, without a second content read.
+func collectOptedIn(fsys filesys.FileSystem, pkgPath string) (optedIn map[string]bool, pkgPaths []string, err error) {
+	optedIn = map[string]bool{}
+
+	root, err := pkg.New(fsys, pkgPath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var walk func(p *pkg.Pkg) error
+	walk = func(p *pkg.Pkg) error {
+		dir := p.UniquePath.String()
+		kf, kfErr := p.Kptfile()
+		if kfErr != nil && !errors.Is(kfErr, os.ErrNotExist) {
+			return kfErr
+		}
+		optedIn[dir] = PackageOptedIn(kf)
+		pkgPaths = append(pkgPaths, dir)
+
+		subpkgs, subErr := p.DirectSubpackages()
+		if subErr != nil {
+			return subErr
+		}
+		for _, sub := range subpkgs {
+			if err := walk(sub); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if err := walk(root); err != nil {
+		return nil, nil, err
+	}
+	return optedIn, pkgPaths, nil
+}
+
+// reattributeToOwningPackage re-roots f, found via one flat read from
+// pkgPath, to whichever known package path most tightly contains it,
+// so per-package opt-in lookups work without a second content read.
+func reattributeToOwningPackage(f NonKRMFile, pkgPath string, pkgPaths []string) NonKRMFile {
+	abs := filepath.Join(pkgPath, f.RelPath)
+	owner := pkgPath
+	for _, p := range pkgPaths {
+		rel, err := filepath.Rel(p, abs)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			continue
+		}
+		if len(p) > len(owner) {
+			owner = p
+		}
+	}
+	rel, err := filepath.Rel(owner, abs)
+	if err != nil {
+		return f
+	}
+	return NonKRMFile{PkgPath: owner, RelPath: rel, Reason: f.Reason}
+}
+
+// scanFlatTree is ScanTree's counterpart for flat-reader callers (the
+// `live` family): one read matching the real reader's own setup (no
+// subpackage-boundary concept, so .krmignore cascades exactly like it
+// does for the real reader), plus a separate Kptfile-only walk to
+// attribute each found file to its owning package for opt-in.
+func scanFlatTree(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, optedIn map[string]bool, resources []*yaml.RNode, err error) {
+	optedIn, pkgPaths, err := collectOptedIn(fsys, pkgPath)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	resources, err = (&kio.LocalPackageReader{
+		PackagePath:     pkgPath,
+		MatchFilesGlob:  liveReaderMatchGlob,
+		WrapBareSeqNode: true,
+		FileSystem:      filesys.FileSystemOrOnDisk{FileSystem: fsys},
+	}).Read()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	_, nonKRM, splitErr := Split(pkgPath, resources)
+	if splitErr != nil {
+		return nil, nil, nil, splitErr
+	}
+	for i, f := range nonKRM {
+		nonKRM[i] = reattributeToOwningPackage(f, pkgPath, pkgPaths)
+	}
+	return nonKRM, optedIn, resources, nil
+}
+
+// ScanFlat wraps scanFlatTree for callers whose real reader has no
+// subpackage concept (e.g. the `live` family's flat reader).
+func ScanFlat(fsys filesys.FileSystem, pkgPath string) (found []NonKRMFile, optedIn bool, allResources []*yaml.RNode, err error) {
+	treeFound, treeOptedIn, resources, scanErr := scanFlatTree(fsys, pkgPath)
+	if scanErr != nil {
+		return nil, false, nil, scanErr
+	}
+
+	// optedIn is pkgPath's own root only; migrate (the one caller
+	// that still reads it) ignores it anyway.
+	optedIn = treeOptedIn[pkgPath]
+	found = treeFound
+	allResources = resources
+	return found, optedIn, allResources, nil
+}
+
+// FlatScanResult mirrors ScanResult for ScanFlat's flat-reader model.
+type FlatScanResult struct {
+	AllResources []*yaml.RNode
+
+	skipped []NonKRMFile
+}
+
+// ScanFlatAndDecide is Scan for flat-reader callers: same per-package
+// opt-in via scanFlatTree, flattened into FlatScanResult's shape.
+func ScanFlatAndDecide(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*FlatScanResult, error) {
+	found, optedIn, resources, err := scanFlatTree(fsys, pkgPath)
+	if err != nil {
+		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
+	}
+	if scanErr := DecideOutcome(found, optedIn, pkgPath); scanErr != nil {
+		return nil, scanErr
+	}
+	PrintSkippedSummary(printf, found, optedIn)
+
+	var skipped []NonKRMFile
+	for _, f := range found {
+		if optedIn[f.PkgPath] {
+			skipped = append(skipped, f)
+		}
+	}
+	return &FlatScanResult{AllResources: resources, skipped: skipped}, nil
+}
+
+// SkippedFiles mirrors ScanResult.SkippedFiles for FlatScanResult.
+func (res *FlatScanResult) SkippedFiles() []NonKRMFile {
+	if res == nil {
+		return nil
+	}
+	return res.skipped
+}
+
+// SkipFunc mirrors ScanResult.SkipFunc, re-rooting each file's path
+// (relative to its own, possibly-sub, package) against pkgRootPath.
+func (res *FlatScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
+	if res == nil {
+		return nil
+	}
+	return skipFuncFor(res.skipped, pkgRootPath)
+}
+
+// skipFuncFor builds a FileSkipFunc from a list of excused files,
+// re-rooting each one's path against pkgRootPath. Shared by
+// ScanResult.SkipFunc and FlatScanResult.SkipFunc.
+func skipFuncFor(skipped []NonKRMFile, pkgRootPath string) func(relPath string) bool {
+	if len(skipped) == 0 {
+		return nil
+	}
+	skip := make(map[string]bool, len(skipped))
+	for _, f := range skipped {
+		abs := filepath.Join(f.PkgPath, f.RelPath)
+		rel, err := filepath.Rel(pkgRootPath, abs)
+		if err != nil {
+			continue
+		}
+		skip[filepath.ToSlash(rel)] = true
+	}
+	return func(relPath string) bool {
+		return skip[filepath.ToSlash(relPath)]
+	}
+}
+
+// CachedLocalResources returns p's resources from cache if present,
+// falling back to a real LocalResources() read otherwise.
+func CachedLocalResources(p *pkg.Pkg, cache map[string][]*yaml.RNode) ([]*yaml.RNode, error) {
+	if cache != nil {
+		if resources, ok := cache[p.UniquePath.String()]; ok {
+			return resources, nil
+		}
+	}
+	return p.LocalResources()
+}
+
+// DecideOutcome returns an error listing every blocking file found,
+// or nil if all were excused. rootPath displays each file's path
+// unambiguously (see NonKRMFile.DisplayPath).
+func DecideOutcome(found []NonKRMFile, optedIn map[string]bool, rootPath string) error {
+	var blocking []NonKRMFile
+	for _, f := range found {
+		if !optedIn[f.PkgPath] {
+			blocking = append(blocking, f)
+		}
+	}
+	if len(blocking) == 0 {
+		return nil
+	}
+
+	sort.Slice(blocking, func(i, j int) bool {
+		return blocking[i].DisplayPath(rootPath) < blocking[j].DisplayPath(rootPath)
+	})
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "input resource list must contain only KRM resources (%d file(s)):", len(blocking))
+	for _, f := range blocking {
+		fmt.Fprintf(&b, "\n  %s: %s", f.DisplayPath(rootPath), f.Reason)
+	}
+	fmt.Fprintf(&b, "\nTo resolve: either exclude these files via .krmignore (manually, or with a pattern rule), "+
+		"or add `%s: \"true\"` to this package's Kptfile to skip any non-KRM files automatically from this package.", AutoIgnoreNonKRMAnnotation)
+	return errors.New(b.String())
+}
+
+// PrintSkippedSummary prints which non-KRM files were excused per
+// opted-in package. No-op if nothing was skipped.
+func PrintSkippedSummary(printf func(format string, args ...any), found []NonKRMFile, optedIn map[string]bool) {
+	byPkg := map[string][]NonKRMFile{}
+	var pkgOrder []string
+	for _, f := range found {
+		if !optedIn[f.PkgPath] {
+			continue
+		}
+		if _, seen := byPkg[f.PkgPath]; !seen {
+			pkgOrder = append(pkgOrder, f.PkgPath)
+		}
+		byPkg[f.PkgPath] = append(byPkg[f.PkgPath], f)
+	}
+	sort.Strings(pkgOrder)
+
+	for _, pkgPath := range pkgOrder {
+		files := byPkg[pkgPath]
+		names := make([]string, 0, len(files))
+		for _, f := range files {
+			names = append(names, f.RelPath)
+		}
+		printf("[info] ignoring %d non-KRM file(s) in %q due to %s annotation: %s\n",
+			len(files), pkgPath, AutoIgnoreNonKRMAnnotation, strings.Join(names, ", "))
+	}
+}

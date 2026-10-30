@@ -19,6 +19,7 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,6 +34,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -1120,4 +1122,36 @@ func TestPrintFnResult(t *testing.T) {
 			assert.Equal(t, "", out.String())
 		})
 	}
+}
+
+// TestFunctionRunner_do_AcceptsNamelessList: a nameless *List-kind
+// resource (e.g. ConfigMapList) must pass do()'s validation on both
+// the input and output side, matching krmvalidate.IsKRM's exemption
+// rather than the stricter, name-requiring validator this used before.
+func TestFunctionRunner_do_AcceptsNamelessList(t *testing.T) {
+	input := `apiVersion: v1
+kind: ConfigMapList
+items: []
+`
+	r := kio.ByteReadWriter{
+		Reader:          bytes.NewBufferString(input),
+		WrapBareSeqNode: true,
+	}
+	nodes, err := r.Read()
+	require.NoError(t, err)
+
+	fr := &FunctionRunner{
+		filter: &runtimeutil.FunctionFilter{
+			// Pass-through: echoes the wrapped ResourceList back unchanged.
+			Run: func(reader io.Reader, writer io.Writer) error {
+				_, err := io.Copy(writer, reader)
+				return err
+			},
+		},
+		fnResult:  &fnresultv1.Result{},
+		fnResults: fnresultv1.NewResultList(),
+	}
+
+	_, err = fr.do(nodes)
+	assert.NoError(t, err, "a nameless *List resource must not be rejected as non-KRM")
 }

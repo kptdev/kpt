@@ -305,6 +305,229 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 	}
 }
 
+// TestUpdate_NonKRMFileNotMergedByContent verifies a .yaml file whose
+// content isn't valid KRM is raw-copied/diffed, never merged.
+func TestUpdate_NonKRMFileNotMergedByContent(t *testing.T) {
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n")
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n# local edit\n")
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 5\ntotallyDifferentField: yes\n")
+	// Locally modified: local's edit is kept untouched, same as
+	// ReplaceNonKRMFiles already does for any other non-KRM file.
+	expected := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n# local edit\n")
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "values.yaml"))
+	require.NoError(t, err)
+	assert.Equal(t, "replicaCount: 3\nimage:\n  repository: nginx\n  tag: latest\n# local edit\n", string(gotContent),
+		"non-KRM file must never be field-merged, and a locally modified file is kept, not overwritten")
+
+	expectedPath := expected.ExpandPkg(t, repos)
+	testutil.KptfileAwarePkgEqual(t, localPath, expectedPath, false)
+}
+
+// TestUpdate_NonKRMFile_LocalOnlySurvives: a non-KRM file that exists
+// only locally (absent from both origin and upstream) must survive an
+// update untouched, not be deleted by the merge-destination writer
+// before ReplaceNonKRMFiles runs.
+func TestUpdate_NonKRMFile_LocalOnlySurvives(t *testing.T) {
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource)
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("values.yaml", "replicaCount: 3\n")
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource)
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "values.yaml"))
+	require.NoError(t, err, "local-only non-KRM file must not be deleted during update")
+	assert.Equal(t, "replicaCount: 3\n", string(gotContent))
+}
+
+// TestUpdate_NonKRMListFileSurvives verifies a file with a bare `kind:
+// List` (no apiVersion of its own) wrapping a valid inner resource is
+// classified consistently by isKrmFile and the merge reader, so it's
+// preserved rather than silently deleted as "no longer in the merge output."
+func TestUpdate_NonKRMListFileSurvives(t *testing.T) {
+	const listFileContent = `kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: cm1
+  data:
+    key: value
+`
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("list.yaml", listFileContent)
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("list.yaml", listFileContent)
+	// Only the unrelated Deployment resource changes upstream; list.yaml
+	// itself is untouched between origin and updated.
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.ConfigMapResource).
+		WithFile("list.yaml", listFileContent)
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "list.yaml"))
+	require.NoError(t, err, "list.yaml must not be deleted during update")
+	assert.Equal(t, listFileContent, string(gotContent))
+}
+
+// TestUpdate_GenerateNameJobMerged verifies a Job using
+// metadata.generateName (no metadata.name) is classified as KRM and
+// goes through the real 3-way merge, so a local edit (added label) and
+// an upstream edit (changed image) both land in the result. Before the
+// fix, IsKRM required metadata.name unconditionally, so this file was
+// misclassified non-KRM and routed to ReplaceNonKRMFiles's raw-copy
+// path - which, for a locally modified file, keeps it untouched and
+// silently drops the upstream image change entirely.
+func TestUpdate_GenerateNameJobMerged(t *testing.T) {
+	const origJob = `apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: my-job-
+spec:
+  template:
+    spec:
+      containers:
+      - name: c
+        image: busybox:1.0
+`
+	const localJob = `apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: my-job-
+  labels:
+    local: "true"
+spec:
+  template:
+    spec:
+      containers:
+      - name: c
+        image: busybox:1.0
+`
+	const updatedJob = `apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: my-job-
+spec:
+  template:
+    spec:
+      containers:
+      - name: c
+        image: busybox:2.0
+`
+	origin := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("job.yaml", origJob)
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "resource-merge").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("job.yaml", localJob)
+	updated := pkgbuilder.NewRootPkg().
+		WithResource(pkgbuilder.DeploymentResource).
+		WithFile("job.yaml", updatedJob)
+
+	repos := testutil.EmptyReposInfo
+	originPath := origin.ExpandPkg(t, repos)
+	localPath := local.ExpandPkg(t, repos)
+	updatedPath := updated.ExpandPkg(t, repos)
+
+	updater := &update.ResourceMergeUpdater{}
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     originPath,
+		LocalPath:      localPath,
+		UpdatedPath:    updatedPath,
+		IsRoot:         true,
+	})
+	require.NoError(t, err)
+
+	gotContent, err := os.ReadFile(filepath.Join(localPath, "job.yaml"))
+	require.NoError(t, err)
+	got := string(gotContent)
+	assert.Contains(t, got, "local: \"true\"", "the local label must survive the merge")
+	assert.Contains(t, got, "busybox:2.0", "the upstream image change must not be silently dropped")
+	assert.NotContains(t, got, "busybox:1.0", "the stale local image must be replaced, not kept verbatim")
+}
+
 func TestKeepTaggedNull(t *testing.T) {
 	updater := update.ResourceMergeUpdater{}
 

@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	ko "github.com/kptdev/kpt/api/kubeobject"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	pkgdiff "github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/lib/update/merge3"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
@@ -275,8 +276,9 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 	return nil
 }
 
-// getSubDirsAndNonKrmFiles returns the list of all non git sub dirs and, non git+non KRM files
-// in the root directory
+// getSubDirsAndNonKrmFiles returns the list of all non git sub dirs and,
+// non git+non KRM files in the root directory. Must classify a given
+// file the same way PruningLocalPackageReader{ExcludeNonKRM: true} does.
 func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	const op errors.Op = "update.getSubDirsAndNonKrmFiles"
 	files := sets.String{}
@@ -313,18 +315,50 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 
 var krmFilesGlob = append([]string{kptfilev1.KptFileName}, kio.DefaultMatch...)
 
-// isKrmFile checks if the file pointed to by the path is a yaml file (including
-// the Kptfile).
+// isKrmFile reports whether path's filename matches krmFilesGlob AND
+// its content is valid KRM per krmvalidate.IsKRM().
+//
+// Parsed with DisableUnwrapping so a bare `kind: List` stays itself
+// instead of being unwrapped into its items, matching how the real merge
+// reader (kio.LocalPackageReader) classifies the same file.
 func isKrmFile(path string) (bool, error) {
 	const op errors.Op = "update.isKrmFile"
+	matchesGlob := false
 	for _, g := range krmFilesGlob {
 		if match, err := filepath.Match(g, filepath.Base(path)); err != nil {
 			return false, errors.E(op, err)
 		} else if match {
+			matchesGlob = true
+			break
+		}
+	}
+	if !matchesGlob {
+		return false, nil
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return false, errors.E(op, errors.IO, err)
+	}
+	nodes, err := (&kio.ByteReader{
+		Reader:                bytes.NewReader(content),
+		OmitReaderAnnotations: true,
+		DisableUnwrapping:     true,
+	}).Read()
+	if err != nil {
+		return false, nil
+	}
+	for _, name := range krmvalidate.RecognizedKustomizationFileNames() {
+		if filepath.Base(path) == name {
 			return true, nil
 		}
 	}
-	return false, nil
+	for _, n := range nodes {
+		if krmvalidate.IsKRM(n) != nil {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 // compareFiles returns true if src file content is equal to dst file content
@@ -395,7 +429,8 @@ func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation stri
 			PreserveSeqIndent:  true,
 			WrapBareSeqNode:    true,
 		},
-		Exclusions: exclusions,
+		Exclusions:    exclusions,
+		ExcludeNonKRM: true,
 	}
 	nodes, err := reader.Read()
 	if err != nil {
@@ -412,6 +447,9 @@ func writeResourcesToDirectory(destPath string, kubeObjects ko.KubeObjects) erro
 		SetAnnotations:     map[string]string{"config.kubernetes.io/merge-source": "dest"},
 		PreserveSeqIndent:  true,
 		WrapBareSeqNode:    true,
+		// Skip non-KRM files so Write never deletes them as
+		// "read but not in the output"; ReplaceNonKRMFiles owns them.
+		FileSkipFunc: skipNonKrmFileFunc(destPath),
 	}
 	_, err := destWriter.Read()
 	if err != nil {
@@ -422,4 +460,13 @@ func writeResourcesToDirectory(destPath string, kubeObjects ko.KubeObjects) erro
 		return err
 	}
 	return nil
+}
+
+// skipNonKrmFileFunc returns a FileSkipFunc matching isKrmFile's
+// classification, for readers that need to leave non-KRM files alone.
+func skipNonKrmFileFunc(root string) func(relPath string) bool {
+	return func(relPath string) bool {
+		isKrm, err := isKrmFile(filepath.Join(root, relPath))
+		return err != nil || !isKrm
+	}
 }
