@@ -144,6 +144,9 @@ View the package hierarchy using the `tree` command:
 
 ```shell
 kpt pkg tree wordpress/
+```
+
+```text
 Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress

@@ -75,6 +75,9 @@ Next, use the following command to view the content of the package:
 
 ```shell
 kpt pkg tree
+```
+
+```text
 Package "nginx" (independent)
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx

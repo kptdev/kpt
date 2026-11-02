@@ -62,7 +62,10 @@ organization has many benefits such as:
 ```shell
 # A sample layout for package catalog repo
 # that contains the tenant pkg
-pkg-catalog $ tree .
+tree .
+```
+
+```text
 .
 ├── LICENSE
 ├── README.md
@@ -79,7 +82,10 @@ pkg-catalog $ tree .
 
 ```shell
 # An sample layout for platform repo
-platform $ tree .
+tree .
+```
+
+```text
 .
 ├── LICENSE
 ├── README.md
@@ -120,10 +126,12 @@ of the tenant package can directly edit, add/delete resources as per their needs
 Here is an example of a [basic tenant package](https://github.com/kptdev/kpt/tree/main/package-examples/tenant).
 
 ```shell
+export PKG_CATALOG_DIR=<path/to/pkg/catalog/dir>
+cd $PKG_CATALOG_DIR
+kpt pkg tree tenant
+```
 
-$ export PKG_CATALOG_DIR=<path/to/pkg/catalog/dir>
-$ cd $PKG_CATALOG_DIR
-pkg-catalog $ kpt pkg tree tenant
+```text
 Package "tenant"
 ├── [Kptfile]  Kptfile tenant
 ├── [namespace.yaml]  Namespace tenant-name
@@ -131,16 +139,17 @@ Package "tenant"
 ├── [quota.yaml]  ResourceQuota tenant-name/quota
 ├── [role-binding.yaml]  RoleBinding tenant-name/sa-admin
 └── [service-account.yaml]  ServiceAccount tenant-name/sa
-
 ```
 
 The tenant package’s Kptfile offers basic customization and enforces single
 namespace constraint.
 
 ```shell
+cd $PKG_CATALOG_DIR
+cat tenant/Kptfile
+```
 
-$ cd $PKG_CATALOG_DIR
-pkg-catalog $ cat tenant/Kptfile
+```text
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -155,7 +164,6 @@ pipeline:
   validators:
     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
       configPath: ns-invariant.yaml
-
 ```
 
 ### Publishing tenant package
