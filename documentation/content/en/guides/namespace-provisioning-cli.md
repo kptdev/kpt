@@ -69,7 +69,10 @@ kubernetes cluster.
 ```shell
 # quick check is kubectl is working correctly
 
-$ kubectl get pods
+kubectl get pods
+```
+
+```text
 No resources found.
 ```
 
@@ -103,7 +106,10 @@ chmod a+x kube-gen.sh
 sudo mv kube-gen.sh /usr/local/bin
 
 # test the script out
-$ kube-gen.sh --help
+kube-gen.sh --help
+```
+
+```text
 Create a resource from a file or from stdin.
  JSON and YAML formats are accepted.
 ....
@@ -118,14 +124,22 @@ Create a resource from a file or from stdin.
 # section  "Prerequisites | Repositories"
 
 # initialize the package (directory will be created automatically if it doesn't exist)
-$ kpt pkg init basens --description "kpt package for provisioning namespace"
+kpt pkg init basens --description "kpt package for provisioning namespace"
+```
+
+```text
 creating package directory basens
 writing basens/Kptfile
 writing basens/README.md
 writing basens/package-context.yaml
+```
 
+```shell
 # examine the package content
-$ kpt pkg tree basens
+kpt pkg tree basens
+```
+
+```text
 Package "basens"
 ├── [Kptfile]  Kptfile tenant
 └── [package-context.yaml]  ConfigMap kptfile.kpt.dev
@@ -146,7 +160,10 @@ cd basens
 kube-gen.sh namespace example > namespace.yaml
 
 # you should see namespace resource
-$ kpt pkg tree
+kpt pkg tree
+```
+
+```text
 Package "basens"
 ├── [Kptfile]  Kptfile tenant
 ├── [namespace.yaml]  Namespace example
@@ -169,24 +186,37 @@ that can be used to ensure all resources in a package use the same namespace.
 # `--image`, `--fn-config` to see available choices, click `tab`
 # to autocomplete your choice or to see further options.
 
-$ kpt fn eval --type mutator --image set-namespace:latest --fn-config package-context.yaml
+kpt fn eval --type mutator --image set-namespace:latest --fn-config package-context.yaml
+```
+
+```text
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
+```
 
+```shell
 # let's add `set-namespace` to rendering workflow so that it is invoked whenever
 # package is rendered.
-$ kpt fn eval -i set-namespace:latest --fn-config package-context.yaml --save -t mutator
+kpt fn eval -i set-namespace:latest --fn-config package-context.yaml --save -t mutator
+```
+
+```text
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
  Added "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" as mutator in the Kptfile.
+```
 
+```shell
 # Let's take a look at Kptfile to see if `set-namespace` is added in the
 # rendering pipeline.
-$ cat Kptfile
+cat Kptfile
+```
+
+```text
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -199,9 +229,14 @@ pipeline:
   mutators:
     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configPath: package-context.yaml
+```
 
+```shell
 # render the package to ensure we have a working package.
-$ kpt fn render
+kpt fn render
+```
+
+```text
 Package "tenant":
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "tenant"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
@@ -233,7 +268,10 @@ managing this tenant.
 # create rolebinding and try out the simple value propagation scenario
 kube-gen.sh rolebinding app-admin --clusterrole=app-admin --group=example.admin@bigco.com > rolebinding.yaml
 
-$ cat rolebinding.yaml
+cat rolebinding.yaml
+```
+
+```text
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -288,11 +326,16 @@ EOF
 Run following commands to add apply-replacements in the package rendering workflow.
 
 ```shell
-$ kpt fn eval -i apply-replacements:latest --fn-config update-rolebinding.yaml --save -t mutator
+kpt fn eval -i apply-replacements:latest --fn-config update-rolebinding.yaml --save -t mutator
+```
+
+```text
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
 Added "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" as mutator in the Kptfile.
+```
 
+```shell
 # ensure our package is being rendered correctly
 kpt fn render
 ```
@@ -305,7 +348,10 @@ Let’s add quota limits for this tenant.
 kube-gen.sh quota default --hard=cpu=40,memory=40G > resourcequota.yaml
 kpt fn render
 
-$ cat resourcequota.yaml
+cat resourcequota.yaml
+```
+
+```text
 apiVersion: v1
 kind: ResourceQuota
 metadata:
@@ -315,14 +361,16 @@ spec:
   hard:
     cpu: "40"
     memory: 40G
-  
 ```
 
 So with that, we should have our basic namespace provisioning package ready.
 Let’s take a look at what we have:
 
 ```shell
-$ kpt pkg tree
+kpt pkg tree
+```
+
+```text
 Package "basens"
 ├── [Kptfile]  Kptfile basens
 ├── [namespace.yaml]  Namespace example
@@ -360,7 +408,10 @@ You need to do this step in the deployment repo.
 # Redirect yourself to $DEPLOYMENT_REPO, which is created in "Prerequisites – Repositories
 cd ../deployment
 
-$ kpt pkg get ${BLUEPRINT_REPO}/basens/@v0 backend --for-deployment
+kpt pkg get ${BLUEPRINT_REPO}/basens/@v0 backend --for-deployment
+```
+
+```text
 Package "backend":
 Fetching ${BLUEPRINT_REPO}@v0
 From ${BLUEPRINT_REPO}
@@ -380,8 +431,10 @@ Customized package for deployment.
 Render the `backend` package so that the package is customized for the `backend`.
 
 ```shell
+kpt fn render backend
+```
 
-$ kpt fn render backend
+```text
 Package "backend":
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on package "backend"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 900ms
@@ -391,11 +444,17 @@ Package "backend":
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
 
 Successfully executed 2 function(s) in 1 package(s).
+```
+
+```shell
 # Important thing to note in the above output is that the `set-namespace`
 # function updated the namespace for the `backend` package instance automatically.
 
 # examine the output of backend package
-$ kpt pkg tree backend
+kpt pkg tree backend
+```
+
+```text
 Package "backend" (independent)
 ├── [Kptfile]  Kptfile backend
 ├── [namespace.yaml]  Namespace backend
@@ -403,7 +462,6 @@ Package "backend" (independent)
 ├── [resourcequota.yaml]  ResourceQuota backend/default
 ├── [rolebinding.yaml]  RoleBinding backend/app-admin
 └── [update-rolebinding.yaml]  ApplyReplacements update-rolebinding
-
 ```
 
 So with that we now have a backend service ready to be onboarded and applied to
@@ -428,10 +486,18 @@ Now let’s deploy the package using kpt live:
 ```shell
 # assuming you are in the deployment directory
 
-$ kpt live init backend
+kpt live init backend
+```
+
+```text
 initializing Kptfile inventory info (namespace: backend)...success
-  
-$ kpt live apply backend
+```
+
+```shell
+kpt live apply backend
+```
+
+```text
 namespace/backend unchanged
 namespace/backend reconciled
 resourcequota/default created

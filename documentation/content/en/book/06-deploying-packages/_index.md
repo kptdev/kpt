@@ -99,6 +99,9 @@ Let's initialize the `wordpress` package:
 
 ```shell
 kpt live init wordpress
+```
+
+```text
 initializing "resourcegroup.yaml" inventory info (namespace: default)...success
 ```
 
@@ -149,6 +152,9 @@ Then deploy the package and wait for the resources to be reconciled:
 
 ```shell
 kpt live apply wordpress --reconcile-timeout=2m
+```
+
+```text
 installing inventory ResourceGroup CRD.
 service/wordpress created
 service/wordpress-mysql created
@@ -207,6 +213,9 @@ would see that 6 resources would be created:
 
 ```shell
 kpt live apply wordpress --dry-run
+```
+
+```text
 Dry-run strategy: client
 service/wordpress created
 service/wordpress-mysql created
@@ -227,6 +236,9 @@ After you have deployed the package, you can get its current status at any time:
 
 ```shell
 kpt live status wordpress
+```
+
+```text
 service/wordpress is Current: Service is ready
 service/wordpress-mysql is Current: Service is ready
 deployment.apps/wordpress is Current: Deployment is available. Replicas: 1
@@ -244,6 +256,9 @@ command:
 
 ```shell
 kpt live destroy wordpress
+```
+
+```text
 persistentvolumeclaim/wp-pv-claim deleted
 persistentvolumeclaim/mysql-pv-claim deleted
 deployment.apps/wordpress-mysql deleted
@@ -311,8 +326,13 @@ containing the mysql password:
 
 ```shell
 kpt live init wordpress-with-dependencies
-initializing Kptfile inventory info (namespace: default)...success
+```
 
+```text
+initializing Kptfile inventory info (namespace: default)...success
+```
+
+```shell
 kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
 ```
 
@@ -321,6 +341,9 @@ and `Service` are created and reconciled before the Wordpress `Deployment` and `
 
 ```shell
 kpt live apply wordpress-with-dependencies --reconcile-timeout=2m
+```
+
+```text
 service/wordpress-mysql created
 statefulset.apps/wordpress-mysql created
 service/wordpress-mysql reconcile pending
@@ -341,6 +364,9 @@ When you delete the package from the cluster, you can see that
 resources are deleted in reverse order:
 ```shell
 kpt live destroy wordpress-with-dependencies
+```
+
+```text
 deployment.apps/wordpress deleted
 service/wordpress deleted
 deployment.apps/wordpress reconciled

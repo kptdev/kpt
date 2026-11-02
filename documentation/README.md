@@ -151,9 +151,9 @@ The token is only sent to github.com domains.
 
 12. Do not add any TBDs to the documentation. If something is missing, create an [issue](https://github.com/kptdev/kpt/issues) for it.
 
-13. Do not prefix shell commands with `$` in code blocks that contain only commands.
-   Use `$` only when a block shows both the command and its output, to distinguish
-   the command from the output:
+13. Show shell commands and their output in separate code blocks. Use `shell` for
+   commands and `text` for terminal output. Do not prefix commands with `$`, so
+   readers can copy and run them directly:
 
    - Correct (command only):
 
@@ -161,18 +161,23 @@ The token is only sent to github.com domains.
    kpt fn render my-package
    ```
 
-   - Correct (command + output):
+   - Correct (command followed by output):
+
+   ```shell
+   kpt fn render my-package
+   ```
+
+   ```text
+   Package "my-package":
+   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+   ```
+
+   - Incorrect (command and output in the same block):
 
    ```shell
    $ kpt fn render my-package
    Package "my-package":
    [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-   ```
-
-   - Incorrect (command only with $):
-
-   ```shell
-   $ kpt fn render my-package
    ```
 
 

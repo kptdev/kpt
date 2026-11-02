@@ -264,10 +264,11 @@ Args:
 `
 var TreeExamples = `
   # Show resources in the current directory.
-  $ kpt pkg tree
+  kpt pkg tree
 
   # Example output showing independent and dependent packages:
-  $ kpt pkg tree wordpress/
+  kpt pkg tree wordpress/
+
   Package "wordpress" (independent)
   ├── [Kptfile]  Kptfile wordpress
   ├── [service.yaml]  Service wordpress
