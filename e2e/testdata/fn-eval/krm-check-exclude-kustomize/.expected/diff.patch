@@ -12,10 +12,10 @@ index 4948ed1..712fea8 100644
    mutators:
      - image: set-labels:latest
 diff --git a/kustomization.yaml b/kustomization.yaml
-index f3f0207..0452667 100644
+index f3f0207..6c517af 100644
 --- a/kustomization.yaml
 +++ b/kustomization.yaml
-@@ -11,7 +11,14 @@
+@@ -11,7 +11,9 @@
  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  # See the License for the specific language governing permissions and
  # limitations under the License.
@@ -26,11 +26,6 @@ index f3f0207..0452667 100644
 +metadata:
 +  labels:
 +    tier: backend
-+spec:
-+  selector:
-+    tier: backend
-+    matchLabels:
-+      tier: backend
 diff --git a/resources.yaml b/resources.yaml
 index 40a033d..dc478d6 100644
 --- a/resources.yaml
