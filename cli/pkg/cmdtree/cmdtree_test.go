@@ -17,6 +17,7 @@ package cmdtree
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -814,4 +815,85 @@ func TestTreeCommand_DedupKRMFile(t *testing.T) {
 	out := b.String()
 	assert.Contains(t, out, "[cm.yaml]  ConfigMap cfg")
 	assert.Equal(t, 1, strings.Count(out, "cm.yaml"), "cm.yaml should appear exactly once (as KRM, not duplicated)")
+}
+
+func TestTreeCommand_formatJSON(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(d, "sub"), 0700))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+spec:
+  selector:
+    app: nginx
+`), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "notes.txt"), []byte("hello\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "sub", "f2.yaml"), []byte(`kind: Deployment
+metadata:
+  name: bar
+spec:
+  replicas: 3
+`), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "--format", "json"})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	var got jsonTreeOutput
+	require.NoError(t, json.Unmarshal(b.Bytes(), &got), b.String())
+
+	assert.Equal(t, jsonTreeOutput{
+		Success: true,
+		Tree: &jsonTreeNode{
+			Name: filepath.Base(d),
+			Children: []*jsonTreeNode{
+				{Name: "f1.yaml", Description: "Deployment foo", Children: []*jsonTreeNode{}},
+				{Name: "f1.yaml", Description: "Service foo", Children: []*jsonTreeNode{}},
+				{Name: "notes.txt", Children: []*jsonTreeNode{}},
+				{Name: "sub", Children: []*jsonTreeNode{
+					{Name: "f2.yaml", Description: "Deployment bar", Children: []*jsonTreeNode{}},
+				}},
+			},
+		},
+	}, got)
+}
+
+func TestTreeCommand_formatJSONEmptyChildrenAreArrays(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`kind: Deployment
+metadata:
+  name: foo
+`), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "--format", "json"})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	// Consumers should never have to handle "children": null.
+	assert.NotContains(t, b.String(), `"children": null`)
+	assert.Contains(t, b.String(), `"children": []`)
+}
+
+func TestTreeCommand_formatInvalid(t *testing.T) {
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{t.TempDir(), "--format", "yaml"})
+	r.Command.SetOut(b)
+	r.Command.SilenceUsage = true
+	r.Command.SilenceErrors = true
+
+	err := r.Command.Execute()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid --format "yaml"`)
+	assert.Empty(t, b.String())
 }

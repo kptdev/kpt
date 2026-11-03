@@ -17,6 +17,7 @@ package cmdtree
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -49,14 +50,53 @@ const (
 
 var GraphStructures = []string{string(TreeStructurePackage)}
 
+const (
+	// OutputFormatText prints the tree as ASCII art. It is the default.
+	OutputFormatText = "text"
+	// OutputFormatJSON prints the tree as a JSON document.
+	OutputFormatJSON = "json"
+)
+
+// jsonTreeOutput is the document printed when the output format is JSON.
+type jsonTreeOutput struct {
+	Success bool          `json:"success"`
+	Tree    *jsonTreeNode `json:"tree"`
+}
+
+// jsonTreeNode mirrors one line of the text tree. For a line printed as
+// "[file.yaml]  Kind name", Name is the file and Description is "Kind name".
+// Lines without a bracketed file, such as directories, packages and plain
+// files, only have a Name.
+type jsonTreeNode struct {
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Children    []*jsonTreeNode `json:"children"`
+}
+
+func toJSONTreeNode(n *treeprint.Node) *jsonTreeNode {
+	node := &jsonTreeNode{Children: make([]*jsonTreeNode, 0, len(n.Nodes))}
+	if n.Meta != nil {
+		node.Name = fmt.Sprint(n.Meta)
+		node.Description = fmt.Sprint(n.Value)
+	} else {
+		node.Name = fmt.Sprint(n.Value)
+	}
+	for _, child := range n.Nodes {
+		node.Children = append(node.Children, toJSONTreeNode(child))
+	}
+	return node
+}
+
 // TreeWriter prints the package structured as a tree.
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
 // used for printing rather than updating or editing.
 type TreeWriter struct {
-	Writer      io.Writer
-	Root        string
-	Fields      []TreeWriterField
-	Structure   TreeStructure
+	Writer    io.Writer
+	Root      string
+	Fields    []TreeWriterField
+	Structure TreeStructure
+	// Format is OutputFormatText (the default when empty) or OutputFormatJSON.
+	Format      string
 	NonKRMFiles map[string][]string // root-relative dir → file basenames in that dir, or relative paths after roll-up from subdirs
 }
 
@@ -195,6 +235,17 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	} else {
 		// else it is just a directory, so print only directory name
 		tree.SetValue(filepath.Base(p.Root))
+	}
+
+	if p.Format == OutputFormatJSON {
+		root, ok := tree.(*treeprint.Node)
+		if !ok {
+			return fmt.Errorf("unexpected tree type %T", tree)
+		}
+		enc := json.NewEncoder(p.Writer)
+		enc.SetEscapeHTML(false)
+		enc.SetIndent("", "  ")
+		return enc.Encode(jsonTreeOutput{Success: true, Tree: toJSONTreeNode(root)})
 	}
 
 	out := tree.String()

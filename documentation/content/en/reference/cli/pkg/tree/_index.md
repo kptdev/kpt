@@ -40,6 +40,17 @@ DIR:
   as plain filenames. Dotfiles and symlinks are excluded.
 ```
 
+#### Flags
+
+```shell
+--format:
+  Output format, either "text" or "json". Defaults to "text".
+  The JSON output is a document with "success" and "tree" fields. Every node in
+  the tree has a "name", a "description" and a list of "children".
+  For a line printed as "[file.yaml]  Kind name", the name is the file and the
+  description is "Kind name".
+```
+
 <!--mdtogo-->
 
 ### Examples
@@ -49,6 +60,11 @@ DIR:
 ```shell
 # Show resources in the current directory.
 $ kpt pkg tree
+```
+
+```shell
+# Print the tree as JSON, for example to render it in an IDE or process it with jq.
+$ kpt pkg tree --format json
 ```
 
 ```shell

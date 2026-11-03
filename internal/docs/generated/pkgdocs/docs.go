@@ -261,10 +261,22 @@ Args:
     Path to a local package directory. Defaults to the current directory.
     Displays KRM resources with their Kind and Name, and non-KRM text files
     as plain filenames. Dotfiles and symlinks are excluded.
+
+Flags:
+
+  --format:
+    Output format, either "text" or "json". Defaults to "text".
+    The JSON output is a document with "success" and "tree" fields. Every node in
+    the tree has a "name", a "description" and a list of "children".
+    For a line printed as "[file.yaml]  Kind name", the name is the file and the
+    description is "Kind name".
 `
 var TreeExamples = `
   # Show resources in the current directory.
   $ kpt pkg tree
+
+  # Print the tree as JSON, for example to render it in an IDE or process it with jq.
+  $ kpt pkg tree --format json
 
   # Example output showing independent and dependent packages:
   $ kpt pkg tree wordpress/
