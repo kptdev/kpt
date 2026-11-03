@@ -230,6 +230,33 @@ func TestScan(t *testing.T) {
 	})
 }
 
+// TestScan_VsScanHonoringKrmignore pins the deliberate difference: fn
+// render's executor still hydrates a subpackage a parent .krmignore
+// excludes, so Scan must keep validating it. fn eval/source's readers
+// skip it, so they use ScanHonoringKrmignore.
+func TestScan_VsScanHonoringKrmignore(t *testing.T) {
+	newFS := func() filesys.FileSystem {
+		fsys := filesys.MakeFsInMemory()
+		fixture := "/root/testdata/fixture"
+		assert.NoError(t, fsys.MkdirAll(fixture))
+		writeKptfileForTest(t, fsys, "/root", "root")
+		assert.NoError(t, fsys.WriteFile("/root/.krmignore", []byte("testdata/\n")))
+		writeKptfileForTest(t, fsys, fixture, "fixture")
+		writeNonKRMForTest(t, fsys, fixture, "values.yaml")
+		return fsys
+	}
+	printf, _ := printfCollector()
+
+	_, err := Scan(newFS(), "/root", printf)
+	if assert.Error(t, err, "render path must keep validating the ignored subpackage") {
+		assert.Contains(t, err.Error(), "testdata/fixture/values.yaml")
+	}
+
+	res, err := ScanHonoringKrmignore(newFS(), "/root", printf)
+	assert.NoError(t, err, "eval/source path must skip it, like their real reader")
+	assert.NotNil(t, res)
+}
+
 func TestScanResult_NilReceiver_IsSafe(t *testing.T) {
 	var res *ScanResult
 	assert.Nil(t, res.SkippedFiles())
@@ -285,6 +312,77 @@ func TestScanTree(t *testing.T) {
 		assert.True(t, optedIn[sub])
 		assert.Contains(t, allResources, root)
 		assert.Contains(t, allResources, sub)
+	})
+
+	t.Run("root .krmignore skips a subpackage under an ignored directory", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		root := "/root"
+		fixture := "/root/testdata/fixture"
+		assert.NoError(t, fsys.MkdirAll(fixture))
+		writeKptfileForTest(t, fsys, root, "root")
+		writeValidKRMForTest(t, fsys, root)
+		assert.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("testdata/\n")))
+		writeKptfileForTest(t, fsys, fixture, "fixture")
+		writeNonKRMForTest(t, fsys, fixture, "values.yaml")
+
+		found, _, allResources, err := scanTree(fsys, root, pkg.MatchAllKRM, true)
+		assert.NoError(t, err)
+		assert.Empty(t, found, "an ignored directory's subpackage must never be scanned")
+		assert.NotContains(t, allResources, fixture)
+	})
+
+	t.Run("root .krmignore skips a directly ignored subpackage", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		root := "/root"
+		ignored := "/root/ignored"
+		assert.NoError(t, fsys.MkdirAll(ignored))
+		writeKptfileForTest(t, fsys, root, "root")
+		assert.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("ignored/\n")))
+		writeKptfileForTest(t, fsys, ignored, "ignored")
+		writeNonKRMForTest(t, fsys, ignored, "values.yaml")
+
+		found, _, allResources, err := scanTree(fsys, root, pkg.MatchAllKRM, true)
+		assert.NoError(t, err)
+		assert.Empty(t, found)
+		assert.NotContains(t, allResources, ignored)
+	})
+
+	t.Run("ignoring one sibling subpackage still reports a non-KRM file in another", func(t *testing.T) {
+		fsys := filesys.MakeFsInMemory()
+		root := "/root"
+		ok := "/root/ok"
+		skipme := "/root/skipme"
+		assert.NoError(t, fsys.MkdirAll(ok))
+		assert.NoError(t, fsys.MkdirAll(skipme))
+		writeKptfileForTest(t, fsys, root, "root")
+		assert.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("skipme/\n")))
+		writeKptfileForTest(t, fsys, ok, "ok")
+		writeNonKRMForTest(t, fsys, ok, "values.yaml")
+		writeKptfileForTest(t, fsys, skipme, "skipme")
+		writeNonKRMForTest(t, fsys, skipme, "values.yaml")
+
+		found, _, _, err := scanTree(fsys, root, pkg.MatchAllKRM, true)
+		assert.NoError(t, err)
+		if assert.Len(t, found, 1, "pruning must be selective, not a blanket skip") {
+			assert.Equal(t, ok, found[0].PkgPath)
+		}
+	})
+
+	t.Run("a parent .krmignore file pattern does not reach into a non-ignored subpackage", func(t *testing.T) {
+		// Matches the real fn reader: .krmignore covers only its own
+		// package, so a subpackage's file is still scanned.
+		fsys := filesys.MakeFsInMemory()
+		root := "/root"
+		sub := "/root/sub"
+		assert.NoError(t, fsys.MkdirAll(sub))
+		writeKptfileForTest(t, fsys, root, "root")
+		assert.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("values.yaml\n")))
+		writeKptfileForTest(t, fsys, sub, "sub")
+		writeNonKRMForTest(t, fsys, sub, "values.yaml")
+
+		found, _, _, err := scanTree(fsys, root, pkg.MatchAllKRM, true)
+		assert.NoError(t, err)
+		assert.Len(t, found, 1)
 	})
 
 	t.Run("bare directory with no root Kptfile is still scanned", func(t *testing.T) {

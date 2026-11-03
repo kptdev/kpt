@@ -17,6 +17,7 @@ package cmdsource
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -743,5 +744,50 @@ spec:
 
 		assert.NotContains(t, b.String(), "replicaCount")
 		assert.Contains(t, b.String(), "kind: Deployment")
+	})
+
+	t.Run("root .krmignore skips a fixture subpackage under an ignored directory", func(t *testing.T) {
+		d := t.TempDir()
+		fixture := filepath.Join(d, "testdata", "fixture")
+		assert.NoError(t, os.MkdirAll(fixture, 0700))
+		kptfile := "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\n"
+		assert.NoError(t, os.WriteFile(filepath.Join(d, "Kptfile"), []byte(fmt.Sprintf(kptfile, "root")), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(d, "cm.yaml"),
+			[]byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cm\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(d, ".krmignore"), []byte("testdata/\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(fixture, "Kptfile"), []byte(fmt.Sprintf(kptfile, "fixture")), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(fixture, "values.yaml"), []byte("replicaCount: 3\n"), 0600))
+
+		b := &bytes.Buffer{}
+		r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
+		r.Command.SetArgs([]string{d})
+		err := r.Command.Execute()
+		assert.NoError(t, err, "the ignored directory's subpackage must never be scanned")
+
+		assert.NotContains(t, b.String(), "replicaCount")
+		assert.Contains(t, b.String(), "name: cm")
+	})
+
+	t.Run("ignoring one sibling subpackage still reports a non-KRM file in another", func(t *testing.T) {
+		d := t.TempDir()
+		kptfile := "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\n"
+		assert.NoError(t, os.WriteFile(filepath.Join(d, "Kptfile"), []byte(fmt.Sprintf(kptfile, "root")), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(d, ".krmignore"), []byte("skipme/\n"), 0600))
+		for _, name := range []string{"ok", "skipme"} {
+			sub := filepath.Join(d, name)
+			assert.NoError(t, os.MkdirAll(sub, 0700))
+			assert.NoError(t, os.WriteFile(filepath.Join(sub, "Kptfile"), []byte(fmt.Sprintf(kptfile, name)), 0600))
+			assert.NoError(t, os.WriteFile(filepath.Join(sub, "values.yaml"), []byte("replicaCount: 3\n"), 0600))
+		}
+
+		b := &bytes.Buffer{}
+		r := GetSourceRunner(fake.CtxWithPrinter(b, nil), "")
+		r.Command.SetArgs([]string{d})
+		err := r.Command.Execute()
+		if assert.Error(t, err) {
+			assert.Contains(t, err.Error(), "ok/values.yaml")
+			assert.NotContains(t, err.Error(), "skipme", "the ignored sibling must not be reported")
+			assert.Contains(t, err.Error(), "1 file(s)")
+		}
 	})
 }

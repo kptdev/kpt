@@ -121,8 +121,9 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 
-		// Non-KRM pre-scan, same as `fn render`/`fn eval`'s.
-		scanResult, err := krmvalidate.Scan(filesys.FileSystemOrOnDisk{}, resolvedPath, printer.FromContextOrDie(r.Ctx).Printf)
+		// Non-KRM pre-scan, same as `fn eval`'s (skips subpackages a
+		// parent .krmignore excludes, like this reader does).
+		scanResult, err := krmvalidate.ScanHonoringKrmignore(filesys.FileSystemOrOnDisk{}, resolvedPath, printer.FromContextOrDie(r.Ctx).Printf)
 		if err != nil {
 			return err
 		}

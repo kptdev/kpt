@@ -106,7 +106,19 @@ type ScanResult struct {
 // pkgPath: the single entry point most callers should use before
 // starting any KRM-assuming work.
 func Scan(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*ScanResult, error) {
-	found, optedIn, allResources, err := ScanTree(fsys, pkgPath, pkg.MatchAllKRM)
+	return scan(fsys, pkgPath, printf, false)
+}
+
+// ScanHonoringKrmignore is Scan for callers whose real reader skips
+// subpackages a parent .krmignore excludes (fn eval, fn source). fn
+// render must keep using Scan: its executor still hydrates those
+// subpackages, so it needs them validated up front.
+func ScanHonoringKrmignore(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any)) (*ScanResult, error) {
+	return scan(fsys, pkgPath, printf, true)
+}
+
+func scan(fsys filesys.FileSystem, pkgPath string, printf func(format string, args ...any), honorKrmignore bool) (*ScanResult, error) {
+	found, optedIn, allResources, err := scanTree(fsys, pkgPath, pkg.MatchAllKRM, honorKrmignore)
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
@@ -149,6 +161,14 @@ func (res *ScanResult) SkipFunc(pkgRootPath string) func(relPath string) bool {
 func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
 	found []NonKRMFile, optedIn map[string]bool, allResources map[string][]*yaml.RNode, err error,
 ) {
+	return scanTree(fsys, pkgPath, matchGlob, false)
+}
+
+// scanTree is ScanTree; honorKrmignore additionally prunes subpackages
+// the real fn reader can't reach because a parent .krmignore excludes them.
+func scanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string, honorKrmignore bool) (
+	found []NonKRMFile, optedIn map[string]bool, allResources map[string][]*yaml.RNode, err error,
+) {
 	optedIn = map[string]bool{}
 	allResources = map[string][]*yaml.RNode{}
 
@@ -156,6 +176,10 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
 	if err != nil {
 		return nil, nil, nil, err
 	}
+
+	// Loaded once, and only if a package has subpackages to prune.
+	var reachable map[string]bool
+	reachableLoaded := false
 
 	var walk func(p *pkg.Pkg, isRoot bool) error
 	walk = func(p *pkg.Pkg, isRoot bool) error {
@@ -207,7 +231,16 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
 		if subErr != nil {
 			return subErr
 		}
+		if honorKrmignore && len(subpkgs) > 0 && !reachableLoaded {
+			reachable = reachableKptfileDirs(fsys, pkgPath)
+			reachableLoaded = true
+		}
 		for _, sub := range subpkgs {
+			// DirectSubpackages ignores .krmignore; skip any subpackage
+			// the real reader can't reach, e.g. under an ignored dir.
+			if reachable != nil && !reachable[sub.UniquePath.String()] {
+				continue
+			}
 			if err := walk(sub, false); err != nil {
 				return err
 			}
@@ -219,6 +252,33 @@ func ScanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string) (
 		return nil, nil, nil, err
 	}
 	return found, optedIn, allResources, nil
+}
+
+// reachableKptfileDirs returns the directory of every Kptfile the fn
+// commands' real reader (IncludeSubpackages: true) can reach from
+// rootPath, so .krmignore is honored with kyaml's exact semantics.
+// Returns nil on any read error, meaning "don't prune": the per-package
+// reads that follow surface the real error.
+func reachableKptfileDirs(fsys filesys.FileSystem, rootPath string) map[string]bool {
+	nodes, err := (&kio.LocalPackageReader{
+		PackagePath:        rootPath,
+		PackageFileName:    kptfilev1.KptFileName,
+		IncludeSubpackages: true,
+		MatchFilesGlob:     []string{kptfilev1.KptFileName},
+		FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: fsys},
+	}).Read()
+	if err != nil {
+		return nil
+	}
+	dirs := make(map[string]bool, len(nodes))
+	for _, n := range nodes {
+		relPath, _, pathErr := kioutil.GetFileAnnotations(n)
+		if pathErr != nil {
+			return nil
+		}
+		dirs[filepath.Join(rootPath, filepath.Dir(relPath))] = true
+	}
+	return dirs
 }
 
 // liveReaderMatchGlob mirrors pkg/live's real reader (defaults to
