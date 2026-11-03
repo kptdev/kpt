@@ -63,9 +63,11 @@ func NewRunner(
 		img := opts.ResolveToImage(f.Image)
 		f.Image = img
 
-		rcOpts := []regclient.Opt{
-			regclient.WithUserAgent(UserAgent),
-			regclient.WithDockerCreds(),
+		rcOpts := []regclient.Opt{regclient.WithUserAgent(UserAgent)}
+		if opts.DockerCredsFile != "" {
+			rcOpts = append(rcOpts, regclient.WithDockerCredsFile(opts.DockerCredsFile))
+		} else {
+			rcOpts = append(rcOpts, regclient.WithDockerCreds())
 		}
 
 		if len(opts.ExtraTlsCerts) != 0 {

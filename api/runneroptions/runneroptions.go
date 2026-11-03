@@ -75,6 +75,10 @@ type RunnerOptions struct {
 	// partial image reference to a fully qualified image reference
 	ImagePrefix string
 
+	// DockerCredsFile is an optional Docker credential file used when resolving
+	// function image tags. When empty, the user's default Docker credentials are used.
+	DockerCredsFile string
+
 	LogOptions LogOptions
 
 	// FullDisplayName is the resolved display name of the package or subpackage.
