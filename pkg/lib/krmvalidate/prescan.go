@@ -122,8 +122,20 @@ func scan(fsys filesys.FileSystem, pkgPath string, printf func(format string, ar
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
-	if scanErr := DecideOutcome(found, optedIn, pkgPath); scanErr != nil {
-		return nil, scanErr
+	skipped, err := decideAndCollectSkipped(found, optedIn, pkgPath, printf)
+	if err != nil {
+		return nil, err
+	}
+	return &ScanResult{AllResources: allResources, skipped: skipped}, nil
+}
+
+// decideAndCollectSkipped is the step Scan and ScanFlatAndDecide share
+// after walking: fail on any non-KRM file whose package didn't opt in,
+// report the ones that did, and return those excused files.
+func decideAndCollectSkipped(found []NonKRMFile, optedIn map[string]bool, rootPath string,
+	printf func(format string, args ...any)) ([]NonKRMFile, error) {
+	if err := DecideOutcome(found, optedIn, rootPath); err != nil {
+		return nil, err
 	}
 	PrintSkippedSummary(printf, found, optedIn)
 
@@ -133,7 +145,7 @@ func scan(fsys filesys.FileSystem, pkgPath string, printf func(format string, ar
 			skipped = append(skipped, f)
 		}
 	}
-	return &ScanResult{AllResources: allResources, skipped: skipped}, nil
+	return skipped, nil
 }
 
 // SkippedFiles returns every non-KRM file Scan excused via the
@@ -429,16 +441,9 @@ func ScanFlatAndDecide(fsys filesys.FileSystem, pkgPath string, printf func(form
 	if err != nil {
 		return nil, fmt.Errorf("non-krm pre-scan: %w", err)
 	}
-	if scanErr := DecideOutcome(found, optedIn, pkgPath); scanErr != nil {
-		return nil, scanErr
-	}
-	PrintSkippedSummary(printf, found, optedIn)
-
-	var skipped []NonKRMFile
-	for _, f := range found {
-		if optedIn[f.PkgPath] {
-			skipped = append(skipped, f)
-		}
+	skipped, err := decideAndCollectSkipped(found, optedIn, pkgPath, printf)
+	if err != nil {
+		return nil, err
 	}
 	return &FlatScanResult{AllResources: resources, skipped: skipped}, nil
 }

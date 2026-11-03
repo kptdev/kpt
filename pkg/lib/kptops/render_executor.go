@@ -95,8 +95,8 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 		return nil, fmt.Errorf("failed to read Kptfile: %w", err)
 	}
 
-	// Non-KRM pre-scan, before any pipeline starts. See autoignore.go.
-	preScanResult, preScanErr := PreScanNonKRM(e.FileSystem, e.PkgPath, pr.Printf)
+	// Non-KRM pre-scan, before any pipeline starts. See krmvalidate.Scan.
+	preScanResult, preScanErr := krmvalidate.Scan(e.FileSystem, e.PkgPath, pr.Printf)
 	if preScanErr != nil {
 		if e.Output == nil {
 			updateRenderStatus(hctx, preScanErr)
@@ -369,7 +369,7 @@ type hydrationContext struct {
 	saveOnRenderFailure bool
 
 	// preScannedResources caches each package's resource list from the
-	// pre-scan (see autoignore.go), avoiding a second disk read.
+	// pre-scan (see krmvalidate.Scan), avoiding a second disk read.
 	preScannedResources map[string][]*yaml.RNode
 
 	// skippedNonKRMFiles is every non-KRM file excused via

@@ -23,20 +23,21 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // writeKptfile writes a minimal Kptfile at dir, optionally with the
-// AutoIgnoreNonKRMAnnotation set to "true" when optedIn is true, and
+// krmvalidate.AutoIgnoreNonKRMAnnotation set to "true" when optedIn is true, and
 // optionally with a single mutator step when withMutator is true (using
 // mockFnRuntime, so no real container/exec ever runs).
 func writeKptfile(t *testing.T, fsys filesys.FileSystem, dir, name string, optedIn, withMutator bool) {
 	t.Helper()
 	annotations := ""
 	if optedIn {
-		annotations = "  annotations:\n    " + AutoIgnoreNonKRMAnnotation + ": \"true\"\n"
+		annotations = "  annotations:\n    " + krmvalidate.AutoIgnoreNonKRMAnnotation + ": \"true\"\n"
 	}
 	pipeline := ""
 	if withMutator {
@@ -161,7 +162,7 @@ func TestNonKRM_AnnotatedPackage_SkipsInMemory_NoDiskWrite(t *testing.T) {
 
 	// The render output mentions the skip.
 	assert.Contains(t, out.String(), "notes.yaml")
-	assert.Contains(t, out.String(), AutoIgnoreNonKRMAnnotation)
+	assert.Contains(t, out.String(), krmvalidate.AutoIgnoreNonKRMAnnotation)
 }
 
 // TestNonKRM_AnnotationNotInherited verifies the annotation is scoped
@@ -259,7 +260,7 @@ func TestNonKRM_CleanTree_NoOverheadOnOutcome(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, mock.capturedItems, 1)
 	assert.ElementsMatch(t, []string{"root-pkg", "root-cm"}, mock.capturedItems[0])
-	assert.NotContains(t, out.String(), AutoIgnoreNonKRMAnnotation)
+	assert.NotContains(t, out.String(), krmvalidate.AutoIgnoreNonKRMAnnotation)
 }
 
 // TestNonKRM_AnnotatedPackage_RecordsSkipInKptfileCondition verifies a
@@ -298,7 +299,7 @@ func TestNonKRM_AnnotatedPackage_RecordsSkipInKptfileCondition(t *testing.T) {
 	assert.Equal(t, kptfilev1.ConditionTrue, cond.Status)
 	assert.Equal(t, kptfilev1.ReasonRenderSuccess, cond.Reason)
 	assert.Contains(t, cond.Message, "notes.yaml")
-	assert.Contains(t, cond.Message, AutoIgnoreNonKRMAnnotation)
+	assert.Contains(t, cond.Message, krmvalidate.AutoIgnoreNonKRMAnnotation)
 }
 
 // Low-level KRM-validity/split/decide tests live in pkg/lib/krmvalidate.
