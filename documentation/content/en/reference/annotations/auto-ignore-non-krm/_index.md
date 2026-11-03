@@ -26,18 +26,24 @@ know its name or path ahead of time.
 
 This annotation only applies to files that parse as valid YAML but
 aren't a valid KRM resource -- the definition above. A file that
-isn't valid YAML at all (invalid syntax) is a different failure
-neither this annotation nor `.krmignore` can excuse: parsing fails
-before kpt ever checks whether the content looks like a KRM resource,
-so there's no non-KRM classification to skip.
+isn't valid YAML at all (invalid syntax) is a different failure that
+this annotation does not excuse: parsing fails before kpt ever checks
+whether the content looks like a KRM resource, so there's no non-KRM
+classification to skip. This is deliberate. The annotation exists to
+let genuinely non-KRM files through, not to hide files that look like
+KRM but are broken.
 
 In practice: the error looks different (a raw parse error, not
 `resource must have` apiVersion/kind/name), it doesn't mention this
 annotation as a fix, and if a package has multiple malformed files,
 only the first one encountered is reported, not the consolidated
-"every non-KRM file across the tree" report described below. The
-only way to work around a malformed file is to fix its syntax or
-remove it.
+"every non-KRM file across the tree" report described below.
+
+[`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})
+does work for a malformed file, because it excludes the file before
+anything is parsed. It ignores any file you list, whether or not the
+file is KRM. To work around a malformed file, fix its syntax, remove
+it, or list it in `.krmignore`.
 
 ### Schema
 
