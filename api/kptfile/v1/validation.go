@@ -78,6 +78,9 @@ func (u *Upstream) validate() error {
 		if u.Git.Ref == "" {
 			return &ValidateError{Field: "upstream.git.ref", Reason: mustNotBeEmpty}
 		}
+		if err := ValidateGitDirectory(u.Git.Directory); err != nil {
+			return &ValidateError{Field: "upstream.git.directory", Value: u.Git.Directory, Reason: err.Error()}
+		}
 	}
 	if u.UpdateStrategy != "" {
 		if _, err := ToUpdateStrategy(string(u.UpdateStrategy)); err != nil {
@@ -130,8 +133,26 @@ func (l *Locator) validate() error {
 		if l.Git.Commit == "" {
 			return &ValidateError{Field: "upstreamLock.git.commit", Reason: mustNotBeEmpty}
 		}
+		if err := ValidateGitDirectory(l.Git.Directory); err != nil {
+			return &ValidateError{Field: "upstreamLock.git.directory", Value: l.Git.Directory, Reason: err.Error()}
+		}
 	}
 	return nil
+}
+
+// ValidateGitDirectory reports whether dir stays inside a git repository root.
+func ValidateGitDirectory(dir string) error {
+	if strings.ContainsRune(dir, 0) {
+		return fmt.Errorf("must not contain a NUL byte")
+	}
+	if slices.Contains(strings.FieldsFunc(dir, isRepoPathSeparator), "..") {
+		return fmt.Errorf("must not reference a path outside the repository")
+	}
+	return nil
+}
+
+func isRepoPathSeparator(r rune) bool {
+	return r == '/' || r == '\\'
 }
 
 // validate checks the PackageInfo fields.

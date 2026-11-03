@@ -97,6 +97,9 @@ func (c Command) validate(kf *kptfilev1.KptFile) error {
 	if len(g.Directory) == 0 {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
 	}
+	if err := kptfilev1.ValidateGitDirectory(g.Directory); err != nil {
+		return errors.E(op, errors.InvalidParam, fmt.Errorf("invalid directory %q: %w", g.Directory, err))
+	}
 	return nil
 }
 
@@ -171,6 +174,12 @@ func (c *Cloner) cloneAndCopy(ctx context.Context, dest string) error {
 // refs.
 func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	const op errors.Op = "fetch.ClonerUsingGitExec"
+
+	// Reject directory values that filepath.Join would resolve outside the
+	// cloned repository. Update calls this directly, without Command.validate.
+	if err := kptfilev1.ValidateGitDirectory(c.repoSpec.Path); err != nil {
+		return errors.E(op, errors.InvalidParam, fmt.Errorf("invalid directory %q: %w", c.repoSpec.Path, err))
+	}
 
 	// Create a local representation of the upstream repo. This will initialize
 	// the cache for the specified repo uri if it isn't already there. It also

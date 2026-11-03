@@ -794,6 +794,28 @@ func TestUpstreamValidation(t *testing.T) {
 			}},
 			valid: false,
 		},
+		"directory from repo root": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo:      "https://github.com/kubernetes/examples.git",
+					Directory: "/package-examples/wordpress",
+					Ref:       "main",
+				},
+			}},
+			valid: true,
+		},
+		"directory traversal": {
+			kf: KptFile{Upstream: &Upstream{
+				Type: GitOrigin,
+				Git: &Git{
+					Repo:      "https://github.com/kubernetes/examples.git",
+					Directory: "/../../etc",
+					Ref:       "main",
+				},
+			}},
+			valid: false,
+		},
 	}
 
 	runValidationCases(t, cases)
@@ -857,6 +879,18 @@ func TestUpstreamLockValidation(t *testing.T) {
 			kf: KptFile{UpstreamLock: &Locator{
 				Type: GitOrigin,
 				Git:  &GitLock{Repo: "https://github.com/kubernetes/examples.git", Ref: "main"},
+			}},
+			valid: false,
+		},
+		"directory traversal": {
+			kf: KptFile{UpstreamLock: &Locator{
+				Type: GitOrigin,
+				Git: &GitLock{
+					Repo:      "https://github.com/kubernetes/examples.git",
+					Directory: "foo/../../etc",
+					Ref:       "main",
+					Commit:    "abc123",
+				},
 			}},
 			valid: false,
 		},
@@ -1029,6 +1063,42 @@ func TestSelectorValidation(t *testing.T) {
 	}
 
 	runValidationCases(t, cases)
+}
+
+func TestValidateGitDirectory(t *testing.T) {
+	cases := []struct {
+		dir   string
+		valid bool
+	}{
+		{dir: "", valid: true},
+		{dir: "/", valid: true},
+		{dir: "/mysql", valid: true},
+		{dir: "/package-examples/wordpress", valid: true},
+		{dir: "staging/cockroachdb", valid: true},
+		{dir: "java", valid: true},
+		{dir: "foo/../bar", valid: false},
+		{dir: "foo..bar", valid: true},
+		{dir: ".", valid: true},
+		{dir: "..", valid: false},
+		{dir: "../etc", valid: false},
+		{dir: "/../../etc", valid: false},
+		{dir: "//../../etc", valid: false},
+		{dir: "foo/../../etc", valid: false},
+		{dir: `foo\..\..\etc`, valid: false},
+		{dir: "a\x00b", valid: false},
+		{dir: "foo\\bar/../../etc", valid: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.dir, func(t *testing.T) {
+			err := ValidateGitDirectory(tc.dir)
+			if tc.valid && err != nil {
+				t.Fatalf("directory %q should be valid: %s", tc.dir, err)
+			}
+			if !tc.valid && err == nil {
+				t.Fatalf("directory %q should not be valid", tc.dir)
+			}
+		})
+	}
 }
 
 func runValidationCases(t *testing.T, cases map[string]struct {

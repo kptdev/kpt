@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import (
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/util/fetch"
+	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -132,6 +133,40 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Contains(t, err.Error(), "must specify repo")
+}
+
+func TestCommand_Run_rejectDirectoryTraversal(t *testing.T) {
+	g, w, clean := setupWorkspace(t)
+	defer clean()
+
+	err := createKptfile(w, &kptfilev1.Git{
+		Repo:      "file://" + g.RepoDirectory,
+		Directory: "/../../etc",
+		Ref:       "master",
+	}, kptfilev1.ResourceMerge)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = fetch.Command{
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "outside the repository")
+}
+
+func TestClonerUsingGitExec_rejectDirectoryTraversal(t *testing.T) {
+	err := fetch.NewCloner(&gitutil.RepoSpec{
+		OrgRepo: "https://example.com/repo.git",
+		Path:    "foo/../../etc",
+		Ref:     "main",
+	}).ClonerUsingGitExec(fake.CtxWithDefaultPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "outside the repository")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.
