@@ -152,6 +152,11 @@ func UpdateStrategiesAsStrings() []string {
 	return strs
 }
 
+// UpstreamRef references an upstream package by an opaque, registry-defined name.
+type UpstreamRef struct {
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+}
+
 // Upstream is a user-specified upstream locator for a package.
 type Upstream struct {
 	// Type is the type of origin.
@@ -162,6 +167,12 @@ type Upstream struct {
 
 	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty" json:"updateStrategy,omitempty"`
+
+	// Ref locates the upstream package by name within a package registry, as an
+	// alternative or supplement to a raw Git URL. The name is opaque to kpt and
+	// interpreted by the orchestrator that manages the package; it is independent
+	// of the Git URL, so it remains valid if the URL changes.
+	Ref *UpstreamRef `yaml:"ref,omitempty" json:"ref,omitempty"`
 
 	// PreserveNulls, when true, keeps a null field (`null`, `~`, or an empty
 	// value) in the local package or upstream during resource-merge instead of

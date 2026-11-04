@@ -31,6 +31,11 @@ type UpstreamApplyConfiguration struct {
 	Git *GitApplyConfiguration `json:"git,omitempty"`
 	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy *kptfilev1.UpdateStrategyType `json:"updateStrategy,omitempty"`
+	// Ref locates the upstream package by name within a package registry, as an
+	// alternative or supplement to a raw Git URL. The name is opaque to kpt and
+	// interpreted by the orchestrator that manages the package; it is independent
+	// of the Git URL, so it remains valid if the URL changes.
+	Ref *UpstreamRefApplyConfiguration `json:"ref,omitempty"`
 	// PreserveNulls, when true, keeps a null field (`null`, `~`, or an empty
 	// value) in the local package or upstream during resource-merge instead of
 	// deleting it. Only applies to the resource-merge update strategy.
@@ -66,6 +71,14 @@ func (b *UpstreamApplyConfiguration) WithGit(value *GitApplyConfiguration) *Upst
 // If called multiple times, the UpdateStrategy field is set to the value of the last call.
 func (b *UpstreamApplyConfiguration) WithUpdateStrategy(value kptfilev1.UpdateStrategyType) *UpstreamApplyConfiguration {
 	b.UpdateStrategy = &value
+	return b
+}
+
+// WithRef sets the Ref field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Ref field is set to the value of the last call.
+func (b *UpstreamApplyConfiguration) WithRef(value *UpstreamRefApplyConfiguration) *UpstreamApplyConfiguration {
+	b.Ref = value
 	return b
 }
 
