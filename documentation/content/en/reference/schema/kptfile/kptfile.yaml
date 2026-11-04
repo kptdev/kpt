@@ -625,11 +625,21 @@ definitions:
                     Experimental: Behavior and naming are subject to change.
                 type: boolean
                 x-go-name: PreserveNulls
+            ref:
+                $ref: '#/definitions/UpstreamRef'
             type:
                 $ref: '#/definitions/OriginType'
             updateStrategy:
                 $ref: '#/definitions/UpdateStrategyType'
         title: Upstream is a user-specified upstream locator for a package.
+        type: object
+        x-go-package: github.com/kptdev/kpt/api/kptfile/v1
+    UpstreamRef:
+        properties:
+            name:
+                type: string
+                x-go-name: Name
+        title: UpstreamRef references an upstream package by an opaque, registry-defined name.
         type: object
         x-go-package: github.com/kptdev/kpt/api/kptfile/v1
     kptfile:

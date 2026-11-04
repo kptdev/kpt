@@ -716,11 +716,25 @@
           "type": "boolean",
           "x-go-name": "PreserveNulls"
         },
+        "ref": {
+          "$ref": "#/definitions/UpstreamRef"
+        },
         "type": {
           "$ref": "#/definitions/OriginType"
         },
         "updateStrategy": {
           "$ref": "#/definitions/UpdateStrategyType"
+        }
+      },
+      "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
+    },
+    "UpstreamRef": {
+      "type": "object",
+      "title": "UpstreamRef references an upstream package by an opaque, registry-defined name.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
         }
       },
       "x-go-package": "github.com/kptdev/kpt/api/kptfile/v1"
