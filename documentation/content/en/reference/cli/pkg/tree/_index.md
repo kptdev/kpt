@@ -43,12 +43,14 @@ DIR:
 #### Flags
 
 ```shell
---format:
+--output, -o:
   Output format, either "text" or "json". Defaults to "text".
-  The JSON output is a document with "success" and "tree" fields. Every node in
-  the tree has a "name", a "description" and a list of "children".
+  The JSON output is a document with a "tree" field. Every node in the tree has
+  a "name", a "description" and a list of "children".
   For a line printed as "[file.yaml]  Kind name", the name is the file and the
   description is "Kind name".
+  A package has its bare name in "name", and its type, "independent" or
+  "dependent", in a separate "type" field. Nothing else has a "type".
 ```
 
 <!--mdtogo-->
@@ -64,7 +66,7 @@ $ kpt pkg tree
 
 ```shell
 # Print the tree as JSON, for example to render it in an IDE or process it with jq.
-$ kpt pkg tree --format json
+$ kpt pkg tree -o json
 ```
 
 ```shell

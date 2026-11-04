@@ -59,30 +59,46 @@ const (
 
 // jsonTreeOutput is the document printed when the output format is JSON.
 type jsonTreeOutput struct {
-	Success bool          `json:"success"`
-	Tree    *jsonTreeNode `json:"tree"`
+	Tree *jsonTreeNode `json:"tree"`
 }
 
 // jsonTreeNode mirrors one line of the text tree. For a line printed as
 // "[file.yaml]  Kind name", Name is the file and Description is "Kind name".
 // Lines without a bracketed file, such as directories, packages and plain
 // files, only have a Name.
+//
+// A package has its bare name in Name, as for a directory, and its dependency
+// type in Type (PkgTypeIndependent or PkgTypeDependent), so that a consumer does
+// not have to parse the label the text output prints, such as
+// `Package "wordpress" (independent)`. Type is left out for anything else.
 type jsonTreeNode struct {
 	Name        string          `json:"name"`
+	Type        string          `json:"type,omitempty"`
 	Description string          `json:"description"`
 	Children    []*jsonTreeNode `json:"children"`
 }
 
-func toJSONTreeNode(n *treeprint.Node) *jsonTreeNode {
+// pkgLabel is what a directory branch of the tree stands for, kept apart from the text it is
+// printed as: the bare directory name and, for a package, its dependency type (empty if it is not
+// printed with one).
+type pkgLabel struct {
+	Name string
+	Type string
+}
+
+func toJSONTreeNode(n *treeprint.Node, labels map[treeprint.Tree]pkgLabel) *jsonTreeNode {
 	node := &jsonTreeNode{Children: make([]*jsonTreeNode, 0, len(n.Nodes))}
-	if n.Meta != nil {
+	if label, ok := labels[n]; ok {
+		node.Name = label.Name
+		node.Type = label.Type
+	} else if n.Meta != nil {
 		node.Name = fmt.Sprint(n.Meta)
 		node.Description = fmt.Sprint(n.Value)
 	} else {
 		node.Name = fmt.Sprint(n.Value)
 	}
 	for _, child := range n.Nodes {
-		node.Children = append(node.Children, toJSONTreeNode(child))
+		node.Children = append(node.Children, toJSONTreeNode(child, labels))
 	}
 	return node
 }
@@ -151,6 +167,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 
 	// add each package to the tree
 	treeIndex := map[string]treeprint.Tree{}
+	labels := map[treeprint.Tree]pkgLabel{}
 	for _, pkg := range allKeys {
 		// create a branch for this package -- search for the parent package and create
 		// the branch under it -- requires that the keys are sorted
@@ -167,7 +184,9 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		// create a new branch for the package
 		createOk := pkg != "." // special edge case logic for tree on current working dir
 		if createOk {
-			branch = branch.AddBranch(branchName(p.Root, pkg))
+			name, isPkg, pkgType := branchInfo(p.Root, pkg)
+			branch = branch.AddBranch(branchText(name, isPkg, pkgType))
+			labels[branch] = pkgLabel{Name: name, Type: pkgType}
 		}
 
 		// cache the branch for this package
@@ -227,14 +246,15 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		// A root package without upstream is not "dependent" — it simply
 		// has no upstream source (e.g. created with kpt pkg init).
 		pkgType := packageType(p.Root)
-		if pkgType == PkgTypeIndependent {
-			tree.SetValue(fmt.Sprintf(PkgNameWithDepFormat, filepath.Base(p.Root), pkgType))
-		} else {
-			tree.SetValue(fmt.Sprintf(PkgNameFormat, filepath.Base(p.Root)))
+		if pkgType != PkgTypeIndependent {
+			pkgType = ""
 		}
+		tree.SetValue(branchText(filepath.Base(p.Root), true, pkgType))
+		labels[tree] = pkgLabel{Name: filepath.Base(p.Root), Type: pkgType}
 	} else {
 		// else it is just a directory, so print only directory name
 		tree.SetValue(filepath.Base(p.Root))
+		labels[tree] = pkgLabel{Name: filepath.Base(p.Root)}
 	}
 
 	if p.Format == OutputFormatJSON {
@@ -245,7 +265,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		enc := json.NewEncoder(p.Writer)
 		enc.SetEscapeHTML(false)
 		enc.SetIndent("", "  ")
-		return enc.Encode(jsonTreeOutput{Success: true, Tree: toJSONTreeNode(root)})
+		return enc.Encode(jsonTreeOutput{Tree: toJSONTreeNode(root, labels)})
 	}
 
 	out := tree.String()
@@ -259,14 +279,29 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 // An independent package has an upstream section in its Kptfile; a dependent
 // package does not.
 func branchName(root, dirRelPath string) string {
-	name := filepath.Base(dirRelPath)
+	name, isPkg, pkgType := branchInfo(root, dirRelPath)
+	return branchText(name, isPkg, pkgType)
+}
+
+// branchInfo returns the facts branchName prints: the directory name, whether it is a package (has a
+// Kptfile) and, for a package, its type, which is empty if the Kptfile cannot be read.
+func branchInfo(root, dirRelPath string) (name string, isPkg bool, pkgType string) {
+	name = filepath.Base(dirRelPath)
 	pkgDir := filepath.Join(root, dirRelPath)
 	_, err := os.Stat(filepath.Join(pkgDir, kptfilev1.KptFileName))
 	if os.IsNotExist(err) {
-		return name
+		return name, false, ""
 	}
 	// It is a package (has Kptfile). Determine if independent or dependent.
-	pkgType := packageType(pkgDir)
+	return name, true, packageType(pkgDir)
+}
+
+// branchText is how the text output prints a directory: its bare name, or for a package
+// `Package "name"`, followed by its type when it has one.
+func branchText(name string, isPkg bool, pkgType string) string {
+	if !isPkg {
+		return name
+	}
 	if pkgType != "" {
 		return fmt.Sprintf(PkgNameWithDepFormat, name, pkgType)
 	}
