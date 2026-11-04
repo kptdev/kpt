@@ -348,7 +348,7 @@ func isKrmFile(path string) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
-	for _, name := range krmvalidate.RecognizedKustomizationFileNames() {
+	for _, name := range kptfilev1.RecognizedKustomizationFileNames() {
 		if filepath.Base(path) == name {
 			return true, nil
 		}

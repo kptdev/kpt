@@ -19,36 +19,26 @@ package krmvalidate
 
 import (
 	"fmt"
-	"path/filepath"
-	"slices"
 	"strings"
 
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const (
-	kustomizationAPIGroup = "kustomize.config.k8s.io"
-	kustomizationKind     = "Kustomization"
-)
-
-// RecognizedKustomizationFileNames are the filenames kustomize itself
-// recognizes as a kustomization root, regardless of content.
-func RecognizedKustomizationFileNames() []string {
-	return []string{
-		"kustomization.yaml",
-		"kustomization.yml",
-		"Kustomization",
-	}
-}
-
-// IsKRM reports whether n is a valid KRM resource: apiVersion and kind
-// are always required. metadata.name is required too, except for
-// kustomization files (any shape), "*List" kinds, resources using
-// metadata.generateName instead, and resources annotated local-config.
+// IsKRM reports whether n is a valid KRM resource for classifying
+// pipeline input: apiVersion and kind are always required. metadata.name
+// is required too, except for kustomization files (any shape), "*List"
+// kinds, resources using metadata.generateName instead, and resources
+// annotated local-config.
+//
+// This deliberately differs from kptfilev1.IsKRM, which validates a
+// function config and always requires a name (a function config needs a
+// stable name to be addressed by). Don't merge them: that would make
+// `fn eval --fn-config` accept generateName-only or nameless configs.
 func IsKRM(n *yaml.RNode) error {
-	if isKustomization(n) {
+	if kptfilev1.IsKustomization(n) {
 		return nil
 	}
 	meta, err := n.GetMeta()
@@ -95,29 +85,4 @@ func AreKRM(nodes []*yaml.RNode) error {
 		}
 	}
 	return nil
-}
-
-// isKustomization reports whether n is a kustomization file or resource.
-func isKustomization(n *yaml.RNode) bool {
-	resourcePath, _, err := kioutil.GetFileAnnotations(n)
-	if err == nil {
-		resourceFile := filepath.Base(resourcePath)
-		if slices.Contains(RecognizedKustomizationFileNames(), resourceFile) {
-			return true
-		}
-	}
-	meta, err := n.GetMeta()
-	if err != nil {
-		return false
-	}
-
-	if strings.HasPrefix(meta.APIVersion, kustomizationAPIGroup) {
-		return true
-	}
-
-	if meta.APIVersion == "" && meta.Kind == kustomizationKind {
-		return true
-	}
-
-	return false
 }

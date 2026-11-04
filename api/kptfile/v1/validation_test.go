@@ -401,7 +401,7 @@ kind: Kustomization
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := isKustomization(yaml.MustParse(tc.input))
+			got := IsKustomization(yaml.MustParse(tc.input))
 			if got != tc.exp {
 				t.Fatalf("got %v expected %v", got, tc.exp)
 			}
