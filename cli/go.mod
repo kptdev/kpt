@@ -2,13 +2,14 @@ module github.com/kptdev/kpt/cli
 
 go 1.26.8
 
-replace github.com/kptdev/kpt/api => ../api
+// TODO: Comment the lines below out when the next version of the API is released.
+// replace github.com/kptdev/kpt/api => ../api
 replace github.com/kptdev/kpt => ..
 
 require (
 	github.com/go-errors/errors v1.5.1
 	github.com/kptdev/kpt v1.0.2-pre.2
-	github.com/kptdev/kpt/api v1.1.1-pre.1
+	github.com/kptdev/kpt/api v1.1.1-pre.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
