@@ -260,7 +260,7 @@ func Test_GitParseArgs(t *testing.T) {
 				t.SkipNow()
 			}
 			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
-			actual, err := GitParseArgs(ctx, []string{test.ghURL, test.expected.Destination}, true)
+			actual, err := GitParseArgs(ctx, []string{test.ghURL, test.expected.Destination}, true, false)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expected, actual)
 		})

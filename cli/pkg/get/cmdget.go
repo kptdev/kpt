@@ -59,9 +59,6 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"overwrite the local destination directory if it already exists and is not the same package.")
 	c.Flags().BoolVarP(&r.createParents, "create-parents", "p", false,
 		"create parent directories if they do not exist.")
-	c.Flags().BoolVar(&r.createParents, "parents", false,
-		"create parent directories if they do not exist.")
-	_ = c.Flags().MarkHidden("parents")
 	_ = c.RegisterFlagCompletionFunc("strategy", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})

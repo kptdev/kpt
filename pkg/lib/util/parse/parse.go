@@ -35,11 +35,7 @@ type Target struct {
 	Destination string
 }
 
-func GitParseArgs(ctx context.Context, args []string, explicitDest bool, createParents ...bool) (Target, error) {
-	createParent := false
-	if len(createParents) > 0 {
-		createParent = createParents[0]
-	}
+func GitParseArgs(ctx context.Context, args []string, explicitDest bool, createParents bool) (Target, error) {
 	g := Target{}
 	if args[0] == "-" {
 		return g, nil
@@ -47,7 +43,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool, createP
 
 	// Simple parsing if contains .git{$|/)
 	if HasGitSuffix(args[0]) {
-		return targetFromPkgURL(ctx, args[0], args[1], explicitDest, createParent)
+		return targetFromPkgURL(ctx, args[0], args[1], explicitDest, createParents)
 	}
 
 	// GitHub parsing if contains github.com
@@ -56,7 +52,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool, createP
 		if err != nil {
 			return g, err
 		}
-		return targetFromPkgURL(ctx, ghPkgURL, args[1], explicitDest, createParent)
+		return targetFromPkgURL(ctx, ghPkgURL, args[1], explicitDest, createParents)
 	}
 
 	uri, version, err := getURIAndVersion(args[0])
@@ -79,7 +75,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool, createP
 		version = defaultRef
 	}
 
-	destination, err := getDest(args[1], repo, remoteDir, explicitDest, createParent)
+	destination, err := getDest(args[1], repo, remoteDir, explicitDest, createParents)
 	if err != nil {
 		return g, err
 	}
@@ -91,11 +87,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool, createP
 }
 
 // targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitDest bool, createParents ...bool) (Target, error) {
-	createParent := false
-	if len(createParents) > 0 {
-		createParent = createParents[0]
-	}
+func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitDest bool, createParents bool) (Target, error) {
 	g := Target{}
 	repo, dir, ref, err := URL(pkgURL)
 	if err != nil {
@@ -115,7 +107,7 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitD
 		}
 		ref = defaultRef
 	}
-	destination, err := getDest(dest, repo, dir, explicitDest, createParent)
+	destination, err := getDest(dest, repo, dir, explicitDest, createParents)
 	if err != nil {
 		return g, err
 	}
@@ -259,18 +251,14 @@ func getRepoAndPkg(v string) (string, string, error) {
 	return repoAndPkg[0], repoAndPkg[1], nil
 }
 
-func getDest(v, repo, subdir string, explicitDest bool, createParents ...bool) (string, error) {
-	createParent := false
-	if len(createParents) > 0 {
-		createParent = createParents[0]
-	}
+func getDest(v, repo, subdir string, explicitDest bool, createParents bool) (string, error) {
 	v = filepath.Clean(v)
 
 	f, err := os.Stat(v)
 	if os.IsNotExist(err) {
 		parent := filepath.Dir(v)
 		if _, err := os.Stat(parent); os.IsNotExist(err) {
-			if !createParent {
+			if !createParents {
 				// error -- fetch to directory where parent does not exist
 				return "", errors.Errorf("parent directory %q does not exist", parent)
 			}
