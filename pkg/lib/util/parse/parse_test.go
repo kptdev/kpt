@@ -272,10 +272,11 @@ func Test_getDest(t *testing.T) {
 	subdir := "package-examples/nginx"
 
 	tests := map[string]struct {
-		dest         func(t *testing.T) string
-		explicitDest bool
-		want         func(dest string) string
-		errS         string
+		dest          func(t *testing.T) string
+		explicitDest  bool
+		createParents bool
+		want          func(dest string) string
+		errS          string
 	}{
 		"explicit destination that does not exist yet": {
 			dest: func(t *testing.T) string {
@@ -325,12 +326,21 @@ func Test_getDest(t *testing.T) {
 			explicitDest: false,
 			errS:         "already exists",
 		},
-		"destination parent does not exist": {
+		"destination parent does not exist without createParents": {
 			dest: func(t *testing.T) string {
 				return filepath.Join(t.TempDir(), "missing-parent", "dest")
 			},
-			explicitDest: true,
-			errS:         "does not exist",
+			explicitDest:  true,
+			createParents: false,
+			errS:          "does not exist",
+		},
+		"destination parent does not exist with createParents": {
+			dest: func(t *testing.T) string {
+				return filepath.Join(t.TempDir(), "missing-parent", "sub-parent", "dest")
+			},
+			explicitDest:  true,
+			createParents: true,
+			want:          func(dest string) string { return dest },
 		},
 		"destination is a file": {
 			dest: func(t *testing.T) string {
@@ -345,7 +355,7 @@ func Test_getDest(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			dest := test.dest(t)
-			actual, err := getDest(dest, repo, subdir, test.explicitDest)
+			actual, err := getDest(dest, repo, subdir, test.explicitDest, test.createParents)
 			if test.errS != "" {
 				require.ErrorContains(t, err, test.errS)
 				return
