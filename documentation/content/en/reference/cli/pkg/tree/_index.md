@@ -66,7 +66,7 @@ $ kpt pkg tree
 
 ```shell
 # Print the tree as JSON, for example to render it in an IDE or process it with jq.
-$ kpt pkg tree -o json
+kpt pkg tree -o json
 ```
 
 ```shell

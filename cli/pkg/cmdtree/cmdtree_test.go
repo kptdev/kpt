@@ -898,8 +898,10 @@ func TestTreeCommand_outputInvalid(t *testing.T) {
 }
 
 const (
-	kptfileIndependent = "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\nupstream:\n  type: git\n  git:\n    repo: https://example.com/repo\n    directory: /%s\n    ref: v1\n  updateStrategy: resource-merge\n"
-	kptfileDependent   = "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\n"
+	kptfileIndependent = "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\n" +
+		"upstream:\n  type: git\n  git:\n    repo: https://example.com/repo\n    directory: /%s\n    ref: v1\n" +
+		"  updateStrategy: resource-merge\n"
+	kptfileDependent = "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\n"
 )
 
 func writeKptfile(t *testing.T, dir, content string) {

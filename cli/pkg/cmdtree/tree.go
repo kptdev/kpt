@@ -273,17 +273,7 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	return err
 }
 
-// branchName takes the root directory and relative path to the directory
-// and returns the branch name. For packages (directories with a Kptfile),
-// it also indicates whether the package is independent or dependent.
-// An independent package has an upstream section in its Kptfile; a dependent
-// package does not.
-func branchName(root, dirRelPath string) string {
-	name, isPkg, pkgType := branchInfo(root, dirRelPath)
-	return branchText(name, isPkg, pkgType)
-}
-
-// branchInfo returns the facts branchName prints: the directory name, whether it is a package (has a
+// branchInfo returns the facts the text output prints for a directory: the directory name, whether it is a package (has a
 // Kptfile) and, for a package, its type, which is empty if the Kptfile cannot be read.
 func branchInfo(root, dirRelPath string) (name string, isPkg bool, pkgType string) {
 	name = filepath.Base(dirRelPath)
