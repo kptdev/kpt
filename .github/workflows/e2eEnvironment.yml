@@ -58,8 +58,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - k8s: "1.35"
           - k8s: "1.36"
-          - k8s: "1.37"
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
