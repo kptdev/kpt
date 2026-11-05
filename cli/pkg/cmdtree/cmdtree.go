@@ -42,9 +42,13 @@ func GetTreeRunner(ctx context.Context, name string) *TreeRunner {
 		Short:   pkgdocs.TreeShort,
 		Long:    pkgdocs.TreeLong,
 		Example: pkgdocs.TreeExamples,
+		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Args:    cobra.MaximumNArgs(1),
 	}
+
+	c.Flags().StringVarP(&r.Output, "output", "o", OutputFormatText,
+		fmt.Sprintf("output format: %q or %q", OutputFormatText, OutputFormatJSON))
 
 	r.Command = c
 	return r
@@ -58,6 +62,17 @@ func NewCommand(ctx context.Context, name string) *cobra.Command {
 type TreeRunner struct {
 	Command *cobra.Command
 	Ctx     context.Context
+	// Output is the output format: OutputFormatText (default) or OutputFormatJSON.
+	Output string
+}
+
+func (r *TreeRunner) preRunE(_ *cobra.Command, _ []string) error {
+	switch r.Output {
+	case OutputFormatText, OutputFormatJSON:
+		return nil
+	default:
+		return fmt.Errorf("invalid --output %q: must be %q or %q", r.Output, OutputFormatText, OutputFormatJSON)
+	}
 }
 
 func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
@@ -89,6 +104,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		Filters: fltrs,
 		Outputs: []kio.Writer{TreeWriter{
 			Root:        root,
+			Format:      r.Output,
 			Writer:      printer.FromContextOrDie(r.Ctx).OutStream(),
 			NonKRMFiles: discoverNonKRMFiles(r.Ctx, resolvedPath),
 		}},
