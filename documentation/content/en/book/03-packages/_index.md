@@ -162,9 +162,26 @@ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 
 ## Excluding files with `.krmignore`
 
-A package may contain files that should not be processed by kpt, such as test fixtures or local development overrides. 
-You can exclude them by creating a `.krmignore` file in the package directory. It uses the same pattern format as
-`.gitignore` (except recursive `**` patterns are not supported).
+Every file in a package falls into one of three categories:
+
+1. **KRM files** that kpt should process: real KRM resources (`apiVersion`, `kind`, and `metadata.name` are
+   all present). These are read, hydrated, applied, and so on, as normal.
+2. **KRM-shaped files kpt should leave alone**: valid KRM resources (or ordinary files that happen to sit
+   in the package directory) that you don't want kpt to touch at all, such as test fixtures or local
+   development overrides. You exclude these yourself with `.krmignore`.
+3. **Non-KRM files kpt cannot work with**: files that look like they should be processed (a `.yaml`/`.yml`/
+   `.json` file, or a file named `Kptfile`) but aren't actually valid KRM resources, such as a Helm
+   `values.yaml`. kpt doesn't know what to do with these, so they must be excluded one way or another,
+   either manually via `.krmignore` or automatically via the
+   [`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation
+   described below. Like `.krmignore`, the annotation is scoped per package: a subpackage with its own
+   `Kptfile` does not inherit it from a parent package.
+
+### Excluding files manually with `.krmignore`
+
+You can exclude files from categories 2 and 3 above by creating a `.krmignore` file in the package
+directory. It uses the same pattern format as `.gitignore` (except recursive `**` patterns are not
+supported).
 
 For example, to exclude a `testdata/` directory and all `.bak` files:
 
@@ -173,8 +190,20 @@ testdata/
 *.bak
 ```
 
-Files matching these patterns are excluded from `kpt fn render`, `kpt fn source`, `kpt fn eval`, and `kpt live apply`. 
+Files matching these patterns are excluded from `kpt fn render`, `kpt fn source`, `kpt fn eval`, `kpt live apply`,
+`kpt live status`, `kpt live destroy`, `kpt live init`, `kpt live migrate`, and `kpt alpha live plan`.
 Each subpackage can have its own `.krmignore` that applies only within that subpackage.
+
+### Non-KRM files without `.krmignore`
+
+If a package contains a non-KRM file (category 3 above) that isn't excluded by `.krmignore`, the commands
+listed above fail before doing any work, listing every such file found across the whole package tree in
+one error. This applies to files that parse as YAML but aren't valid KRM; a file that isn't valid YAML at
+all fails differently and isn't covered by this consolidated reporting or by the annotation below -- see
+["Malformed YAML is different, and isn't covered"]({{% relref "/reference/annotations/auto-ignore-non-krm#malformed-yaml-is-different-and-isnt-covered" %}})
+for details. If you'd rather non-KRM files be skipped automatically instead of maintaining a `.krmignore`
+list by hand, see the [`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}})
+annotation.
 
 ## Editing a package
 

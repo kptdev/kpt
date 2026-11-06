@@ -25,6 +25,12 @@ Previous 1.0.0-alpha or 1.0.0-beta versions of kpt would store the inventory
 metadata in the `Kptfile`. Running this command will move the metadata from
 the `Kptfile` in a `ResourceGroup` manifest in the `resourcegroup.yaml` file.
 
+If the package contains a non-KRM file (not excluded by
+[`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `migrate` fails before
+making any changes, listing every such file found. Unlike the other `live` commands, the
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation does
+**not** unblock `migrate`: the legacy ConfigMap-based inventory reader it uses has no way to skip a file in
+memory, so `.krmignore` is the only way to exclude a non-KRM file for this command.
 
 ### Synopsis
 

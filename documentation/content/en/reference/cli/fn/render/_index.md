@@ -24,6 +24,12 @@ from A is then written to the local filesystem in-place.
 If any of the functions in the pipeline fails, then the entire pipeline is
 aborted and the local filesystem is left intact.
 
+If a package contains a non-KRM file (not excluded by
+[`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `render` fails before
+running any function, listing every such file found across the whole package tree. See the
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation to
+skip these files automatically instead.
+
 Refer to the [Declarative Functions Execution] for more details.
 
 ### Synopsis
@@ -115,7 +121,10 @@ the last render succeeded or failed.
 #### Behavior
 
 - **Success**: When rendering completes successfully, the Kptfile receives a condition with `type: Rendered`,
-`status: "True"`, and `reason: RenderSuccess`.
+`status: "True"`, and `reason: RenderSuccess`. If any non-KRM files were skipped because of the
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation, the
+condition also gets a `message` field naming them, so that fact is recorded even after this invocation's
+terminal output is gone.
 - **Failure**: When rendering fails, the Kptfile receives a condition with `type: Rendered`, `status: "False"`,
 `reason: RenderFailed`, and a `message` field containing the error details.
 - **In-place render only**: The status condition is written only when rendering in-place (the default behavior).
@@ -138,6 +147,26 @@ status:
   - type: Rendered
     status: "True"
     reason: RenderSuccess
+```
+
+If the package's Kptfile carries the `kpt.dev/auto-ignore-non-krm` annotation and non-KRM files were skipped,
+the condition instead looks like:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: my-package
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+status:
+  conditions:
+  - type: Rendered
+    status: "True"
+    reason: RenderSuccess
+    message: |-
+      These non-KRM resources were ignored during render due to the kpt.dev/auto-ignore-non-krm annotation
+      being present on this package's Kptfile: values.yaml
 ```
 
 #### Failure Example

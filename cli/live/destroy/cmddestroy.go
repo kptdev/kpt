@@ -156,7 +156,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	_, inv, err := live.Load(r.factory, path, c.InOrStdin())
+	_, inv, err := live.Load(r.ctx, r.factory, path, c.InOrStdin())
 	if err != nil {
 		return err
 	}

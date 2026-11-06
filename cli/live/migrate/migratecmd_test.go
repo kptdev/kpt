@@ -388,3 +388,142 @@ metadata:
   labels:
     cli-utils.sigs.k8s.io/inventory-id: SSSSSSSSSS-RRRRR
 `
+
+func TestKptMigrate_Run_NonKRM(t *testing.T) {
+	t.Run("non-KRM file with no annotation blocks Run with a consolidated, file-naming error", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		dir := t.TempDir()
+		err := os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(kptFile), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(dir, "values.yaml"), []byte("replicaCount: 3\n"), 0600)
+		assert.NoError(t, err)
+
+		ctx := fake.CtxWithDefaultPrinter()
+		cmLoader := manifestreader.NewManifestLoader(tf)
+		migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+		migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
+			return inventory.NewFakeClient([]object.ObjMetadata{}), nil
+		}
+
+		err = migrateRunner.Run(strings.NewReader(""), []string{dir})
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+		assert.Contains(t, err.Error(), "values.yaml")
+		assert.Contains(t, err.Error(), "1 file(s)")
+		assert.Contains(t, err.Error(), ".krmignore")
+		assert.NotContains(t, err.Error(), "add `kpt.dev/auto-ignore-non-krm", "must not suggest the annotation as a fix")
+	})
+
+	t.Run("the auto-ignore annotation does NOT unblock migrate -- still fails with the same pre-scan error", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		dir := t.TempDir()
+		kptFileWithAnnotation := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test1
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+upstreamLock:
+  type: git
+  git:
+    repo: git@github.com:seans3/blueprint-helloworld
+    directory: /
+    ref: master
+`
+		err := os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(kptFileWithAnnotation), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(dir, "values.yaml"), []byte("replicaCount: 3\n"), 0600)
+		assert.NoError(t, err)
+
+		ctx := fake.CtxWithDefaultPrinter()
+		cmLoader := manifestreader.NewManifestLoader(tf)
+		migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+		migrateRunner.dryRun = true
+		migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
+			return inventory.NewFakeClient([]object.ObjMetadata{}), nil
+		}
+
+		err = migrateRunner.Run(strings.NewReader(""), []string{dir})
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+		assert.Contains(t, err.Error(), "values.yaml")
+		assert.Contains(t, err.Error(), "1 file(s)")
+
+		// Confirm the annotation did not cause the file to be skipped or modified.
+		content, readErr := os.ReadFile(filepath.Join(dir, "values.yaml"))
+		assert.NoError(t, readErr)
+		assert.Equal(t, "replicaCount: 3\n", string(content))
+		_, statErr := os.Stat(filepath.Join(dir, ".krmignore"))
+		assert.True(t, os.IsNotExist(statErr), ".krmignore should not have been written")
+	})
+
+	t.Run("same-named non-KRM files in different subpackages are disambiguated by path", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		dir := t.TempDir()
+		app1 := filepath.Join(dir, "apps", "app1")
+		app2 := filepath.Join(dir, "apps", "app2")
+		assert.NoError(t, os.MkdirAll(app1, 0700))
+		assert.NoError(t, os.MkdirAll(app2, 0700))
+		assert.NoError(t, os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(kptFile), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app1, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: app1\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app2, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: app2\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app1, "values.yaml"), []byte("replicaCount: 1\n"), 0600))
+		assert.NoError(t, os.WriteFile(filepath.Join(app2, "values.yaml"), []byte("replicaCount: 2\n"), 0600))
+
+		ctx := fake.CtxWithDefaultPrinter()
+		cmLoader := manifestreader.NewManifestLoader(tf)
+		migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+		migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
+			return inventory.NewFakeClient([]object.ObjMetadata{}), nil
+		}
+
+		err := migrateRunner.Run(strings.NewReader(""), []string{dir})
+		if !assert.Error(t, err) {
+			t.FailNow()
+		}
+		assert.Contains(t, err.Error(), filepath.ToSlash(filepath.Join("apps", "app1", "values.yaml")))
+		assert.Contains(t, err.Error(), filepath.ToSlash(filepath.Join("apps", "app2", "values.yaml")))
+		assert.Contains(t, err.Error(), "2 file(s)")
+	})
+
+	t.Run(".krmignore still works independently of the annotation, no non-KRM-file error at all", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+		defer tf.Cleanup()
+		ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+		dir := t.TempDir()
+		err := os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(kptFile), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(dir, "values.yaml"), []byte("replicaCount: 3\n"), 0600)
+		assert.NoError(t, err)
+		err = os.WriteFile(filepath.Join(dir, ".krmignore"), []byte("values.yaml\n"), 0600)
+		assert.NoError(t, err)
+
+		ctx := fake.CtxWithDefaultPrinter()
+		cmLoader := manifestreader.NewManifestLoader(tf)
+		migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+		migrateRunner.cmInvClientFunc = func(_ context.Context, _ util.Factory) (inventory.Client, error) {
+			return inventory.NewFakeClient([]object.ObjMetadata{}), nil
+		}
+
+		err = migrateRunner.Run(strings.NewReader(""), []string{dir})
+		// The pre-scan must not block this case. Any other downstream error
+		// (e.g. from the fake ConfigMap-based inventory lookup) is tolerated.
+		if err != nil {
+			assert.NotContains(t, err.Error(), "values.yaml")
+			assert.NotContains(t, err.Error(), "must contain only KRM resources")
+		}
+	})
+}

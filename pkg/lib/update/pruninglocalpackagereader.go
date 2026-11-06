@@ -17,6 +17,7 @@ package update
 import (
 	"strings"
 
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -27,6 +28,12 @@ import (
 type PruningLocalPackageReader struct {
 	LocalPackageReader kio.LocalPackageReader
 	Exclusions         []string
+
+	// ExcludeNonKRM, if true, also drops any node failing
+	// krmvalidate.IsKRM() (e.g. a Helm values.yaml), so it's handled
+	// by ReplaceNonKRMFiles's raw-copy path instead of the 3-way
+	// merge. Must agree with getSubDirsAndNonKrmFiles's classification.
+	ExcludeNonKRM bool
 }
 
 func (p PruningLocalPackageReader) Read() ([]*yaml.RNode, error) {
@@ -52,7 +59,31 @@ func (p PruningLocalPackageReader) Read() ([]*yaml.RNode, error) {
 		}
 		filteredNodes = append(filteredNodes, node)
 	}
-	return filteredNodes, nil
+	if !p.ExcludeNonKRM {
+		return filteredNodes, nil
+	}
+
+	nonKRMPaths := make(map[string]bool)
+	for _, node := range filteredNodes {
+		if krmvalidate.IsKRM(node) != nil {
+			path, _, err := kioutil.GetFileAnnotations(node)
+			if err != nil {
+				return nil, err
+			}
+			nonKRMPaths[path] = true
+		}
+	}
+	var validNodes []*yaml.RNode
+	for _, node := range filteredNodes {
+		path, _, err := kioutil.GetFileAnnotations(node)
+		if err != nil {
+			return nil, err
+		}
+		if !nonKRMPaths[path] {
+			validNodes = append(validNodes, node)
+		}
+	}
+	return validNodes, nil
 }
 
 func (p PruningLocalPackageReader) isExcluded(path string) bool {

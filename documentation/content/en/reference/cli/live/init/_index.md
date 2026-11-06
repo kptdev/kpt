@@ -13,6 +13,12 @@ description: |
 `init` initializes the package with the name, namespace and id of the resource
 that will keep track of the package inventory.
 
+If the package contains a non-KRM file (not excluded by
+[`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `init` fails, listing
+every such file found. See the
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation to
+skip these files automatically instead.
+
 ### Synopsis
 
 <!--mdtogo:Long-->
