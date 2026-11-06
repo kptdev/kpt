@@ -8,7 +8,7 @@ go 1.26.8
 
 require (
 	github.com/go-errors/errors v1.5.1
-	github.com/kptdev/kpt v1.0.2-pre.3
+	github.com/kptdev/kpt v1.0.2-pre.4
 	github.com/kptdev/kpt/api v1.1.1-pre.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
