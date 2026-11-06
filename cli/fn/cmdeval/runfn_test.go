@@ -17,13 +17,18 @@ package cmdeval
 
 import (
 	"bytes"
+	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
+	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -749,4 +754,28 @@ func TestRunFns_mergeContainerEnv(t *testing.T) {
 			assert.Equal(t, tc.expect.GetDockerFlags(), runtimeutil.NewContainerEnvFromStringSlice(envs).GetDockerFlags())
 		})
 	}
+}
+
+func TestDefaultFnFilterProvider_execTimeout(t *testing.T) {
+	sleepBin, err := exec.LookPath("sleep")
+	if err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	r := &RunFns{
+		Ctx:           printer.WithContext(context.Background(), printer.New(out, out)),
+		ExecArgs:      []string{"30"},
+		fnResults:     fnresultv1.NewResultList(),
+		RunnerOptions: runneroptions.RunnerOptions{Timeout: 100 * time.Millisecond},
+	}
+	fltr, err := r.defaultFnFilterProvider(
+		runtimeutil.FunctionSpec{Exec: runtimeutil.ExecSpec{Path: sleepBin}}, nil, nil)
+	require.NoError(t, err)
+
+	_, err = fltr.Filter(nil)
+	assert.Error(t, err)
+	assert.Contains(t, out.String(), "Timed out: function execution timeout of 100ms exceeded")
+	require.Len(t, r.fnResults.Items, 1)
+	assert.Equal(t, -1, r.fnResults.Items[0].ExitCode)
 }
