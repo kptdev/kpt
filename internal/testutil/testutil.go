@@ -599,6 +599,20 @@ func checkoutBranch(repo string, branch string, create bool) error {
 	return nil
 }
 
+// syncWritableFile copies src to dst, forcing dst writable (module-cache
+// sources are read-only, which would break a later ReplaceData overwrite).
+func syncWritableFile(src, dst string) error {
+	if err := copyutil.SyncFile(src, dst); err != nil {
+		return err
+	}
+	// Add owner-write; keep other bits (e.g. executable) intact.
+	info, err := os.Stat(dst)
+	if err != nil {
+		return err
+	}
+	return os.Chmod(dst, info.Mode()|0200)
+}
+
 // nolint:gocyclo
 func replaceData(repo, data string) error {
 	// If the path is absolute we assume it is the full path to the
@@ -640,7 +654,7 @@ func replaceData(repo, data string) error {
 			case info.IsDir():
 				return os.Mkdir(filepath.Join(repo, rel), 0700)
 			default:
-				return copyutil.SyncFile(path, filepath.Join(repo, rel))
+				return syncWritableFile(path, filepath.Join(repo, rel))
 			}
 		}
 
@@ -676,7 +690,7 @@ func replaceData(repo, data string) error {
 				return err
 			}
 		} else {
-			err := copyutil.SyncFile(path, filepath.Join(repo, rel))
+			err := syncWritableFile(path, filepath.Join(repo, rel))
 			if err != nil {
 				return err
 			}
