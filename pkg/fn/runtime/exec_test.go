@@ -22,6 +22,7 @@ import (
 	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -89,7 +90,7 @@ func TestExecFn_Timeout(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			ctx, cancel := WithRunTimeout(context.Background(), tc.runTimeout)
+			ctx, cancel := runneroptions.WithRunTimeout(context.Background(), tc.runTimeout)
 			defer cancel()
 			fn := &ExecFn{
 				Path:     shBin,
@@ -109,7 +110,7 @@ func TestExecFn_Timeout(t *testing.T) {
 			require.ErrorAs(t, err, &execErr)
 			assert.Equal(t, tc.expectedTimeout, execErr.Timeout)
 			assert.Equal(t, tc.expectRunTimeout, execErr.RunTimeout)
-			assert.Equal(t, timeoutExitCode, execErr.ExitCode)
+			assert.Equal(t, runneroptions.TimeoutExitCode, execErr.ExitCode)
 			assert.Equal(t, tc.expectedStderr, execErr.Stderr)
 			// kpt must not have waited for the function to finish
 			assert.Less(t, time.Since(start), 10*time.Second)

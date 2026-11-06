@@ -24,6 +24,7 @@ import (
 	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 )
 
@@ -54,7 +55,7 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 // limit of ctx has passed.
 func (f *ExecFn) RunContext(ctx context.Context, r io.Reader, w io.Writer) error {
 	// setup exec run timeout
-	ctx, cancel := fnContext(ctx, f.Timeout)
+	ctx, cancel := runneroptions.WithFnTimeout(ctx, f.Timeout, defaultLongTimeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, f.Path, f.Args...)
@@ -71,7 +72,7 @@ func (f *ExecFn) RunContext(ctx context.Context, r io.Reader, w io.Writer) error
 	// The function can exit successfully and leave a child process with its
 	// output open. Then the end of ctx kills only the child, and err is nil.
 	err := runCmd(ctx, cmd)
-	if ctxErr := contextError(ctx, err, errSink.String); ctxErr != nil {
+	if ctxErr := runneroptions.ContextError(ctx, err, errSink.String, printer.TruncateOutput); ctxErr != nil {
 		return ctxErr
 	}
 	if err != nil {

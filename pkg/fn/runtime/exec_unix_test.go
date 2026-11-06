@@ -28,6 +28,7 @@ import (
 	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -103,7 +104,7 @@ func TestExecFn_TimeoutStopsChildProcesses(t *testing.T) {
 
 			var execErr *fnresultv1.ExecError
 			require.ErrorAs(t, err, &execErr)
-			assert.Equal(t, timeoutExitCode, execErr.ExitCode)
+			assert.Equal(t, runneroptions.TimeoutExitCode, execErr.ExitCode)
 			assert.Equal(t, 2*time.Second, execErr.Timeout)
 			// kpt must not have waited for the child to finish
 			assert.Less(t, time.Since(start), 10*time.Second)

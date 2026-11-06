@@ -75,13 +75,15 @@ func (fe *ExecError) String() string {
 // TimeoutMessage describes the time limit that was exceeded. It is empty if
 // the function did not time out.
 func (fe *ExecError) TimeoutMessage() string {
+	scope := "function"
 	switch {
 	case fe.Timeout == 0:
 		return ""
 	case fe.RunTimeout:
-		return fmt.Sprintf("pipeline execution timeout of %v exceeded", fe.Timeout)
+		scope = "pipeline"
+		fallthrough
 	default:
-		return fmt.Sprintf("function execution timeout of %v exceeded", fe.Timeout)
+		return fmt.Sprintf("%s execution timeout of %v exceeded", scope, fe.Timeout)
 	}
 }
 

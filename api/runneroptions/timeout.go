@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runtime
+package runneroptions
 
 import (
 	"context"
-	goerrors "errors"
+	"errors"
 	"fmt"
 	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
-	"github.com/kptdev/kpt/pkg/printer"
 )
 
-// timeoutExitCode is the exit code reported for a function that timed out.
+// TimeoutExitCode is the exit code reported for a function that timed out.
 // It is the exit code of a process that was killed by a signal.
-const timeoutExitCode = -1
+const TimeoutExitCode = -1
 
 // timeoutError is the cause of a context that ended because a time limit
 // has passed.
@@ -54,11 +53,11 @@ func WithRunTimeout(ctx context.Context, timeout time.Duration) (context.Context
 	return context.WithTimeoutCause(ctx, timeout, &timeoutError{timeout: timeout, wholeRun: true})
 }
 
-// fnContext returns the context that a single function is run with. The
+// WithFnTimeout returns the context that a single function is run with. The
 // function is limited by timeout. When timeout is zero, the function is
-// limited by the time limit of the whole run if parent has one, and by the
-// default of 5 minutes otherwise.
-func fnContext(parent context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+// limited by the time limit of the whole run if parent has one, and by
+// defaultTimeout otherwise.
+func WithFnTimeout(parent context.Context, timeout, defaultTimeout time.Duration) (context.Context, context.CancelFunc) {
 	if parent == nil {
 		parent = context.Background()
 	}
@@ -66,37 +65,38 @@ func fnContext(parent context.Context, timeout time.Duration) (context.Context, 
 		if _, ok := parent.Deadline(); ok {
 			return context.WithCancel(parent)
 		}
-		timeout = defaultLongTimeout
+		timeout = defaultTimeout
 	}
 	return context.WithTimeoutCause(parent, timeout, &timeoutError{timeout: timeout})
 }
 
-// newTimeoutExecError returns the error for a function that was killed
-// because the time limit of ctx has passed.
-func newTimeoutExecError(ctx context.Context, err error, stderr string) *fnresultv1.ExecError {
-	execErr := &fnresultv1.ExecError{
-		OriginalErr:    err,
-		ExitCode:       timeoutExitCode,
-		Stderr:         stderr,
-		TruncateOutput: printer.TruncateOutput,
-	}
-	if cause, ok := goerrors.AsType[*timeoutError](context.Cause(ctx)); ok {
-		execErr.Timeout = cause.timeout
-		execErr.RunTimeout = cause.wholeRun
-	}
-	return execErr
-}
-
-// contextError returns the error for a function whose ctx has ended, or nil
+// ContextError returns the error for a function whose ctx has ended, or nil
 // if ctx has not ended. err is the error from running the function, which is
 // nil if only a child process of the function was killed. stderr is called
-// only if ctx has ended.
-func contextError(ctx context.Context, err error, stderr func() string) error {
+// only if ctx has ended. truncateOutput is copied to the returned ExecError.
+func ContextError(ctx context.Context, err error, stderr func() string, truncateOutput bool) error {
 	switch {
-	case goerrors.Is(ctx.Err(), context.DeadlineExceeded):
-		return newTimeoutExecError(ctx, err, stderr())
+	case errors.Is(ctx.Err(), context.DeadlineExceeded):
+		return newTimeoutExecError(ctx, err, stderr(), truncateOutput)
 	case ctx.Err() != nil && err == nil:
 		return fmt.Errorf("function canceled: %w", context.Cause(ctx))
 	}
 	return nil
+}
+
+// newTimeoutExecError returns the error for a function that was killed
+// because the time limit of ctx has passed.
+func newTimeoutExecError(ctx context.Context, err error, stderr string, truncateOutput bool) *fnresultv1.ExecError {
+	execErr := &fnresultv1.ExecError{
+		OriginalErr:    err,
+		ExitCode:       TimeoutExitCode,
+		Stderr:         stderr,
+		TruncateOutput: truncateOutput,
+	}
+	var cause *timeoutError
+	if errors.As(context.Cause(ctx), &cause) {
+		execErr.Timeout = cause.timeout
+		execErr.RunTimeout = cause.wholeRun
+	}
+	return execErr
 }

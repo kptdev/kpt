@@ -141,7 +141,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, filterCLIOutputFn func(io.Reader) string) error {
 	errSink := bytes.Buffer{}
 	// setup container run timeout
-	ctx, cancel := fnContext(f.Ctx, f.Timeout)
+	ctx, cancel := runneroptions.WithFnTimeout(f.Ctx, f.Timeout, defaultLongTimeout)
 	defer cancel()
 	cmd := f.getCmd(ctx, bin)
 	cmd.Stdin = reader
@@ -149,7 +149,7 @@ func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, fil
 	cmd.Stderr = &errSink
 
 	err := cmd.Run()
-	if ctxErr := contextError(ctx, err, func() string { return filterCLIOutputFn(&errSink) }); ctxErr != nil {
+	if ctxErr := runneroptions.ContextError(ctx, err, func() string { return filterCLIOutputFn(&errSink) }, printer.TruncateOutput); ctxErr != nil {
 		return ctxErr
 	}
 	if err != nil {

@@ -1130,7 +1130,7 @@ func TestNewRunner_RunTimeout(t *testing.T) {
 	}
 
 	out := &bytes.Buffer{}
-	ctx, cancel := WithRunTimeout(
+	ctx, cancel := runneroptions.WithRunTimeout(
 		printer.WithContext(context.Background(), printer.New(out, out)), 100*time.Millisecond)
 	defer cancel()
 	opts := runneroptions.RunnerOptions{}
@@ -1145,5 +1145,5 @@ func TestNewRunner_RunTimeout(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, out.String(), "Timed out: pipeline execution timeout of 100ms exceeded")
 	require.Len(t, fnResults.Items, 1)
-	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
+	assert.Equal(t, runneroptions.TimeoutExitCode, fnResults.Items[0].ExitCode)
 }

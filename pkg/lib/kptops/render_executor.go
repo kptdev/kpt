@@ -108,7 +108,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresultv1.ResultList, error) 
 	}
 
 	// the timeout, if set, limits the run time of the whole pipeline
-	hydCtx, cancel := fnruntime.WithRunTimeout(ctx, e.RunnerOptions.Timeout)
+	hydCtx, cancel := runneroptions.WithRunTimeout(ctx, e.RunnerOptions.Timeout)
 	_, hydErr := hydrateFn(hydCtx, root, hctx)
 	cancel()
 
