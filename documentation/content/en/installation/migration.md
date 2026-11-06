@@ -223,7 +223,10 @@ cd kpt-functions-catalog/testdata/fix/nginx-v1alpha1
 
 ```shell
 # verify the version of kpt
-$ kpt version
+kpt version
+```
+
+```text
 1.0.0+
 ```
 
@@ -307,7 +310,10 @@ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 
 ```shell
 # verify the version of kpt
-$ kpt version
+kpt version
+```
+
+```text
 1.0.0+
 ```
 

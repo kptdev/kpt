@@ -48,12 +48,15 @@ DIR:
 
 ```shell
 # Show resources in the current directory.
-$ kpt pkg tree
+kpt pkg tree
 ```
 
 ```shell
 # Example output showing independent and dependent packages:
-$ kpt pkg tree wordpress/
+kpt pkg tree wordpress/
+```
+
+```text
 Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress

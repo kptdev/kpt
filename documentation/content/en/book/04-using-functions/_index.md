@@ -72,6 +72,9 @@ Let us now render the package hierarchy:
 
 ```shell
 kpt fn render wordpress
+```
+
+```text
 Package "wordpress/mysql":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
@@ -462,7 +465,10 @@ pipeline:
 When you render the package, kpt shows whether the function ran or was skipped:
 
 ```shell
-$ kpt fn render wordpress
+kpt fn render wordpress
+```
+
+```text
 Package "wordpress":
 
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
@@ -474,7 +480,10 @@ Successfully executed 1 function(s) in 1 package(s).
 If the condition is not met:
 
 ```shell
-$ kpt fn render wordpress
+kpt fn render wordpress
+```
+
+```text
 Package "wordpress":
 
 [SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" (celCondition not met)
@@ -529,7 +538,10 @@ When you invoke the render command, the `mysql` package is rendered first, and t
 The `set-label` function is then invoked on all the resources in the package hierarchy of the `wordpress` package.
 
 ```shell
-$ kpt fn render wordpress
+kpt fn render wordpress
+```
+
+```text
 Package "wordpress/mysql":
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "wordpress/mysql"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 311ms
@@ -589,7 +601,10 @@ pipeline:
 Render the package as follows:
 
 ```shell
-$ kpt fn render wordpress
+kpt fn render wordpress
+```
+
+```text
 Package "wordpress/mysql":
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on package "wordpress/mysql"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 310ms
@@ -780,7 +795,10 @@ The net effect on each directory is:
 Running `kpt fn render` on this package produces:
 
 ```shell
-$ kpt fn render app
+kpt fn render app
+```
+
+```text
 Package "app":
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s) on package "app"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
@@ -1068,6 +1086,9 @@ For example:
 
 ```shell
 kpt fn render wordpress --results-dir /tmp
+```
+
+```text
 Package "wordpress/mysql":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
@@ -1104,6 +1125,9 @@ For example, change the value of the `port` field in the `service.yaml` from `80
 
 ```shell
 kpt fn render wordpress --results-dir /tmp
+```
+
+```text
 Package "wordpress/mysql":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
