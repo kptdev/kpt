@@ -372,6 +372,41 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 				assert.Contains(t, err.Error(), "unknown update strategy \"does-not-exist\"")
 			},
 		},
+		"destination parent does not exist without create-parents flag": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "missing-parent", "my-app")}
+			},
+			runE: failRun,
+			validations: func(repo, dir string, r *get.Runner, err error) {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "parent directory")
+				assert.Contains(t, err.Error(), "does not exist")
+			},
+		},
+		"destination parent does not exist with create-parents flag": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{"--create-parents", fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "missing-parent", "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *get.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "missing-parent", "my-app"), r.Get.Destination)
+			},
+		},
+		"destination parent does not exist with -p shorthand flag": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{"-p", fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "missing-parent", "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *get.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "missing-parent", "my-app"), r.Get.Destination)
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
