@@ -605,7 +605,12 @@ func syncWritableFile(src, dst string) error {
 	if err := copyutil.SyncFile(src, dst); err != nil {
 		return err
 	}
-	return os.Chmod(dst, 0600)
+	// Add owner-write; keep other bits (e.g. executable) intact.
+	info, err := os.Stat(dst)
+	if err != nil {
+		return err
+	}
+	return os.Chmod(dst, info.Mode()|0200)
 }
 
 // nolint:gocyclo
