@@ -307,8 +307,11 @@ pipeline:
 
 Now, run `kpt fn render` on the kpt package:
 
-```bash
-$ kpt fn render
+```shell
+kpt fn render
+```
+
+```text
 Package "Gatekeeper":
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" on package "Gatekeeper"
 [FAIL] "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest" in 314ms

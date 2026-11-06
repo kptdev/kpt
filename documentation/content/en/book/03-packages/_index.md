@@ -138,6 +138,9 @@ kpt also provides the `tree` command which is handy for quickly viewing the pack
 
 ```shell
 kpt pkg tree wordpress/
+```
+
+```text
 Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
@@ -352,6 +355,9 @@ Let us revisit the `wordpress` package and see how it was composed in the first 
 
 ```shell
 kpt pkg tree wordpress/
+```
+
+```text
 Package "wordpress" (independent)
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
