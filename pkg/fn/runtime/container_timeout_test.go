@@ -23,6 +23,7 @@ import (
 	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	"github.com/kptdev/kpt/api/runneroptions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -55,7 +56,7 @@ exec sleep 30
 	var execErr *fnresultv1.ExecError
 	require.ErrorAs(t, err, &execErr)
 	assert.Equal(t, 100*time.Millisecond, execErr.Timeout)
-	assert.Equal(t, timeoutExitCode, execErr.ExitCode)
+	assert.Equal(t, runneroptions.TimeoutExitCode, execErr.ExitCode)
 	// the CLI message is filtered out, the message of the function is kept
 	assert.Equal(t, "function is stuck", execErr.Stderr)
 	assert.Less(t, time.Since(start), 10*time.Second)
@@ -86,6 +87,6 @@ sleep 1 &
 	var execErr *fnresultv1.ExecError
 	require.ErrorAs(t, err, &execErr)
 	assert.Equal(t, 100*time.Millisecond, execErr.Timeout)
-	assert.Equal(t, timeoutExitCode, execErr.ExitCode)
+	assert.Equal(t, runneroptions.TimeoutExitCode, execErr.ExitCode)
 	assert.Equal(t, "function is stuck", execErr.Stderr)
 }
