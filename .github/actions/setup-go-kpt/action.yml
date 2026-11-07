@@ -20,10 +20,6 @@ inputs:
     description: "Whether to install kpt"
     required: false
     default: "true"
-  kpt-fallback-version:
-    description: "Fallback kpt version if extraction from go.mod fails"
-    required: false
-    default: "v1.0.0"
   go-version:
     description: "Exact version for Go version setup, go-version-file is ignored if set"
     required: false
@@ -67,23 +63,19 @@ runs:
       env:
         GO_VERSION_FILE: ${{ inputs.go-version-file }}
         KPT_VERSION_FILE: ${{ inputs.kpt-version-file }}
-        KPT_FALLBACK: ${{ inputs.kpt-fallback-version }}
       run: |
         set -euo pipefail
         VERSION_FILE="${KPT_VERSION_FILE:-$GO_VERSION_FILE}"
-        KPT_VERSION=""
         if [ ! -f "$VERSION_FILE" ]; then
-          echo "::warning::kpt version file '${VERSION_FILE}' not found; using fallback ${KPT_FALLBACK}."
-        else
-          GO_MOD_DIR=$(dirname -- "$VERSION_FILE")
-          KPT_VERSION=$(cd "$GO_MOD_DIR" && go mod edit -json \
-            | jq -r '(.Require[]? | select(.Path=="github.com/kptdev/kpt") | .Version) // ""')
-          if [ -z "$KPT_VERSION" ]; then
-            echo "::warning::Could not resolve github.com/kptdev/kpt from ${VERSION_FILE}; using fallback ${KPT_FALLBACK}."
-          fi
+          echo "::error::kpt version file '${VERSION_FILE}' not found."
+          exit 1
         fi
+        GO_MOD_DIR=$(dirname -- "$VERSION_FILE")
+        KPT_VERSION=$(cd "$GO_MOD_DIR" && go mod edit -json \
+          | jq -r '(.Require[]? | select(.Path=="github.com/kptdev/kpt") | .Version) // ""')
         if [ -z "$KPT_VERSION" ]; then
-          KPT_VERSION="$KPT_FALLBACK"
+          echo "::error::Could not resolve github.com/kptdev/kpt from ${VERSION_FILE}."
+          exit 1
         fi
         echo "Using kpt version: ${KPT_VERSION}"
         echo "version=${KPT_VERSION}" >> "$GITHUB_OUTPUT"
@@ -93,5 +85,7 @@ runs:
       uses: jaxxstorm/action-install-gh-release@v2.1.0
       with:
         repo: kptdev/kpt
-        tag: ${{ steps.kpt-version.outputs.version }}
+        # The kpt CLI binaries are published on the cli/ module's release tag
+        # (e.g. cli/v1.0.2-pre.4); the root module tag carries no assets.
+        tag: cli/${{ steps.kpt-version.outputs.version }}
         chmod: 0755
