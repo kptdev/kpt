@@ -284,7 +284,7 @@ var EvalExamples = `
 
   # execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
   # in current directory
-  kpt fn eval -i set-namespace:latest --by-kind Deployment --by-name foo -- namespace=staging
+  kpt fn eval -i set-namespace:latest --match-kind Deployment --match-name foo -- namespace=staging
 
   # execute container my-fn with podman on the resources in DIR directory and
   # write output back to DIR
