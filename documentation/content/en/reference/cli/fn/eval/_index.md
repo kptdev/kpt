@@ -318,7 +318,7 @@ $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -o st
 ```shell
 # execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
 # in current directory
-kpt fn eval -i set-namespace:latest --by-kind Deployment --by-name foo -- namespace=staging
+kpt fn eval -i set-namespace:latest --match-kind Deployment --match-name foo -- namespace=staging
 ```
 
 ```shell
