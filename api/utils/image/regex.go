@@ -24,13 +24,14 @@ var (
 	ipv6PartS = `(?:[0-9a-fA-F]{1,4}:){0,7}[0-9a-fA-F]{1,4}`
 	ipv6S     = `(?:` + regexp.QuoteMeta(`[`) + `(?:` +
 		ipv6PartS + `|` + // uncompressed
+		regexp.QuoteMeta(`::`) + `|` + // fully compressed
 		regexp.QuoteMeta(`::`) + ipv6PartS + `|` + // prefix compressed
 		ipv6PartS + regexp.QuoteMeta(`::`) + ipv6PartS + `|` + // middle compressed
 		ipv6PartS + regexp.QuoteMeta(`::`) + // suffix compressed
 		`)` + regexp.QuoteMeta(`]`) + `)`
 	localhostS  = `localhost`
 	hostDomainS = `(?:` + hostPartS + `(?:(?:` + regexp.QuoteMeta(`.`) + hostPartS + `)+` + regexp.QuoteMeta(`.`) + `?|` + regexp.QuoteMeta(`.`) + `))`
-	hostUpperS  = `(?:[a-zA-Z0-9]*[A-Z][a-zA-Z0-9-]*[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[A-Z][a-zA-Z0-9]*)`
+	hostUpperS  = `(?:[a-zA-Z0-9][a-zA-Z0-9-]*)?[A-Z](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?`
 	registryS   = `(?:` +
 		`(?:` + hostDomainS + `|` + hostUpperS + `|` + ipv6S + `|` + localhostS + `)` + portS + `?|` + // name with dotted domain, upper case, or IPv6 with optional port
 		hostPartS + portS + // a short name with required port

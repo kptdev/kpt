@@ -47,9 +47,9 @@ func MatchesAnyConstraint(version string, constraints []string) bool {
 	return false
 }
 
-// FindBestSemverMatch selects the cache key whose semver tag best satisfies
-// the constraint for the given imageName. It returns the full cache key
-// (e.g. "ghcr.io/foo/bar:v1.2.3") of the highest matching version.
+// FindBestSemverMatch returns the highest semantic-version tag in cachedTags
+// that satisfies constraint, preserving the original tag string (e.g. "v1.2.3").
+// Entries that cannot be parsed as semantic versions are ignored.
 func FindBestSemverMatch(constraint string, cachedTags []string) (string, error) {
 	c, err := semver.NewConstraint(constraint)
 	if err != nil {
