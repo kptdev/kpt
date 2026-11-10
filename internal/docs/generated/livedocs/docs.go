@@ -106,9 +106,6 @@ var ApplyExamples = `
   # apply resources in the my-dir directory and wait up until 15 minutes 
   # for all the resources to be reconciled before pruning
   $ kpt live apply --reconcile-timeout=15m my-dir
-
-  # apply resources and specify how often to poll the cluster for resource status
-  $ kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir
 `
 
 var DestroyShort = `Remove all previously applied resources in a package from the cluster`

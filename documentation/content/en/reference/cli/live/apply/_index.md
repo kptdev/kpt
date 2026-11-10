@@ -130,9 +130,4 @@ $ kpt live apply
 $ kpt live apply --reconcile-timeout=15m my-dir
 ```
 
-```shell
-# apply resources and specify how often to poll the cluster for resource status
-$ kpt live apply --reconcile-timeout=15m --poll-period=5s my-dir
-```
-
 <!--mdtogo-->
