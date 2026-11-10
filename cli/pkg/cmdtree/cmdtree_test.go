@@ -17,6 +17,7 @@ package cmdtree
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -814,4 +815,187 @@ func TestTreeCommand_DedupKRMFile(t *testing.T) {
 	out := b.String()
 	assert.Contains(t, out, "[cm.yaml]  ConfigMap cfg")
 	assert.Equal(t, 1, strings.Count(out, "cm.yaml"), "cm.yaml should appear exactly once (as KRM, not duplicated)")
+}
+
+func TestTreeCommand_outputJSON(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(d, "sub"), 0700))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`kind: Deployment
+metadata:
+  name: foo
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+spec:
+  selector:
+    app: nginx
+`), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "notes.txt"), []byte("hello\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "sub", "f2.yaml"), []byte(`kind: Deployment
+metadata:
+  name: bar
+spec:
+  replicas: 3
+`), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "--output", "json"})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	var got jsonTreeOutput
+	require.NoError(t, json.Unmarshal(b.Bytes(), &got), b.String())
+
+	assert.Equal(t, jsonTreeOutput{
+		Tree: &jsonTreeNode{
+			Name: filepath.Base(d),
+			Children: []*jsonTreeNode{
+				{Name: "f1.yaml", Description: "Deployment foo", Children: []*jsonTreeNode{}},
+				{Name: "f1.yaml", Description: "Service foo", Children: []*jsonTreeNode{}},
+				{Name: "notes.txt", Children: []*jsonTreeNode{}},
+				{Name: "sub", Children: []*jsonTreeNode{
+					{Name: "f2.yaml", Description: "Deployment bar", Children: []*jsonTreeNode{}},
+				}},
+			},
+		},
+	}, got)
+}
+
+func TestTreeCommand_outputJSONEmptyChildrenAreArrays(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`kind: Deployment
+metadata:
+  name: foo
+`), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "-o", "json"})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	// Consumers should never have to handle "children": null.
+	assert.NotContains(t, b.String(), `"children": null`)
+	assert.Contains(t, b.String(), `"children": []`)
+}
+
+func TestTreeCommand_outputInvalid(t *testing.T) {
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{t.TempDir(), "--output", "yaml"})
+	r.Command.SetOut(b)
+	r.Command.SilenceUsage = true
+	r.Command.SilenceErrors = true
+
+	err := r.Command.Execute()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `invalid --output "yaml"`)
+	assert.Empty(t, b.String())
+}
+
+const (
+	kptfileIndependent = "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\n" +
+		"upstream:\n  type: git\n  git:\n    repo: https://example.com/repo\n    directory: /%s\n    ref: v1\n" +
+		"  updateStrategy: resource-merge\n"
+	kptfileDependent = "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: %s\n"
+)
+
+func writeKptfile(t *testing.T, dir, content string) {
+	t.Helper()
+	require.NoError(t, os.MkdirAll(dir, 0700))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(content), 0600))
+}
+
+// TestTreeCommand_outputJSONPackages checks that a package is reported with its bare name and its
+// type in a separate field, not as the label the text output prints, and that the type is only
+// there for a package: independent and dependent sub-packages, a plain directory, and the root.
+func TestTreeCommand_outputJSONPackages(t *testing.T) {
+	d := t.TempDir()
+	writeKptfile(t, d, fmt.Sprintf(kptfileIndependent, "wordpress", "wordpress"))
+	writeKptfile(t, filepath.Join(d, "mysql"), fmt.Sprintf(kptfileIndependent, "mysql", "mysql")) // has an upstream
+	writeKptfile(t, filepath.Join(d, "inherits"), fmt.Sprintf(kptfileDependent, "inherits"))      // no upstream
+	require.NoError(t, os.MkdirAll(filepath.Join(d, "plain"), 0700))                              // no Kptfile
+	require.NoError(t, os.WriteFile(filepath.Join(d, "mysql", "cm.yaml"), []byte("kind: ConfigMap\nmetadata:\n  name: db\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "inherits", "cm.yaml"), []byte("kind: ConfigMap\nmetadata:\n  name: app\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "plain", "cm.yaml"), []byte("kind: ConfigMap\nmetadata:\n  name: p\n"), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "-o", "json"})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	var got jsonTreeOutput
+	require.NoError(t, json.Unmarshal(b.Bytes(), &got), b.String())
+
+	// The root has an upstream, so it is independent. The label the text output prints must not
+	// leak into the structured output.
+	assert.Equal(t, filepath.Base(d), got.Tree.Name)
+	assert.Equal(t, PkgTypeIndependent, got.Tree.Type)
+	assert.NotContains(t, b.String(), "Package ")
+	assert.NotContains(t, b.String(), "(independent)")
+	assert.NotContains(t, b.String(), "(dependent)")
+
+	type want struct{ name, typ string }
+	found := map[string]want{}
+	for _, c := range got.Tree.Children {
+		found[c.Name] = want{c.Name, c.Type}
+	}
+	assert.Equal(t, want{"mysql", PkgTypeIndependent}, found["mysql"], "independent sub-package")
+	assert.Equal(t, want{"inherits", PkgTypeDependent}, found["inherits"], "dependent sub-package")
+	assert.Equal(t, want{"plain", ""}, found["plain"], "a directory without a Kptfile has no type")
+
+	// the type of a node is not set on anything but a package
+	var walk func(n *jsonTreeNode)
+	walk = func(n *jsonTreeNode) {
+		if n.Type != "" {
+			assert.Contains(t, []string{"mysql", "inherits", filepath.Base(d)}, n.Name, "type on a non-package")
+		}
+		for _, c := range n.Children {
+			walk(c)
+		}
+	}
+	walk(got.Tree)
+	assert.NotContains(t, b.String(), `"success"`)
+}
+
+// TestTreeCommand_outputJSONRootWithoutUpstream: a root package without an upstream is printed as
+// `Package "x"` with no type in the text output, so it has no type in the JSON either.
+func TestTreeCommand_outputJSONRootWithoutUpstream(t *testing.T) {
+	d := t.TempDir()
+	writeKptfile(t, d, fmt.Sprintf(kptfileDependent, "root"))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "-o", "json"})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	var got jsonTreeOutput
+	require.NoError(t, json.Unmarshal(b.Bytes(), &got), b.String())
+	assert.Equal(t, filepath.Base(d), got.Tree.Name)
+	assert.Empty(t, got.Tree.Type)
+}
+
+// TestTreeCommand_outputTextUnchanged: the text output still prints the labels.
+func TestTreeCommand_outputTextUnchanged(t *testing.T) {
+	d := t.TempDir()
+	writeKptfile(t, d, fmt.Sprintf(kptfileIndependent, "wordpress", "wordpress"))
+	writeKptfile(t, filepath.Join(d, "mysql"), fmt.Sprintf(kptfileIndependent, "mysql", "mysql"))
+	writeKptfile(t, filepath.Join(d, "inherits"), fmt.Sprintf(kptfileDependent, "inherits"))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "mysql", "cm.yaml"), []byte("kind: ConfigMap\nmetadata:\n  name: db\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "inherits", "cm.yaml"), []byte("kind: ConfigMap\nmetadata:\n  name: app\n"), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d, "-o", "text"})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	assert.Contains(t, b.String(), `Package "mysql" (independent)`)
+	assert.Contains(t, b.String(), `Package "inherits" (dependent)`)
 }
