@@ -71,7 +71,7 @@ func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
 	if errors.As(err, &deprecatedv1alpha1KptfileError) &&
 		deprecatedv1alpha1KptfileError.Version == "v1alpha1" {
 		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha1KptfileError.Version)
-		msg += "Please update the package to the latest format by following https://kpt.dev/installation/migration."
+		msg += "Please update the package to the latest format."
 
 		return ResolvedResult{
 			Message: msg,

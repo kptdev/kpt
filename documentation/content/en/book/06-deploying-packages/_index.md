@@ -69,8 +69,6 @@ For CRDs, the status computation is based on the recommended
 [convention for status fields]({{% relref "/reference/schema/crd-status-convention" %}})
 that must be followed by custom resource publishers. If CRDs follow
 these conventions, `kpt live apply` will correctly compute the reconciliation status.
-`kpt` alsohas special rules for computing status for
-[Config Connector resources]({{% relref "/reference/schema/config-connector-status-convention" %}}).
 
 Multiple resources are usually applied together and we want to know
 when all of these resources have been successfully reconciled. `kpt live apply` computes
