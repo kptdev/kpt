@@ -101,4 +101,53 @@ func TestWithFnTimeout(t *testing.T) {
 		require.True(t, ok)
 		assert.WithinDuration(t, time.Now().Add(time.Hour), deadline, time.Minute)
 	})
+
+	t.Run("expired default is reported as the function timeout", func(t *testing.T) {
+		ctx, cancel := WithFnTimeout(context.Background(), 0, time.Nanosecond)
+		defer cancel()
+		<-ctx.Done()
+		var execErr *fnresultv1.ExecError
+		require.ErrorAs(t, ContextError(ctx, nil, func() string { return "" }, false), &execErr)
+		assert.Equal(t, "function execution timeout of 1ns exceeded", execErr.TimeoutMessage())
+	})
+}
+
+func TestWithFnTimeout_RunTimeout(t *testing.T) {
+	tests := []struct {
+		name        string
+		fnTimeout   time.Duration
+		runTimeout  time.Duration
+		wantMessage string
+	}{
+		{
+			name:        "function timeout shorter than the run timeout",
+			fnTimeout:   time.Nanosecond,
+			runTimeout:  time.Hour,
+			wantMessage: "function execution timeout of 1ns exceeded",
+		},
+		{
+			name:        "function timeout longer than the run timeout",
+			fnTimeout:   time.Hour,
+			runTimeout:  time.Nanosecond,
+			wantMessage: "pipeline execution timeout of 1ns exceeded",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			runCtx, cancelRun := WithRunTimeout(context.Background(), tt.runTimeout)
+			defer cancelRun()
+			ctx, cancel := WithFnTimeout(runCtx, tt.fnTimeout, time.Hour)
+			defer cancel()
+
+			deadline, ok := ctx.Deadline()
+			require.True(t, ok)
+			assert.WithinDuration(t, time.Now().Add(min(tt.fnTimeout, tt.runTimeout)), deadline, time.Minute)
+
+			<-ctx.Done()
+			var execErr *fnresultv1.ExecError
+			require.ErrorAs(t, ContextError(ctx, nil, func() string { return "" }, false), &execErr)
+			assert.Equal(t, tt.wantMessage, execErr.TimeoutMessage())
+		})
+	}
 }
