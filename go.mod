@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt
 
-go 1.26.8
+go 1.26.9
 
 // TODO: Comment the line below out when the next version of the API is released.
 // replace github.com/kptdev/kpt/api => ./api
@@ -103,7 +103,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/net v0.54.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
