@@ -3,6 +3,7 @@ module github.com/kptdev/kpt/api
 go 1.24.0
 
 require (
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/distribution/reference v0.6.0
 	github.com/stretchr/testify v1.11.1
 	sigs.k8s.io/kustomize/kyaml v0.21.1
