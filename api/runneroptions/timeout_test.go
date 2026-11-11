@@ -66,3 +66,39 @@ func TestContextError(t *testing.T) {
 		assert.ErrorIs(t, err, context.Canceled)
 	})
 }
+
+func TestWithRunTimeout(t *testing.T) {
+	t.Run("zero timeout returns ctx as it is", func(t *testing.T) {
+		parent := context.Background()
+		ctx, cancel := WithRunTimeout(parent, 0)
+		cancel()
+		assert.Equal(t, parent, ctx)
+		assert.NoError(t, ctx.Err())
+	})
+
+	t.Run("cause names the timeout", func(t *testing.T) {
+		ctx, cancel := WithRunTimeout(context.Background(), time.Nanosecond)
+		defer cancel()
+		<-ctx.Done()
+		assert.EqualError(t, context.Cause(ctx), "timed out after 1ns")
+	})
+}
+
+func TestWithFnTimeout(t *testing.T) {
+	t.Run("nil parent", func(t *testing.T) {
+		//nolint:staticcheck // WithFnTimeout accepts a nil parent
+		ctx, cancel := WithFnTimeout(nil, time.Hour, time.Minute)
+		defer cancel()
+		deadline, ok := ctx.Deadline()
+		require.True(t, ok)
+		assert.WithinDuration(t, time.Now().Add(time.Hour), deadline, time.Minute)
+	})
+
+	t.Run("zero timeout without a run timeout uses the default", func(t *testing.T) {
+		ctx, cancel := WithFnTimeout(context.Background(), 0, time.Hour)
+		defer cancel()
+		deadline, ok := ctx.Deadline()
+		require.True(t, ok)
+		assert.WithinDuration(t, time.Now().Add(time.Hour), deadline, time.Minute)
+	})
+}
