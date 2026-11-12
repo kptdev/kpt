@@ -13,13 +13,17 @@
 # limitations under the License.
 
 name: "Setup Go and kpt"
-description: "Sets up Go from go.mod and installs kpt version matching go.mod"
+description: "Sets up Go from go.mod and installs kpt, either from the kpt-version input or the version pinned in go.mod"
 
 inputs:
   install-kpt:
     description: "Whether to install kpt"
     required: false
     default: "true"
+  kpt-version:
+    description: "Exact kpt version to install (e.g. v1.0.2-pre.4). Takes precedence over kpt-version-file."
+    required: false
+    default: ""
   go-version:
     description: "Exact version for Go version setup, go-version-file is ignored if set"
     required: false
@@ -28,7 +32,7 @@ inputs:
     required: false
     default: "go.mod"
   kpt-version-file:
-    description: "Path to the go.mod file used to resolve the kpt version. Defaults to go-version-file."
+    description: "Path to the go.mod file used to resolve the kpt version. Defaults to go-version-file. Ignored when kpt-version is set."
     required: false
     default: ""
   go-cache:
@@ -56,36 +60,72 @@ runs:
         cache: ${{ inputs.go-cache == 'true' }}
         cache-dependency-path: ${{ inputs.cache-dependency-path }}
 
-    - name: Get kpt version from go.mod
+    - name: Resolve kpt version
       if: inputs.install-kpt == 'true'
       id: kpt-version
       shell: bash
       env:
+        KPT_VERSION_INPUT: ${{ inputs.kpt-version }}
         GO_VERSION_FILE: ${{ inputs.go-version-file }}
         KPT_VERSION_FILE: ${{ inputs.kpt-version-file }}
       run: |
         set -euo pipefail
-        VERSION_FILE="${KPT_VERSION_FILE:-$GO_VERSION_FILE}"
-        if [ ! -f "$VERSION_FILE" ]; then
-          echo "::error::kpt version file '${VERSION_FILE}' not found."
-          exit 1
+        if [ -n "${KPT_VERSION_INPUT}" ]; then
+          KPT_VERSION="${KPT_VERSION_INPUT}"
+          echo "Using kpt version from kpt-version input"
+        else
+          VERSION_FILE="${KPT_VERSION_FILE:-$GO_VERSION_FILE}"
+          if [ ! -f "$VERSION_FILE" ]; then
+            echo "::error::kpt version file '${VERSION_FILE}' not found."
+            exit 1
+          fi
+          GO_MOD_DIR=$(dirname -- "$VERSION_FILE")
+          KPT_VERSION=$(cd "$GO_MOD_DIR" && go mod edit -json \
+            | jq -r '(.Require[]? | select(.Path=="github.com/kptdev/kpt") | .Version) // ""')
+          if [ -z "$KPT_VERSION" ]; then
+            echo "::error::Could not resolve github.com/kptdev/kpt from ${VERSION_FILE}."
+            exit 1
+          fi
         fi
-        GO_MOD_DIR=$(dirname -- "$VERSION_FILE")
-        KPT_VERSION=$(cd "$GO_MOD_DIR" && go mod edit -json \
-          | jq -r '(.Require[]? | select(.Path=="github.com/kptdev/kpt") | .Version) // ""')
-        if [ -z "$KPT_VERSION" ]; then
-          echo "::error::Could not resolve github.com/kptdev/kpt from ${VERSION_FILE}."
-          exit 1
-        fi
+        # Normalise to the go.mod form, e.g. 1.0.2-pre.4 -> v1.0.2-pre.4
+        case "${KPT_VERSION}" in
+          v*) ;;
+          *) KPT_VERSION="v${KPT_VERSION}" ;;
+        esac
         echo "Using kpt version: ${KPT_VERSION}"
         echo "version=${KPT_VERSION}" >> "$GITHUB_OUTPUT"
+
+    - name: Resolve kpt release tag
+      if: inputs.install-kpt == 'true'
+      id: kpt-tag
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        KPT_VERSION: ${{ steps.kpt-version.outputs.version }}
+      run: |
+        set -euo pipefail
+        # Newer kpt releases publish binaries on the cli/<version> tag (e.g. cli/v1.0.2-pre.4); 
+        # older ones on the plain <version> tag (e.g. v1.0.1).
+        # Use cli/<version> if that release exists, otherwise the plain tag.
+        STATUS=$(curl -sS --retry 3 --retry-delay 5 -o /dev/null -w '%{http_code}' \
+          -H "Authorization: Bearer ${GH_TOKEN}" \
+          -H "Accept: application/vnd.github+json" \
+          "https://api.github.com/repos/kptdev/kpt/releases/tags/cli/${KPT_VERSION}")
+        case "${STATUS}" in
+          200) TAG="cli/${KPT_VERSION}" ;;
+          404) TAG="${KPT_VERSION}" ;;
+          *)
+            echo "::error::Unexpected HTTP ${STATUS} looking up kpt release cli/${KPT_VERSION}."
+            exit 1
+            ;;
+        esac
+        echo "Using kpt release tag: ${TAG}"
+        echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
     - name: Install kpt
       if: inputs.install-kpt == 'true'
       uses: jaxxstorm/action-install-gh-release@v2.1.0
       with:
         repo: kptdev/kpt
-        # The kpt CLI binaries are published on the cli/ module's release tag
-        # (e.g. cli/v1.0.2-pre.4); the root module tag carries no assets.
-        tag: cli/${{ steps.kpt-version.outputs.version }}
+        tag: ${{ steps.kpt-tag.outputs.tag }}
         chmod: 0755
