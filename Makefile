@@ -21,7 +21,7 @@ include ./make/api.mk
 include ./make/cli.mk
 include ./make/checks.mk
 
-all: fix vet fmt lint test build tidy
+all: fix vet fmt lint test test-scripts build tidy
 
 build: cli/build
 

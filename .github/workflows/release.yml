@@ -20,7 +20,10 @@
 # See release/README.md and scripts/multimodule-release/release.sh.
 #
 # The RELEASE_TOKEN secret must be a GitHub App installation token or PAT that
-# is allowed to push to the (protected) release branch and to create tags.
+# is allowed to push to the (protected) release branch and to create tags. It is
+# stored as a secret of the "release" environment, not as a repository secret, so
+# that only runs approved by the environment's reviewers (and started from the
+# branches it allows) can read it.
 
 name: kpt multimodule release
 on:
@@ -52,6 +55,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: kpt-multimodule-release
+    environment: release
     permissions:
       contents: write
     outputs:
@@ -131,7 +135,9 @@ jobs:
           args: release --skip=validate,publish --clean --verbose -f release/tag/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          GORELEASER_CURRENT_TAG: cli/${{ steps.validate.outputs.version }}
+          # The root tag, so that GoReleaser's .Version (used for the package versions)
+          # is X.Y.Z. The binaries are still built from the checked out cli commit.
+          GORELEASER_CURRENT_TAG: ${{ steps.validate.outputs.version }}
       - name: Push branch and tags
         env:
           VERSION: ${{ steps.validate.outputs.version }}

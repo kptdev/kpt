@@ -41,8 +41,10 @@ Nothing is pushed before the build and tests have succeeded. The steps are imple
 
 ### Requirements
 
-- The `RELEASE_TOKEN` repository secret: a GitHub App installation token or PAT that may push to the (protected) release branch and
-  create tags. The default `GITHUB_TOKEN` is not sufficient for protected branches.
+- A GitHub environment named `release` containing the `RELEASE_TOKEN` secret: a GitHub App installation token or PAT that may push
+  to the (protected) release branch and create tags. The default `GITHUB_TOKEN` is not sufficient for protected branches. The
+  environment should only allow deployments from `main` and require approval from a maintainer, so the run waits for approval
+  (dry runs too) before it can read the token. Do not also define `RELEASE_TOKEN` as a repository secret.
 - The branch must not receive other commits while the workflow runs. If it does, the atomic push is rejected and nothing is published;
   run the workflow again.
 

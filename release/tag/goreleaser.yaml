@@ -22,9 +22,10 @@
 # platform specific C std library (libc) and cross-compiler to be used.
 
 # The CLI is released from tags like cli/v1.2.3. GoReleaser's monorepo.tag_prefix
-# setting is not available in the open-source build, so the workflow sets
-# GORELEASER_CURRENT_TAG=cli/v1.2.3 and the templates below strip the prefix
-# with (base .Tag).
+# setting is not available in the open-source build, and a cli/ tag is not a valid
+# version (.Version would be "cli/v1.2.3", which ends up in the deb/rpm/apk package
+# versions). The workflow therefore sets GORELEASER_CURRENT_TAG=v1.2.3, the tag of
+# the same release on the root module, while building from the checked out cli commit.
 version: 2
 env:
   - CGO_ENABLED=0
@@ -88,9 +89,6 @@ archives:
       - darwin-arm64
       - linux-amd64
       - linux-arm64
-    files:
-      - LICENSES*
-      - lib.zip*
     name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ trimprefix (base .Tag) "v" }}'
   - id: bin-only
     formats: binary

@@ -16,14 +16,16 @@
 
 # Runs go commands so that the kpt module tags, which only exist locally at
 # this point, can be resolved: the kpt repository URL is redirected to the
-# local clone and the proxy and checksum database are bypassed for kpt modules.
+# local clone, and the proxy and checksum database are bypassed for the kpt
+# modules (github.com/kptdev/kpt and everything below it) only. All other
+# modules are fetched and verified as usual.
 # Only the environment of the invoked command is changed.
 with_local_kpt() {
   GIT_CONFIG_COUNT=1 \
   GIT_CONFIG_KEY_0="url.file://${REPO_ROOT}/.git.insteadOf" \
   GIT_CONFIG_VALUE_0="https://github.com/kptdev/kpt" \
-  GOPROXY=direct \
-  GONOSUMDB="github.com/kptdev/*" \
+  GONOPROXY="github.com/kptdev/kpt" \
+  GONOSUMDB="github.com/kptdev/kpt" \
   GOFLAGS=-mod=mod \
   "$@"
 }
