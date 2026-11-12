@@ -3,7 +3,7 @@ module github.com/kptdev/kpt
 go 1.26.9
 
 // TODO: Comment the line below out when the next version of the API is released.
-// replace github.com/kptdev/kpt/api => ./api
+replace github.com/kptdev/kpt/api => ./api
 
 require (
 	github.com/Masterminds/semver/v3 v3.5.0

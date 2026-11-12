@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
@@ -47,6 +48,49 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, strings.ToLower(filepath.Join("path", "to", "pkg", "dir")), strings.ToLower(r.pkgPath))
+}
+
+func TestCmd_timeoutFlag(t *testing.T) {
+	testCases := map[string]struct {
+		args        []string
+		expected    time.Duration
+		expectedErr string
+	}{
+		"not set uses the runtime default": {
+			args:     []string{},
+			expected: 0,
+		},
+		"valid duration": {
+			args:     []string{"--timeout", "30s"},
+			expected: 30 * time.Second,
+		},
+		"negative duration": {
+			args:        []string{"--timeout", "-1s"},
+			expectedErr: "invalid timeout -1s: must not be negative",
+		},
+		"not a duration": {
+			args:        []string{"--timeout", "soon"},
+			expectedErr: "invalid argument \"soon\" for \"--timeout\" flag",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			r := NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+			r.Command.RunE = NoOpRunE
+			r.Command.SilenceErrors = true
+			r.Command.SilenceUsage = true
+			r.Command.SetArgs(append([]string{t.TempDir()}, tc.args...))
+
+			err := r.Command.Execute()
+			if tc.expectedErr != "" {
+				assert.ErrorContains(t, err, tc.expectedErr)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, r.RunnerOptions.Timeout)
+		})
+	}
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.

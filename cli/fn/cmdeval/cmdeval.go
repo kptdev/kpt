@@ -135,6 +135,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.excludeLabels, "exclude-labels", []string{}, "exclude resources matching the given labels")
 	r.Command.Flags().StringVar(
 		&r.CelCondition, "when", "", "CEL expression to determine if the function should be run")
+	r.Command.Flags().DurationVar(
+		&r.RunnerOptions.Timeout, "timeout", 0, "maximum time the function is allowed to run, e.g. 30s or 10m (default 5m)")
 
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)
@@ -478,6 +480,9 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	// separate the optional flag validation to fix linter issue: cyclomatic complexity
 
 	if err := r.RunnerOptions.ValidatePrefix(); err != nil {
+		return err
+	}
+	if err := r.RunnerOptions.ValidateTimeout(); err != nil {
 		return err
 	}
 	if err := r.validateOptionalFlags(); err != nil {

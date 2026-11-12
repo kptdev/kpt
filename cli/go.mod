@@ -3,8 +3,9 @@ module github.com/kptdev/kpt/cli
 go 1.26.9
 
 // TODO: Comment the lines below out when the next version of the API is released.
-// replace github.com/kptdev/kpt/api => ../api
-// replace github.com/kptdev/kpt => ..
+replace github.com/kptdev/kpt/api => ../api
+
+replace github.com/kptdev/kpt => ..
 
 require (
 	github.com/go-errors/errors v1.5.1
