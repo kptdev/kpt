@@ -138,6 +138,26 @@ jobs:
           # The root tag, so that GoReleaser's .Version (used for the package versions)
           # is X.Y.Z. The binaries are still built from the checked out cli commit.
           GORELEASER_CURRENT_TAG: ${{ steps.validate.outputs.version }}
+      # Done before pushing, so that a problem here cannot leave tags behind. Also
+      # runs in dry runs, to show what the release would contain.
+      - name: Prepare release notes and assets
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: |
+          ./scripts/multimodule-release/release.sh notes "$VERSION" "$BRANCH" release-notes.md
+          ./scripts/multimodule-release/release.sh assets dist release-assets
+
+          {
+            echo "## Release ${VERSION} (dry run: ${DRY_RUN})"
+            echo
+            echo "### Assets"
+            echo
+            (cd release-assets && printf -- '- %s\n' *)
+            echo
+            echo "### Release notes"
+            echo
+            cat release-notes.md
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Push branch and tags
         env:
           VERSION: ${{ steps.validate.outputs.version }}
@@ -147,9 +167,6 @@ jobs:
         env:
           VERSION: ${{ steps.validate.outputs.version }}
         run: |
-          ./scripts/multimodule-release/release.sh notes "$VERSION" release-notes.md
-          ./scripts/multimodule-release/release.sh assets dist release-assets
-
           prerelease=()
           if [[ "$VERSION" == *-* ]]; then
             prerelease=(--prerelease)

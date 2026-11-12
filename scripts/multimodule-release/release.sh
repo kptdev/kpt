@@ -22,7 +22,9 @@
 #   validate VERSION BRANCH   Validate the version/branch and print the normalized version
 #   tag VERSION               Create the bump commits and the api/, root and cli/ tags locally
 #   push VERSION BRANCH       Atomically push the branch and the three tags (DRY_RUN=true skips)
-#   notes VERSION OUTFILE     Write the combined release notes (tags must be pushed already)
+#   notes VERSION BRANCH OUTFILE
+#                             Write the combined release notes for the changes up to BRANCH
+#                             (the new tags do not need to be pushed yet)
 #   assets DIST OUTDIR        Stage the GoReleaser artifacts to attach to the release
 #
 # Environment:
@@ -55,7 +57,7 @@ main() {
     validate)     [[ $# -eq 2 ]] || usage; cmd_validate "$@" ;;
     tag)          [[ $# -eq 1 ]] || usage; cmd_tag "$@" ;;
     push)         [[ $# -eq 2 ]] || usage; cmd_push "$@" ;;
-    notes)        [[ $# -eq 2 ]] || usage; cmd_notes "$@" ;;
+    notes)        [[ $# -eq 3 ]] || usage; cmd_notes "$@" ;;
     assets)       [[ $# -eq 2 ]] || usage; cmd_assets "$@" ;;
     *)            usage ;;
   esac

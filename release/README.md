@@ -32,8 +32,10 @@ The workflow:
 4. Tags `api/v1.2.3`, bumps the api requirement in the root `go.mod` and commits, tags `v1.2.3`, bumps the kpt and api
    requirements in `cli/go.mod` and commits, tags `cli/v1.2.3`. The checks of step 2 run again on the result and the CLI is built.
 5. Builds the CLI archives, Linux packages and checksums with GoReleaser ([`release/tag/goreleaser.yaml`](tag/goreleaser.yaml)).
-6. Pushes the branch and the three tags in a single atomic push.
-7. Creates the GitHub release **named `v1.2.3`, attached to the `cli/v1.2.3` tag**, with all artifacts, and uploads SLSA provenance.
+6. Generates the release notes and stages the release assets, and prints both in the log and the job summary (also in dry
+   runs). This happens before anything is pushed.
+7. Pushes the branch and the three tags in a single atomic push.
+8. Creates the GitHub release **named `v1.2.3`, attached to the `cli/v1.2.3` tag**, with all artifacts, and uploads SLSA provenance.
    Versions with a pre-release suffix are marked as pre-releases.
 
 Nothing is pushed before the build and tests have succeeded. The steps are implemented in
@@ -51,7 +53,8 @@ Nothing is pushed before the build and tests have succeeded. The steps are imple
 ### Release notes
 
 The release notes are the GitHub generated notes for the whole repository since the previous `v*` release, followed by the
-changes scoped to `api/` and `cli/` since their previous tags. GoReleaser's changelog is disabled, because the open-source
+changes scoped to `api/` and `cli/` since their previous tags (the highest earlier tag with that prefix). The range ends at the
+release branch, so the notes can be generated before the new tags are pushed. GoReleaser's changelog is disabled, because the open-source
 version cannot scope changelogs to a module (no `monorepo` support).
 
 [`scripts/generate-folder-release-notes.sh`](../scripts/generate-folder-release-notes.sh) generates the folder scoped notes. It

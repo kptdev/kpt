@@ -30,7 +30,9 @@ version: 2
 env:
   - CGO_ENABLED=0
   - GO111MODULE=on
-# All other tags besides cli/* must not be treated as the previous CLI release.
+# Tags GoReleaser must not pick when it detects the current or previous tag by
+# itself, for example in snapshot runs. The release workflow sets
+# GORELEASER_CURRENT_TAG explicitly and does not depend on this.
 git:
   ignore_tags:
     - "v*"

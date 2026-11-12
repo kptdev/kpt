@@ -13,14 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # Release notes. Sourced by release.sh, do not execute directly.
-# Requires gh (authenticated via GH_TOKEN) and tags that exist on the remote.
+# Requires gh (authenticated via GH_TOKEN) and the previous release tags on the remote.
 
 # --- Subcommand: notes ---
 # The notes consist of the repository wide GitHub generated notes, followed by
 # the changes scoped to the api/ and cli/ modules. The previous release of
 # each is the highest earlier tag with the matching prefix.
+# The end of the range is the branch (not the new tags), so that the notes can
+# also be generated before the new tags are pushed, for example in a dry run.
+# The bump commits at the branch tip do not belong to any PR and are ignored.
 cmd_notes() {
-  local version="v${1#v}" outfile="$2"
+  local version="v${1#v}" branch="$2" outfile="$3"
   local repo="${GITHUB_REPOSITORY:-kptdev/kpt}"
   local tags
   tags="$(remote_tags | grep -Fvx -e "$version" -e "api/${version}" -e "cli/${version}")"
@@ -31,9 +34,10 @@ cmd_notes() {
   {
     if [[ -n "$prev_root" ]]; then
       gh api "repos/${repo}/releases/generate-notes" \
-        -f tag_name="$version" -f previous_tag_name="$prev_root" --jq .body
+        -f tag_name="$version" -f previous_tag_name="$prev_root" -f target_commitish="$branch" --jq .body
     else
-      gh api "repos/${repo}/releases/generate-notes" -f tag_name="$version" --jq .body
+      gh api "repos/${repo}/releases/generate-notes" \
+        -f tag_name="$version" -f target_commitish="$branch" --jq .body
     fi
 
     local module prev
@@ -42,7 +46,7 @@ cmd_notes() {
       [[ -n "$prev" ]] || continue
       printf '\n## Changes in `%s/`\n\n' "$module"
       GITHUB_REPOSITORY="$repo" "${REPO_ROOT}/scripts/generate-folder-release-notes.sh" \
-        --folder "$module" --previous-tag "$prev" --new-tag "$version" --ref "${module}/${version}" \
+        --folder "$module" --previous-tag "$prev" --new-tag "$version" --ref "$branch" \
         | sed '/^## What.s Changed$/d; /^\*\*Full Changelog/d'
     done
   } > "$outfile"
