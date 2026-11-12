@@ -37,10 +37,10 @@ There are a number of key principles to be borne in mind, with regard to configu
 * Representation of abstractions of configuration generators as data with schemas, like other configuration data.
 * Finding, filtering/querying/selecting, and/or validating configuration data that can be operated on by the given code (functions).
 * Finding and/or filtering/querying/selecting code (functions) that can operate on the resource types contained within a body of configuration data.
-* Actuation (reconciliation of the configuration data with the live state) that is separate from the transformation of the configuration data, and is driven by the declarative data model.
+* Actuation (reconciliation of configuration data with live state) that is separate from the transformation of configuration data, and is driven by the declarative data model.
 * Transformations, particularly value propagation, are preferable to wholesale configuration generation, except when the expansion is dramatic (for example, >10x).
 * Transformation input generation should usually be decoupled from propagation.
-* Deployment context inputs should be taken from well-defined "provider context" objects.
+* Deployment context inputs should be taken from well-defined “provider context” objects.
 * Identifiers and references should be declarative.
 * The live state should be linked back to the sources of truth (configuration).
 
@@ -53,9 +53,8 @@ The kpt toolchain includes the following components:
   resource pruning, aggregated status and observability, and an improved preview experience.
 
 - [**Function SDK**](https://github.com/kptdev/krm-functions-sdk): Any general-purpose or domain-specific language can
-  be used to create functions to transform and/or validate the YAML KRM input/output format. However, we provide
-  software development kits (SDKs) to simplify the function authoring process, in
-  [Go](../05-developing-functions/#developing-in-Go). 
+  be used to create functions to transform and/or validate the YAML KRM input/output format. However, we provide SDKs to
+  simplify the function authoring process, in [Go]({{% relref "05-developing-functions/#developing-in-Go" %}}).
 
 - [**Function catalog**](https://catalog.kpt.dev): This is a catalog of off-the-shelf, tested functions. kpt makes
   configurations easy to create and transform, via reusable functions. Because the functions are expected to be used for
@@ -74,17 +73,18 @@ Validation goes hand-in-hand with customization. KRM functions can be used to au
 
 A kpt package is a bundle of configuration _data_. It is represented as a directory tree containing the KRM resources using YAML as the file format.
 
-A package is explicitly declared using a file named `Kptfile`. This file contains a KRM resource of type `Kptfile`. The Kptfile contains metadata about the package and is simply a regular resource in the YAML format.
-
-Just as directories can be nested, a package can contain another package. This is called a _subpackage_.
+A package is explicitly declared using a file named `Kptfile`. This file  contains a KRM resource of type `Kptfile`. The Kptfile contains metadata about the package and is simply a regular resource in the YAML format.
 
 ### Kptfile annotations
 
 The Kptfile supports annotations that control package-level behavior:
 
 - **`kpt.dev/bfs-rendering`**: When set to `"true"`, this annotation renders the package hierarchy in breadth-first order, instead of the default depth-first
-  post-order.
-- **`kpt.dev/save-on-render-failure`**: When set to `"true"`, this annotation saves partially rendered resources to disk, even when rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is essential for programmatic package rendering scenarios, where preserving partial progress is valuable.
+post-order.
+- **`kpt.dev/save-on-render-failure`**: When set to `"true"`, this annotation saves partially rendered resources to disk, even when rendering fails, instead
+of reverting all changes. This is particularly useful for debugging render failures and is essential for programmatic package rendering scenarios, where preserving partial progress is valuable.
+
+Just as directories can be nested, a package can contain another package. This is called a _subpackage_.
 
 These annotations are read from the Kptfile of the invoked package and applied to all subpackages recursively. In case
 if these annotations are defined in the Kptfile of the subpackages, they are ignored. If an subpackage is rendered
@@ -153,7 +153,7 @@ three direct resources in three files:
 2. `wordpress/mysql`: This is a subpackage of the `wordpress` package, since it contains a `Kptfile`. This package contains three resources in the 
 `wordpress/mysql/deployment.yaml` file.
 
-kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the local filesystem using `kpt pkg` commands. All the other commands (namely,
+kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the localfilesystem using `kpt pkg` commands. All other functionalities (namely,
 `kpt fn` and `kpt live`) use the package from the local filesystem, rather than the remote Git repository. It can be thought of as the _vendoring_ used by tooling for some programming languages. The main difference is that kpt is designed to enable you to modify the vendored package on the local filesystem, and then update the package by merging the local and upstream changes.
 
 There is one scenario where a Kptfile is implicit: you can use kpt to fetch any Git directory containing KRM resources, even if the directory does not contain a `Kptfile`. Effectively, you are telling kpt to treat the Git directory as a package. kpt automatically creates the `Kptfile` on the local filesystem to keep track of the upstream repository. This means that kpt is compatible with a
@@ -165,6 +165,7 @@ For example, `spark` is essentially a vanilla directory of KRM:
 kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/spark
 ```
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 Details of how to work with packages are set out in [Chapter 3](../03-packages).
@@ -197,6 +198,9 @@ pipeline. See [Chapter 4]({{% relref "/book/04-using-functions" %}}) for how fun
 this annotation, and the
 [`local-config` annotation reference]({{% relref "/reference/annotations/local-config" %}}) for
 full details.
+=======
+Details of how to work with packages are set out in [Chapter 3]({{% relref "/book/03-packages" %}}).
+>>>>>>> de0a38c80 (Proofreading up to kptfile annotations.)
 
 ### Local Configuration
 
@@ -270,6 +274,7 @@ Let us suppose that you have rendered the package, and would like to deploy it t
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 First, use the `kpt live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
 =======
 First, use the kpt `live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
@@ -277,6 +282,9 @@ First, use the kpt `live apply --dry-run` command to validate the resources in y
 =======
 First, use the `kpt live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
 >>>>>>> aa9e252df (Apply suggestions from code review)
+=======
+First, use the kpt `live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
+>>>>>>> de0a38c80 (Proofreading up to kptfile annotations.)
 
 Typically, it is best to store the package in Git:
 
@@ -289,10 +297,14 @@ The publishing flow is orthogonal to the deployment flow. This allows you to act
 ## Functions
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 A Kubernetes Resource Model (KRM) function (formerly called a _kpt function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. KRM functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
 =======
 A Kubernetes Resource Model (KRM) function (formerly called a _kpt_ function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. kpt functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
 >>>>>>> bba110b3d (Proofreading up to kptfile annotations.)
+=======
+A Kubernetes Resource Model (KRM) function (formerly called a _kpt_ function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. kpt functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
+>>>>>>> de0a38c80 (Proofreading up to kptfile annotations.)
 
 - Enforce all `Namespace` resources to have a `cost-center` label.
 - Add a label to resources based on certain filtering criteria.
