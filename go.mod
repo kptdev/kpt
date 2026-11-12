@@ -7,7 +7,6 @@ go 1.26.9
 
 require (
 	github.com/Masterminds/semver/v3 v3.5.0
-	github.com/bytecodealliance/wasmtime-go v1.0.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.7
 	github.com/distribution/reference v0.6.0
 	github.com/go-errors/errors v1.5.1
@@ -18,10 +17,10 @@ require (
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
-	github.com/prep/wasmexec v0.0.0-20220807105708-6554945c1dec
 	github.com/regclient/regclient v0.11.5
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
+	github.com/tetratelabs/wazero v1.12.0
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/v3 v3.5.2
 	k8s.io/api v0.36.1

@@ -47,6 +47,8 @@ linters:
       line-length: 170
     revive:
       confidence: .85
+    goconst:
+      min-occurrences: 5
   exclusions:
     generated: lax
     presets:

@@ -28,6 +28,7 @@ type WasmRuntime string
 
 const (
 	Wasmtime WasmRuntime = "wasmtime"
+	Wazero   WasmRuntime = "wazero"
 	Nodejs   WasmRuntime = "nodejs"
 
 	WasmRuntimeEnv = "KPT_FN_WASM_RUNTIME"
@@ -35,15 +36,17 @@ const (
 	jsEntrypointFunction = "processResourceList"
 )
 
+var wasmtimeErr = fmt.Errorf("`%s` is no longer supported because of compile issues, use `%s` instead", Wasmtime, Wazero)
+
 type WasmFn struct {
 	runtimeType WasmRuntime
 
-	wasmtime *WasmtimeFn
-	nodejs   *WasmNodejsFn
+	wazero *WazeroFn
+	nodejs *WasmNodejsFn
 }
 
 func NewWasmFn(loader WasmLoader) (*WasmFn, error) {
-	switch os.Getenv(WasmRuntimeEnv) {
+	switch rt := os.Getenv(WasmRuntimeEnv); rt {
 	case string(Nodejs):
 		nf, err := NewNodejsFn(loader)
 		if err != nil {
@@ -53,19 +56,21 @@ func NewWasmFn(loader WasmLoader) (*WasmFn, error) {
 			runtimeType: Nodejs,
 			nodejs:      nf,
 		}, nil
+	case string(Wasmtime):
+		return nil, wasmtimeErr
 	case "":
 		fallthrough
-	case string(Wasmtime):
-		wf, err := NewWasmtimeFn(loader)
+	case string(Wazero):
+		wf, err := NewWazeroFn(loader)
 		if err != nil {
 			return nil, err
 		}
 		return &WasmFn{
-			runtimeType: Wasmtime,
-			wasmtime:    wf,
+			runtimeType: Wazero,
+			wazero:      wf,
 		}, nil
 	default:
-		return nil, fmt.Errorf("unsupported wasm runtime: %v", os.Getenv(WasmRuntimeEnv))
+		return nil, fmt.Errorf("unsupported wasm runtime: `%s`", rt)
 	}
 }
 
@@ -73,8 +78,10 @@ func (f *WasmFn) Run(r io.Reader, w io.Writer) error {
 	switch f.runtimeType {
 	case Nodejs:
 		return f.nodejs.Run(r, w)
+	case Wazero:
+		return f.wazero.Run(r, w)
 	case Wasmtime:
-		return f.wasmtime.Run(r, w)
+		return wasmtimeErr
 	default:
 		return fmt.Errorf("unknown wasm runtime type: %q", f.runtimeType)
 	}
