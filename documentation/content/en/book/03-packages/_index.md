@@ -109,6 +109,57 @@ In this case, the `mysql` subpackage is a _dependent package_. The upstream pack
 inferred from the parent package. Think of the `Kptfile` in the `mysql` package as implicitly inheriting the `upstream` section
 of its parent, with the only difference being that the `upstream.directory` in the subpackage instead points to `/package-examples/wordpress/mysql`.
 
+### Fetching from private HTTPS repositories
+
+kpt uses the Git executable to fetch packages, so it can use the same
+[credential helpers](https://git-scm.com/docs/gitcredentials) as Git. Configure
+a helper for the user account that runs kpt before fetching a private package.
+A user-level Git configuration makes the helper available to the repositories
+in kpt's cache as well as your working directory.
+
+kpt disables terminal credential prompts by setting `GIT_TERMINAL_PROMPT=0`.
+A configured helper can still supply credentials, but kpt cannot ask you to
+enter a username or token in the terminal. For GitHub, GitLab, or Bitbucket,
+use a helper that supports your host, such as
+[Git Credential Manager](https://github.com/git-ecosystem/git-credential-manager).
+
+For GitHub, another option is to configure the
+[GitHub CLI as Git's credential helper](https://cli.github.com/manual/gh_auth_setup-git).
+With the GitHub CLI installed, authenticate and configure Git:
+
+```shell
+gh auth login --hostname github.com --git-protocol https
+gh auth setup-git --hostname github.com
+```
+
+Replace *OWNER* and *PRIVATE_REPO* with your repository's owner and name. Verify
+that Git can access it without terminal prompts:
+
+```shell
+GIT_TERMINAL_PROMPT=0 git ls-remote https://github.com/OWNER/PRIVATE_REPO.git
+```
+
+Then fetch a package using its HTTPS URL. In this example, the package is in
+*packages/app* on the *main* branch:
+
+```shell
+kpt pkg get https://github.com/OWNER/PRIVATE_REPO.git/packages/app@main app
+```
+
+Keep tokens out of repository URLs. kpt records upstream URLs in the `Kptfile`,
+and Git also stores remote URLs in the repository cache. Let the credential
+helper supply authentication separately.
+
+If the package has private remote subpackages, the helper must also supply
+credentials with read access to each subpackage's repository. This applies to
+later `kpt pkg update` operations as well as the initial fetch.
+
+In CI, configure the helper for the account running the job and provide its
+credentials through the CI system's secret configuration. When using the
+GitHub CLI, set `GH_TOKEN` from a secret with access to the required private
+repositories, then run `gh auth setup-git --hostname github.com` before kpt.
+The token does not need to appear in the package URL or `Kptfile`.
+
 ### Package name and identifier
 
 It is possible to specify a different local directory name to the `get` command. For example, the following command fetches the packages to a directory named `mywordpress`:
