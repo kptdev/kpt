@@ -12,28 +12,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# Unit tests for lib/semver.sh. Run: scripts/multimodule-release/test-semver.sh
 
-set -euo pipefail
+# Unit tests for semver.sh. Run: make test-scripts
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/lib/common.sh"
-source "${SCRIPT_DIR}/lib/semver.sh"
+source "${SCRIPT_DIR}/testing.sh"
+source "${SCRIPT_DIR}/common.sh"
+source "${SCRIPT_DIR}/semver.sh"
 
-failures=0
-expect_cmp() {
-  local got
-  got="$(semver_cmp "$1" "$2")"
-  if [[ "$got" != "$3" ]]; then
-    echo "FAIL: semver_cmp $1 $2 = $got, want $3"
-    failures=$((failures + 1))
-  fi
+expect_cmp() { # A B WANT
+  assert_eq "$3" "$(semver_cmp "$1" "$2")" "semver_cmp $1 $2"
 }
-expect_valid() {
-  if is_semver "$1"; then got=valid; else got=invalid; fi
-  if [[ "$got" != "$2" ]]; then
-    echo "FAIL: is_semver $1 = $got, want $2"
-    failures=$((failures + 1))
-  fi
+expect_valid() { # VERSION valid|invalid
+  local got=invalid
+  if is_semver "$1"; then got=valid; fi
+  assert_eq "$2" "$got" "is_semver '$1'"
 }
 
 expect_cmp v1.0.0 v1.0.0 0
@@ -61,12 +54,9 @@ expect_valid latest invalid
 expect_valid "v1.2.3 " invalid
 
 tags=$'v1.0.2-pre.4\nv1.0.2-pre.10\nv1.0.1\napi/v1.1.1-pre.2\napi/v1.1.0\ncli/v1.0.2-pre.4\nporch/v9.0.0'
-[[ "$(latest_semver_tag "" <<< "$tags")" == v1.0.2-pre.10 ]] || { echo "FAIL: latest root"; failures=$((failures + 1)); }
-[[ "$(latest_semver_tag "api/" <<< "$tags")" == api/v1.1.1-pre.2 ]] || { echo "FAIL: latest api"; failures=$((failures + 1)); }
-[[ "$(latest_semver_tag "cli/" <<< "$tags")" == cli/v1.0.2-pre.4 ]] || { echo "FAIL: latest cli"; failures=$((failures + 1)); }
+assert_eq v1.0.2-pre.10 "$(latest_semver_tag "" <<< "$tags")" "latest root tag"
+assert_eq api/v1.1.1-pre.2 "$(latest_semver_tag "api/" <<< "$tags")" "latest api tag"
+assert_eq cli/v1.0.2-pre.4 "$(latest_semver_tag "cli/" <<< "$tags")" "latest cli tag"
+assert_eq "" "$(latest_semver_tag "other/" <<< "$tags")" "no tag for an unknown prefix"
 
-if ((failures > 0)); then
-  echo "$failures failure(s)"
-  exit 1
-fi
-echo "All semver tests passed"
+finish

@@ -84,4 +84,4 @@ https://github.com/kptdev/kpt/releases/download/cli/v1.2.3/kpt_linux_amd64-1.2.3
 Local development can use a gitignored `go.work` (`make work`) so builds see the sibling modules without committed `replace`
 directives.
 
-To test the version logic: `scripts/multimodule-release/test-semver.sh`.
+The release scripts have unit tests (`scripts/multimodule-release/lib/test-*.sh`) that run in CI. Run them with `make test-scripts`.

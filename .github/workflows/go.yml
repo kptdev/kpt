@@ -83,6 +83,8 @@ jobs:
         run: make fix vet fmt lint
       - name: Test with Coverage
         run: make test-coverage
+      - name: Script Tests
+        run: make test-scripts
       - name: Docker Runtime Tests
         run: make test-docker
         env:

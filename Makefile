@@ -59,6 +59,13 @@ generate: install-mdtogo api/generate
 	go fmt ./internal/docs/generated/...
 	$(MAKE) schema
 
+# Runs the unit tests of the shell scripts: every scripts/**/test-*.sh.
+.PHONY: test-scripts
+test-scripts:
+	@find scripts -name 'test-*.sh' | sort | while read -r t; do \
+		echo "=== $$t"; bash "$$t" || exit 1; \
+	done
+
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
 # KRM_FN_RUNTIME can be set to select the desired function runtime.
