@@ -8,6 +8,8 @@
 //   nil, and storeValue encodes it as undefined. Go 1.23+'s syscall package
 //   requires this to initialize.
 // - ResetMemoryDataView is a no-op instead of logging "NOT IMPLEMENTED".
+// - removed the waPC support (the wapc global and Invoke) and the debug
+//   logging, which kpt does not use.
 
 package wasmexec
 
@@ -28,23 +30,6 @@ const nanHead = 0x7FF80000
 // NaN describes a not-a-number value.
 var NaN = math.NaN()
 
-// invokeContext keeps track of the response from the guest during an Invoke
-// call.
-type invokeContext struct {
-	guestResp []byte
-	guestErr  string
-	success   chan bool
-}
-
-func newInvokeContext() *invokeContext {
-	return &invokeContext{success: make(chan bool, 1)}
-}
-
-// debugLogger describes an instance that has implemented a debug logger.
-type debugLogger interface {
-	Debug(format string, params ...any)
-}
-
 // errorLogger describes an instance that has implemented an error logger.
 type errorLogger interface {
 	Error(format string, params ...any)
@@ -60,22 +45,14 @@ type exiter interface {
 	Exit(code int)
 }
 
-// hostCaller describes an instance that has implemented the waPC HostCall method.
-type hostCaller interface {
-	HostCall(string, string, string, []byte) ([]byte, error)
-}
-
 // Module implements the JavaScript imports that a Go program compiled with
 // GOOS=js expects.
 type Module struct {
-	instance      Instance
-	invokeContext *invokeContext
+	instance Instance
 
-	debugLog debugLogger
 	errorLog errorLogger
 	writer   fdWriter
 	exit     exiter
-	waPC     hostCaller
 
 	idcounter uint32
 	ids       map[any]uint32
@@ -85,21 +62,17 @@ type Module struct {
 
 // New returns a new Module.
 func New(instance Instance) *Module {
-	debugLog, _ := instance.(debugLogger)
 	errorLog, _ := instance.(errorLogger)
 	writer, _ := instance.(fdWriter)
 	exit, _ := instance.(exiter)
-	waPC, _ := instance.(hostCaller)
 
 	var mod *Module
 	mod = &Module{
 		instance: instance,
 
-		debugLog: debugLog,
 		errorLog: errorLog,
 		writer:   writer,
 		exit:     exit,
-		waPC:     waPC,
 
 		idcounter: 10,
 		refcounts: make(map[uint32]int32),
@@ -260,7 +233,7 @@ func New(instance Instance) *Module {
 
 									n, err := mod.write(fd, buf.data)
 									if err != nil {
-										callback.fn(errorResponse(eNOSYS))
+										callback.fn(errorResponse())
 										return nil
 									}
 
@@ -269,29 +242,29 @@ func New(instance Instance) *Module {
 								},
 							},
 
-							"chmod":     errorCallback(eNOSYS),
-							"chown":     errorCallback(eNOSYS),
-							"close":     errorCallback(eNOSYS),
-							"fchmod":    errorCallback(eNOSYS),
-							"fchown":    errorCallback(eNOSYS),
-							"fstat":     errorCallback(eNOSYS),
-							"fsync":     errorCallback(eNOSYS),
-							"ftruncate": errorCallback(eNOSYS),
-							"lchown":    errorCallback(eNOSYS),
-							"link":      errorCallback(eNOSYS),
-							"lstat":     errorCallback(eNOSYS),
-							"mkdir":     errorCallback(eNOSYS),
-							"open":      errorCallback(eNOSYS),
-							"read":      errorCallback(eNOSYS),
-							"readdir":   errorCallback(eNOSYS),
-							"readlink":  errorCallback(eNOSYS),
-							"rename":    errorCallback(eNOSYS),
-							"rmdir":     errorCallback(eNOSYS),
-							"stat":      errorCallback(eNOSYS),
-							"symlink":   errorCallback(eNOSYS),
-							"truncate":  errorCallback(eNOSYS),
-							"unlink":    errorCallback(eNOSYS),
-							"utimes":    errorCallback(eNOSYS),
+							"chmod":     errorCallback(),
+							"chown":     errorCallback(),
+							"close":     errorCallback(),
+							"fchmod":    errorCallback(),
+							"fchown":    errorCallback(),
+							"fstat":     errorCallback(),
+							"fsync":     errorCallback(),
+							"ftruncate": errorCallback(),
+							"lchown":    errorCallback(),
+							"link":      errorCallback(),
+							"lstat":     errorCallback(),
+							"mkdir":     errorCallback(),
+							"open":      errorCallback(),
+							"read":      errorCallback(),
+							"readdir":   errorCallback(),
+							"readlink":  errorCallback(),
+							"rename":    errorCallback(),
+							"rmdir":     errorCallback(),
+							"stat":      errorCallback(),
+							"symlink":   errorCallback(),
+							"truncate":  errorCallback(),
+							"unlink":    errorCallback(),
+							"utimes":    errorCallback(),
 						},
 					},
 
@@ -309,80 +282,6 @@ func New(instance Instance) *Module {
 							"umask": newjsFunction(func([]any) any { return 0o22 }),
 							"cwd":   newjsFunction(func(args []any) any { return "/" }),
 							"chdir": newjsFunction(func([]any) any { return nil }),
-						},
-					},
-
-					// waPC.
-					"wapc": &jsObject{
-						properties: jsProperties{
-							"__guest_response": &jsFunction{
-								fn: func(args []any) any {
-									if len(args) != 1 {
-										return nil
-									}
-
-									if resp, ok := args[0].(*jsUint8Array); ok {
-										mod.invokeContext.guestResp = resp.data
-										mod.invokeContext.success <- true
-									}
-
-									return nil
-								},
-							},
-							"__guest_error": &jsFunction{
-								fn: func(args []any) any {
-									if len(args) != 1 {
-										return nil
-									}
-
-									if resp, ok := args[0].(*jsUint8Array); ok {
-										mod.invokeContext.guestErr = string(resp.data)
-										mod.invokeContext.success <- false
-									}
-
-									return nil
-								},
-							},
-							"__host_call": &jsFunction{
-								fn: func(args []any) any {
-									resp, err := func() ([]byte, error) {
-										if mod.waPC == nil {
-											return nil, errors.New("no waPC host support")
-										}
-
-										if len(args) != 4 {
-											return nil, fmt.Errorf("%d: unexpected length of arguments for __host_call", len(args))
-										}
-
-										binding, ok := args[0].(*jsUint8Array)
-										if !ok {
-											return nil, fmt.Errorf("%T: unexpected type for binding parameter", args[0])
-										}
-
-										namespace, ok := args[1].(*jsUint8Array)
-										if !ok {
-											return nil, fmt.Errorf("%T: unexpected type for namespace parameter", args[1])
-										}
-
-										operation, ok := args[2].(*jsUint8Array)
-										if !ok {
-											return nil, fmt.Errorf("%T: unexpected type for operation parameter", args[2])
-										}
-
-										payload, ok := args[3].(*jsUint8Array)
-										if !ok {
-											return nil, fmt.Errorf("%T: unexpected type for payload parameter", args[3])
-										}
-
-										return mod.waPC.HostCall(string(binding.data), string(namespace.data), string(operation.data), payload.data)
-									}()
-									if err != nil {
-										return []any{nil, &jsString{data: err.Error()}}
-									}
-
-									return []any{&jsUint8Array{data: resp}, nil}
-								},
-							},
 						},
 					},
 				},
@@ -452,31 +351,9 @@ func (mod *Module) Call(name string, args ...any) (any, error) {
 	return fn.fn(args), nil
 }
 
-// Invoke calls operation with the specified payload and returns a []byte payload.
-func (mod *Module) Invoke(operation string, payload []byte) ([]byte, error) {
-	mod.invokeContext = newInvokeContext()
-
-	_, err := mod.Call("__guest_call", operation, payload)
-	if err != nil {
-		return nil, err
-	}
-
-	if ok := <-mod.invokeContext.success; !ok {
-		return nil, errors.New(mod.invokeContext.guestErr)
-	}
-
-	return mod.invokeContext.guestResp, nil
-}
-
 // ****************************************************************************
 // **************************** [ Helper methods ] ****************************
 // ****************************************************************************
-
-func (mod *Module) debug(format string, params ...any) {
-	if mod.debugLog != nil {
-		mod.debugLog.Debug(format, params...)
-	}
-}
 
 func (mod *Module) error(format string, params ...any) {
 	if mod.errorLog != nil {
@@ -518,14 +395,10 @@ func (mod *Module) loadValue(addr uint32) (any, error) {
 		return nil, err
 	}
 
-	mod.debug("   loadValue(id=%v)", id)
-
 	return mod.values[id], nil
 }
 
 func (mod *Module) storeValue(addr uint32, v any) error {
-	mod.debug("   storeValue(addr=%v type=%T v=%v nil=%v)", addr, v, v, (v == nil))
-
 	// Convert any integer to a float64, which is akin to a JSON number.
 	switch num := v.(type) {
 	case int:
@@ -605,7 +478,6 @@ func (mod *Module) storeValue(addr uint32, v any) error {
 
 	// Create a unique signature of the value.
 	signature := fmt.Sprintf("%d", reflect.ValueOf(v).Pointer())
-	mod.debug("   storeValue(type=%T signature=%v)", v, signature)
 
 	// Use the signature to check if this value has already been stored. If not,
 	// store it in the ids and values map.
@@ -638,8 +510,6 @@ func (mod *Module) storeValue(addr uint32, v any) error {
 		panic(fmt.Sprintf("%T: unknown value type", t))
 	}
 
-	mod.debug("   storeValue(id=%v typeFlag=%v refcount=%v signature=%q)", id, typeFlag, mod.refcounts[id], signature)
-
 	// Store the type.
 	if err := mod.instance.SetUInt32(addr+4, nanHead|typeFlag); err != nil {
 		return err
@@ -660,8 +530,6 @@ func (mod *Module) loadSlice(addr uint32) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	mod.debug("   loadSlice(offset=%v length=%v)", offset, length)
 
 	return mod.instance.Range(uint32(offset), uint32(length))
 }
@@ -701,8 +569,6 @@ func (mod *Module) loadString(addr uint32) (string, error) {
 }
 
 func (mod *Module) reflectApply(v any, name string, args []any) (any, error) {
-	mod.debug("   reflectApply(name=%v)", name)
-
 	obj, err := mod.reflectGet(v, name)
 	if err != nil {
 		return nil, err
@@ -712,8 +578,6 @@ func (mod *Module) reflectApply(v any, name string, args []any) (any, error) {
 }
 
 func (mod *Module) reflectConstruct(v any, args []any) (any, error) {
-	mod.debug("   reflectConstruct(v=%v args=%v)", v, args)
-
 	if fn, ok := v.(*jsFunction); ok {
 		return fn.fn(args), nil
 	}
@@ -722,8 +586,6 @@ func (mod *Module) reflectConstruct(v any, args []any) (any, error) {
 }
 
 func (mod *Module) reflectGet(v, key any) (any, error) {
-	mod.debug("   reflectGet(key=%v)", key)
-
 	if v == nil {
 		v = mod.values[5]
 	}
@@ -761,8 +623,6 @@ func (mod *Module) reflectGet(v, key any) (any, error) {
 }
 
 func (mod *Module) reflectSet(v, key, value any) error {
-	mod.debug("   reflectSet(v=%v key=%v value=%v)", v, key, value)
-
 	if v == nil {
 		v = mod.values[5]
 	}
@@ -790,8 +650,6 @@ func (mod *Module) reflectSet(v, key, value any) error {
 }
 
 func (mod *Module) reflectDeleteProperty(v, key any) error {
-	mod.debug("   reflectDelete(v=%v key=%v)", v, key)
-
 	if v == nil {
 		v = mod.values[5]
 	}
@@ -825,10 +683,6 @@ func (mod *Module) wrap(name string, fn func() error) error {
 	if fn == nil {
 		mod.error("%s NOT IMPLEMENTED", name)
 		return nil
-	}
-
-	if name != "" && name != "runtime.wasmWrite" {
-		mod.debug(name)
 	}
 
 	if err := fn(); err != nil {
@@ -967,35 +821,26 @@ func (mod *Module) FinalizeRef(sp uint32) {
 			return err
 		}
 
-		mod.debug("   id=%v (%T)", id, id)
-
 		// Make sure the ID has a reference count.
 		ref, ok := mod.refcounts[id]
 		if !ok {
 			return fmt.Errorf("%d: missing reference count for id", id)
 		}
 
-		mod.debug("   ref=%v", ref)
-
 		// Decrease the reference count.
 		ref--
 
 		// If the reference count is 0, clean up the object.
 		if ref == 0 {
-			mod.debug("   deleting reference")
-
 			signature, ok := mod.values[id]
 			if !ok {
 				return fmt.Errorf("%d: could not find signature in values for id", id)
 			}
 
-			mod.debug("%d: deleting object", id)
-
 			delete(mod.refcounts, id)
 			delete(mod.values, id)
 			delete(mod.ids, signature)
 		} else {
-			mod.debug("   decreasing ref")
 			mod.refcounts[id] = ref
 		}
 
@@ -1273,15 +1118,11 @@ func (mod *Module) ValueNew(sp uint32) {
 			return err
 		}
 
-		mod.debug("   v: %T: %v", v, v)
-
 		// Fetch the arguments to call the constructor with.
 		args, err := mod.loadSliceOfValues(sp + 16)
 		if err != nil {
 			return err
 		}
-
-		mod.debug("   args: %T: %v", args, args)
 
 		// Call the constructor function with the arguments.
 		result, err := mod.reflectConstruct(v, args)
@@ -1336,8 +1177,6 @@ func (mod *Module) ValueLength(sp uint32) {
 // and Number types.
 func (mod *Module) ValuePrepareString(sp uint32) {
 	_ = mod.wrap("syscall/js.valuePrepareString", func() error {
-		mod.debug("   valuePrepareString: sp=%v", sp)
-
 		v, err := mod.loadValue(sp + 8)
 		if err != nil {
 			return err
@@ -1385,8 +1224,6 @@ func (mod *Module) ValueLoadString(sp uint32) {
 		if err != nil {
 			return err
 		}
-
-		mod.debug("   string=%v", s.data)
 
 		copy(dst, s.data)
 		return nil

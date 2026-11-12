@@ -6,6 +6,8 @@
 // Modified by The kpt Authors in 2026:
 // - added the jsUndefined type, so that missing properties can be told apart
 //   from null.
+// - errorResponse and errorCallback no longer take an errno parameter, because
+//   they were only ever used with ENOSYS.
 
 package wasmexec
 
@@ -17,13 +19,14 @@ const (
 	eNOSYS errno = "ENOSYS"
 )
 
-// errorResponse returns a errno callback response.
-func errorResponse(code errno) []any {
-	return []any{jsProperties{"code": string(code)}}
+// errorResponse returns an ENOSYS callback response.
+func errorResponse() []any {
+	return []any{jsProperties{"code": string(eNOSYS)}}
 }
 
-// errCallback calls the callback with the specified errno code.
-func errorCallback(code errno) *jsFunction {
+// errorCallback returns a function that calls the callback with an ENOSYS
+// errno code.
+func errorCallback() *jsFunction {
 	return &jsFunction{
 		fn: func(args []any) any {
 			if len(args) == 0 {
@@ -37,7 +40,7 @@ func errorCallback(code errno) *jsFunction {
 				return nil
 			}
 
-			callback.fn(errorResponse(code))
+			callback.fn(errorResponse())
 			return nil
 		},
 	}

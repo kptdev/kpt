@@ -30,6 +30,11 @@ import (
 
 // WazeroFn runs a Go js/wasm function using the pure Go wazero runtime. The
 // "go" imports (the Go wasm_exec.js shim) are provided by wasmexec.
+//
+// Known limitation: a function that writes to stdout or stderr (fmt.Println,
+// log.Print, ...) while it is running inside processResourceList makes the run
+// fail with a nested resume error. Output written outside of that call, for
+// example at startup, works. See TestWazeroFnPrintInsideCallback.
 type WazeroFn struct {
 	wasmexec.Memory
 

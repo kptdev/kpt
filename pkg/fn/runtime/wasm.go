@@ -36,7 +36,7 @@ const (
 	jsEntrypointFunction = "processResourceList"
 )
 
-var wasmtimeErr = fmt.Errorf("`%s` is no longer supported because of compile issues, use `%s` instead", Wasmtime, Wazero)
+var errWasmtimeUnsupported = fmt.Errorf("`%s` is no longer supported because of compile issues, use `%s` instead", Wasmtime, Wazero)
 
 type WasmFn struct {
 	runtimeType WasmRuntime
@@ -57,7 +57,7 @@ func NewWasmFn(loader WasmLoader) (*WasmFn, error) {
 			nodejs:      nf,
 		}, nil
 	case string(Wasmtime):
-		return nil, wasmtimeErr
+		return nil, errWasmtimeUnsupported
 	case "":
 		fallthrough
 	case string(Wazero):
@@ -81,7 +81,7 @@ func (f *WasmFn) Run(r io.Reader, w io.Writer) error {
 	case Wazero:
 		return f.wazero.Run(r, w)
 	case Wasmtime:
-		return wasmtimeErr
+		return errWasmtimeUnsupported
 	default:
 		return fmt.Errorf("unknown wasm runtime type: %q", f.runtimeType)
 	}
