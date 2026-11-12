@@ -70,7 +70,8 @@
 			&:focus {
 				background-color: transparent;
 				border-bottom: $black 2px solid;
-				outline: none;
+				outline: 2px solid $black;
+				outline-offset: 2px;
 				box-shadow: none;
 			}
 		}

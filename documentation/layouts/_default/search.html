@@ -25,7 +25,15 @@
 	<div id="search"></div>
 	<script>
 	window.addEventListener("DOMContentLoaded", (event) => {
-		const pagefind = new PagefindUI({ element: "#search", showSubResults: true, showImages: false, resetStyles: false });
+		const pagefind = new PagefindUI({
+			element: "#search",
+			showSubResults: true,
+			showImages: false,
+			resetStyles: false,
+			filter: {
+				version: "{{ .Site.Params.version | default "latest" }}"
+			}
+		});
 
 		const urlParams = new URLSearchParams(window.location.search);
 		const q = urlParams.get('q');

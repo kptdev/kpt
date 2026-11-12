@@ -40,6 +40,9 @@ limitations under the License.
                 });
 
                 $(document).on('keydown', '.td-search-input', function(e) {
+                    if ((e.originalEvent && e.originalEvent.isComposing) || e.keyCode === 229) {
+                        return;
+                    }
                     if (e.key === 'Enter' || e.keyCode === 13) {
                         e.preventDefault();
                         executeSearch($(this));
