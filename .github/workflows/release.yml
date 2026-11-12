@@ -19,11 +19,15 @@
 #   4. publish the GitHub release vX.Y.Z on the cli/vX.Y.Z tag
 # See release/README.md and scripts/multimodule-release/release.sh.
 #
-# The RELEASE_TOKEN secret must be a GitHub App installation token or PAT that
-# is allowed to push to the (protected) release branch and to create tags. It is
-# stored as a secret of the "release" environment, not as a repository secret, so
-# that only runs approved by the environment's reviewers (and started from the
-# branches it allows) can read it.
+# Pushing and publishing is done with a short-lived token of the kptdev-ci-bot
+# GitHub App (CI_BOT_APP_ID and CI_BOT_PRIVATE_KEY secrets), which must be allowed
+# to push to the (protected) main branch and to create tags. The token is
+# created right before it is needed, because installation tokens expire after an
+# hour and the build and tests can take a while. The secrets should be defined in
+# the "release" environment as well, so that only runs approved by the
+# environment's reviewers (and started from main) can read them
+# (an environment secret takes precedence over an organization secret of the same
+# name).
 
 name: kpt multimodule release
 on:
@@ -32,11 +36,6 @@ on:
       version:
         required: true
         description: 'The new version to be released, e.g. v1.2.3 or v1.2.3-pre.1'
-        type: string
-      branch:
-        required: false
-        default: 'main'
-        description: 'Branch to create the release on'
         type: string
       dry_run:
         required: false
@@ -53,6 +52,8 @@ permissions:
 
 jobs:
   build:
+    # Releases are always made from main, using the workflow definition of main.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     name: kpt-multimodule-release
     environment: release
@@ -62,20 +63,21 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
       version: ${{ steps.validate.outputs.version }}
     env:
-      BRANCH: ${{ inputs.branch }}
+      BRANCH: main
       DRY_RUN: ${{ inputs.dry_run }}
-      GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch }}
+          ref: main
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_TOKEN }}
+          # Push credentials are configured later, with a fresh app token.
+          persist-credentials: false
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+          cache: false
       - name: Configure git
         run: |
           git config --global user.name "github-actions[bot]"
@@ -134,15 +136,26 @@ jobs:
           # its tag, so it only builds and the release is created below.
           args: release --skip=validate,publish --clean --verbose -f release/tag/goreleaser.yaml
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           # The root tag, so that GoReleaser's .Version (used for the package versions)
           # is X.Y.Z. The binaries are still built from the checked out cli commit.
           GORELEASER_CURRENT_TAG: ${{ steps.validate.outputs.version }}
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.CI_BOT_APP_ID }}
+          private-key: ${{ secrets.CI_BOT_PRIVATE_KEY }}
+      - name: Configure push credentials
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git remote set-url --push origin "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
       # Done before pushing, so that a problem here cannot leave tags behind. Also
       # runs in dry runs, to show what the release would contain.
       - name: Prepare release notes and assets
         env:
           VERSION: ${{ steps.validate.outputs.version }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           ./scripts/multimodule-release/release.sh notes "$VERSION" "$BRANCH" release-notes.md
           ./scripts/multimodule-release/release.sh assets dist release-assets
@@ -166,6 +179,7 @@ jobs:
         if: ${{ !inputs.dry_run }}
         env:
           VERSION: ${{ steps.validate.outputs.version }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           prerelease=()
           if [[ "$VERSION" == *-* ]]; then
