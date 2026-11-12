@@ -12,46 +12,167 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Releases the api, root (library) and cli modules with one locked version:
+#   1. tag api/vX.Y.Z
+#   2. bump the api requirement in the root go.mod, commit, tag vX.Y.Z
+#   3. bump the kpt and api requirements in cli/go.mod, commit, tag cli/vX.Y.Z
+#   4. publish the GitHub release vX.Y.Z on the cli/vX.Y.Z tag
+# See release/README.md and scripts/multimodule-release/release.sh.
+#
+# The RELEASE_TOKEN secret must be a GitHub App installation token or PAT that
+# is allowed to push to the (protected) release branch and to create tags.
+
 name: kpt multimodule release
 on:
   workflow_dispatch:
     inputs:
       version:
         required: true
-        description: 'The new version/tag to be released'
+        description: 'The new version to be released, e.g. v1.2.3 or v1.2.3-pre.1'
         type: string
-      branch: # TODO: make this ref-compatible so you can give branches AND commits
+      branch:
         required: false
         default: 'main'
         description: 'Branch to create the release on'
         type: string
+      dry_run:
+        required: false
+        default: false
+        description: 'Build everything locally, but do not push or publish anything'
+        type: boolean
+
+concurrency:
+  group: kpt-multimodule-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     name: kpt-multimodule-release
+    permissions:
+      contents: write
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+      version: ${{ steps.validate.outputs.version }}
+    env:
+      BRANCH: ${{ inputs.branch }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: ${{ inputs.branch }}
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - name: Check for replace directives in go.mod
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Validate version and branch
+        id: validate
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version=$(./scripts/multimodule-release/release.sh validate "$INPUT_VERSION" "$BRANCH")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Check for replace directives and kpt pseudo-versions (root module)
         uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: .
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check for replace directives and kpt pseudo-versions (api module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: api
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check for replace directives and kpt pseudo-versions (cli module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: cli
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Build, Test, Lint
+        run: |
+          make all
+          make test-docker
       - name: Create commits and tags
         env:
-          BRANCH: ${{ inputs.branch }}
-          VERSION: ${{ inputs.version }}
-        run: ./scripts/multimodule-release.sh "$VERSION"
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: ./scripts/multimodule-release/release.sh tag "$VERSION"
+      - name: Check release commits for replace directives and kpt pseudo-versions (root module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: .
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check release commits for replace directives and kpt pseudo-versions (api module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: api
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check release commits for replace directives and kpt pseudo-versions (cli module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: cli
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
       - name: Run GoReleaser
-        id: run-goreleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --skip=validate --verbose -f release/tag/goreleaser.yaml
+          # GoReleaser (open-source) cannot publish a release named differently from
+          # its tag, so it only builds and the release is created below.
+          args: release --skip=validate,publish --clean --verbose -f release/tag/goreleaser.yaml
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GORELEASER_CURRENT_TAG: cli/${{ steps.validate.outputs.version }}
+      - name: Push branch and tags
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: ./scripts/multimodule-release/release.sh push "$VERSION" "$BRANCH"
+      - name: Create GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: |
+          ./scripts/multimodule-release/release.sh notes "$VERSION" release-notes.md
+          ./scripts/multimodule-release/release.sh assets dist release-assets
+
+          prerelease=()
+          if [[ "$VERSION" == *-* ]]; then
+            prerelease=(--prerelease)
+          fi
+          # The release is named vX.Y.Z but points at the cli/vX.Y.Z tag.
+          gh release create "cli/${VERSION}" release-assets/* \
+            --verify-tag \
+            --title "$VERSION" \
+            --notes-file release-notes.md \
+            "${prerelease[@]}"
+      - name: Generate SLSA subjects for provenance
+        id: hash
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          # Hash the staged assets: they have the names they have on the release.
+          hashes=$(cd release-assets && sha256sum -- * | base64 -w0)
+          echo "hashes=${hashes}" >> "$GITHUB_OUTPUT"
+
+  provenance:
+    needs: [build]
+    if: ${{ !inputs.dry_run }}
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # upload to the release created above
+      upload-tag-name: "cli/${{ needs.build.outputs.version }}"
