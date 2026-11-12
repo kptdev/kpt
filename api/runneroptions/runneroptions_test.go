@@ -17,6 +17,7 @@ package runneroptions
 import (
 	"os"
 	"testing"
+	"time"
 )
 
 func TestValidatePrefix(t *testing.T) {
@@ -56,6 +57,28 @@ func TestValidatePrefix(t *testing.T) {
 			err := opts.ValidatePrefix()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ValidatePrefix(%q) error = %v, wantErr %v", tt.prefix, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateTimeout(t *testing.T) {
+	tests := []struct {
+		name    string
+		timeout time.Duration
+		wantErr bool
+	}{
+		{"zero", 0, false},
+		{"positive", 30 * time.Second, false},
+		{"negative", -time.Second, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opts := RunnerOptions{Timeout: tt.timeout}
+			err := opts.ValidateTimeout()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateTimeout(%v) error = %v, wantErr %v", tt.timeout, err, tt.wantErr)
 			}
 		})
 	}
