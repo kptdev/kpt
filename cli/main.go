@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mdtogo ../documentation/content/en/reference/cli/live       ../internal/docs/generated/livedocs  --license=none --strategy=cmdDocs --recursive=true
-//go:generate mdtogo ../documentation/content/en/reference/cli/pkg        ../internal/docs/generated/pkgdocs   --license=none --strategy=cmdDocs --recursive=true
-//go:generate mdtogo ../documentation/content/en/reference/cli/fn         ../internal/docs/generated/fndocs    --license=none --strategy=cmdDocs --recursive=true
-//go:generate mdtogo ../documentation/content/en/reference/cli/alpha      ../internal/docs/generated/alphadocs --license=none --strategy=cmdDocs --recursive=false
-//go:generate mdtogo ../documentation/content/en/reference/cli/alpha/sync ../internal/docs/generated/syncdocs  --license=none --strategy=cmdDocs --recursive=true
-//go:generate mdtogo ../documentation/content/en/reference/cli/alpha/wasm ../internal/docs/generated/wasmdocs  --license=none --strategy=cmdDocs --recursive=true
-//go:generate mdtogo ../documentation/content/en/reference/cli/_index.md  ../internal/docs/generated/overview  --license=none --strategy=cmdDocs
+//go:generate mdtogo ../documentation/content/en/documentation/6-references/cli/live       ../internal/docs/generated/livedocs  --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/documentation/6-references/cli/pkg        ../internal/docs/generated/pkgdocs   --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/documentation/6-references/cli/fn         ../internal/docs/generated/fndocs    --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/documentation/6-references/cli/alpha      ../internal/docs/generated/alphadocs --license=none --strategy=cmdDocs --recursive=false
+//go:generate mdtogo ../documentation/content/en/documentation/6-references/cli/alpha/sync ../internal/docs/generated/syncdocs  --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/documentation/6-references/cli/alpha/wasm ../internal/docs/generated/wasmdocs  --license=none --strategy=cmdDocs --recursive=true
+//go:generate mdtogo ../documentation/content/en/documentation/6-references/cli/_index.md  ../internal/docs/generated/overview  --license=none --strategy=cmdDocs
 package main
 
 import (

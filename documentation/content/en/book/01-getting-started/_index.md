@@ -39,7 +39,7 @@ Follow the [instructions](https://podman.io/getting-started/installation) to ins
 If you want to set up a rootless container runtime, then [this](https://rootlesscontaine.rs/) may be a useful resource for you.
 
 Environment variables can be used to control which container runtime to use. More details can be found in the reference
-documents for [`kpt fn render`]({{% relref "/reference/cli/fn/render" %}}) and [`kpt fn eval`]({{% relref "/reference/cli/fn/eval" %}}).
+documents for [`kpt fn render`]({{% relref "/documentation/6-references/cli/fn/render" %}}) and [`kpt fn eval`]({{% relref "/documentation/6-references/cli/fn/eval" %}}).
 
 ### Kubernetes cluster
 
@@ -105,7 +105,7 @@ vim deployment.yaml
 
 #### Automating one-time edits with functions
 
-The [`kpt fn`]({{% relref "/reference/cli/fn" %}}) set of commands enables you to execute programs called _kpt functions_. These programs are
+The [`kpt fn`]({{% relref "/documentation/6-references/cli/fn" %}}) set of commands enables you to execute programs called _kpt functions_. These programs are
 packaged as containers and take YAML files as input, mutate or validate them, and then output YAML.
 
 For example, you can use a function (`ghcr.io/kptdev/krm-functions-catalog/search-replace:latest`) to search for and replace all the occurrences of the `app` key, in the `spec` section of the YAML document (`spec.**.app`), and set the value to `my-nginx`. 

@@ -55,7 +55,7 @@ This enables machine manipulation of configuration for Kubernetes and any infras
 
 The kpt toolchain includes the following components:
 
-- [**kpt CLI**]({{% relref "/reference/cli" %}}): The kpt CLI supports package and function operations, and also   deployment, via
+- [**kpt CLI**]({{% relref "/documentation/6-references/cli" %}}): The kpt CLI supports package and function operations, and also   deployment, via
   either direct apply or GitOps. By keeping an inventory of deployed resources, kpt enables resource pruning, aggregated
   status and observability, and an improved preview experience.
 
@@ -206,7 +206,7 @@ When you deploy the package with `kpt live apply`, local configuration resources
 are automatically filtered out. They exist in the package solely to support the
 pipeline. See [Chapter 4]({{% relref "/book/04-using-functions" %}}) for how function configs use
 this annotation, and the
-[`local-config` annotation reference]({{% relref "/reference/annotations/local-config" %}}) for
+[`local-config` annotation reference]({{% relref "/documentation/6-references/annotations/local-config" %}}) for
 full details.
 
 ## Workflows

@@ -1,0 +1,35 @@
+---
+title: "`info`"
+linkTitle: "info"
+description: |
+    Displays license information of the OSS libraries used by `kpt`.
+aliases:
+  - /reference/cli/alpha/license/info/
+---
+
+<!--mdtogo:Short
+    Displays OSS license information.
+-->
+
+`info` displays license information of the OSS libraries used by `kpt`.
+
+### Synopsis
+
+<!--mdtogo:Long-->
+
+```shell
+kpt alpha license info
+```
+
+<!--mdtogo-->
+
+### Examples
+
+<!--mdtogo:Examples-->
+
+```shell
+# display license information for OSS libraries.
+kpt alpha license info | less
+```
+
+<!--mdtogo-->

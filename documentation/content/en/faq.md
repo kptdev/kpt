@@ -125,7 +125,7 @@ don't have to alias it. It is pronounced "kept".
 [declarative application management in kubernetes]:
   https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/declarative-application-management.md
 [rationale]: /guides/rationale
-[functions]: /reference/cli/fn/eval/
+[functions]: /documentation/6-references/cli/fn/eval/
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
