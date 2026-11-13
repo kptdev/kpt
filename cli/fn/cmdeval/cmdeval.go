@@ -71,7 +71,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
 		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
 	_ = r.Command.RegisterFlagCompletionFunc("type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"mutator", "validator"}, cobra.ShellCompDirectiveDefault
+		return []string{fnTypeMutator, fnTypeValidator}, cobra.ShellCompDirectiveDefault
 	})
 	r.Command.Flags().BoolVarP(
 		&r.SaveFn, "save", "s", false,
@@ -146,6 +146,12 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 func EvalCommand(ctx context.Context, name string) *cobra.Command {
 	return GetEvalFnRunner(ctx, name).Command
 }
+
+// Function type values accepted by the --type flag.
+const (
+	fnTypeMutator   = "mutator"
+	fnTypeValidator = "validator"
+)
 
 // EvalFnRunner contains the run function
 type EvalFnRunner struct {
@@ -291,9 +297,9 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	}
 	var usrMsg string
 	switch r.FnType {
-	case "mutator":
+	case fnTypeMutator:
 		kf.Pipeline.Mutators, usrMsg = r.updateFnList(kf.Pipeline.Mutators)
-	case "validator":
+	case fnTypeValidator:
 		kf.Pipeline.Validators, usrMsg = r.updateFnList(kf.Pipeline.Validators)
 	}
 
@@ -458,7 +464,7 @@ func (r *EvalFnRunner) validateOptionalFlags() error {
 		if r.FnType == "" {
 			return fmt.Errorf("--type must be specified if saving functions to Kptfile (--save=true)")
 		}
-		if r.FnType != "mutator" && r.FnType != "validator" {
+		if r.FnType != fnTypeMutator && r.FnType != fnTypeValidator {
 			return fmt.Errorf("--type must be either `mutator` or `validator`")
 		}
 	}

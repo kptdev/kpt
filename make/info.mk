@@ -13,7 +13,7 @@
 # limitations under the License.
 
 GOLANG_VERSION    := 1.26.3
-GOLANGCI_LINT_VERSION := 2.11.4
+GOLANGCI_LINT_VERSION := 2.15.0
 SWAGGER_VERSION := v0.33.1
 
 GORELEASER_CONFIG = release/tag/goreleaser.yaml

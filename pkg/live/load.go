@@ -289,7 +289,7 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 	var violations errors.Violations
 	if inventory.Name == "" {
 		violations = append(violations, errors.Violation{
-			Field:  "name",
+			Field:  fieldName,
 			Value:  inventory.Name,
 			Type:   errors.Missing,
 			Reason: "\"inventory.name\" must not be empty",
@@ -297,7 +297,7 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 	}
 	if inventory.Namespace == "" {
 		violations = append(violations, errors.Violation{
-			Field:  "namespace",
+			Field:  fieldNamespace,
 			Value:  inventory.Namespace,
 			Type:   errors.Missing,
 			Reason: "\"inventory.namespace\" must not be empty",
@@ -345,10 +345,10 @@ func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {
 	var inventoryObj = &unstructured.Unstructured{
 		Object: map[string]any{
 			"apiVersion": groupVersion,
-			"kind":       ResourceGroupGVK.Kind,
+			fieldKind:    ResourceGroupGVK.Kind,
 			"metadata": map[string]any{
-				"name":      inv.Name,
-				"namespace": inv.Namespace,
+				fieldName:      inv.Name,
+				fieldNamespace: inv.Namespace,
 				"labels": map[string]any{
 					common.InventoryLabel: inv.InventoryID,
 				},
