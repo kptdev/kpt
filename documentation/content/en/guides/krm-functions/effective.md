@@ -18,6 +18,7 @@ The examples use the [KRM function SDK](https://pkg.go.dev/github.com/kptdev/krm
 
 - [Install kpt]({{% relref "/installation" %}})
 - [Install Docker](https://docs.docker.com/get-docker/)
+- Go 1.24 or later, the minimum version the SDK requires
 
 ## Read configuration
 
@@ -92,6 +93,11 @@ excluded := items.WhereNot(fn.IsGroupKind(schema.GroupKind{
 Use `fn.IsGroupVersionKind` to match an exact apiVersion and kind. Use
 `fn.IsGroupKind` to match a group and kind across all versions. `IsGVK` is
 deprecated, so avoid it in new code.
+
+The objects in `items` are modified in place, and the function's output is the
+set of objects you leave in `items`. You don't return a new list.
+
+`fn.IsName` matches objects by name, for example `items.Where(fn.IsName("nginx"))`.
 
 `IsNamespaceScoped` is decided by a table of known kinds. For any other kind it
 falls back to whether `metadata.namespace` is set. A custom resource without a
@@ -176,6 +182,10 @@ if err := deployment.GetMap("spec").As(&spec); err != nil {
 }
 fn.Logf("decoded %d replicas\n", spec.Replicas)
 ```
+
+`As` copies the sub-object. Changes you make to `spec` don't change the resource.
+To update the resource, set the fields back with the setters, such as
+`SetNestedString`, on the `KubeObject`.
 
 ## Next steps
 
