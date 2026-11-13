@@ -98,8 +98,12 @@ Use `kubeobject.IsGroupVersionKind` to match an exact apiVersion and kind. Use
 `kubeobject.IsGroupKind` to match a group and kind across all versions. `IsGVK` is
 deprecated, so avoid it in new code.
 
-The objects in `items` are modified in place, and the function's output is the
-set of objects you leave in `items`. You don't return a new list.
+Changes you make to the objects in `items`, or to objects returned by `Where`, are
+reflected in the output, because these are the same objects. Reassigning `items`
+or building a filtered slice does not change the output. The SDK emits the list it
+passed to `Run`, so a `Runner` can't add or remove resources. To add or remove
+resources, implement a `ResourceListProcessor` instead, as described in
+[Interfaces]({{% relref "/guides/krm-functions/interfaces" %}}).
 
 `kubeobject.IsName` matches objects by name, for example
 `items.Where(kubeobject.IsName("nginx"))`.
