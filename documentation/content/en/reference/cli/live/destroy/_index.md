@@ -12,6 +12,12 @@ description: |
 
 `destroy` removes all files belonging to a package from the cluster.
 
+If the package contains a non-KRM file (not excluded by
+[`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `destroy` fails before
+making any cluster changes, listing every such file found. See the
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation to
+skip these files automatically instead.
+
 ### Synopsis
 
 <!--mdtogo:Long-->

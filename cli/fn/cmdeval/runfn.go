@@ -37,6 +37,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 )
 
@@ -144,6 +145,14 @@ func (r RunFns) getNodesAndFilters() (
 	var outputPkg *kio.LocalPackageReadWriter
 
 	if r.Path != "" {
+		// Non-KRM pre-scan, same as `kpt fn render`'s, except it skips
+		// subpackages a parent .krmignore excludes, like this reader does.
+		pr := printer.FromContextOrDie(r.Ctx)
+		scanResult, err := krmvalidate.ScanHonoringKrmignore(filesys.FileSystemOrOnDisk{}, string(r.uniquePath), pr.Printf)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
 		outputPkg = &kio.LocalPackageReadWriter{
 			PackagePath:        string(r.uniquePath),
 			MatchFilesGlob:     pkg.MatchAllKRM,
@@ -151,6 +160,7 @@ func (r RunFns) getNodesAndFilters() (
 			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
+			FileSkipFunc:       scanResult.SkipFunc(string(r.uniquePath)),
 		}
 	}
 

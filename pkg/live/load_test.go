@@ -26,6 +26,7 @@ import (
 	rgfilev1alpha1 "github.com/kptdev/kpt/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -252,7 +253,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}()
 
 			var buf bytes.Buffer
-			objs, inv, err := Load(tf, dir, &buf)
+			objs, inv, err := Load(fake.CtxWithDefaultPrinter(), tf, dir, &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -280,6 +281,113 @@ func TestLoad_LocalDisk(t *testing.T) {
 			assert.Equal(t, tc.expectedInv, inv)
 		})
 	}
+}
+
+// TestLoad_LocalDisk_NonKRM covers the non-KRM pre-scan in loadFromDisk.
+func TestLoad_LocalDisk_NonKRM(t *testing.T) {
+	rgFile := pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+		Name:      "foo",
+		Namespace: "bar",
+		ID:        "foo-bar",
+	})
+
+	t.Run("non-KRM file with no annotation blocks Load with a consolidated, file-naming error", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("foo")
+		defer tf.Cleanup()
+
+		rootPkg := pkgbuilder.NewRootPkg().
+			WithKptfile(pkgbuilder.NewKptfile()).
+			WithRGFile(rgFile).
+			WithFile("deployment.yaml", deploymentA).
+			WithFile("values.yaml", "replicaCount: 3\n")
+		dir := rootPkg.ExpandPkg(t, nil)
+		defer func() { _ = os.RemoveAll(dir) }()
+
+		var buf bytes.Buffer
+		_, _, err := Load(fake.CtxWithDefaultPrinter(), tf, dir, &buf)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "values.yaml")
+		assert.Contains(t, err.Error(), "1 file(s)")
+		// Specifically NOT the old, file-less cli-utils error shape.
+		assert.NotContains(t, err.Error(), "/, Kind=")
+	})
+
+	t.Run("annotated package skips the non-KRM file in memory, leaves it untouched on disk, no .krmignore written", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("foo")
+		defer tf.Cleanup()
+
+		rootPkg := pkgbuilder.NewRootPkg().
+			WithFile("Kptfile", `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test-pkg
+  annotations:
+    kpt.dev/auto-ignore-non-krm: "true"
+`).
+			WithRGFile(rgFile).
+			WithFile("deployment.yaml", deploymentA).
+			WithFile("values.yaml", "replicaCount: 3\n")
+		dir := rootPkg.ExpandPkg(t, nil)
+		defer func() { _ = os.RemoveAll(dir) }()
+
+		var buf bytes.Buffer
+		objs, _, err := Load(fake.CtxWithDefaultPrinter(), tf, dir, &buf)
+		assert.NoError(t, err)
+
+		objMetas := object.UnstructuredSetToObjMetadataSet(objs)
+		var names []string
+		for _, m := range objMetas {
+			names = append(names, m.Name)
+		}
+		assert.ElementsMatch(t, []string{"test-deployment"}, names, "values.yaml must not have reached the loaded object set")
+
+		content, readErr := os.ReadFile(filepath.Join(dir, "values.yaml"))
+		assert.NoError(t, readErr)
+		assert.Equal(t, "replicaCount: 3\n", string(content), "non-KRM file must be left completely untouched on disk")
+
+		assert.NoFileExists(t, filepath.Join(dir, ".krmignore"), ".krmignore must never be written by the annotation path")
+	})
+
+	t.Run("bare directory with no Kptfile at all is still pre-scanned, same as a Kptfile'd package", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("foo")
+		defer tf.Cleanup()
+
+		rootPkg := pkgbuilder.NewRootPkg().
+			WithRGFile(rgFile).
+			WithFile("deployment.yaml", deploymentA).
+			WithFile("values.yaml", "replicaCount: 3\n")
+		dir := rootPkg.ExpandPkg(t, nil)
+		defer func() { _ = os.RemoveAll(dir) }()
+
+		var buf bytes.Buffer
+		_, _, err := Load(fake.CtxWithDefaultPrinter(), tf, dir, &buf)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "values.yaml")
+	})
+
+	t.Run(".krmignore still works independently of the annotation, no non-KRM-file error at all", func(t *testing.T) {
+		tf := cmdtesting.NewTestFactory().WithNamespace("foo")
+		defer tf.Cleanup()
+
+		rootPkg := pkgbuilder.NewRootPkg().
+			WithKptfile(pkgbuilder.NewKptfile()).
+			WithRGFile(rgFile).
+			WithFile("deployment.yaml", deploymentA).
+			WithFile("values.yaml", "replicaCount: 3\n").
+			WithFile(".krmignore", "values.yaml\n")
+		dir := rootPkg.ExpandPkg(t, nil)
+		defer func() { _ = os.RemoveAll(dir) }()
+
+		var buf bytes.Buffer
+		objs, _, err := Load(fake.CtxWithDefaultPrinter(), tf, dir, &buf)
+		assert.NoError(t, err)
+
+		objMetas := object.UnstructuredSetToObjMetadataSet(objs)
+		assert.Len(t, objMetas, 1)
+		assert.Equal(t, "test-deployment", objMetas[0].Name)
+	})
 }
 
 func TestLoad_StdIn(t *testing.T) {
@@ -533,7 +641,7 @@ func TestLoad_StdIn(t *testing.T) {
 			os.Remove(filepath.Join(dir, kptfilev1.KptFileName))
 			os.Remove(filepath.Join(dir, tc.rgFile))
 
-			objs, inv, err := Load(tf, "-", &buf)
+			objs, inv, err := Load(fake.CtxWithDefaultPrinter(), tf, "-", &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
