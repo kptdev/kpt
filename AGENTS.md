@@ -261,7 +261,7 @@ If changes modify CLI documentation in documentation/content/en/reference/cli/:
 * **sigs.k8s.io/cli-utils**: CLI utilities
 * **sigs.k8s.io/kustomize/kyaml**: YAML handling for Kubernetes
 * **sigs.k8s.io/controller-runtime**: Controller and reconciliation patterns
-* **wasmtime-go**: WebAssembly function runtime
+* **wazero**: WebAssembly function runtime (pure Go, no cgo)
 * **go-containerregistry**: Container image handling
 
 ## Testing Strategy
