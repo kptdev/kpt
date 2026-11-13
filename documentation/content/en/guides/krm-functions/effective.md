@@ -13,6 +13,9 @@ tutorial. Read [Tutorial]({{% relref "/guides/krm-functions/tutorial" %}}) and
 [Interfaces]({{% relref "/guides/krm-functions/interfaces" %}}) first.
 
 The examples use the [KRM function SDK](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn).
+The resource types and selector functions live in the
+[`kubeobject` package](https://pkg.go.dev/github.com/kptdev/kpt/api/kubeobject), so
+import it alongside the SDK. The examples refer to it as `kubeobject`.
 
 ## Prerequisites
 
@@ -26,7 +29,7 @@ The function config arrives as a `KubeObject` in the `functionConfig` argument o
 `Run`. Read the fields you need from it instead of defining a struct for them.
 
 ```golang
-func (r *SetImage) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
+func (r *SetImage) Run(ctx *fn.Context, functionConfig *kubeobject.KubeObject, items kubeobject.KubeObjects, results *kubeobject.Results) bool {
 	oldImage, _, err := functionConfig.NestedString("oldImage")
 	if err != nil {
 		results.ErrorE(err)
@@ -59,45 +62,47 @@ newImage: my-registry/example:v2
 
 ## Select KRM resources
 
-`fn.KubeObjects` is a slice of `*fn.KubeObject`. Use `Where` and `WhereNot` with
-a predicate to narrow the set. The `GroupVersionKind` and `GroupKind` types come from
-`github.com/kptdev/kpt/api/schema/v1`, not from `k8s.io/apimachinery`.
+`kubeobject.KubeObjects` is a slice of `*kubeobject.KubeObject`. Use `Where` and
+`WhereNot` with a predicate to narrow the set. The `GroupVersionKind` and
+`GroupKind` types come from `github.com/kptdev/kpt/api/schema/v1`, not from
+`k8s.io/apimachinery`.
 
 ```golang
 import schema "github.com/kptdev/kpt/api/schema/v1"
 
 // Namespace-scoped resources only.
-namespaced := items.Where(func(o *fn.KubeObject) bool {
+namespaced := items.Where(func(o *kubeobject.KubeObject) bool {
 	return o.IsNamespaceScoped()
 })
 
 // Cluster-scoped resources only.
-clusterScoped := items.Where(func(o *fn.KubeObject) bool {
+clusterScoped := items.Where(func(o *kubeobject.KubeObject) bool {
 	return o.IsClusterScoped()
 })
 
 // Deployments in the apps group, at exactly apps/v1.
-deployments := items.Where(fn.IsGroupVersionKind(schema.GroupVersionKind{
+deployments := items.Where(kubeobject.IsGroupVersionKind(schema.GroupVersionKind{
 	Group:   "apps",
 	Version: "v1",
 	Kind:    "Deployment",
 }))
 
 // Everything except Namespace objects, in the core group.
-excluded := items.WhereNot(fn.IsGroupKind(schema.GroupKind{
+excluded := items.WhereNot(kubeobject.IsGroupKind(schema.GroupKind{
 	Group: "",
 	Kind:  "Namespace",
 }))
 ```
 
-Use `fn.IsGroupVersionKind` to match an exact apiVersion and kind. Use
-`fn.IsGroupKind` to match a group and kind across all versions. `IsGVK` is
+Use `kubeobject.IsGroupVersionKind` to match an exact apiVersion and kind. Use
+`kubeobject.IsGroupKind` to match a group and kind across all versions. `IsGVK` is
 deprecated, so avoid it in new code.
 
 The objects in `items` are modified in place, and the function's output is the
 set of objects you leave in `items`. You don't return a new list.
 
-`fn.IsName` matches objects by name, for example `items.Where(fn.IsName("nginx"))`.
+`kubeobject.IsName` matches objects by name, for example
+`items.Where(kubeobject.IsName("nginx"))`.
 
 `IsNamespaceScoped` is decided by a table of known kinds. For any other kind it
 falls back to whether `metadata.namespace` is set. A custom resource without a
@@ -106,11 +111,12 @@ your function.
 
 ## Read and update fields
 
-`KubeObject` embeds `SubObject`, so both expose the same field accessors. Each
-nested getter returns the value, whether the field was found, and an error.
+`kubeobject.KubeObject` embeds `kubeobject.SubObject`, so both expose the same
+field accessors. Each nested getter returns the value, whether the field was
+found, and an error.
 
 ```golang
-for _, obj := range items.Where(fn.IsGroupVersionKind(schema.GroupVersionKind{
+for _, obj := range items.Where(kubeobject.IsGroupVersionKind(schema.GroupVersionKind{
 	Group:   "apps",
 	Version: "v1",
 	Kind:    "Deployment",
