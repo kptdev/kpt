@@ -1,4 +1,4 @@
-// Copyright 2021,2026 The kpt Authors
+// Copyright 2021-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -352,6 +352,23 @@ func Test_getDest(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, test.want(dest), actual)
+		})
+	}
+}
+
+// Test_getDest_statError verifies that filesystem errors are returned rather
+// than dereferencing the nil FileInfo returned by os.Stat.
+func Test_getDest_statError(t *testing.T) {
+	for _, explicitDest := range []bool{false, true} {
+		t.Run(fmt.Sprintf("explicit destination %t", explicitDest), func(t *testing.T) {
+			dest := filepath.Join(t.TempDir(), "invalid\x00directory", "dest")
+			actual, err := getDest(dest, "https://github.com/kptdev/kpt", "package-examples/nginx", explicitDest)
+			require.Error(t, err)
+			assert.Empty(t, actual)
+
+			var pathErr *os.PathError
+			require.ErrorAs(t, err, &pathErr)
+			assert.Equal(t, dest, pathErr.Path)
 		})
 	}
 }
