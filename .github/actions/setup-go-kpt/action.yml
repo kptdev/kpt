@@ -100,25 +100,20 @@ runs:
       id: kpt-tag
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
         KPT_VERSION: ${{ steps.kpt-version.outputs.version }}
       run: |
         set -euo pipefail
-        # Newer kpt releases publish binaries on the cli/<version> tag (e.g. cli/v1.0.2-pre.4); 
-        # older ones on the plain <version> tag (e.g. v1.0.1).
-        # Use cli/<version> if that release exists, otherwise the plain tag.
-        STATUS=$(curl -sS --retry 3 --retry-delay 5 -o /dev/null -w '%{http_code}' \
-          -H "Authorization: Bearer ${GH_TOKEN}" \
-          -H "Accept: application/vnd.github+json" \
-          "https://api.github.com/repos/kptdev/kpt/releases/tags/cli/${KPT_VERSION}")
-        case "${STATUS}" in
-          200) TAG="cli/${KPT_VERSION}" ;;
-          404) TAG="${KPT_VERSION}" ;;
-          *)
-            echo "::error::Unexpected HTTP ${STATUS} looking up kpt release cli/${KPT_VERSION}."
-            exit 1
-            ;;
-        esac
+        # Newer kpt releases use the cli/<version> tag, older ones the plain <version>.
+        # Output is captured first so a git failure aborts instead of looking like "no cli/ tag".
+        if ! REFS=$(GIT_TERMINAL_PROMPT=0 git ls-remote --tags https://github.com/kptdev/kpt "refs/tags/cli/${KPT_VERSION}"); then
+          echo "::error::Could not query kptdev/kpt tags to resolve the release layout for ${KPT_VERSION}."
+          exit 1
+        fi
+        if [ -n "${REFS}" ]; then
+          TAG="cli/${KPT_VERSION}"
+        else
+          TAG="${KPT_VERSION}"
+        fi
         echo "Using kpt release tag: ${TAG}"
         echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
 
