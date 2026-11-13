@@ -41,6 +41,10 @@ func (r *SetImage) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.
 }
 ```
 
+In `main`, wrap your `Runner` with `fn.WithContext` before passing it to
+`fn.AsMain`, as shown in [Interfaces]({{% relref "/guides/krm-functions/interfaces" %}}).
+Passing it directly fails at runtime with `unknown input type`.
+
 A matching input looks like this:
 
 ```yaml
@@ -55,9 +59,12 @@ newImage: my-registry/example:v2
 ## Select KRM resources
 
 `fn.KubeObjects` is a slice of `*fn.KubeObject`. Use `Where` and `WhereNot` with
-a predicate to narrow the set.
+a predicate to narrow the set. The `GroupVersionKind` and `GroupKind` types come from
+`github.com/kptdev/kpt/api/schema/v1`, not from `k8s.io/apimachinery`.
 
 ```golang
+import schema "github.com/kptdev/kpt/api/schema/v1"
+
 // Namespace-scoped resources only.
 namespaced := items.Where(func(o *fn.KubeObject) bool {
 	return o.IsNamespaceScoped()
@@ -68,14 +75,28 @@ clusterScoped := items.Where(func(o *fn.KubeObject) bool {
 	return o.IsClusterScoped()
 })
 
-// Deployments in the apps/v1 group.
-deployments := items.Where(fn.IsGVK("apps", "v1", "Deployment"))
+// Deployments in the apps group, at exactly apps/v1.
+deployments := items.Where(fn.IsGroupVersionKind(schema.GroupVersionKind{
+	Group:   "apps",
+	Version: "v1",
+	Kind:    "Deployment",
+}))
 
-// Everything except Namespace objects.
-excluded := items.WhereNot(fn.IsGVK("", "v1", "Namespace"))
+// Everything except Namespace objects, in the core group.
+excluded := items.WhereNot(fn.IsGroupKind(schema.GroupKind{
+	Group: "",
+	Kind:  "Namespace",
+}))
 ```
 
-`fn.IsGVK` takes group, version, and kind. Pass an empty version to match any version.
+Use `fn.IsGroupVersionKind` to match an exact apiVersion and kind. Use
+`fn.IsGroupKind` to match a group and kind across all versions. `IsGVK` is
+deprecated, so avoid it in new code.
+
+`IsNamespaceScoped` is decided by a table of known kinds. For any other kind it
+falls back to whether `metadata.namespace` is set. A custom resource without a
+namespace is treated as cluster-scoped, so check the kind if this matters for
+your function.
 
 ## Read and update fields
 
@@ -83,7 +104,11 @@ excluded := items.WhereNot(fn.IsGVK("", "v1", "Namespace"))
 nested getter returns the value, whether the field was found, and an error.
 
 ```golang
-for _, obj := range items.Where(fn.IsGVK("apps", "v1", "Deployment")) {
+for _, obj := range items.Where(fn.IsGroupVersionKind(schema.GroupVersionKind{
+	Group:   "apps",
+	Version: "v1",
+	Kind:    "Deployment",
+})) {
 	replicas, found, err := obj.NestedInt64("spec", "replicas")
 	if err != nil {
 		results.ErrorE(err)
@@ -110,15 +135,25 @@ Setters return an error. Check it, as shown above.
 
 ## Work with sub-objects
 
-`GetMap` returns a `SubObject` for a nested map, so you can chain lookups without
-repeating the full path.
+`GetMap` returns a `SubObject` for a nested map. If the field is missing, it
+returns `nil`, and calling a method on `nil` panics. Check each step before you
+chain the next one.
 
 ```golang
 spec := deployment.GetMap("spec")
+if spec == nil {
+	return true // no spec, nothing to update
+}
 template := spec.GetMap("template")
-nodeSelector := template.GetMap("spec").GetMap("nodeSelector")
+if template == nil {
+	return true
+}
+podSpec := template.GetMap("spec")
+if podSpec == nil {
+	return true
+}
 
-if err := nodeSelector.SetNestedString("ssd", "disktype"); err != nil {
+if err := podSpec.SetNestedString("ssd", "nodeSelector", "disktype"); err != nil {
 	results.ErrorE(err)
 }
 ```
@@ -126,7 +161,8 @@ if err := nodeSelector.SetNestedString("ssd", "disktype"); err != nil {
 ## Decode into a typed struct
 
 When a resource has a shape you already model in Go, decode its sub-object into a
-struct with `As`.
+struct with `As`. `As` returns an error on a `nil` sub-object, so it is safe to
+call without a check, but you still need to handle that error.
 
 ```golang
 type deploymentSpec struct {
