@@ -77,7 +77,7 @@ Uses structural comparison of Kubernetes resources to intelligently merge change
 # Result: Your replicas preserved + upstream changes added
 ```
 
-For detailed technical information on how resource-merge works, see the [update command reference]({{% relref "/reference/cli/pkg/update#resource-merge-strategy" %}}).
+For detailed technical information on how resource-merge works, see the [update command reference]({{% relref "/documentation/6-references/cli/pkg/update#resource-merge-strategy" %}}).
 
 ### 2. copy-merge
 
@@ -137,7 +137,7 @@ Replaces your entire local package with upstream, discarding all local changes.
 This strategy will **lose all your local modifications**. Use with caution.
 {{% /alert %}}
 
-For complete strategy details and examples, see the [update command reference]({{% relref "/reference/cli/pkg/update" %}}).
+For complete strategy details and examples, see the [update command reference]({{% relref "/documentation/6-references/cli/pkg/update" %}}).
 
 ## A Complete Example
 
@@ -408,7 +408,7 @@ spec:
 
 If you add a new container, it's added to the merged result. If you remove one, it stays removed.
 
-For technical details on merge keys, resource identity, and the complete merge algorithm, see the [update command reference]({{% relref "/reference/cli/pkg/update#merge-rules" %}}).
+For technical details on merge keys, resource identity, and the complete merge algorithm, see the [update command reference]({{% relref "/documentation/6-references/cli/pkg/update#merge-rules" %}}).
 
 ## Understanding Git Integration
 
@@ -429,8 +429,8 @@ kpt's 3-way merge is **independent** of Git's merge algorithm—it applies intel
 
 ## Related Resources
 
-- [kpt pkg update command reference]({{% relref "/reference/cli/pkg/update" %}}) - Complete technical specification and all merge strategies
-- [Kptfile specification]({{% relref "/reference/schema/kptfile" %}}) - Package configuration schema
+- [kpt pkg update command reference]({{% relref "/documentation/6-references/cli/pkg/update" %}}) - Complete technical specification and all merge strategies
+- [Kptfile specification]({{% relref "/documentation/6-references/schema/kptfile" %}}) - Package configuration schema
 
 ## See Also
 

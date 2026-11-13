@@ -25,7 +25,7 @@ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-
 
 A package in a Git repository can be fetched by specifying a branch, tag, or commit SHA. In the above example, the tag `v1.0.0-beta.61` is specified.
 
-See the [get command reference]({{% relref "/reference/cli/pkg/get" %}}) for usage.
+See the [get command reference]({{% relref "/documentation/6-references/cli/pkg/get" %}}) for usage.
 
 The `Kptfile` contains the metadata about the origin of the forked package. Have a look at the content of the `Kptfile` on
 your local filesystem:
@@ -202,7 +202,7 @@ Package "wordpress" (independent)
     └── [service.yaml]  Service wordpress-mysql
 ```
 
-See the [tree command reference]({{% relref "/reference/cli/pkg/tree" %}}) for usage.
+See the [tree command reference]({{% relref "/documentation/6-references/cli/pkg/tree" %}}) for usage.
 
 In addition, you can use a kpt function, such as `search-replace`, to run a query on the package. For example, to search for resources that have a field with the
 `spec.selector.tier` path, use the following kpt function:
@@ -281,7 +281,7 @@ Regardless of how you have edited the package, you need to _render_ it. Use the 
 kpt fn render wordpress
 ```
 
-See the [render command reference]({{% relref "/reference/cli/fn/render" %}}) for command usage.
+See the [render command reference]({{% relref "/documentation/6-references/cli/fn/render" %}}) for command usage.
 
 `render` is a critical step in the package lifecycle. At a high level, it performs the following steps:
 
@@ -350,7 +350,7 @@ The `update` command updates the local `wordpress` package and the dependent `my
 
 Several different strategies are available for handling the merge. By default, the `resource-merge` strategy is used. This performs a structural comparison of the resource using the OpenAPI schema.
 
-See the [update command reference]({{% relref "/reference/cli/pkg/update" %}}) for usage.
+See the [update command reference]({{% relref "/documentation/6-references/cli/pkg/update" %}}) for usage.
 
 ### Committing the updated resources
 
@@ -369,7 +369,7 @@ kpt pkg init awesomeapp
 
 This command automatically creates the `awesomeapp` directory, if it does not already exist, eliminating the need to manually create the directory beforehand.
 
-See the [init command reference]({{% relref "/reference/cli/pkg/init" %}}) for usage.
+See the [init command reference]({{% relref "/documentation/6-references/cli/pkg/init" %}}) for usage.
 
 The `info` section of the `Kptfile` contains some optional package metadata that you may want to set. These fields are not consumed by any functionality in kpt:
 
