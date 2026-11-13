@@ -48,6 +48,8 @@ jobs:
               - 'mdtogo/**'
               - 'scripts/**'
               - 'Makefile'
+              - 'make/**'
+              - '.golangci.yml'
               - 'go.mod'
               - 'go.sum'
               - '.github/workflows/go.yml'

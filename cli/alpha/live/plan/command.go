@@ -220,13 +220,13 @@ func findAndPrintDiff(before, after *unstructured.Unstructured, prefix string, i
 		}
 
 		switch d.Type {
-		case "LeftAdd":
+		case DiffTypeLeftAdd:
 			txt := print.SprintfWithColor(print.RED, "%s-%s: %s\n", prefix, d.Path, strings.TrimSpace(fmt.Sprintf("%v", d.Left)))
 			fmt.Fprint(ioStreams.Out, txt)
-		case "RightAdd":
+		case DiffTypeRightAdd:
 			txt := print.SprintfWithColor(print.GREEN, "%s+%s: %s\n", prefix, d.Path, strings.TrimSpace(fmt.Sprintf("%v", d.Right)))
 			fmt.Fprint(ioStreams.Out, txt)
-		case "Change":
+		case DiffTypeChange:
 			txt1 := print.SprintfWithColor(print.RED, "%s-%s: %s\n", prefix, d.Path, strings.TrimSpace(fmt.Sprintf("%v", d.Left)))
 			fmt.Fprint(ioStreams.Out, txt1)
 			txt2 := print.SprintfWithColor(print.GREEN, "%s+%s: %s\n", prefix, d.Path, strings.TrimSpace(fmt.Sprintf("%v", d.Right)))
