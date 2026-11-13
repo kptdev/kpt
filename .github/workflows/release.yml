@@ -12,22 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Releases the api, root (library) and cli modules with one locked version:
-#   1. tag api/vX.Y.Z
-#   2. bump the api requirement in the root go.mod, commit, tag vX.Y.Z
-#   3. bump the kpt and api requirements in cli/go.mod, commit, tag cli/vX.Y.Z
-#   4. publish the GitHub release vX.Y.Z on the cli/vX.Y.Z tag
+# Releases the api, root and cli modules with one locked version.
 # See release/README.md and scripts/multimodule-release/release.sh.
 #
-# Pushing and publishing is done with a short-lived token of the kptdev-ci-bot
-# GitHub App (CI_BOT_APP_ID and CI_BOT_PRIVATE_KEY secrets), which must be allowed
-# to push to the (protected) main branch and to create tags. The token is
-# created right before it is needed, because installation tokens expire after an
-# hour and the build and tests can take a while. The secrets should be defined in
-# the "release" environment as well, so that only runs approved by the
-# environment's reviewers (and started from main) can read them
-# (an environment secret takes precedence over an organization secret of the same
-# name).
+# TODO: The provenance (release-provenance.yml) only attests the published assets,
+# not the run that built them. A stricter option: this workflow only validates,
+# tests, tags and pushes (keeping the dry run), and a workflow triggered by the
+# pushed cli/v* tag builds, releases and attests in one run. That needs the app
+# token for the push, protected cli/* tags, and would also allow resuming a
+# half-done release by re-running it.
+#
+# Pushing uses a token of the kptdev-ci-bot GitHub App, created right before it is
+# needed because installation tokens expire after an hour. The app secrets should
+# also be defined in the "release" environment, which takes precedence over the
+# organization secrets and limits who can read them.
 
 name: kpt multimodule release
 on:
@@ -52,16 +50,13 @@ permissions:
 
 jobs:
   build:
-    # Releases are always made from main, using the workflow definition of main.
+    # Releases are only made from main.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     name: kpt-multimodule-release
     environment: release
     permissions:
       contents: write
-    outputs:
-      hashes: ${{ steps.hash.outputs.hashes }}
-      version: ${{ steps.validate.outputs.version }}
     env:
       BRANCH: main
       DRY_RUN: ${{ inputs.dry_run }}
@@ -132,12 +127,10 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
-          # GoReleaser (open-source) cannot publish a release named differently from
-          # its tag, so it only builds and the release is created below.
+          # Only builds: the open-source GoReleaser cannot name the release differently from its tag.
           args: release --skip=validate,publish --clean --verbose -f release/tag/goreleaser.yaml
         env:
-          # The root tag, so that GoReleaser's .Version (used for the package versions)
-          # is X.Y.Z. The binaries are still built from the checked out cli commit.
+          # The root tag, so that .Version (used in the package versions) is X.Y.Z.
           GORELEASER_CURRENT_TAG: ${{ steps.validate.outputs.version }}
       - name: Create GitHub App token
         id: app-token
@@ -150,8 +143,7 @@ jobs:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           git remote set-url --push origin "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-      # Done before pushing, so that a problem here cannot leave tags behind. Also
-      # runs in dry runs, to show what the release would contain.
+      # Before the push, so a failure here leaves no tags behind. Runs in dry runs too.
       - name: Prepare release notes and assets
         env:
           VERSION: ${{ steps.validate.outputs.version }}
@@ -191,25 +183,3 @@ jobs:
             --title "$VERSION" \
             --notes-file release-notes.md \
             "${prerelease[@]}"
-      - name: Generate SLSA subjects for provenance
-        id: hash
-        if: ${{ !inputs.dry_run }}
-        run: |
-          set -euo pipefail
-
-          # Hash the staged assets: they have the names they have on the release.
-          hashes=$(cd release-assets && sha256sum -- * | base64 -w0)
-          echo "hashes=${hashes}" >> "$GITHUB_OUTPUT"
-
-  provenance:
-    needs: [build]
-    if: ${{ !inputs.dry_run }}
-    permissions:
-      actions: read # To read the workflow path.
-      id-token: write # To sign the provenance.
-      contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
-    with:
-      base64-subjects: "${{ needs.build.outputs.hashes }}"
-      upload-assets: true # upload to the release created above
-      upload-tag-name: "cli/${{ needs.build.outputs.version }}"

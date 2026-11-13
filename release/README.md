@@ -35,8 +35,11 @@ The workflow:
 6. Generates the release notes and stages the release assets, and prints both in the log and the job summary (also in dry
    runs). This happens before anything is pushed.
 7. Pushes `main` and the three tags in a single atomic push.
-8. Creates the GitHub release **named `v1.2.3`, attached to the `cli/v1.2.3` tag**, with all artifacts, and uploads SLSA provenance.
+8. Creates the GitHub release **named `v1.2.3`, attached to the `cli/v1.2.3` tag**, with all artifacts.
    Versions with a pre-release suffix are marked as pre-releases.
+9. Creating the release triggers the [kpt release provenance](../.github/workflows/release-provenance.yml) workflow, which hashes
+   the published assets and uploads SLSA provenance to the release. The recorded revision is the commit of the `cli/v1.2.3` tag.
+   The provenance therefore attests the assets as they were published, not the run that built them.
 
 Nothing is pushed before the build and tests have succeeded. The steps are implemented in
 [`scripts/multimodule-release/`](../scripts/multimodule-release/) (usage is documented in the header of `release.sh`).
@@ -83,7 +86,8 @@ https://github.com/kptdev/kpt/releases/download/cli/v1.2.3/kpt_linux_amd64-1.2.3
 ## When something fails
 
 - Before the push (validation, checks, tests, build): nothing was published. Fix the problem and run the workflow again with the same version.
-- After the push (release creation or provenance failed): the tags exist and **must not be reused**. Either create the missing
+- The provenance failed: re-run the failed "kpt release provenance" workflow run (Actions, "Re-run failed jobs").
+- After the push (release creation failed): the tags exist and **must not be reused**. Either create the missing
   release manually from the `cli/v1.2.3` tag, or delete the three tags and the bump commits and run again. Do not delete tags
   that were already fetched by the Go module proxy; release a new version instead.
 

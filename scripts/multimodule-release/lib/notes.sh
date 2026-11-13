@@ -19,9 +19,8 @@
 # The notes consist of the repository wide GitHub generated notes, followed by
 # the changes scoped to the api/ and cli/ modules. The previous release of
 # each is the highest earlier tag with the matching prefix.
-# The end of the range is the branch (not the new tags), so that the notes can
-# also be generated before the new tags are pushed, for example in a dry run.
-# The bump commits at the branch tip do not belong to any PR and are ignored.
+# The range ends at the branch, not the new tags, so the notes also work before
+# the tags are pushed (dry run). The bump commits have no PR and are ignored.
 cmd_notes() {
   local version="v${1#v}" branch="$2" outfile="$3"
   local repo="${GITHUB_REPOSITORY:-kptdev/kpt}"

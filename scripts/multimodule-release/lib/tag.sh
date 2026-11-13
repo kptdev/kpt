@@ -14,12 +14,9 @@
 # limitations under the License.
 # Tagging, bump commits and push. Sourced by release.sh, do not execute directly.
 
-# Runs go commands so that the kpt module tags, which only exist locally at
-# this point, can be resolved: the kpt repository URL is redirected to the
-# local clone, and the proxy and checksum database are bypassed for the kpt
-# modules (github.com/kptdev/kpt and everything below it) only. All other
-# modules are fetched and verified as usual.
-# Only the environment of the invoked command is changed.
+# Runs a go command so that the new kpt tags, which only exist locally yet, resolve:
+# the kpt repository URL is redirected to the local clone, and proxy and checksum
+# database are bypassed for the kpt modules only.
 with_local_kpt() {
   GIT_CONFIG_COUNT=1 \
   GIT_CONFIG_KEY_0="url.file://${REPO_ROOT}/.git.insteadOf" \

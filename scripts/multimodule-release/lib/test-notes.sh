@@ -13,23 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Tests for the notes subcommand. Run: make test-scripts
+# Tests for the notes subcommand.
 #
-# The history is known: starting from v1.0.0, api/v1.0.0 and cli/v1.0.0 (all on
-# the initial commit) the following commits are made, with PR numbers in the
-# subjects like squash merges have them:
-#
-#   #12 touches api/      <- api/v1.0.1-pre.1 is tagged here
+# Known history on top of v1.0.0, api/v1.0.0 and cli/v1.0.0 (PR numbers as in
+# squash merge subjects):
+#   #12 touches api/  <- api/v1.0.1-pre.1 is tagged here
 #   #13 touches cli/
 #   #15 touches api/
 #   #14 touches the root
-#
-# so between the previous releases and the new one, the expected PRs are:
-#   api/ since api/v1.0.1-pre.1 (the highest earlier api tag): #15 only
-#   cli/ since cli/v1.0.0:                                    #13 only
-# gh is stubbed. It returns the same GitHub-style notes for every call (listing
-# all four PRs) and records its arguments, so that the tags the notes are
-# requested for can be verified too.
+# Expected: api/ notes since api/v1.0.1-pre.1 have #15 only, cli/ notes since
+# cli/v1.0.0 have #13 only.
+# gh is stubbed: it returns notes listing all four PRs and records its arguments.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/testing.sh"
