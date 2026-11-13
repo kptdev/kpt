@@ -13,21 +13,24 @@
 # limitations under the License.
 
 # This defines the build for goreleaser (https://goreleaser.com/). It is
-# executed through a Github Action that is triggered by new tags being created
-# in the kpt repo.
+# executed by the multimodule release workflow (.github/workflows/release.yml),
+# which publishes the GitHub release itself, so GoReleaser is run with
+# --skip=publish and only builds and packages the artifacts.
 # As kpt needs to be compiled with CGO, we cannot simply just provide a simple
 # matrix of GOOS and GOARCH combinations, but instead, we'd need to define separate
 # steps for each targetted OS and ARCH. This is because we need to specify the
 # platform specific C std library (libc) and cross-compiler to be used.
 
 # The CLI is released from tags like cli/v1.2.3. GoReleaser's monorepo.tag_prefix
-# setting is not available in the open-source build, and it would treat that tag
-# as the version string.
+# setting is not available in the open-source build, and .Version would be "cli/v1.2.3"
+# (which ends up in the package versions). The workflow therefore sets
+# GORELEASER_CURRENT_TAG=v1.2.3, the root tag of the same release.
 version: 2
 env:
   - CGO_ENABLED=0
   - GO111MODULE=on
-# All other tags besides cli/* must not be treated as the previous CLI release.
+# Only matters when GoReleaser detects tags itself (snapshot runs); the release
+# workflow sets GORELEASER_CURRENT_TAG.
 git:
   ignore_tags:
     - "v*"
@@ -86,9 +89,6 @@ archives:
       - darwin-arm64
       - linux-amd64
       - linux-arm64
-    files:
-      - LICENSES*
-      - lib.zip*
     name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ trimprefix (base .Tag) "v" }}'
   - id: bin-only
     formats: binary
@@ -121,19 +121,7 @@ nfpms:
     file_name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ trimprefix (base .Tag) "v" }}'
 checksum:
   name_template: "checksums.txt"
+# The release notes and the GitHub release are created by the release workflow
+# (the open-source build cannot scope a changelog to a module).
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - "(?i)^docs:"
-      - "(?i)^test:"
-      - "(?i)^regenerate docs"
-      - Merge pull request
-      - Merge branch
-release:
-  github:
-    owner: kptdev
-    name: kpt
-  draft: false
-  prerelease: auto
-
+  disable: true

@@ -153,9 +153,9 @@ git config --global user.name "Your Name"
 * **.github/workflows/live-e2e.yml**: Live apply e2e tests
   * Tests with pinned Kubernetes image SHAs
   * Runs `make test-live-apply` with `K8S_VERSION` environment variable
-* **.github/workflows/release-api.yml**: Release the kpt API module
-  * Builds, tests and lints the kpt API module
-  * Runs `make api`
+* **.github/workflows/release.yml**: Multimodule release (manual `workflow_dispatch`)
+  * Tags the api, root and cli modules with one locked version, builds with GoReleaser and publishes the GitHub release
+  * Implemented by `scripts/multimodule-release/`; see `release/README.md`
 
 ### Documentation & Tests
 

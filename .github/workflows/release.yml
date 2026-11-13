@@ -12,29 +12,174 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: kpt library release
+# Releases the api, root and cli modules with one locked version.
+# See release/README.md and scripts/multimodule-release/release.sh.
+#
+# TODO: The provenance (release-provenance.yml) only attests the published assets,
+# not the run that built them. A stricter option: this workflow only validates,
+# tests, tags and pushes (keeping the dry run), and a workflow triggered by the
+# pushed cli/v* tag builds, releases and attests in one run. That needs the app
+# token for the push, protected cli/* tags, and would also allow resuming a
+# half-done release by re-running it.
+#
+# Pushing uses a token of the kptdev-ci-bot GitHub App, created right before it is
+# needed because installation tokens expire after an hour. The app secrets should
+# also be defined in the "release" environment, which takes precedence over the
+# organization secrets and limits who can read them.
+
+name: kpt multimodule release
 on:
-  push:
-    tags:
-    - "v[1-9].*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        description: 'The new version to be released, e.g. v1.2.3 or v1.2.3-pre.1'
+        type: string
+      dry_run:
+        required: false
+        default: false
+        description: 'Build everything locally, but do not push or publish anything'
+        type: boolean
+
+concurrency:
+  group: kpt-multimodule-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    # Releases are only made from main.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    name: kpt-library-release
+    name: kpt-multimodule-release
+    environment: release
+    permissions:
+      contents: write
+    env:
+      BRANCH: main
+      DRY_RUN: ${{ inputs.dry_run }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          ref: main
           fetch-depth: 0
+          # Push credentials are configured later, with a fresh app token.
+          persist-credentials: false
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - name: Check for replace directives in go.mod
-        uses: ./.github/actions/check-go-mod-replace
-      - name: Build, test, lint (root module)
+          cache: false
+      - name: Configure git
         run: |
-          git config --global user.email you@example.com
-          git config --global user.name Your Name
-          make lib
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Validate version and branch
+        id: validate
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          version=$(./scripts/multimodule-release/release.sh validate "$INPUT_VERSION" "$BRANCH")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Check for replace directives and kpt pseudo-versions (root module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: .
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check for replace directives and kpt pseudo-versions (api module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: api
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check for replace directives and kpt pseudo-versions (cli module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: cli
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Build, Test, Lint
+        run: |
+          make all
+          make test-docker
+      - name: Create commits and tags
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: ./scripts/multimodule-release/release.sh tag "$VERSION"
+      - name: Check release commits for replace directives and kpt pseudo-versions (root module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: .
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check release commits for replace directives and kpt pseudo-versions (api module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: api
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Check release commits for replace directives and kpt pseudo-versions (cli module)
+        uses: ./.github/actions/check-go-mod-replace
+        with:
+          working-directory: cli
+          tagged-only-modules: '["github.com/kptdev/kpt"]'
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          # Only builds: the open-source GoReleaser cannot name the release differently from its tag.
+          args: release --skip=validate,publish --clean --verbose -f release/tag/goreleaser.yaml
+        env:
+          # The root tag, so that .Version (used in the package versions) is X.Y.Z.
+          GORELEASER_CURRENT_TAG: ${{ steps.validate.outputs.version }}
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.CI_BOT_APP_ID }}
+          private-key: ${{ secrets.CI_BOT_PRIVATE_KEY }}
+      - name: Configure push credentials
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git remote set-url --push origin "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+      # Before the push, so a failure here leaves no tags behind. Runs in dry runs too.
+      - name: Prepare release notes and assets
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          ./scripts/multimodule-release/release.sh notes "$VERSION" "$BRANCH" release-notes.md
+          ./scripts/multimodule-release/release.sh assets dist release-assets
+
+          {
+            echo "## Release ${VERSION} (dry run: ${DRY_RUN})"
+            echo
+            echo "### Assets"
+            echo
+            (cd release-assets && printf -- '- %s\n' *)
+            echo
+            echo "### Release notes"
+            echo
+            cat release-notes.md
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Push branch and tags
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+        run: ./scripts/multimodule-release/release.sh push "$VERSION" "$BRANCH"
+      - name: Create GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.validate.outputs.version }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          prerelease=()
+          if [[ "$VERSION" == *-* ]]; then
+            prerelease=(--prerelease)
+          fi
+          # The release is named vX.Y.Z but points at the cli/vX.Y.Z tag.
+          gh release create "cli/${VERSION}" release-assets/* \
+            --verify-tag \
+            --title "$VERSION" \
+            --notes-file release-notes.md \
+            "${prerelease[@]}"

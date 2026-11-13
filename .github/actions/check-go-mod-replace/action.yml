@@ -15,17 +15,28 @@
 name: Check go.mod replace directives
 description: >
   Fails if the go.mod in the specified directory contains active replace
-  directives that are not in the allowed list.
+  directives that are not in the allowed list, or requires one of the given
+  modules at a pseudo-version (commit date and hash instead of a tag).
 
 inputs:
   working-directory:
     description: Directory containing the go.mod to check.
     required: false
     default: "."
+
   allowed-replacements:
     description: >
       JSON array of module paths that are allowed to have replace directives.
       Example: '["k8s.io/apiserver", "sigs.k8s.io/kustomize/kyaml"]'
+    required: false
+    default: "[]"
+
+  tagged-only-modules:
+    description: >
+      JSON array of module paths that must be required at tagged versions, not
+      pseudo-versions. Submodules (path/...) are included. Pseudo-versions of
+      other modules are allowed.
+      Example: '["github.com/kptdev/kpt"]'
     required: false
     default: "[]"
 
@@ -43,5 +54,22 @@ runs:
         if [ "$COUNT" -gt 0 ]; then
           echo "::error::$(pwd)/go.mod contains unexpected replace directives. Remove them before releasing."
           echo "$UNEXPECTED" | jq .
+          exit 1
+        fi
+
+    - name: Check for pseudo-versions
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        TAGGED_ONLY='${{ inputs.tagged-only-modules }}'
+        # Pseudo-versions end in a 14 digit UTC timestamp and a 12 character commit hash.
+        PSEUDO=$(go mod edit -json | jq --argjson modules "$TAGGED_ONLY" \
+          '[(.Require // [])[]
+            | select(.Path as $p | $modules | any(. as $m | $p == $m or ($p | startswith($m + "/"))))
+            | select(.Version | test("[-.][0-9]{14}-[0-9a-f]{12}$"))]')
+        COUNT=$(echo "$PSEUDO" | jq 'length')
+        if [ "$COUNT" -gt 0 ]; then
+          echo "::error::$(pwd)/go.mod requires modules at pseudo-versions. Use tagged versions before releasing."
+          echo "$PSEUDO" | jq .
           exit 1
         fi
