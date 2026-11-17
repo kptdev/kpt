@@ -189,9 +189,12 @@ func scanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string, honor
 		return nil, nil, nil, err
 	}
 
-	// Loaded once, and only if a package has subpackages to prune.
+	// Loaded once upfront when honorKrmignore is true, before any
+	// DirectSubpackages() call can read Kptfiles inside ignored dirs.
 	var reachable map[string]bool
-	reachableLoaded := false
+	if honorKrmignore {
+		reachable = reachableKptfileDirs(fsys, pkgPath, kptfilev1.KptFileName)
+	}
 
 	var walk func(p *pkg.Pkg, isRoot bool) error
 	walk = func(p *pkg.Pkg, isRoot bool) error {
@@ -239,20 +242,15 @@ func scanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string, honor
 		}
 		found = append(found, nonKRM...)
 
+		if reachable != nil {
+			return nil
+		}
+
 		subpkgs, subErr := p.DirectSubpackages()
 		if subErr != nil {
 			return subErr
 		}
-		if honorKrmignore && len(subpkgs) > 0 && !reachableLoaded {
-			reachable = reachableKptfileDirs(fsys, pkgPath)
-			reachableLoaded = true
-		}
 		for _, sub := range subpkgs {
-			// DirectSubpackages ignores .krmignore; skip any subpackage
-			// the real reader can't reach, e.g. under an ignored dir.
-			if reachable != nil && !reachable[sub.UniquePath.String()] {
-				continue
-			}
 			if err := walk(sub, false); err != nil {
 				return err
 			}
@@ -263,19 +261,45 @@ func scanTree(fsys filesys.FileSystem, pkgPath string, matchGlob []string, honor
 	if err := walk(root, true); err != nil {
 		return nil, nil, nil, err
 	}
+	if reachable != nil {
+		for _, dir := range sortedSubpackageDirs(reachable, root.UniquePath.String()) {
+			sub, subErr := pkg.New(fsys, dir)
+			if subErr != nil {
+				return nil, nil, nil, subErr
+			}
+			if err := walk(sub, false); err != nil {
+				return nil, nil, nil, err
+			}
+		}
+	}
 	return found, optedIn, allResources, nil
 }
 
-// reachableKptfileDirs returns the directory of every Kptfile the fn
-// commands' real reader (IncludeSubpackages: true) can reach from
-// rootPath, so .krmignore is honored with kyaml's exact semantics.
+// sortedSubpackageDirs returns every directory in reachable other than
+// rootDir, sorted for deterministic traversal.
+func sortedSubpackageDirs(reachable map[string]bool, rootDir string) []string {
+	dirs := make([]string, 0, len(reachable))
+	for dir := range reachable {
+		if dir != rootDir {
+			dirs = append(dirs, dir)
+		}
+	}
+	sort.Strings(dirs)
+	return dirs
+}
+
+// reachableKptfileDirs returns the directory of every Kptfile a
+// LocalPackageReader can reach from rootPath, honoring .krmignore with
+// kyaml's exact semantics. Pass packageFileName=kptfilev1.KptFileName
+// for package-scoped .krmignore (fn eval/source), or "" for flat
+// root-only .krmignore (live).
 // Returns nil on any read error, meaning "don't prune": the per-package
 // reads that follow surface the real error.
-func reachableKptfileDirs(fsys filesys.FileSystem, rootPath string) map[string]bool {
+func reachableKptfileDirs(fsys filesys.FileSystem, rootPath, packageFileName string) map[string]bool {
 	nodes, err := (&kio.LocalPackageReader{
 		PackagePath:        rootPath,
-		PackageFileName:    kptfilev1.KptFileName,
-		IncludeSubpackages: true,
+		PackageFileName:    packageFileName,
+		IncludeSubpackages: packageFileName != "",
 		MatchFilesGlob:     []string{kptfilev1.KptFileName},
 		FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: fsys},
 	}).Read()
@@ -331,6 +355,11 @@ func collectOptedIn(fsys filesys.FileSystem, pkgPath string) (optedIn map[string
 		return nil, nil, err
 	}
 
+	// Honor root .krmignore upfront (flat, matching scanFlatTree's real
+	// reader) before DirectSubpackages() can read Kptfiles inside
+	// ignored directories.
+	reachable := reachableKptfileDirs(fsys, pkgPath, "")
+
 	var walk func(p *pkg.Pkg) error
 	walk = func(p *pkg.Pkg) error {
 		dir := p.UniquePath.String()
@@ -340,6 +369,10 @@ func collectOptedIn(fsys filesys.FileSystem, pkgPath string) (optedIn map[string
 		}
 		optedIn[dir] = PackageOptedIn(kf)
 		pkgPaths = append(pkgPaths, dir)
+
+		if reachable != nil {
+			return nil
+		}
 
 		subpkgs, subErr := p.DirectSubpackages()
 		if subErr != nil {
@@ -354,6 +387,17 @@ func collectOptedIn(fsys filesys.FileSystem, pkgPath string) (optedIn map[string
 	}
 	if err := walk(root); err != nil {
 		return nil, nil, err
+	}
+	if reachable != nil {
+		for _, dir := range sortedSubpackageDirs(reachable, root.UniquePath.String()) {
+			sub, subErr := pkg.New(fsys, dir)
+			if subErr != nil {
+				return nil, nil, subErr
+			}
+			if err := walk(sub); err != nil {
+				return nil, nil, err
+			}
+		}
 	}
 	return optedIn, pkgPaths, nil
 }

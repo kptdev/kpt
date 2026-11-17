@@ -677,3 +677,92 @@ func indexOf(haystack, needle string) int {
 	}
 	return -1
 }
+
+// TestScanIgnoredSubpackageUnreadableKptfile pins that neither
+// ScanHonoringKrmignore (fn eval/source) nor ScanFlatAndDecide (live)
+// reads or parses a Kptfile inside a directory excluded by .krmignore,
+// while still failing when an unignored subpackage has an unreadable Kptfile.
+func TestScanIgnoredSubpackageUnreadableKptfile(t *testing.T) {
+	cases := []struct {
+		name    string
+		kptfile string
+	}{
+		{
+			name:    "v1alpha1 Kptfile",
+			kptfile: "apiVersion: kpt.dev/v1alpha1\nkind: Kptfile\nmetadata:\n  name: fixture\n",
+		},
+		{
+			name:    "invalid YAML Kptfile",
+			kptfile: ": invalid: [yaml\n",
+		},
+		{
+			name:    "unknown field in Kptfile",
+			kptfile: "apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: fixture\nunknownField: value\n",
+		},
+		{
+			name:    "empty Kptfile",
+			kptfile: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run("ScanHonoringKrmignore ignores "+tc.name, func(t *testing.T) {
+			fsys := filesys.MakeFsOnDisk()
+			root := t.TempDir()
+			fixture := filepath.Join(root, "testdata", "fixture")
+			require.NoError(t, fsys.MkdirAll(fixture))
+			writeKptfileForTest(t, fsys, root, "root")
+			writeValidKRMForTest(t, fsys, root)
+			require.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("testdata/\n")))
+			require.NoError(t, fsys.WriteFile(filepath.Join(fixture, "Kptfile"), []byte(tc.kptfile)))
+
+			printf, _ := printfCollector()
+			res, err := ScanHonoringKrmignore(fsys, root, printf)
+			assert.NoError(t, err)
+			assert.NotContains(t, res.AllResources, fixture)
+		})
+
+		t.Run("ScanFlatAndDecide ignores "+tc.name, func(t *testing.T) {
+			fsys := filesys.MakeFsOnDisk()
+			root := t.TempDir()
+			fixture := filepath.Join(root, "testdata", "fixture")
+			require.NoError(t, fsys.MkdirAll(fixture))
+			writeKptfileForTest(t, fsys, root, "root")
+			writeValidKRMForTest(t, fsys, root)
+			require.NoError(t, fsys.WriteFile(filepath.Join(root, ".krmignore"), []byte("testdata/\n")))
+			require.NoError(t, fsys.WriteFile(filepath.Join(fixture, "Kptfile"), []byte(tc.kptfile)))
+
+			printf, _ := printfCollector()
+			_, err := ScanFlatAndDecide(fsys, root, printf)
+			assert.NoError(t, err)
+		})
+	}
+
+	for _, tc := range cases[:3] {
+		t.Run("ScanHonoringKrmignore still fails on unignored "+tc.name, func(t *testing.T) {
+			fsys := filesys.MakeFsOnDisk()
+			root := t.TempDir()
+			sub := filepath.Join(root, "sub")
+			require.NoError(t, fsys.MkdirAll(sub))
+			writeKptfileForTest(t, fsys, root, "root")
+			require.NoError(t, fsys.WriteFile(filepath.Join(sub, "Kptfile"), []byte(tc.kptfile)))
+
+			printf, _ := printfCollector()
+			_, err := ScanHonoringKrmignore(fsys, root, printf)
+			assert.Error(t, err)
+		})
+
+		t.Run("ScanFlatAndDecide still fails on unignored "+tc.name, func(t *testing.T) {
+			fsys := filesys.MakeFsOnDisk()
+			root := t.TempDir()
+			sub := filepath.Join(root, "sub")
+			require.NoError(t, fsys.MkdirAll(sub))
+			writeKptfileForTest(t, fsys, root, "root")
+			require.NoError(t, fsys.WriteFile(filepath.Join(sub, "Kptfile"), []byte(tc.kptfile)))
+
+			printf, _ := printfCollector()
+			_, err := ScanFlatAndDecide(fsys, root, printf)
+			assert.Error(t, err)
+		})
+	}
+}
