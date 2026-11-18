@@ -16,6 +16,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -24,60 +25,24 @@ import (
 	"github.com/kptdev/kpt/pkg/wasm"
 )
 
-type WasmRuntime string
+// ErrWasmFunctionsRemoved is returned when kpt is asked to run a WASM function.
+// Support for WASM functions has been removed from kpt, see
+// https://github.com/kptdev/kpt/issues/4881. The WasmFn type and the loaders
+// below are kept as stubs in case WASM support is revisited in the future.
+var ErrWasmFunctionsRemoved = errors.New("support for WASM functions has been removed from kpt, " +
+	"run the function as a container image or an executable instead")
 
-const (
-	Wasmtime WasmRuntime = "wasmtime"
-	Nodejs   WasmRuntime = "nodejs"
+// WasmFn is a stub kept for API compatibility. It can no longer run WASM functions.
+type WasmFn struct{}
 
-	WasmRuntimeEnv = "KPT_FN_WASM_RUNTIME"
-
-	jsEntrypointFunction = "processResourceList"
-)
-
-type WasmFn struct {
-	runtimeType WasmRuntime
-
-	wasmtime *WasmtimeFn
-	nodejs   *WasmNodejsFn
+// NewWasmFn always returns ErrWasmFunctionsRemoved.
+func NewWasmFn(_ WasmLoader) (*WasmFn, error) {
+	return nil, ErrWasmFunctionsRemoved
 }
 
-func NewWasmFn(loader WasmLoader) (*WasmFn, error) {
-	switch os.Getenv(WasmRuntimeEnv) {
-	case string(Nodejs):
-		nf, err := NewNodejsFn(loader)
-		if err != nil {
-			return nil, err
-		}
-		return &WasmFn{
-			runtimeType: Nodejs,
-			nodejs:      nf,
-		}, nil
-	case "":
-		fallthrough
-	case string(Wasmtime):
-		wf, err := NewWasmtimeFn(loader)
-		if err != nil {
-			return nil, err
-		}
-		return &WasmFn{
-			runtimeType: Wasmtime,
-			wasmtime:    wf,
-		}, nil
-	default:
-		return nil, fmt.Errorf("unsupported wasm runtime: %v", os.Getenv(WasmRuntimeEnv))
-	}
-}
-
-func (f *WasmFn) Run(r io.Reader, w io.Writer) error {
-	switch f.runtimeType {
-	case Nodejs:
-		return f.nodejs.Run(r, w)
-	case Wasmtime:
-		return f.wasmtime.Run(r, w)
-	default:
-		return fmt.Errorf("unknown wasm runtime type: %q", f.runtimeType)
-	}
+// Run always returns ErrWasmFunctionsRemoved.
+func (f *WasmFn) Run(_ io.Reader, _ io.Writer) error {
+	return ErrWasmFunctionsRemoved
 }
 
 type WasmLoader interface {
