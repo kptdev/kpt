@@ -35,6 +35,10 @@ type ResourceGroupPathManifestReader struct {
 	PkgPath string
 
 	manifestreader.ReaderOptions
+
+	// FileSkipFunc, if set, is passed through to the underlying reader
+	// so pre-excused non-KRM files are skipped at read time.
+	FileSkipFunc kio.LocalPackageSkipFileFunc
 }
 
 // Read reads the manifests and returns them as Info objects.
@@ -51,6 +55,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	nodes, err := (&kio.LocalPackageReader{
 		PackagePath:     absPkgPath,
 		WrapBareSeqNode: true,
+		FileSkipFunc:    r.FileSkipFunc,
 	}).Read()
 	if err != nil {
 		return objs, err

@@ -28,6 +28,7 @@ import (
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
@@ -38,6 +39,9 @@ import (
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/openapi"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -153,10 +157,42 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	const op errors.Op = "cmdliveinit.Run"
 	pr := printer.FromContextOrDie(ctx)
 
-	namespace, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
+	// Pre-scan for non-KRM files before config.FindNamespace() reads them.
+	scanResult, err := krmvalidate.ScanFlatAndDecide(filesys.FileSystemOrOnDisk{}, c.Pkg.UniquePath.String(), pr.Printf)
 	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath,
-			fmt.Errorf("failed to determine inventory namespace from package resources: %w; please provide the namespace using the --namespace flag", err))
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+
+	var namespace string
+	if len(scanResult.SkippedFiles()) > 0 {
+		// FindNamespace re-reads the package with no skip hook, so it
+		// would hit the excused files. Replicate its priority order
+		// instead: explicit --namespace wins, else check agreement.
+		loaderNamespace, enforceNamespace, nsErr := c.Factory.ToRawKubeConfigLoader().Namespace()
+		if nsErr != nil {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("failed to determine inventory namespace: %w; please provide the namespace using the --namespace flag", nsErr))
+		}
+		namespace = loaderNamespace
+		if !enforceNamespace {
+			filtered, ferr := filterSkipped(scanResult.AllResources, scanResult.SkipFunc(c.Pkg.UniquePath.String()))
+			if ferr != nil {
+				return errors.E(op, c.Pkg.UniquePath, ferr)
+			}
+			ns, ok, aerr := allInSameNamespace(filtered)
+			if aerr != nil {
+				return errors.E(op, c.Pkg.UniquePath, aerr)
+			}
+			if ok {
+				namespace = ns
+			}
+		}
+	} else {
+		namespace, err = config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath,
+				fmt.Errorf("failed to determine inventory namespace from package resources: %w; please provide the namespace using the --namespace flag", err))
+		}
 	}
 	namespace = strings.TrimSpace(namespace)
 	if !c.Quiet {
@@ -214,9 +250,65 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	}
 	// add metrics annotation to package resources to track the usage as the resources
 	// will be applied using kpt live group
-	at := attribution.Attributor{PackagePaths: []string{c.Pkg.UniquePath.String()}, CmdGroup: "live"}
+	at := attribution.Attributor{
+		PackagePaths: []string{c.Pkg.UniquePath.String()},
+		CmdGroup:     "live",
+		FileSkipFunc: scanResult.SkipFunc(c.Pkg.UniquePath.String()),
+	}
 	at.Process()
 	return nil
+}
+
+// allInSameNamespace is kpt's own copy of cli-utils's unexported
+// config.allInSameNamespace, operating on an already-filtered
+// resource list instead of re-reading the directory itself.
+func allInSameNamespace(nodes []*yaml.RNode) (string, bool, error) {
+	nodes, err := (&filters.IsLocalConfig{}).Filter(nodes)
+	if err != nil {
+		return "", false, err
+	}
+
+	var ns string
+	for _, node := range nodes {
+		rm, err := node.GetMeta()
+		if err != nil {
+			return "", false, err
+		}
+		if namespaced, found := openapi.IsNamespaceScoped(rm.TypeMeta); found && !namespaced {
+			continue
+		}
+		if rm.Namespace == "" {
+			return "", false, nil
+		}
+		if ns == "" {
+			ns = rm.Namespace
+		} else if rm.Namespace != ns {
+			return "", false, nil
+		}
+	}
+	if ns == "" {
+		return "", false, nil
+	}
+	return ns, true, nil
+}
+
+// filterSkipped drops any node skip reports true for, by its
+// kioutil.PathAnnotation. A nil skip leaves nodes unchanged.
+func filterSkipped(nodes []*yaml.RNode, skip func(relPath string) bool) ([]*yaml.RNode, error) {
+	if skip == nil {
+		return nodes, nil
+	}
+	var out []*yaml.RNode
+	for _, n := range nodes {
+		path, _, err := kioutil.GetFileAnnotations(n)
+		if err != nil {
+			return nil, err
+		}
+		if !skip(path) {
+			out = append(out, n)
+		}
+	}
+	return out, nil
 }
 
 // createRGFile fills in the inventory object values into the resourcegroup object and writes to file storage.

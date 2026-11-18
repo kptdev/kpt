@@ -210,9 +210,17 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	// write a test filter to the directory of configuration
+	// Named (unlike the shared ValueReplacerYAMLData constant) so it's
+	// valid KRM and the non-KRM pre-scan doesn't block this test.
+	namedValueReplacerYAMLData := `apiVersion: v1
+kind: ValueReplacer
+metadata:
+  name: filter
+stringMatch: Deployment
+replace: StatefulSet
+`
 	if !assert.NoError(t, os.WriteFile(
-		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
+		filepath.Join(dir, "filter.yaml"), []byte(namedValueReplacerYAMLData), 0600)) {
 		return
 	}
 
