@@ -25,7 +25,7 @@ Note that `plan` does only works reliably with server-side apply.
 If the package contains a non-KRM file (not excluded by
 [`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `plan` fails, listing
 every such file found. See the
-[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation to
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/documentation/6-references/annotations/auto-ignore-non-krm" %}}) annotation to
 skip these files automatically instead.
 
 ### Synopsis

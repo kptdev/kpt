@@ -21,7 +21,7 @@ and the local filesystem is left intact.
 If the target directory contains a non-KRM file (not excluded by
 [`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `eval` fails before
 running the function, listing every such file found. See the
-[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation to
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/documentation/6-references/annotations/auto-ignore-non-krm" %}}) annotation to
 skip these files automatically instead.
 
 Refer to the [Imperative Function Execution] for detailed overview.

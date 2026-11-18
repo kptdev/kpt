@@ -224,7 +224,7 @@ Every file in a package falls into one of three categories:
    `.json` file, or a file named `Kptfile`) but aren't actually valid KRM resources, such as a Helm
    `values.yaml`. kpt doesn't know what to do with these, so they must be excluded one way or another,
    either manually via `.krmignore` or automatically via the
-   [`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation
+   [`kpt.dev/auto-ignore-non-krm`]({{% relref "/documentation/6-references/annotations/auto-ignore-non-krm" %}}) annotation
    described below. Like `.krmignore`, the annotation is scoped per package: a subpackage with its own
    `Kptfile` does not inherit it from a parent package.
 
@@ -251,9 +251,9 @@ If a package contains a non-KRM file (category 3 above) that isn't excluded by `
 listed above fail before doing any work, listing every such file found across the whole package tree in
 one error. This applies to files that parse as YAML but aren't valid KRM; a file that isn't valid YAML at
 all fails differently and isn't covered by this consolidated reporting or by the annotation below -- see
-["Malformed YAML is different, and isn't covered"]({{% relref "/reference/annotations/auto-ignore-non-krm#malformed-yaml-is-different-and-isnt-covered" %}})
+["Malformed YAML is different, and isn't covered"]({{% relref "/documentation/6-references/annotations/auto-ignore-non-krm#malformed-yaml-is-different-and-isnt-covered" %}})
 for details. If you'd rather non-KRM files be skipped automatically instead of maintaining a `.krmignore`
-list by hand, see the [`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}})
+list by hand, see the [`kpt.dev/auto-ignore-non-krm`]({{% relref "/documentation/6-references/annotations/auto-ignore-non-krm" %}})
 annotation.
 
 ## Editing a package

@@ -29,7 +29,7 @@ aborted and the local filesystem is left intact.
 If a package contains a non-KRM file (not excluded by
 [`.krmignore`]({{% relref "/book/03-packages#excluding-files-with-krmignore" %}})), `render` fails before
 running any function, listing every such file found across the whole package tree. See the
-[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation to
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/documentation/6-references/annotations/auto-ignore-non-krm" %}}) annotation to
 skip these files automatically instead.
 
 Refer to the [Declarative Functions Execution] for more details.
@@ -124,7 +124,7 @@ the last render succeeded or failed.
 
 - **Success**: When rendering completes successfully, the Kptfile receives a condition with `type: Rendered`,
 `status: "True"`, and `reason: RenderSuccess`. If any non-KRM files were skipped because of the
-[`kpt.dev/auto-ignore-non-krm`]({{% relref "/reference/annotations/auto-ignore-non-krm" %}}) annotation, the
+[`kpt.dev/auto-ignore-non-krm`]({{% relref "/documentation/6-references/annotations/auto-ignore-non-krm" %}}) annotation, the
 condition also gets a `message` field naming them, so that fact is recorded even after this invocation's
 terminal output is gone.
 - **Failure**: When rendering fails, the Kptfile receives a condition with `type: Rendered`, `status: "False"`,
