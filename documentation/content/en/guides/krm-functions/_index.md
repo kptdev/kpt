@@ -17,6 +17,8 @@ then dig into the topic guides as needed.
 - [Interfaces]({{% relref "/guides/krm-functions/interfaces" %}}) — choose between
   `fn.Runner` (transformers, validators) and `fn.ResourceListProcessor`
   (generators, complex functions).
+- [Effective KRM functions]({{% relref "/guides/krm-functions/effective" %}}) — patterns
+  for selecting, reading, and updating resources.
 - [Testing]({{% relref "/guides/krm-functions/testing" %}}) — golden test patterns
   and unit testing in depth.
 - [Containerizing]({{% relref "/guides/krm-functions/containerizing" %}}) — package
