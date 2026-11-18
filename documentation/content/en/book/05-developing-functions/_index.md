@@ -420,6 +420,8 @@ kpt fn eval ./testdata/hello-world/resources.yaml --image ${FN_CONTAINER_REGISTR
 - Read the [KRM Function Developer Guide]({{% relref "/guides/krm-functions" %}})
   for choosing an [interface]({{% relref "/guides/krm-functions/interfaces" %}})
   (`fn.Runner` vs `fn.ResourceListProcessor`),
+  [effective patterns]({{% relref "/guides/krm-functions/effective" %}}) for selecting
+  and updating resources,
   [testing]({{% relref "/guides/krm-functions/testing" %}}) with golden files, and
   [containerizing]({{% relref "/guides/krm-functions/containerizing" %}}) your function.
 - See other [go documentation examples](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn/examples) to use KubeObject.

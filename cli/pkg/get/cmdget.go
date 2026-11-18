@@ -57,6 +57,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"(Experimental) indicates if this package will be deployed to a cluster.")
 	c.Flags().BoolVarP(&r.force, "force", "f", false,
 		"overwrite the local destination directory if it already exists and is not the same package.")
+	c.Flags().BoolVarP(&r.createParents, "create-parents", "p", false,
+		"create parent directories if they do not exist.")
 	_ = c.RegisterFlagCompletionFunc("strategy", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
@@ -75,6 +77,7 @@ type Runner struct {
 	strategy             string
 	isDeploymentInstance bool
 	force                bool
+	createParents        bool
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
@@ -91,6 +94,14 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 				return errors.E(op, err)
 			}
 			args[1] = resolvedPath
+		}
+	}
+	if r.createParents && len(args) > 1 {
+		parent := filepath.Dir(args[1])
+		if _, err := os.Stat(parent); os.IsNotExist(err) {
+			if err := os.MkdirAll(parent, 0755); err != nil {
+				return errors.E(op, err)
+			}
 		}
 	}
 	t, err := parse.GitParseArgs(r.ctx, args, explicitDest)

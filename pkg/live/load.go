@@ -16,6 +16,7 @@ package live
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 
@@ -24,9 +25,11 @@ import (
 	schema "github.com/kptdev/kpt/api/schema/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/lib/util/strings"
+	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -59,11 +62,14 @@ func (e *InventoryInfoValidationError) Error() string {
 // for inventory information inside Kptfile or resourcegroup resources.
 // It returns the resources in unstructured format and the inventory information.
 // If no inventory information is found, that is not considered an error here.
-func Load(f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+// When reading from disk, non-KRM files are pre-scanned and rejected
+// (or excused by annotation) before conversion to Unstructured; stdin
+// input is not pre-scanned.
+func Load(ctx context.Context, f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
 	if path == "-" {
 		return loadFromStream(f, stdIn)
 	}
-	return loadFromDisk(f, path)
+	return loadFromDisk(ctx, f, path)
 }
 
 // loadFromStream reads resources from the provided reader and returns the
@@ -160,7 +166,7 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 // It returns the filtered resources and any inventory information found in
 // Kptfile resources.
 // Only the Kptfile in the root directory will be checked for inventory information.
-func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func loadFromDisk(ctx context.Context, f util.Factory, path string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
 	invInfo, err := readInvInfoFromDisk(path)
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err
@@ -175,9 +181,20 @@ func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kp
 		return nil, kptfilev1.Inventory{}, err
 	}
 
+	absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(path)
+	if err != nil {
+		return nil, kptfilev1.Inventory{}, err
+	}
+	pr := printer.FromContextOrDie(ctx)
+	scanResult, err := krmvalidate.ScanFlatAndDecide(filesys.FileSystemOrOnDisk{}, absPkgPath, pr.Printf)
+	if err != nil {
+		return nil, kptfilev1.Inventory{}, err
+	}
+
 	objs, err := (&ResourceGroupPathManifestReader{
 		PkgPath:       path,
 		ReaderOptions: ro,
+		FileSkipFunc:  scanResult.SkipFunc(absPkgPath),
 	}).Read()
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err
@@ -289,7 +306,7 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 	var violations errors.Violations
 	if inventory.Name == "" {
 		violations = append(violations, errors.Violation{
-			Field:  "name",
+			Field:  fieldName,
 			Value:  inventory.Name,
 			Type:   errors.Missing,
 			Reason: "\"inventory.name\" must not be empty",
@@ -297,7 +314,7 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 	}
 	if inventory.Namespace == "" {
 		violations = append(violations, errors.Violation{
-			Field:  "namespace",
+			Field:  fieldNamespace,
 			Value:  inventory.Namespace,
 			Type:   errors.Missing,
 			Reason: "\"inventory.namespace\" must not be empty",
@@ -345,10 +362,10 @@ func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {
 	var inventoryObj = &unstructured.Unstructured{
 		Object: map[string]any{
 			"apiVersion": groupVersion,
-			"kind":       ResourceGroupGVK.Kind,
+			fieldKind:    ResourceGroupGVK.Kind,
 			"metadata": map[string]any{
-				"name":      inv.Name,
-				"namespace": inv.Namespace,
+				fieldName:      inv.Name,
+				fieldNamespace: inv.Namespace,
 				"labels": map[string]any{
 					common.InventoryLabel: inv.InventoryID,
 				},

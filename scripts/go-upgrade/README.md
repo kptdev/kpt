@@ -87,7 +87,7 @@ FORK_OWNER=kptdev ./upgrade.sh all --push --force # ← allowed
 
 ```bash
 TARGET_GO_VERSION="1.26.9"
-TARGET_GOLANGCI_LINT_VERSION="2.12.2"
+TARGET_GOLANGCI_LINT_VERSION="2.15.0"
 ```
 
 ### Repository Format

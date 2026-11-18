@@ -93,6 +93,47 @@ func TestCmd_execute(t *testing.T) {
 	})
 }
 
+// TestCmd_execute_createParents tests that get creates multi-directory nested parents when --create-parents is provided.
+func TestCmd_execute_createParents(t *testing.T) {
+	testCases := map[string]struct {
+		flag    string
+		subDirs []string
+	}{
+		"long flag with multi-directory parent": {
+			flag:    "--create-parents",
+			subDirs: []string{"dir1", "dir2", "dir3"},
+		},
+		"shorthand flag with multi-directory parent": {
+			flag:    "-p",
+			subDirs: []string{"nested", "parent", "dirs"},
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+				Data:   testutil.Dataset1,
+				Branch: "master",
+			})
+			defer clean()
+
+			defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+			destParts := append([]string{w.WorkspaceDirectory}, tc.subDirs...)
+			destParts = append(destParts, "pkg")
+			dest := filepath.Join(destParts...)
+
+			r := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+			r.Command.SetArgs([]string{tc.flag, "file://" + g.RepoDirectory + ".git/", dest})
+			err := r.Command.Execute()
+
+			assert.NoError(t, err)
+			assert.DirExists(t, dest)
+			g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true)
+		})
+	}
+}
+
 // TestCmdMainBranch_execute tests that get is correctly invoked if default branch
 // is main and master branch doesn't exist
 func TestCmdMainBranch_execute(t *testing.T) {
@@ -370,6 +411,41 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			validations: func(repo, dir string, r *get.Runner, err error) {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "unknown update strategy \"does-not-exist\"")
+			},
+		},
+		"destination parent does not exist without create-parents flag": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "missing-parent", "my-app")}
+			},
+			runE: failRun,
+			validations: func(repo, dir string, r *get.Runner, err error) {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "parent directory")
+				assert.Contains(t, err.Error(), "does not exist")
+			},
+		},
+		"destination parent does not exist with create-parents flag": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{"--create-parents", fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "missing-parent", "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *get.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "missing-parent", "my-app"), r.Get.Destination)
+			},
+		},
+		"destination parent does not exist with -p shorthand flag": {
+			argsFunc: func(repo, dir string) []string {
+				return []string{"-p", fmt.Sprintf("file://%s.git", repo), filepath.Join(dir, "missing-parent", "my-app")}
+			},
+			runE: NoOpRunE,
+			validations: func(repo, dir string, r *get.Runner, err error) {
+				assert.NoError(t, err)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, filepath.Join(dir, "missing-parent", "my-app"), r.Get.Destination)
 			},
 		},
 	}

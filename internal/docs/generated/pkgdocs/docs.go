@@ -162,6 +162,9 @@ Args:
 
 Flags:
 
+  --create-parents, -p:
+    Create parent directories if they do not exist. It is ` + "`" + `false` + "`" + ` by default.
+
   --force:
     Overwrite the local destination directory if it already exists and is not the
     same package. Re-fetching the same upstream package is always idempotent and

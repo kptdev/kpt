@@ -80,7 +80,7 @@ func (rir *RGInventoryLoader) GetInvInfo(cmd *cobra.Command, args []string) (inv
 		}
 	}
 
-	_, inv, err := live.Load(rir.factory, path, cmd.InOrStdin())
+	_, inv, err := live.Load(rir.ctx, rir.factory, path, cmd.InOrStdin())
 	if err != nil {
 		return nil, err
 	}

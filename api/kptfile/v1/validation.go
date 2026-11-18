@@ -434,8 +434,11 @@ func AreKRM(nodes []*yaml.RNode) error {
 // IsKRM validates if given resource is a valid KRM resource by ensuring
 // that resource has a valid apiVersion, kind and metadata.name field.
 // It excludes kustomization resource from KRM check.
+// It validates function configs, which always need a name. The CLI's
+// pipeline-input classifier (pkg/lib/krmvalidate.IsKRM) is deliberately
+// more lenient about names and must not be merged with this one.
 func IsKRM(n *yaml.RNode) error {
-	if isKustomization(n) {
+	if IsKustomization(n) {
 		// exclude kustomization files from KRM check
 		// https://github.com/kptdev/kpt/issues/2388
 		return nil
@@ -456,8 +459,8 @@ func IsKRM(n *yaml.RNode) error {
 	return nil
 }
 
-// isKustomization determines if given YAML is a kustomization file or resource.
-func isKustomization(n *yaml.RNode) bool {
+// IsKustomization determines if given YAML is a kustomization file or resource.
+func IsKustomization(n *yaml.RNode) bool {
 	resourcePath, _, err := kioutil.GetFileAnnotations(n)
 	if err == nil {
 		// perform the check only if we are able to reliably

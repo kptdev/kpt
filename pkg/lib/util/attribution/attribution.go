@@ -39,6 +39,11 @@ type Attributor struct {
 
 	// CmdGroup is the command groups in krm, e.g., pkg, fn, live
 	CmdGroup string
+
+	// FileSkipFunc, if set, is passed to processPackage's own reader
+	// so a file the caller's non-KRM pre-scan already excused is
+	// never read here either, not just left unwritten.
+	FileSkipFunc kio.LocalPackageSkipFileFunc
 }
 
 // Process invokes Attribution kyaml filter on the resources in input packages paths
@@ -71,7 +76,12 @@ func (a *Attributor) Process() {
 func (a *Attributor) processPackage(path string) error {
 	changedFiles := map[string]bool{}
 	return kio.Pipeline{
-		Inputs: []kio.Reader{kio.LocalPackageReader{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}},
+		Inputs: []kio.Reader{kio.LocalPackageReader{
+			PackagePath:       path,
+			PreserveSeqIndent: true,
+			WrapBareSeqNode:   true,
+			FileSkipFunc:      a.FileSkipFunc,
+		}},
 		Filters: []kio.Filter{kio.FilterAll(kyaml.FilterFunc(func(node *kyaml.RNode) (*kyaml.RNode, error) {
 			prevAnnoVal := node.GetAnnotations()[CNRMMetricsAnnotation]
 			if _, err := a.Filter(node); err != nil {

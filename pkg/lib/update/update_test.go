@@ -4082,9 +4082,11 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 				err = os.WriteFile(filepath.Join(expectedLocal, "somefunction.py"), []byte("Print some other thing"), 0600)
 				assert.NoError(t, err)
 			}
-			// Add a yaml file in updated that should never be moved to
-			// expectedLocal.
+			// A .yaml file whose content isn't valid KRM; must be
+			// synced in by this raw-copy path like any other new file.
 			err = os.WriteFile(filepath.Join(updated, "new.yaml"), []byte("a: b"), 0600)
+			assert.NoError(t, err)
+			err = os.WriteFile(filepath.Join(expectedLocal, "new.yaml"), []byte("a: b"), 0600)
 			assert.NoError(t, err)
 			err = update.ReplaceNonKRMFiles(updated, original, local)
 			assert.NoError(t, err)

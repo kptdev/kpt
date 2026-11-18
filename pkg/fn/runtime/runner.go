@@ -33,6 +33,7 @@ import (
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/lib/builtins"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/krmvalidate"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/shlex"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -375,7 +376,7 @@ func (fr *FunctionRunner) SetFnConfig(conf *yaml.RNode) {
 // do executes the kpt function and returns the modified resources.
 // fnResult is updated with the function results returned by the kpt function.
 func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	if krmErr := kptfilev1.AreKRM(input); krmErr != nil {
+	if krmErr := krmvalidate.AreKRM(input); krmErr != nil {
 		return output, fmt.Errorf("input resource list must contain only KRM resources: %w", krmErr)
 	}
 
@@ -390,7 +391,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	if pathErr := enforcePathInvariants(output); pathErr != nil {
 		return output, pathErr
 	}
-	if krmErr := kptfilev1.AreKRM(output); krmErr != nil {
+	if krmErr := krmvalidate.AreKRM(output); krmErr != nil {
 		return output, fmt.Errorf("output resource list must contain only KRM resources: %w", krmErr)
 	}
 

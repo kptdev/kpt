@@ -28,6 +28,13 @@ type Diff struct {
 	Path  string
 }
 
+// Diff.Type values.
+const (
+	DiffTypeLeftAdd  = "LeftAdd"
+	DiffTypeRightAdd = "RightAdd"
+	DiffTypeChange   = "Change"
+)
+
 func diffObjects(b, a *unstructured.Unstructured) ([]Diff, error) {
 	diffs, err := diffMaps("", b.Object, a.Object)
 	if err != nil {
@@ -43,7 +50,7 @@ func diffMaps(prefix string, l, r map[string]any) ([]Diff, error) {
 
 		rv, ok := r[k]
 		if !ok {
-			diffs = append(diffs, Diff{Type: "LeftAdd", Path: childPrefix, Left: lv, Right: rv})
+			diffs = append(diffs, Diff{Type: DiffTypeLeftAdd, Path: childPrefix, Left: lv, Right: rv})
 			continue
 		}
 		childDiffs, err := diffValue(childPrefix, lv, rv)
@@ -58,7 +65,7 @@ func diffMaps(prefix string, l, r map[string]any) ([]Diff, error) {
 
 		lv, ok := l[k]
 		if !ok {
-			diffs = append(diffs, Diff{Type: "RightAdd", Path: childPrefix, Left: lv, Right: rv})
+			diffs = append(diffs, Diff{Type: DiffTypeRightAdd, Path: childPrefix, Left: lv, Right: rv})
 			continue
 		}
 	}
@@ -72,7 +79,7 @@ func diffSlices(prefix string, l, r []any) ([]Diff, error) {
 		childPrefix := prefix + "." + strconv.Itoa(i)
 
 		if len(r) <= i {
-			diffs = append(diffs, Diff{Type: "LeftAdd", Path: childPrefix, Left: l[i], Right: nil})
+			diffs = append(diffs, Diff{Type: DiffTypeLeftAdd, Path: childPrefix, Left: l[i], Right: nil})
 			continue
 		}
 		rv := r[i]
@@ -87,7 +94,7 @@ func diffSlices(prefix string, l, r []any) ([]Diff, error) {
 		childPrefix := prefix + "." + strconv.Itoa(i)
 
 		if len(l) <= i {
-			diffs = append(diffs, Diff{Type: "RightAdd", Path: childPrefix, Left: nil, Right: rv})
+			diffs = append(diffs, Diff{Type: DiffTypeRightAdd, Path: childPrefix, Left: nil, Right: rv})
 			continue
 		}
 	}
@@ -110,20 +117,20 @@ func diffValue(path string, lv, rv any) ([]Diff, error) {
 	case map[string]any:
 		rvMap, ok := rv.(map[string]any)
 		if !ok {
-			return []Diff{{Type: "Change", Path: path, Left: lv, Right: rv}}, nil
+			return []Diff{{Type: DiffTypeChange, Path: path, Left: lv, Right: rv}}, nil
 		}
 		return diffMaps(path, lv, rvMap)
 
 	case []any:
 		rvSlice, ok := rv.([]any)
 		if !ok {
-			return []Diff{{Type: "Change", Path: path, Left: lv, Right: rv}}, nil
+			return []Diff{{Type: DiffTypeChange, Path: path, Left: lv, Right: rv}}, nil
 		}
 		return diffSlices(path, lv, rvSlice)
 
 	default:
 		if !reflect.DeepEqual(lv, rv) {
-			return []Diff{{Type: "Change", Path: path, Left: lv, Right: rv}}, nil
+			return []Diff{{Type: DiffTypeChange, Path: path, Left: lv, Right: rv}}, nil
 		}
 		return nil, nil
 	}

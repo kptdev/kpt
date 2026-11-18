@@ -13,6 +13,7 @@ The following annotations are used to configure kpt features:
 | [config.kubernetes.io/depends-on]          | specifies one or more resource dependencies |
 | [config.kubernetes.io/apply-time-mutation] | specifies one or more substitutions to make at apply time using dependencies as input |
 | [config.kubernetes.io/local-config]        | specifies a resource to be skipped when applying |
+| [kpt.dev/auto-ignore-non-krm]               | automatically skip non-KRM files in a package instead of failing |
 
 The following annotations are used by kpt internally:
 

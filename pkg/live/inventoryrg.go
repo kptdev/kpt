@@ -48,6 +48,13 @@ const (
 	applyRGPollInterval = 2 * time.Second
 )
 
+// Field names used in constructing unstructured inventory objects.
+const (
+	fieldKind      = "kind"
+	fieldName      = "name"
+	fieldNamespace = "namespace"
+)
+
 // ResourceGroupGVK is the group/version/kind of the custom
 // resource used to store inventory.
 var ResourceGroupGVK = schema.GroupVersionKind{
@@ -156,11 +163,11 @@ func (icm *InventoryResourceGroup) Load() (object.ObjMetadataSet, error) {
 	klog.V(4).Infof("loading %d inventory items", len(items))
 	for _, itemUncast := range items {
 		item := itemUncast.(map[string]any)
-		namespace, _, err := unstructured.NestedString(item, "namespace")
+		namespace, _, err := unstructured.NestedString(item, fieldNamespace)
 		if err != nil {
 			return []object.ObjMetadata{}, err
 		}
-		name, _, err := unstructured.NestedString(item, "name")
+		name, _, err := unstructured.NestedString(item, fieldName)
 		if err != nil {
 			return []object.ObjMetadata{}, err
 		}
@@ -168,7 +175,7 @@ func (icm *InventoryResourceGroup) Load() (object.ObjMetadataSet, error) {
 		if err != nil {
 			return []object.ObjMetadata{}, err
 		}
-		kind, _, err := unstructured.NestedString(item, "kind")
+		kind, _, err := unstructured.NestedString(item, fieldKind)
 		if err != nil {
 			return []object.ObjMetadata{}, err
 		}
@@ -213,10 +220,10 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 	for _, objMeta := range icm.objMetas {
 		klog.V(4).Infof("storing inventory obj refercence: %s/%s", objMeta.Namespace, objMeta.Name)
 		objs = append(objs, map[string]any{
-			"group":     objMeta.GroupKind.Group,
-			"kind":      objMeta.GroupKind.Kind,
-			"namespace": objMeta.Namespace,
-			"name":      objMeta.Name,
+			"group":        objMeta.GroupKind.Group,
+			fieldKind:      objMeta.GroupKind.Kind,
+			fieldNamespace: objMeta.Namespace,
+			fieldName:      objMeta.Name,
 		})
 	}
 	klog.V(4).Infof("Creating list of %d resources status", len(icm.objMetas))
@@ -226,14 +233,14 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 		if found {
 			klog.V(4).Infof("storing inventory obj refercence and its status: %s/%s", objMeta.Namespace, objMeta.Name)
 			objStatus = append(objStatus, map[string]any{
-				"group":     objMeta.GroupKind.Group,
-				"kind":      objMeta.GroupKind.Kind,
-				"namespace": objMeta.Namespace,
-				"name":      objMeta.Name,
-				"status":    "Unknown",
-				"strategy":  status.Strategy.String(),
-				"actuation": status.Actuation.String(),
-				"reconcile": status.Reconcile.String(),
+				"group":        objMeta.GroupKind.Group,
+				fieldKind:      objMeta.GroupKind.Kind,
+				fieldNamespace: objMeta.Namespace,
+				fieldName:      objMeta.Name,
+				"status":       "Unknown",
+				"strategy":     status.Strategy.String(),
+				"actuation":    status.Actuation.String(),
+				"reconcile":    status.Reconcile.String(),
 			})
 		}
 	}
