@@ -24,8 +24,6 @@ YEAR_GEN          := $(shell date '+%Y')
 GOBIN := $(shell go env GOPATH)/bin
 KPT_VERSION := $(shell date '+development-%Y-%m-%dT%H:%M:%S')
 
-export KPT_FN_WASM_RUNTIME ?= nodejs
-
 LDFLAGS := -ldflags "-X main.version=${KPT_VERSION}
 ifeq ($(OS),Windows_NT)
 	# Do nothing

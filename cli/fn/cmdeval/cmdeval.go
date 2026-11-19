@@ -105,6 +105,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().BoolVar(
 		&r.RunnerOptions.AllowWasm, "allow-alpha-wasm", false, "allow alpha wasm functions to be run."+
 			" If true, you can specify a wasm image with --image flag or a path to a wasm file (must have the .wasm file extension) with --exec flag.")
+	_ = r.Command.Flags().MarkDeprecated("allow-alpha-wasm", "support for WASM functions has been removed from kpt")
 
 	// selector flags
 	r.Command.Flags().StringVar(
