@@ -52,9 +52,8 @@ PKG_PATH:
 
 ```shell
 --allow-alpha-wasm:
-  Allow wasm to be used during pipeline execution. When enabled, function
-  images that are wasm modules will be executed using the wasm runtime
-  instead of a container runtime. Defaults to false.
+  Deprecated. Support for WASM functions has been removed from kpt. If set,
+  every function in the pipeline fails with an error. Defaults to false.
 
 --allow-exec:
   Allow executable binaries to run as function. Note that executable binaries

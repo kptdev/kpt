@@ -59,9 +59,9 @@ Args:
 Flags:
 
   --allow-alpha-wasm:
-    Allow alpha wasm functions to be run. If true, you can specify a wasm image
-    with --image flag or a path to a wasm file (must have the .wasm file
-    extension) with --exec flag. Defaults to false.
+    Deprecated. Support for WASM functions has been removed from kpt. If set,
+    running a function given with --image, or a .wasm file given with --exec,
+    fails with an error. Defaults to false.
   
   --as-current-user:
     Use the ` + "`" + `uid` + "`" + ` and ` + "`" + `gid` + "`" + ` of the kpt process for container function execution.
@@ -304,9 +304,8 @@ Args:
 Flags:
 
   --allow-alpha-wasm:
-    Allow wasm to be used during pipeline execution. When enabled, function
-    images that are wasm modules will be executed using the wasm runtime
-    instead of a container runtime. Defaults to false.
+    Deprecated. Support for WASM functions has been removed from kpt. If set,
+    every function in the pipeline fails with an error. Defaults to false.
   
   --allow-exec:
     Allow executable binaries to run as function. Note that executable binaries
