@@ -132,6 +132,15 @@ func NewRunner(
 			pkgCtxGenerator := &builtins.PackageContextGenerator{}
 			fltr.Run = pkgCtxGenerator.Run
 		} else {
+			var fnTimeout time.Duration
+			if f.Timeout != "" {
+				var err error
+				fnTimeout, err = time.ParseDuration(f.Timeout)
+				if err != nil {
+					return nil, fmt.Errorf("invalid function timeout %q: %w", f.Timeout, err)
+				}
+			}
+
 			switch {
 			case f.Image != "":
 				// If allowWasm is true, we will use wasm runtime for image field.
@@ -145,6 +154,7 @@ func NewRunner(
 					cfn := &ContainerFn{
 						Image:           f.Image,
 						ImagePullPolicy: opts.ImagePullPolicy,
+						Timeout:         fnTimeout,
 						Perm: ContainerFnPermission{
 							AllowNetwork: opts.AllowNetwork,
 							// mounts are disabled for render operations (currently)
@@ -181,6 +191,7 @@ func NewRunner(
 					eFn := &ExecFn{
 						Path:     execPath,
 						Args:     execArgs,
+						Timeout:  fnTimeout,
 						FnResult: fnResult,
 					}
 					fltr.Run = eFn.Run
