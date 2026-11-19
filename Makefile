@@ -21,7 +21,7 @@ include ./make/api.mk
 include ./make/cli.mk
 include ./make/checks.mk
 
-all: fix vet fmt lint test build tidy
+all: fix vet fmt lint test test-scripts build tidy
 
 build: cli/build
 
@@ -58,6 +58,13 @@ generate: install-mdtogo api/generate
 	$(MAKE) cli/generate
 	go fmt ./internal/docs/generated/...
 	$(MAKE) schema
+
+# Runs the unit tests of the shell scripts: every scripts/**/test-*.sh.
+.PHONY: test-scripts
+test-scripts:
+	@find scripts -name 'test-*.sh' | sort | while read -r t; do \
+		echo "=== $$t"; bash "$$t" || exit 1; \
+	done
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
