@@ -1,0 +1,7 @@
+{{- $page := false -}}
+{{- range .Params -}}
+  {{- if not $page -}}
+    {{- $page = site.GetPage . -}}
+  {{- end -}}
+{{- end -}}
+{{- with $page -}}{{- .RelPermalink -}}{{- end -}}
