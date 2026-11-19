@@ -68,7 +68,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c.Flags().BoolVar(&r.RunnerOptions.AllowNetwork, "allow-network", false,
 		"allow functions to access network during pipeline execution.")
 	c.Flags().BoolVar(&r.RunnerOptions.AllowWasm, "allow-alpha-wasm", r.RunnerOptions.AllowWasm,
-		"support for WASM functions has been removed from kpt. If true, every pipeline function fails with an error.")
+		"allow wasm to be used during pipeline execution.")
+	_ = c.Flags().MarkDeprecated("allow-alpha-wasm", "support for WASM functions has been removed from kpt")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
