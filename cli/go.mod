@@ -3,8 +3,9 @@ module github.com/kptdev/kpt/cli
 go 1.26.9
 
 // TODO: Comment the lines below out when the next version of the API is released.
-// replace github.com/kptdev/kpt/api => ../api
-// replace github.com/kptdev/kpt => ..
+replace github.com/kptdev/kpt/api => ../api
+
+replace github.com/kptdev/kpt => ..
 
 require (
 	github.com/go-errors/errors v1.5.1
@@ -35,7 +36,6 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/bytecodealliance/wasmtime-go v1.0.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chai2010/gettext-go v1.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
@@ -89,7 +89,6 @@ require (
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prep/wasmexec v0.0.0-20220807105708-6554945c1dec // indirect
 	github.com/prometheus/client_golang v1.23.2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.67.5 // indirect
