@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !unix
+//go:build !unix && !windows
 
 package runtime
 
@@ -21,8 +21,7 @@ import (
 	"os/exec"
 )
 
-// runCmd runs cmd and waits for it to finish. When the context of cmd ends,
-// only the function is killed, not the processes that it started.
+// runCmd runs cmd and waits for it to finish.
 func runCmd(_ context.Context, cmd *exec.Cmd) error {
 	return cmd.Run()
 }
