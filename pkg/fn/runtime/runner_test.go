@@ -21,9 +21,11 @@ import (
 	"context"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -1154,4 +1156,27 @@ items: []
 
 	_, err = fr.do(nodes)
 	assert.NoError(t, err, "a nameless *List resource must not be rejected as non-KRM")
+}
+
+func TestNewRunner_ExecTimeout(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	ctx := printer.WithContext(context.Background(), printer.New(out, out))
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+	opts.Timeout = 100 * time.Millisecond
+
+	fnResults := fnresultv1.NewResultList()
+	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30"},
+		"", fnResults, opts, nil)
+	require.NoError(t, err)
+
+	_, err = fr.Filter(nil)
+	assert.Error(t, err)
+	assert.Contains(t, out.String(), "Timed out after: 100ms")
+	require.Len(t, fnResults.Items, 1)
+	assert.Equal(t, timeoutExitCode, fnResults.Items[0].ExitCode)
 }
