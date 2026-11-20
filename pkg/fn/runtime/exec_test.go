@@ -105,7 +105,7 @@ func TestExecFn_Timeout(t *testing.T) {
 				return
 			}
 
-			var execErr *ExecError
+			var execErr *fnresultv1.ExecError
 			require.ErrorAs(t, err, &execErr)
 			assert.Equal(t, tc.expectedTimeout, execErr.Timeout)
 			assert.Equal(t, tc.expectRunTimeout, execErr.RunTimeout)
