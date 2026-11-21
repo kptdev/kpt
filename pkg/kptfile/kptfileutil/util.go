@@ -495,7 +495,7 @@ func shouldAddFnKeyUtil(fns []kptfilev1.Function) bool {
 		if fn.Exec != "" {
 			key = fn.Exec
 		} else {
-			key = strings.Split(fn.Image, ":")[0]
+			key = imageMergeKey(fn.Image)
 		}
 		if keySet.Has(key) {
 			return false
@@ -503,6 +503,16 @@ func shouldAddFnKeyUtil(fns []kptfilev1.Function) bool {
 		keySet.Insert(key)
 	}
 	return true
+}
+
+// imageMergeKey returns the function image without its tag or digest.
+// A colon before the last "/" is the port of the registry and is kept.
+func imageMergeKey(image string) string {
+	image, _, _ = strings.Cut(image, "@")
+	if i := strings.LastIndex(image, ":"); i > strings.LastIndex(image, "/") {
+		return image[:i]
+	}
+	return image
 }
 
 // addNameForMerge adds name field for all the functions if empty
@@ -531,10 +541,7 @@ func addName(fn kptfilev1.Function) kptfilev1.Function {
 	if fn.Exec != "" {
 		key = fn.Exec
 	} else {
-		parts := strings.Split(fn.Image, ":")
-		if len(parts) > 0 {
-			key = parts[0]
-		}
+		key = imageMergeKey(fn.Image)
 	}
 	fn.Name = fmt.Sprintf("_kpt-merge_%s", key)
 	return fn

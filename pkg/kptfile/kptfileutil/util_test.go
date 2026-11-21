@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -825,6 +825,71 @@ pipeline:
       image: nginx
       new-setter: new-setter-value // new setter is added
       tag: 1.2.0 // value of tag is updated
+`,
+		},
+
+		"functions from a registry with a port are merged by image name": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+    - image: registry.example.com:5000/krm/apply-setters:v0.2
+      configMap:
+        image: nginx
+        tag: 1.0.1
+    - image: registry.example.com:5000/krm/set-labels:v0.2
+      configMap:
+        app: demo
+`,
+			update: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+    - image: registry.example.com:5000/krm/apply-setters:v0.2
+      configMap:
+        image: nginx
+        tag: 1.0.1
+        new-setter: new-setter-value // new setter is added
+    - image: registry.example.com:5000/krm/set-labels:v0.2
+      configMap:
+        app: demo
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+    - image: registry.example.com:5000/krm/apply-setters:v0.2
+      configMap:
+        image: nginx
+        tag: 1.2.0 // value of tag is updated
+    - image: registry.example.com:5000/krm/set-labels:v0.2
+      configMap:
+        app: demo
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+  - image: registry.example.com:5000/krm/apply-setters:v0.2
+    configMap:
+      image: nginx
+      new-setter: new-setter-value // new setter is added
+      tag: 1.2.0 // value of tag is updated
+  - image: registry.example.com:5000/krm/set-labels:v0.2
+    configMap:
+      app: demo
 `,
 		},
 
@@ -1842,4 +1907,45 @@ func TestUpdateKptfileWithoutOrigin_errorPaths(t *testing.T) {
 		err = UpdateKptfileWithoutOrigin(localDir, updatedDir, false)
 		assert.Error(t, err)
 	})
+}
+
+func TestImageMergeKey(t *testing.T) {
+	testCases := map[string]struct {
+		image    string
+		expected string
+	}{
+		"tag": {
+			image:    "ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2",
+			expected: "ghcr.io/kptdev/krm-functions-catalog/apply-setters",
+		},
+		"no tag": {
+			image:    "ghcr.io/kptdev/krm-functions-catalog/apply-setters",
+			expected: "ghcr.io/kptdev/krm-functions-catalog/apply-setters",
+		},
+		"short name with tag": {
+			image:    "foo:bar",
+			expected: "foo",
+		},
+		"registry with port and tag": {
+			image:    "registry.example.com:5000/krm/apply-setters:v0.2",
+			expected: "registry.example.com:5000/krm/apply-setters",
+		},
+		"registry with port and no tag": {
+			image:    "registry.example.com:5000/krm/apply-setters",
+			expected: "registry.example.com:5000/krm/apply-setters",
+		},
+		"digest": {
+			image:    "ghcr.io/kptdev/krm-functions-catalog/apply-setters@sha256:0123456789abcdef",
+			expected: "ghcr.io/kptdev/krm-functions-catalog/apply-setters",
+		},
+		"registry with port, tag and digest": {
+			image:    "registry.example.com:5000/krm/apply-setters:v0.2@sha256:0123456789abcdef",
+			expected: "registry.example.com:5000/krm/apply-setters",
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			assert.Equal(t, tc.expected, imageMergeKey(tc.image))
+		})
+	}
 }
