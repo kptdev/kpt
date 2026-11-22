@@ -19,6 +19,7 @@ package runtime
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -1154,4 +1155,69 @@ items: []
 
 	_, err = fr.do(nodes)
 	assert.NoError(t, err, "a nameless *List resource must not be rejected as non-KRM")
+}
+
+func TestFunctionRunnerPreservesDocumentComments(t *testing.T) {
+	input := `# START A
+apiVersion: v1
+kind: Pod
+metadata:
+  name: a
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest # inline
+
+# END A
+---
+# START B
+apiVersion: v1
+kind: Pod
+metadata:
+  name: b
+
+# END B
+`
+	fnErr := errors.New("function failed")
+	for _, tc := range []struct {
+		name  string
+		input string
+		err   error
+	}{
+		{name: "multiple mutators", input: input},
+		{name: "empty input"},
+		{name: "failed mutators", input: input, err: fnErr},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			nodes, err := (&kio.ByteReader{Reader: strings.NewReader(tc.input)}).Read()
+			require.NoError(t, err)
+			fr := &FunctionRunner{
+				filter: &runtimeutil.FunctionFilter{
+					GlobalScope: true,
+					Run: func(reader io.Reader, writer io.Writer) error {
+						_, err := io.Copy(writer, reader)
+						if err != nil {
+							return err
+						}
+						return tc.err
+					},
+				},
+				fnResult:  &fnresultv1.Result{},
+				fnResults: fnresultv1.NewResultList(),
+			}
+			for range 3 {
+				nodes, err = fr.do(nodes)
+				require.ErrorIs(t, err, tc.err)
+			}
+			var out bytes.Buffer
+			err = (kio.ByteWriter{
+				Writer: &out,
+				ClearAnnotations: []string{
+					PathAnnotation, "config.kubernetes.io/path",
+				},
+			}).Write(nodes)
+			require.NoError(t, err)
+			assert.Equal(t, tc.input, out.String())
+		})
+	}
 }

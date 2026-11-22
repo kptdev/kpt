@@ -382,6 +382,20 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 
 	fnResult := fr.fnResult
 	output, err = fr.filter.Filter(input)
+	for _, node := range output {
+		root := node.Document()
+		if root.Kind != yaml.DocumentNode && root.FootComment != "" {
+			// Keep document foot comments outside the ResourceList's items sequence.
+			// Otherwise YAML decoding attaches them to the following resource.
+			content := *root
+			content.FootComment = ""
+			node.SetYNode(&yaml.Node{
+				Kind:        yaml.DocumentNode,
+				FootComment: root.FootComment,
+				Content:     []*yaml.Node{&content},
+			})
+		}
+	}
 
 	if fr.opts.SetPkgPathAnnotation {
 		if pkgPathErr := setPkgPathAnnotationIfNotExist(output, fr.pkgPath); pkgPathErr != nil {
