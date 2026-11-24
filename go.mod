@@ -14,7 +14,7 @@ require (
 	github.com/google/cel-go v0.29.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.21.6
-	github.com/kptdev/kpt/api v1.1.1-pre.2
+	github.com/kptdev/kpt/api v1.1.1-pre.2.0.20261119080405-30c899905853
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
