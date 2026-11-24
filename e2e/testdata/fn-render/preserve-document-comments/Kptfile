@@ -1,0 +1,15 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: preserve-document-comments
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
+      configMap:
+        test: "3"
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
+      configMap:
+        test: "3"
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
+      configMap:
+        test: "3"
