@@ -52,7 +52,7 @@ fix fmt vet lint test tidy:
 	$(MAKE) cli/$@
 
 .PHONY: lib api cli
-# lib is what the vX.Y.Z tag workflow runs. It does not build the CLI.
+# lib runs the checks of the root module only. It does not build the CLI.
 lib api cli:
 	$(MAKE) $@/fix
 	$(MAKE) $@/vet
