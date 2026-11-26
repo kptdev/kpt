@@ -135,5 +135,5 @@ release:
     owner: kptdev
     name: kpt
   draft: false
-  prerelease: auto
+  prerelease: false
 
