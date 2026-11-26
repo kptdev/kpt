@@ -18,6 +18,7 @@ import (
 	"context"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -33,6 +34,14 @@ type RenderOptions struct {
 	DisplayName string
 }
 
+// Renderer executes a rendering pipeline and returns an fnresult ResultList.
+//
+// Deprecated: use StatusRenderer instead.
 type Renderer interface {
 	Render(ctx context.Context, pkg filesys.FileSystem, opts RenderOptions) (*fnresultv1.ResultList, error)
+}
+
+// StatusRenderer executes a rendering pipeline and returns the structured RenderStatus.
+type StatusRenderer interface {
+	Render(ctx context.Context, pkg filesys.FileSystem, opts RenderOptions) (*kptfilev1.RenderStatus, error)
 }
