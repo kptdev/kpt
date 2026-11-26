@@ -21,9 +21,11 @@ import (
 	"context"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -1123,7 +1125,6 @@ func TestPrintFnResult(t *testing.T) {
 		})
 	}
 }
-
 // TestFunctionRunner_do_AcceptsNamelessList: a nameless *List-kind
 // resource (e.g. ConfigMapList) must pass do()'s validation on both
 // the input and output side, matching krmvalidate.IsKRM's exemption
@@ -1154,4 +1155,35 @@ items: []
 
 	_, err = fr.do(nodes)
 	assert.NoError(t, err, "a nameless *List resource must not be rejected as non-KRM")
+}
+
+func TestNewRunner_StepTimeout(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping exec timeout test: no sleep binary found")
+	}
+
+	out := &bytes.Buffer{}
+	ctx := printer.WithContext(context.Background(), printer.New(out, out))
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+
+	fnResults := fnresultv1.NewResultList()
+	fr, err := NewRunner(ctx, filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30", Timeout: "100ms"},
+		"", fnResults, opts, nil)
+	require.NoError(t, err)
+
+	start := time.Now()
+	_, err = fr.Filter(nil)
+	assert.Error(t, err)
+	assert.Less(t, time.Since(start), 5*time.Second)
+	require.Len(t, fnResults.Items, 1)
+}
+
+func TestNewRunner_InvalidTimeout(t *testing.T) {
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+	fnResults := fnresultv1.NewResultList()
+	_, err := NewRunner(context.Background(), filesys.MakeFsInMemory(), &kptfilev1.Function{Exec: "sleep 30", Timeout: "not-a-duration"},
+		"", fnResults, opts, nil)
+	assert.ErrorContains(t, err, "invalid function timeout \"not-a-duration\"")
 }

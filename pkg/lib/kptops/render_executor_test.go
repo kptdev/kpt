@@ -18,9 +18,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	fnresultv1 "github.com/kptdev/kpt/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/api/kptfile/v1"
@@ -396,6 +398,46 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 			assertOrder(t, output, tc.orderedOutput...)
 		})
 	}
+}
+func TestRenderer_Execute_StepTimeout(t *testing.T) {
+	if _, err := exec.LookPath("sleep"); err != nil {
+		t.Skip("skipping render timeout test: no sleep binary found")
+	}
+
+	var outputBuffer bytes.Buffer
+	ctx := printer.WithContext(t.Context(), printer.New(&outputBuffer, &outputBuffer))
+
+	mockFileSystem := filesys.MakeFsInMemory()
+	assert.NoError(t, mockFileSystem.Mkdir(rootString))
+	assert.NoError(t, mockFileSystem.WriteFile(filepath.Join(rootString, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+pipeline:
+  mutators:
+    - exec: sleep 30
+      timeout: 100ms
+`)))
+	assert.NoError(t, mockFileSystem.WriteFile(filepath.Join(rootString, "resources.yaml"), []byte(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: root-cm
+`)))
+
+	opts := runneroptions.RunnerOptions{}
+	opts.InitDefaults(runneroptions.GHCRImagePrefix)
+	opts.AllowExec = true
+	renderer := &Renderer{
+		PkgPath:       rootString,
+		FileSystem:    mockFileSystem,
+		RunnerOptions: opts,
+		Output:        &bytes.Buffer{},
+	}
+
+	start := time.Now()
+	_, err := renderer.Execute(ctx)
+	assert.Error(t, err)
+	assert.Less(t, time.Since(start), 10*time.Second)
 }
 func TestRunPipeline_SubpkgNameDisplay(t *testing.T) {
 	tests := []struct {
