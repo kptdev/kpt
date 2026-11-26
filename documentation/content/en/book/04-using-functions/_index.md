@@ -2,7 +2,7 @@
 title: "Chapter 4: Using functions"
 linkTitle: "Chapter 4: Using functions"
 description: |
-    [Chapter 2]({{% relref "/book/02-concepts#functions" %}}) provided a high-level conceptual explanation of the functions. We also saw examples of how to use `fn eval` and `fn render` to
+    [Functions]({{% relref "/documentation/2-concepts/functions" %}}) provided a high-level conceptual explanation of the functions. We also saw examples of how to use `fn eval` and `fn render` to
     execute the functions. In this chapter, we will take a closer look at how to execute the functions using these two
     two approaches.
 
@@ -84,7 +84,7 @@ Package "wordpress":
 Successfully executed 3 function(s) in 2 package(s).
 ```
 
-See the [render command reference]({{% relref "/reference/cli/fn/render" %}}) for usage.
+See the [render command reference]({{% relref "/documentation/6-references/cli/fn/render" %}}) for usage.
 
 When you invoke the `render` command, kpt performs the following steps:
 
@@ -268,7 +268,7 @@ Using the `exec` field is not recommended, for the following two reasons:
 
 ### Specifying `functionConfig`
 
-In [Chapter 2]({{% relref "/book/02-concepts#functions" %}}), we saw the following conceptual representation of a function invocation:
+In [Functions]({{% relref "/documentation/2-concepts/functions" %}}), we saw the following conceptual representation of a function invocation:
 
 ![img](/images/func.svg)
 
@@ -408,7 +408,7 @@ This annotation is useful for:
 - Any resource that should exist in the package but not on the cluster
 
 For full details on the annotation schema and behavior, see the
-[`local-config` annotation reference]({{% relref "/reference/annotations/local-config" %}}).
+[`local-config` annotation reference]({{% relref "/documentation/6-references/annotations/local-config" %}}).
 
 ### Specifying function `name`
 
@@ -879,7 +879,7 @@ Alternatively, for convenience, you can use the short-hand form of the above com
 kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
 ```
 
-See the [eval command reference]({{% relref "/reference/cli/fn/eval" %}}) for usage.
+See the [eval command reference]({{% relref "/documentation/6-references/cli/fn/eval" %}}) for usage.
 
 This changes the resources in the `wordpress` package and the `mysql` subpackage.
 
@@ -1042,8 +1042,8 @@ kpt fn source wordpress \
   | kpt fn sink my-wordpress
 ```
 
-See the command reference for usage of the [source]({{% relref "/reference/cli/fn/source" %}}) command and the
-[sink]({{% relref "/reference/cli/fn/sink" %}}) command.
+See the command reference for usage of the [source]({{% relref "/documentation/6-references/cli/fn/source" %}}) command and the
+[sink]({{% relref "/documentation/6-references/cli/fn/sink" %}}) command.
 
 The above pipeline can be described as follows:
 

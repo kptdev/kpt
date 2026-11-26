@@ -39,12 +39,12 @@ else
   SWAGGER_CMD="go run github.com/go-swagger/go-swagger/cmd/swagger@${SWAGGER_VERSION}"
 fi
 
-$SWAGGER_CMD generate spec -m -w api/kptfile/v1 -o documentation/content/en/reference/schema/kptfile/kptfile.yaml
-$SWAGGER_CMD generate spec -m -w api/kptfile/v1 -o documentation/content/en/reference/schema/kptfile/kptfile.json
+$SWAGGER_CMD generate spec -m -w api/kptfile/v1 -o documentation/content/en/documentation/6-references/schema/kptfile/kptfile.yaml
+$SWAGGER_CMD generate spec -m -w api/kptfile/v1 -o documentation/content/en/documentation/6-references/schema/kptfile/kptfile.json
 
 # Strip kubebuilder annotations from generated schema files.
-jq -f ${REPO_ROOT}/scripts/strip-kubebuilder-annos.jq documentation/content/en/reference/schema/kptfile/kptfile.json > "${BUILD_DIR}/kptfile-schema.json"
-yq -o json documentation/content/en/reference/schema/kptfile/kptfile.yaml \
+jq -f ${REPO_ROOT}/scripts/strip-kubebuilder-annos.jq documentation/content/en/documentation/6-references/schema/kptfile/kptfile.json > "${BUILD_DIR}/kptfile-schema.json"
+yq -o json documentation/content/en/documentation/6-references/schema/kptfile/kptfile.yaml \
   | jq -f ${REPO_ROOT}/scripts/strip-kubebuilder-annos.jq \
   | yq -P -I 4 -o yaml > "${BUILD_DIR}/kptfile-schema.yaml"
 
@@ -53,5 +53,5 @@ yq -o json documentation/content/en/reference/schema/kptfile/kptfile.yaml \
 jq -s '.[0] * .[1]' scripts/schema-header.json ${BUILD_DIR}/kptfile-schema.json > ${BUILD_DIR}/kptfile-schema-with-header.json
 
 rm -f ${BUILD_DIR}/kptfile-schema.json
-mv ${BUILD_DIR}/kptfile-schema-with-header.json documentation/content/en/reference/schema/kptfile/kptfile.json
-mv ${BUILD_DIR}/kptfile-schema.yaml documentation/content/en/reference/schema/kptfile/kptfile.yaml
+mv ${BUILD_DIR}/kptfile-schema-with-header.json documentation/content/en/documentation/6-references/schema/kptfile/kptfile.json
+mv ${BUILD_DIR}/kptfile-schema.yaml documentation/content/en/documentation/6-references/schema/kptfile/kptfile.yaml

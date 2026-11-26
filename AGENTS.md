@@ -234,7 +234,7 @@ git config --global user.name "Your Name"
 
 ### Module Generation
 
-If changes modify CLI documentation in documentation/content/en/reference/cli/:
+If changes modify CLI documentation in documentation/content/en/documentation/6-references/cli/:
 
 * Run `make generate` to regenerate `internal/docs/generated/`
 * Commit generated files
@@ -274,7 +274,7 @@ If changes modify CLI documentation in documentation/content/en/reference/cli/:
 
 ## Implementation Notes for Code Changes
 
-* **CLI Commands**: Add to `commands/` directory; use Cobra; update `documentation/content/en/reference/cli/` for documentation
+* **CLI Commands**: Add to `commands/` directory; use Cobra; update `documentation/content/en/documentation/6-references/cli/` for documentation
 * **Library Code**: Place in `pkg/` for public APIs; use `internal/` for internal utilities
 * **Tests**: Colocate `*_test.go` files with source; use testdata directories for fixtures
 * **Generated Code**: Run `make generate` after modifying templates

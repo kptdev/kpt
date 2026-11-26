@@ -120,8 +120,8 @@ The token is only sent to github.com domains.
 
 
 8. Links to other kpt doc pages should be absolute:
-   - Correct: `[pkg]: /reference/cli/pkg/get/`
-   - Incorrect: `[pkg]: ../../../reference/cli/pkg/get`
+   - Correct: `[pkg]: /documentation/6-references/cli/pkg/get/`
+   - Incorrect: `[pkg]: ../../../documentation/6-references/cli/pkg/get`
 
 9. Flags must appear after positional args:
 

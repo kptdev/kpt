@@ -53,7 +53,8 @@
 						&::after {
 							display: inline-flex;
 							content: '\f078';
-							font-family: 'Font Awesome 5 Free';
+							font-family: $td-font-awesome-font-name;
+							font-weight: 900;
 						}
 					}
 					&.active-path {
