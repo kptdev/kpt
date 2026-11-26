@@ -2,7 +2,7 @@
 title: "Chapter 3: Packages"
 linkTitle: "Chapter 3: Packages"
 description: |
-    [Chapter 2]({{% relref "/book/02-concepts#packages" %}}) provided a high-level conceptual explanation of a package and the package
+    [Packages]({{% relref "/documentation/2-concepts/packages" %}}) provided a high-level conceptual explanation of a package and the package
     lifecycle. This chapter covers working with packages in detail: how to get, explore, edit, update, and publish
     packages.
 toc: true

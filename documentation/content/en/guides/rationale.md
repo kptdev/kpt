@@ -64,7 +64,7 @@ These resource representations were intended to form the core of a declarative d
 to support pre-deployment validation, preview, and approval and post-deployment auditing, versioning, and undo. 
 
 kpt supports management of
-[Configuration as Data]({{% relref "/book/02-concepts/#configuration-as-data-key-principles" %}}).
+[Configuration as Data]({{% relref "/documentation/1-overview#configuration-as-data-key-principles" %}}).
 The core ideas are simple:
 
 * uses a uniform, serializable data model to represent configuration

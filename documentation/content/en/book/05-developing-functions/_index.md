@@ -3,7 +3,7 @@ title: "Chapter 5: Developing Functions"
 linkTitle: "Chapter 5: Developing Functions"
 
 description: |
-    [Chapter 2]({{% relref "/book/02-concepts#functions" %}}) provided a high-level conceptual explanation of functions. We discussed how
+    [Functions]({{% relref "/documentation/2-concepts/functions" %}}) provided a high-level conceptual explanation of functions. We discussed how
     this architecture enables us to develop functions in different languages, frameworks and runtimes. In this chapter,
     we are going to look at different approaches to developing functions.
 

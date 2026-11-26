@@ -2,7 +2,7 @@
 title: "Chapter 4: Using functions"
 linkTitle: "Chapter 4: Using functions"
 description: |
-    [Chapter 2]({{% relref "/book/02-concepts#functions" %}}) provided a high-level conceptual explanation of the functions. We also saw examples of how to use `fn eval` and `fn render` to
+    [Functions]({{% relref "/documentation/2-concepts/functions" %}}) provided a high-level conceptual explanation of the functions. We also saw examples of how to use `fn eval` and `fn render` to
     execute the functions. In this chapter, we will take a closer look at how to execute the functions using these two
     two approaches.
 
@@ -268,7 +268,7 @@ Using the `exec` field is not recommended, for the following two reasons:
 
 ### Specifying `functionConfig`
 
-In [Chapter 2]({{% relref "/book/02-concepts#functions" %}}), we saw the following conceptual representation of a function invocation:
+In [Functions]({{% relref "/documentation/2-concepts/functions" %}}), we saw the following conceptual representation of a function invocation:
 
 ![img](/images/func.svg)
 
