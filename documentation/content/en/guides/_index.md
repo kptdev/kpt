@@ -9,6 +9,7 @@ menu:
 
 # Reference
 
+- [A 10,000 m View of kpt and Porch]({{% relref "/guides/10000-m-view" %}})
 - [The Rationale Behind kpt]({{% relref "/guides/rationale" %}})
 - [Namespace Provisioning CLI]({{% relref "/guides/namespace-provisioning-cli" %}})
 - [Variant Constructor Pattern]({{% relref "/guides/variant-constructor-pattern" %}})
