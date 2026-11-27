@@ -41,7 +41,7 @@ const binDir = process.platform === 'win32'
   : `${process.cwd()}/node_modules/.bin`;
 const patchedPath = `${binDir}${pathSep}${process.env[pathKey] || ''}`;
 
-// Theme is configured via Hugo Modules in config.toml (theme = ["github.com/google/docsy"]).
+// Theme is configured via Hugo Modules in config.toml (theme = ["github.com/docsy/docsy/theme"]).
 // Do not pass --theme=docsy here; it expects a local themes/docsy directory.
 run(hugo, ['--baseURL=/', '--minify'], {
   HUGO_POSTCSS: postcssBin,
