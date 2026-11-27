@@ -53,7 +53,8 @@ func (frc *fakeLister) Name() string {
 	return "fake"
 }
 
-func TestFilterParseSortTags(t *testing.T) {
+// Combined test for filterSemvers and filterConstraint
+func TestTagFilterFunctions(t *testing.T) {
 	constraint, _ := semver.NewConstraint("*") // match everything
 	testCases := map[string]struct {
 		tags     []string
@@ -83,7 +84,7 @@ func TestFilterParseSortTags(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			res := filterParseTags(tc.tags, constraint)
+			res := filterConstraint(filterSemvers(tc.tags), constraint)
 			sortVersions(res)
 			assert.Equal(t, tc.expected, stringifyVersionSlice(res))
 		})
@@ -133,7 +134,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "0.3.x",
 			repoTags:      tagSet,
-			expectedErr:   "no tag could be found matching the version constraint",
+			expectedErr:   `no tag could be found matching the version constraint "0.3.x": no tag matched the version constraint`,
 		},
 		"image preserved on empty tag": {
 			functionImage: image + ":v0.3.1",
@@ -180,7 +181,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "~0.1",
 			repoErr:       "test",
-			expectedErr:   "no tag could be found matching the version constraint",
+			expectedErr:   `no tag could be found matching the version constraint "~0.1": failed to list tags for image`,
 		},
 		"digest replaced correctly": {
 			functionImage: image + "@sha256:59a5a43c8fcafaf14b5fd4463ccb3fda61d6c0b55ff218cbb5783a29c8d6c20c",
@@ -193,7 +194,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "~0.1",
 			repoTags:      []string{},
-			expectedErr:   "no tag could be found matching the version constraint",
+			expectedErr:   `no tag could be found matching the version constraint "~0.1": no tags found for image`,
 		},
 		"invalid image ref": {
 			functionImage: "aaaaa~~234..=/",
@@ -290,6 +291,16 @@ func TestResolveFunctionImageMultipleListers(t *testing.T) {
 			functionTag: "*",
 			expectedErr: "no tag could be found matching the version constraint",
 		},
+		"error in one lister, no matches in another": {
+			listers: []TagLister{
+				&fakeLister{err: "a down"},
+				&fakeLister{tags: map[string][]string{image: {"v0.1.0", "v0.1.1"}}},
+			},
+			functionTag: "~0.2",
+			expectedErr: `no tag could be found matching the version constraint "~0.2": ` +
+				`failed to list tags for image "ghcr.io/kptdev/krm-functions-catalog/test-function" using lister "fake": a down; ` +
+				`no tag matched the version constraint "~0.2" when using lister "fake" (from [v0.1.0, v0.1.1])`,
+		},
 	}
 
 	for name, tc := range testCases {
@@ -307,18 +318,14 @@ func TestResolveFunctionImageMultipleListers(t *testing.T) {
 }
 
 func TestAbbrevSlice(t *testing.T) {
-	tagSet := []string{"v0.1", "v0.2.3", "v0.1.2", "v0", "v0.2", "v0.1.1", "v0.2.1", "v0.2.2"}
-	var versions []*semver.Version
-	for _, tag := range tagSet {
-		versions = append(versions, semver.MustParse(tag))
-	}
+	versions := []string{"v0.1", "v0.2.3", "v0.1.2", "v0", "v0.2", "v0.1.1", "v0.2.1", "v0.2.2"}
 
 	testCases := []struct {
-		input    []*semver.Version
+		input    []string
 		expected string
 	}{
 		{
-			input:    []*semver.Version{},
+			input:    []string{},
 			expected: "[]",
 		},
 		{
@@ -335,11 +342,15 @@ func TestAbbrevSlice(t *testing.T) {
 		},
 		{
 			input:    versions[:4],
-			expected: "[v0.1, v0.2.3, ..., v0]",
+			expected: "[v0.1, v0.2.3, v0.1.2, v0]",
+		},
+		{
+			input:    versions[:5],
+			expected: "[v0.1, v0.2.3, v0.1.2, ..., v0.2]",
 		},
 		{
 			input:    versions,
-			expected: "[v0.1, v0.2.3, ..., v0.2.2]",
+			expected: "[v0.1, v0.2.3, v0.1.2, ..., v0.2.2]",
 		},
 	}
 

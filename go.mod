@@ -22,6 +22,7 @@ require (
 	github.com/regclient/regclient v0.11.5
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
+	go.uber.org/multierr v1.11.0
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools/v3 v3.5.2
 	k8s.io/api v0.36.1
