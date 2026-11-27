@@ -62,7 +62,7 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		var allFilteredVersions []*semver.Version
 		var errs error
 		for _, lister := range tr.Listers {
-			possibleTags, err := lister.List(ctx, image)
+			allTags, err := lister.List(ctx, image)
 			if err != nil {
 				err := fmt.Errorf("failed to list tags for image %q using lister %q: %w", image, lister.Name(), err)
 				errs = multierr.Append(errs, err)
@@ -70,18 +70,19 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 				continue
 			}
 
-			if len(possibleTags) == 0 {
+			if len(allTags) == 0 {
 				err := fmt.Errorf("no tags found for image %q with lister %q", image, lister.Name())
 				errs = multierr.Append(errs, err)
 				klog.V(2).Infof("%v", err)
 				continue
 			}
 
-			filteredVersions := filterParseTags(possibleTags, constraint)
+			possibleTags := filterSemvers(allTags)
+			filteredVersions := filterConstraint(possibleTags, constraint)
 			if len(filteredVersions) > 0 {
 				allFilteredVersions = append(allFilteredVersions, filteredVersions...)
 			} else {
-				err := fmt.Errorf("no tag matched the version constraint %q when using lister %q (from %s)", tag, lister.Name(), abbrevSlice(filteredVersions))
+				err := fmt.Errorf("no tag matched the version constraint %q when using lister %q (from %s)", tag, lister.Name(), abbrevSlice(possibleTags))
 				errs = multierr.Append(errs, err)
 				klog.V(2).Infof("%v", err)
 			}
@@ -113,9 +114,9 @@ func imageWithLiteralTag(ref regclientref.Ref, tag string) (string, error) {
 	return ref.CommonName(), nil
 }
 
-// filterParseTags takes in a list of potential tags, and returns all the valid semvers matching the constraint
-func filterParseTags(tags []string, constraint *semver.Constraints) []*semver.Version {
-	var versions []*semver.Version
+// filterSemvers returns the tags which can be parsed as semantic versions
+func filterSemvers(tags []string) []string {
+	filtered := make([]string, 0, len(tags))
 	for _, tag := range tags {
 		if strings.HasPrefix(tag, "sha256-") {
 			klog.V(3).Infof("Skipping tag %q because it looks like a hash", tag)
@@ -127,11 +128,24 @@ func filterParseTags(tags []string, constraint *semver.Constraints) []*semver.Ve
 			continue
 		}
 
-		version, err := semver.NewVersion(tag)
+		_, err := semver.NewVersion(tag)
 		if err != nil {
 			klog.V(3).Infof("Failed to parse tag %q as semantic version, ignoring", tag)
 			continue
 		}
+
+		filtered = append(filtered, tag)
+	}
+
+	return filtered
+}
+
+// filterConstraint takes in a list of valid semver tags, and returns all that match the constraint, converted to semver.Version.
+// Panics if a tag is not a valid semver. Use in conjunction with filterSemvers.
+func filterConstraint(tags []string, constraint *semver.Constraints) []*semver.Version {
+	var versions []*semver.Version
+	for _, tag := range tags {
+		version := semver.MustParse(tag)
 
 		if constraint.Check(version) {
 			versions = append(versions, version)
@@ -149,18 +163,13 @@ func sortVersions(versions []*semver.Version) {
 	})
 }
 
-func abbrevSlice(slice []*semver.Version) string {
+func abbrevSlice(slice []string) string {
 	switch len(slice) {
 	case 0:
 		return "[]"
-	case 1, 2, 3:
-		out := make([]string, len(slice))
-		for i, v := range slice {
-			out[i] = v.Original()
-		}
-		return "[" + strings.Join(out, ", ") + "]"
+	case 1, 2, 3, 4:
+		return "[" + strings.Join(slice, ", ") + "]"
 	default:
-		return fmt.Sprintf("[%s, %s, ..., %s]",
-			slice[0].Original(), slice[1].Original(), slice[len(slice)-1].Original())
+		return "[" + strings.Join([]string{slice[0], slice[1], slice[2], "...", slice[len(slice)-1]}, ", ") + "]"
 	}
 }

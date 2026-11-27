@@ -53,7 +53,8 @@ func (frc *fakeLister) Name() string {
 	return "fake"
 }
 
-func TestFilterParseSortTags(t *testing.T) {
+// Combined test for filterSemvers and filterConstraint
+func TestTagFilterFunctions(t *testing.T) {
 	constraint, _ := semver.NewConstraint("*") // match everything
 	testCases := map[string]struct {
 		tags     []string
@@ -83,7 +84,7 @@ func TestFilterParseSortTags(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			res := filterParseTags(tc.tags, constraint)
+			res := filterConstraint(filterSemvers(tc.tags), constraint)
 			sortVersions(res)
 			assert.Equal(t, tc.expected, stringifyVersionSlice(res))
 		})
@@ -307,18 +308,14 @@ func TestResolveFunctionImageMultipleListers(t *testing.T) {
 }
 
 func TestAbbrevSlice(t *testing.T) {
-	tagSet := []string{"v0.1", "v0.2.3", "v0.1.2", "v0", "v0.2", "v0.1.1", "v0.2.1", "v0.2.2"}
-	var versions []*semver.Version
-	for _, tag := range tagSet {
-		versions = append(versions, semver.MustParse(tag))
-	}
+	versions := []string{"v0.1", "v0.2.3", "v0.1.2", "v0", "v0.2", "v0.1.1", "v0.2.1", "v0.2.2"}
 
 	testCases := []struct {
-		input    []*semver.Version
+		input    []string
 		expected string
 	}{
 		{
-			input:    []*semver.Version{},
+			input:    []string{},
 			expected: "[]",
 		},
 		{
@@ -335,11 +332,15 @@ func TestAbbrevSlice(t *testing.T) {
 		},
 		{
 			input:    versions[:4],
-			expected: "[v0.1, v0.2.3, ..., v0]",
+			expected: "[v0.1, v0.2.3, v0.1.2, v0]",
+		},
+		{
+			input:    versions[:5],
+			expected: "[v0.1, v0.2.3, v0.1.2, ..., v0.2]",
 		},
 		{
 			input:    versions,
-			expected: "[v0.1, v0.2.3, ..., v0.2.2]",
+			expected: "[v0.1, v0.2.3, v0.1.2, ..., v0.2.2]",
 		},
 	}
 
