@@ -164,7 +164,7 @@ Flags:
 
   --create-parents, -p:
     Create parent directories if they do not exist. It is ` + "`" + `false` + "`" + ` by default.
-
+  
   --force:
     Overwrite the local destination directory if it already exists and is not the
     same package. Re-fetching the same upstream package is always idempotent and
@@ -281,7 +281,7 @@ var TreeExamples = `
   $ kpt pkg tree
 
   # Print the tree as JSON, for example to render it in an IDE or process it with jq.
-  $ kpt pkg tree -o json
+  kpt pkg tree -o json
 
   # Example output showing independent and dependent packages:
   $ kpt pkg tree wordpress/
