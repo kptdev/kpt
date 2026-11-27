@@ -133,7 +133,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "0.3.x",
 			repoTags:      tagSet,
-			expectedErr:   "no tag could be found matching the version constraint",
+			expectedErr:   `no tag could be found matching the version constraint "0.3.x": no tag matched the version constraint`,
 		},
 		"image preserved on empty tag": {
 			functionImage: image + ":v0.3.1",
@@ -180,7 +180,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "~0.1",
 			repoErr:       "test",
-			expectedErr:   "no tag could be found matching the version constraint",
+			expectedErr:   `no tag could be found matching the version constraint "~0.1": failed to list tags for image`,
 		},
 		"digest replaced correctly": {
 			functionImage: image + "@sha256:59a5a43c8fcafaf14b5fd4463ccb3fda61d6c0b55ff218cbb5783a29c8d6c20c",
@@ -193,7 +193,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "~0.1",
 			repoTags:      []string{},
-			expectedErr:   "no tag could be found matching the version constraint",
+			expectedErr:   `no tag could be found matching the version constraint "~0.1": no tags found for image`,
 		},
 		"invalid image ref": {
 			functionImage: "aaaaa~~234..=/",

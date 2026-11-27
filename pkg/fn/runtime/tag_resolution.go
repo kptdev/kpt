@@ -23,6 +23,7 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/distribution/reference"
 	regclientref "github.com/regclient/regclient/types/ref"
+	"go.uber.org/multierr"
 	"k8s.io/klog/v2"
 )
 
@@ -59,15 +60,20 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		// when we are given an exact version. We just return from here.
 	} else if constraint, constraintErr := semver.NewConstraint(tag); constraintErr == nil {
 		var allFilteredVersions []*semver.Version
+		var errs error
 		for _, lister := range tr.Listers {
 			possibleTags, err := lister.List(ctx, image)
 			if err != nil {
-				klog.V(2).Infof("failed to list tags for image %q using lister %q: %v", image, lister.Name(), err)
+				err := fmt.Errorf("failed to list tags for image %q using lister %q: %w", image, lister.Name(), err)
+				errs = multierr.Append(errs, err)
+				klog.V(2).Infof("%v", err)
 				continue
 			}
 
 			if len(possibleTags) == 0 {
-				klog.V(2).Infof("no tags found for image %q with lister %q", image, lister.Name())
+				err := fmt.Errorf("no tags found for image %q with lister %q", image, lister.Name())
+				errs = multierr.Append(errs, err)
+				klog.V(2).Infof("%v", err)
 				continue
 			}
 
@@ -75,12 +81,14 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 			if len(filteredVersions) > 0 {
 				allFilteredVersions = append(allFilteredVersions, filteredVersions...)
 			} else {
-				klog.V(2).Infof("no tag matched the version constraint %q when using lister %q (from %s)", tag, lister.Name(), abbrevSlice(filteredVersions))
+				err := fmt.Errorf("no tag matched the version constraint %q when using lister %q (from %s)", tag, lister.Name(), abbrevSlice(filteredVersions))
+				errs = multierr.Append(errs, err)
+				klog.V(2).Infof("%v", err)
 			}
 		}
 
 		if len(allFilteredVersions) == 0 {
-			return "", fmt.Errorf("no tag could be found matching the version constraint %q", tag)
+			return "", fmt.Errorf("no tag could be found matching the version constraint %q: %w", tag, errs)
 		}
 
 		sortVersions(allFilteredVersions)
