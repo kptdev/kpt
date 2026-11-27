@@ -1,10 +1,10 @@
 module github.com/kptdev/kpt/mdtogo
 
-go 1.26.9
+go 1.26.11
 
 require (
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/text v0.38.0
+	golang.org/x/text v0.44.0
 )
 
 require (
