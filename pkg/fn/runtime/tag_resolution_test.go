@@ -291,6 +291,14 @@ func TestResolveFunctionImageMultipleListers(t *testing.T) {
 			functionTag: "*",
 			expectedErr: "no tag could be found matching the version constraint",
 		},
+		"error in one lister, no matches in another": {
+			listers: []TagLister{
+				&fakeLister{err: "a down"},
+				&fakeLister{tags: map[string][]string{image: {"v0.1.0", "v0.1.1"}}},
+			},
+			functionTag: "~0.2",
+			expectedErr: `no tag could be found matching the version constraint "~0.2": failed to list tags for image "ghcr.io/kptdev/krm-functions-catalog/test-function" using lister "fake": a down; no tag matched the version constraint "~0.2" when using lister "fake" (from [v0.1.0, v0.1.1])`,
+		},
 	}
 
 	for name, tc := range testCases {
