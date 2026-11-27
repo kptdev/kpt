@@ -59,6 +59,10 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		// A valid version is a valid constraint, but we don't want to waste time listing
 		// when we are given an exact version. We just return from here.
 	} else if constraint, constraintErr := semver.NewConstraint(tag); constraintErr == nil {
+		if len(tr.Listers) == 0 {
+			return "", fmt.Errorf("valid constraint (%q) specified, but no tag listers configured", constraint)
+		}
+
 		var allFilteredVersions []*semver.Version
 		var errs error
 		for _, lister := range tr.Listers {
