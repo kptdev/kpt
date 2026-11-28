@@ -169,15 +169,21 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	treeIndex := map[string]treeprint.Tree{}
 	labels := map[treeprint.Tree]pkgLabel{}
 	for _, pkg := range allKeys {
-		// create a branch for this package -- search for the parent package and create
-		// the branch under it -- requires that the keys are sorted
+		// Find the nearest ancestor directory already in treeIndex by walking
+		// up path segments rather than scanning the map with strings.HasPrefix,
+		// so sibling prefix collisions (e.g. app vs app-db) and map iteration
+		// order cannot misattach packages.
 		branch := tree
-		for parent, subTree := range treeIndex {
-			if strings.HasPrefix(pkg, parent) {
-				// found a package whose path is a prefix to our own, use this
-				// package if a closer one isn't found
-				branch = subTree
-				// don't break, continue searching for more closely related ancestors
+		if pkg != "." {
+			for ancestor := filepath.Dir(pkg); ; ancestor = filepath.Dir(ancestor) {
+				if subTree, ok := treeIndex[ancestor]; ok {
+					branch = subTree
+					break
+				}
+				parent := filepath.Dir(ancestor)
+				if ancestor == "." || parent == ancestor {
+					break
+				}
 			}
 		}
 

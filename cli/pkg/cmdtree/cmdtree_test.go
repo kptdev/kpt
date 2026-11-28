@@ -999,3 +999,141 @@ func TestTreeCommand_outputTextUnchanged(t *testing.T) {
 	assert.Contains(t, b.String(), `Package "mysql" (independent)`)
 	assert.Contains(t, b.String(), `Package "inherits" (dependent)`)
 }
+
+// TestTreeCommand_siblingPrefixDoesNotNest verifies that sibling directories or
+// packages sharing a path prefix (e.g. app and app-db) remain siblings in both
+// text and JSON output (#4895).
+func TestTreeCommand_siblingPrefixDoesNotNest(t *testing.T) {
+	d := t.TempDir()
+	rootDir := filepath.Join(d, "my-pkg")
+	writeKptfile(t, rootDir, fmt.Sprintf(kptfileDependent, "my-pkg"))
+
+	appDir := filepath.Join(rootDir, "app")
+	writeKptfile(t, appDir, fmt.Sprintf(kptfileDependent, "app"))
+	require.NoError(t, os.WriteFile(filepath.Join(appDir, "deploy.yaml"),
+		[]byte("apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: frontend\n"), 0600))
+
+	appDBDir := filepath.Join(rootDir, "app-db")
+	writeKptfile(t, appDBDir, fmt.Sprintf(kptfileDependent, "app-db"))
+	require.NoError(t, os.WriteFile(filepath.Join(appDBDir, "statefulset.yaml"),
+		[]byte("apiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: postgres\n"), 0600))
+
+	// Text output should render app and app-db as siblings under my-pkg.
+	txtBuf := &bytes.Buffer{}
+	rText := GetTreeRunner(fake.CtxWithPrinter(txtBuf, nil), "")
+	rText.Command.SetArgs([]string{rootDir})
+	rText.Command.SetOut(txtBuf)
+	require.NoError(t, rText.Command.Execute())
+
+	wantText := `Package "my-pkg"
+├── [Kptfile]  Kptfile my-pkg
+├── Package "app" (dependent)
+│   ├── [Kptfile]  Kptfile app
+│   └── [deploy.yaml]  Deployment frontend
+└── Package "app-db" (dependent)
+    ├── [Kptfile]  Kptfile app-db
+    └── [statefulset.yaml]  StatefulSet postgres
+`
+	assert.Equal(t, wantText, txtBuf.String())
+
+	// JSON output should place both app and app-db directly under root.Children.
+	jsonBuf := &bytes.Buffer{}
+	rJSON := GetTreeRunner(fake.CtxWithPrinter(jsonBuf, nil), "")
+	rJSON.Command.SetArgs([]string{rootDir, "-o", "json"})
+	rJSON.Command.SetOut(jsonBuf)
+	require.NoError(t, rJSON.Command.Execute())
+
+	var got jsonTreeOutput
+	require.NoError(t, json.Unmarshal(jsonBuf.Bytes(), &got), jsonBuf.String())
+	var pkgChildren []string
+	for _, c := range got.Tree.Children {
+		if c.Type != "" {
+			pkgChildren = append(pkgChildren, c.Name)
+		}
+	}
+	assert.Equal(t, []string{"app", "app-db"}, pkgChildren)
+}
+
+// TestTreeCommand_deepNestingDeterministic verifies that 3+ nested subpackage
+// levels deterministically attach under their nearest ancestor across repeated
+// runs in both text and JSON output (#4895).
+func TestTreeCommand_deepNestingDeterministic(t *testing.T) {
+	d := t.TempDir()
+	rootDir := filepath.Join(d, "root-pkg")
+	tier1 := filepath.Join(rootDir, "tier1")
+	tier2 := filepath.Join(tier1, "tier2")
+	tier3 := filepath.Join(tier2, "tier3")
+
+	for _, p := range []struct {
+		dir, name string
+	}{
+		{rootDir, "root-pkg"},
+		{tier1, "tier1"},
+		{tier2, "tier2"},
+		{tier3, "tier3"},
+	} {
+		writeKptfile(t, p.dir, fmt.Sprintf(kptfileDependent, p.name))
+	}
+	require.NoError(t, os.WriteFile(filepath.Join(tier3, "cm.yaml"),
+		[]byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cfg\n"), 0600))
+
+	wantText := `Package "root-pkg"
+├── [Kptfile]  Kptfile root-pkg
+└── Package "tier1" (dependent)
+    ├── [Kptfile]  Kptfile tier1
+    └── Package "tier2" (dependent)
+        ├── [Kptfile]  Kptfile tier2
+        └── Package "tier3" (dependent)
+            ├── [Kptfile]  Kptfile tier3
+            └── [cm.yaml]  ConfigMap cfg
+`
+	wantJSON := jsonTreeOutput{
+		Tree: &jsonTreeNode{
+			Name: "root-pkg",
+			Children: []*jsonTreeNode{
+				{Name: "Kptfile", Description: "Kptfile root-pkg", Children: []*jsonTreeNode{}},
+				{
+					Name: "tier1",
+					Type: PkgTypeDependent,
+					Children: []*jsonTreeNode{
+						{Name: "Kptfile", Description: "Kptfile tier1", Children: []*jsonTreeNode{}},
+						{
+							Name: "tier2",
+							Type: PkgTypeDependent,
+							Children: []*jsonTreeNode{
+								{Name: "Kptfile", Description: "Kptfile tier2", Children: []*jsonTreeNode{}},
+								{
+									Name: "tier3",
+									Type: PkgTypeDependent,
+									Children: []*jsonTreeNode{
+										{Name: "Kptfile", Description: "Kptfile tier3", Children: []*jsonTreeNode{}},
+										{Name: "cm.yaml", Description: "ConfigMap cfg", Children: []*jsonTreeNode{}},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for i := 0; i < 30; i++ {
+		txtBuf := &bytes.Buffer{}
+		rText := GetTreeRunner(fake.CtxWithPrinter(txtBuf, nil), "")
+		rText.Command.SetArgs([]string{rootDir})
+		rText.Command.SetOut(txtBuf)
+		require.NoError(t, rText.Command.Execute())
+		assert.Equal(t, wantText, txtBuf.String(), "iteration %d", i)
+
+		jsonBuf := &bytes.Buffer{}
+		rJSON := GetTreeRunner(fake.CtxWithPrinter(jsonBuf, nil), "")
+		rJSON.Command.SetArgs([]string{rootDir, "-o", "json"})
+		rJSON.Command.SetOut(jsonBuf)
+		require.NoError(t, rJSON.Command.Execute())
+
+		var got jsonTreeOutput
+		require.NoError(t, json.Unmarshal(jsonBuf.Bytes(), &got), "iteration %d: %s", i, jsonBuf.String())
+		assert.Equal(t, wantJSON, got, "iteration %d", i)
+	}
+}
