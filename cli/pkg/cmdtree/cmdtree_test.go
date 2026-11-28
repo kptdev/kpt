@@ -1087,6 +1087,33 @@ func TestTreeCommand_deepNestingDeterministic(t *testing.T) {
             ├── [Kptfile]  Kptfile tier3
             └── [cm.yaml]  ConfigMap cfg
 `
+	wantJSON := jsonTreeOutput{
+		Tree: &jsonTreeNode{
+			Name: "root-pkg",
+			Children: []*jsonTreeNode{
+				{
+					Name: "tier1",
+					Type: PkgTypeDependent,
+					Children: []*jsonTreeNode{
+						{
+							Name: "tier2",
+							Type: PkgTypeDependent,
+							Children: []*jsonTreeNode{
+								{
+									Name: "tier3",
+									Type: PkgTypeDependent,
+									Children: []*jsonTreeNode{
+										{Name: "cm.yaml", Description: "ConfigMap cfg", Children: []*jsonTreeNode{}},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
 	for i := 0; i < 30; i++ {
 		txtBuf := &bytes.Buffer{}
 		rText := GetTreeRunner(fake.CtxWithPrinter(txtBuf, nil), "")
@@ -1094,5 +1121,15 @@ func TestTreeCommand_deepNestingDeterministic(t *testing.T) {
 		rText.Command.SetOut(txtBuf)
 		require.NoError(t, rText.Command.Execute())
 		assert.Equal(t, wantText, txtBuf.String(), "iteration %d", i)
+
+		jsonBuf := &bytes.Buffer{}
+		rJSON := GetTreeRunner(fake.CtxWithPrinter(jsonBuf, nil), "")
+		rJSON.Command.SetArgs([]string{rootDir, "-o", "json"})
+		rJSON.Command.SetOut(jsonBuf)
+		require.NoError(t, rJSON.Command.Execute())
+
+		var got jsonTreeOutput
+		require.NoError(t, json.Unmarshal(jsonBuf.Bytes(), &got), "iteration %d: %s", i, jsonBuf.String())
+		assert.Equal(t, wantJSON, got, "iteration %d", i)
 	}
 }
