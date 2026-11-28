@@ -1091,18 +1091,22 @@ func TestTreeCommand_deepNestingDeterministic(t *testing.T) {
 		Tree: &jsonTreeNode{
 			Name: "root-pkg",
 			Children: []*jsonTreeNode{
+				{Name: "Kptfile", Description: "Kptfile root-pkg", Children: []*jsonTreeNode{}},
 				{
 					Name: "tier1",
 					Type: PkgTypeDependent,
 					Children: []*jsonTreeNode{
+						{Name: "Kptfile", Description: "Kptfile tier1", Children: []*jsonTreeNode{}},
 						{
 							Name: "tier2",
 							Type: PkgTypeDependent,
 							Children: []*jsonTreeNode{
+								{Name: "Kptfile", Description: "Kptfile tier2", Children: []*jsonTreeNode{}},
 								{
 									Name: "tier3",
 									Type: PkgTypeDependent,
 									Children: []*jsonTreeNode{
+										{Name: "Kptfile", Description: "Kptfile tier3", Children: []*jsonTreeNode{}},
 										{Name: "cm.yaml", Description: "ConfigMap cfg", Children: []*jsonTreeNode{}},
 									},
 								},
